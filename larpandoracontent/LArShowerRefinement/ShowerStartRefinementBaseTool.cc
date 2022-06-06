@@ -736,7 +736,7 @@ bool ShowerStartRefinementBaseTool::FindShowerStart(ShowerStartRefinementAlgorit
     /////////////////////////////////
 
     protoShowerVector.push_back(ProtoShower(ShowerCore(showerStartPosition, showerStartDirection, showerHitList), 
-        ConnectionPathway(projectedNuVertexPosition, startDirection, pathwayHitList), showerSpineHitList, isHelper));
+        ConnectionPathway(projectedNuVertexPosition, startDirection, pathwayHitList), showerSpineHitList, isHelper, CaloHitList(), CartesianPointVector()));
 
     return showerStartFound;
 }

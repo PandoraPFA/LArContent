@@ -1,4 +1,4 @@
-/**
+/**<
  *  @file   larpandoracontent/LArHelpers/LArConnectionPathwayHelper.cc
  *
  *  @brief  Implementation of the connection pathway helper class.
@@ -39,6 +39,10 @@ namespace lar_content
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArConnectionPathwayHelper::ElectronTreeVariables::ElectronTreeVariables() :
+    m_nConnectionPathways(-10.f),
+    m_showerStartX(-9999.f),
+    m_showerStartY(-9999.f),
+    m_showerStartZ(-9999.f),
     m_pathwayLengthMin(-10.f),
     m_pathwayLengthMiddle(-10.f),
     m_pathwayLengthMax(-10.f),
@@ -61,17 +65,80 @@ LArConnectionPathwayHelper::ElectronTreeVariables::ElectronTreeVariables() :
     m_pathwayMaxEnergySigma(-10.f),
     m_postShowerStartLength(-10.f),
     m_postShowerStartNHits(-10),
-    m_postShowerStartNHitsU(-10),
-    m_postShowerStartNHitsV(-10),
-    m_postShowerStartNHitsW(-10),
-    m_minNPostShowerStartHits(-10),
-    m_maxNPostShowerStartHits(-10),
+    m_postShowerStartNHitsW(-10.f),
+    m_minNPostShowerStartHits(-10.f),
+    m_middleNPostShowerStartHits(-10.f),
+    m_maxNPostShowerStartHits(-10.f),
     m_postShowerStartScatterAngle(-10.f),
-    m_postShowerStartScatterAngleU(-10.f),
-    m_postShowerStartScatterAngleV(-10.f),
     m_postShowerStartScatterAngleW(-10.f),
     m_minPostShowerStartScatterAngle(-10.f),
+    m_middlePostShowerStartScatterAngle(-10.f),
     m_maxPostShowerStartScatterAngle(-10.f),
+    m_postShowerStartOpeningAngleW(-10.f),
+    m_minPostShowerStartOpeningAngle(-10.f),
+    m_middlePostShowerStartOpeningAngle(-10.f),
+    m_maxPostShowerStartOpeningAngle(-10.f),
+    m_postShowerStartOpeningAngleAsymmetryW(-10.f),
+    m_minPostShowerStartOpeningAngleAsymmetry(-10.f),
+    m_middlePostShowerStartOpeningAngleAsymmetry(-10.f),
+    m_maxPostShowerStartOpeningAngleAsymmetry(-10.f),
+    m_postShowerStartNuVertexHitAsymmetryW(-10.f),
+    m_minPostShowerStartNuVertexHitAsymmetry(-10.f),
+    m_middlePostShowerStartNuVertexHitAsymmetry(-10.f),
+    m_maxPostShowerStartNuVertexHitAsymmetry(-10.f),
+    m_postShowerStartNuVertexEnergyAsymmetryW(-0.5f),
+    m_minPostShowerStartNuVertexEnergyAsymmetry(-0.5f),
+    m_middlePostShowerStartNuVertexEnergyAsymmetry(-0.5f),
+    m_maxPostShowerStartNuVertexEnergyAsymmetry(-0.5f),
+    m_postShowerStartShowerStartHitAsymmetryW(-10.f),
+    m_minPostShowerStartShowerStartHitAsymmetry(-10.f),
+    m_middlePostShowerStartShowerStartHitAsymmetry(-10.f),
+    m_maxPostShowerStartShowerStartHitAsymmetry(-10.f),
+    m_postShowerStartShowerStartEnergyAsymmetryW(-0.5f),
+    m_minPostShowerStartShowerStartEnergyAsymmetry(-0.5f),
+    m_middlePostShowerStartShowerStartEnergyAsymmetry(-0.5f),
+    m_maxPostShowerStartShowerStartEnergyAsymmetry(-0.5f),        
+    m_postShowerStartNuVertexMeanRadialDistanceW(-10.f),
+    m_minPostShowerStartNuVertexMeanRadialDistance(-10.f),
+    m_middlePostShowerStartNuVertexMeanRadialDistance(-10.f),
+    m_maxPostShowerStartNuVertexMeanRadialDistance(-10.f),
+    m_postShowerStartNuVertexEnergyWeightedMeanRadialDistanceW(-10.f),
+    m_minPostShowerStartNuVertexEnergyWeightedMeanRadialDistance(-10.f),
+    m_middlePostShowerStartNuVertexEnergyWeightedMeanRadialDistance(-10.f),
+    m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance(-10.f),
+    m_postShowerStartShowerStartMeanRadialDistanceW(-10.f),
+    m_minPostShowerStartShowerStartMeanRadialDistance(-10.f),
+    m_middlePostShowerStartShowerStartMeanRadialDistance(-10.f),
+    m_maxPostShowerStartShowerStartMeanRadialDistance(-10.f),
+    m_postShowerStartShowerStartEnergyWeightedMeanRadialDistanceW(-10.f),
+    m_minPostShowerStartShowerStartEnergyWeightedMeanRadialDistance(-10.f),
+    m_middlePostShowerStartShowerStartEnergyWeightedMeanRadialDistance(-10.f),
+    m_maxPostShowerStartShowerStartEnergyWeightedMeanRadialDistance(-10.f),
+    m_postShowerStartNuVertexMoliereRadiusW(-10.f),
+    m_minPostShowerStartNuVertexMoliereRadius(-10.f),
+    m_middlePostShowerStartNuVertexMoliereRadius(-10.f),
+    m_maxPostShowerStartNuVertexMoliereRadius(-10.f),
+    m_postShowerStartShowerStartMoliereRadiusW(-10.f),
+    m_minPostShowerStartShowerStartMoliereRadius(-10.f),
+    m_middlePostShowerStartShowerStartMoliereRadius(-10.f),
+    m_maxPostShowerStartShowerStartMoliereRadius(-10.f),
+    m_positiveOpeningAngleW(-10.f),
+    m_negativeOpeningAngleW(-10.f),
+    m_maxOpeningAngleW(-10.f),
+    m_showerApexLW(-9999.f),
+    m_minShowerApexL(-9999.f),
+    m_middleShowerApexL(-9999.f),
+    m_maxShowerApexL(-9999.f),
+    m_showerApexTW(-10.f),
+    m_minShowerApexT(-10.f),
+    m_middleShowerApexT(-10.f),
+    m_maxShowerApexT(-10.f),
+    m_foundHitRatioW(-0.5f),
+    m_minFoundHitRatio(-0.5f),
+    m_middleFoundHitRatio(-0.5f),
+    m_maxFoundHitRatio(-0.5f),
+    m_fitShowerStartLW(-10.f),
+    m_fitShowerStartTW(-10.f),
     m_postShowerStartMinHalfOpeningAngle(-10.f),
     m_postShowerStartMaxHalfOpeningAngle(-10.f),
     m_postShowerStartOpeningAngle(-10.f),
@@ -89,6 +156,22 @@ LArConnectionPathwayHelper::ElectronTreeVariables::ElectronTreeVariables() :
     m_initialRegionDistanceToNuVertex(-10.f),
     m_initialRegionDistanceInGaps(-10.f),
     m_initialRegionMaxGapSize(-10.f),
+    m_initialGapSizeW(-10.f),
+    m_minInitialGapSize(-10.f),
+    m_middleInitialGapSize(-10.f),
+    m_maxInitialGapSize(-10.f),
+    m_largestGapSizeW(-10.f),
+    m_minLargestGapSize(-10.f),
+    m_middleLargestGapSize(-10.f),
+    m_maxLargestGapSize(-10.f),
+    m_largestProjectedGapSizeW(-10.f),
+    m_minLargestProjectedGapSize(-10.f),
+    m_middleLargestProjectedGapSize(-10.f),
+    m_maxLargestProjectedGapSize(-10.f),
+    m_hitLineDensityW(-10.f),
+    m_minHitLineDensity(-10.f),
+    m_middleHitLineDensity(-10.f),
+    m_maxHitLineDensity(-10.f),
     m_nViewsWithAmbiguousHits(-10),
     m_nAmbiguousHits2D(-10),
     m_minNAmbiguousHits(-10),
@@ -108,8 +191,163 @@ LArConnectionPathwayHelper::ElectronTreeVariables::ElectronTreeVariables() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+LArConnectionPathwayHelper::ElectronTreeVariables &LArConnectionPathwayHelper::ElectronTreeVariables::operator=(const ElectronTreeVariables &rhs)
+{
+    m_nConnectionPathways = rhs.m_nConnectionPathways;
+    m_showerStartX = rhs.m_showerStartX;
+    m_showerStartY = rhs.m_showerStartY;
+    m_showerStartZ = rhs.m_showerStartZ;
+    m_pathwayLengthMin = rhs.m_pathwayLengthMin;
+    m_pathwayLengthMiddle = rhs.m_pathwayLengthMiddle;
+    m_pathwayLengthMax = rhs.m_pathwayLengthMax;
+    m_pathwayShowerStartDelta = rhs.m_pathwayShowerStartDelta;
+    m_pathwayMaxScatteringAngle = rhs.m_pathwayMaxScatteringAngle;
+    m_minShowerStartPathwayScatteringAngle2D = rhs.m_minShowerStartPathwayScatteringAngle2D;
+    m_middleShowerStartPathwayScatteringAngle2D = rhs.m_middleShowerStartPathwayScatteringAngle2D;
+    m_maxShowerStartPathwayScatteringAngle2D = rhs.m_maxShowerStartPathwayScatteringAngle2D;
+    m_pathwayEnergyMeanU = rhs.m_pathwayEnergyMeanU;
+    m_pathwayEnergyMeanV = rhs.m_pathwayEnergyMeanV;
+    m_pathwayEnergyMeanW = rhs.m_pathwayEnergyMeanW;
+    m_pathwayEnergySigmaU = rhs.m_pathwayEnergySigmaU;
+    m_pathwayEnergySigmaV = rhs.m_pathwayEnergySigmaV;
+    m_pathwayEnergySigmaW = rhs.m_pathwayEnergySigmaW;
+    m_pathwayMinEnergyMean = rhs.m_pathwayMinEnergyMean;
+    m_pathwayMiddleEnergyMean = rhs.m_pathwayMiddleEnergyMean;
+    m_pathwayMaxEnergyMean = rhs.m_pathwayMaxEnergyMean;
+    m_pathwayMinEnergySigma = rhs.m_pathwayMinEnergySigma;
+    m_pathwayMiddleEnergySigma = rhs.m_pathwayMiddleEnergySigma;
+    m_pathwayMaxEnergySigma = rhs.m_pathwayMaxEnergySigma;
+    m_postShowerStartLength = rhs.m_postShowerStartLength;
+    m_postShowerStartNHits = rhs.m_postShowerStartNHits;
+    m_postShowerStartNHitsW = rhs.m_postShowerStartNHitsW;
+    m_minNPostShowerStartHits = rhs.m_minNPostShowerStartHits;
+    m_middleNPostShowerStartHits = rhs.m_middleNPostShowerStartHits;
+    m_maxNPostShowerStartHits = rhs.m_maxNPostShowerStartHits;
+    m_postShowerStartScatterAngle = rhs.m_postShowerStartScatterAngle;
+    m_postShowerStartScatterAngleW = rhs.m_postShowerStartScatterAngleW;
+    m_minPostShowerStartScatterAngle = rhs.m_minPostShowerStartScatterAngle;
+    m_middlePostShowerStartScatterAngle = rhs.m_middlePostShowerStartScatterAngle;
+    m_maxPostShowerStartScatterAngle = rhs.m_maxPostShowerStartScatterAngle;
+    m_postShowerStartOpeningAngleW = rhs.m_postShowerStartOpeningAngleW;
+    m_minPostShowerStartOpeningAngle = rhs.m_minPostShowerStartOpeningAngle;
+    m_middlePostShowerStartOpeningAngle = rhs.m_middlePostShowerStartOpeningAngle;
+    m_maxPostShowerStartOpeningAngle = rhs.m_maxPostShowerStartOpeningAngle;
+    m_postShowerStartOpeningAngleAsymmetryW = rhs.m_postShowerStartOpeningAngleAsymmetryW;
+    m_minPostShowerStartOpeningAngleAsymmetry = rhs.m_minPostShowerStartOpeningAngleAsymmetry;
+    m_middlePostShowerStartOpeningAngleAsymmetry = rhs.m_middlePostShowerStartOpeningAngleAsymmetry;
+    m_maxPostShowerStartOpeningAngleAsymmetry = rhs.m_maxPostShowerStartOpeningAngleAsymmetry;
+    m_postShowerStartNuVertexHitAsymmetryW = rhs.m_postShowerStartNuVertexHitAsymmetryW;
+    m_minPostShowerStartNuVertexHitAsymmetry = rhs.m_minPostShowerStartNuVertexHitAsymmetry;
+    m_middlePostShowerStartNuVertexHitAsymmetry = rhs.m_middlePostShowerStartNuVertexHitAsymmetry;
+    m_maxPostShowerStartNuVertexHitAsymmetry = rhs.m_maxPostShowerStartNuVertexHitAsymmetry;
+    m_postShowerStartNuVertexEnergyAsymmetryW = rhs.m_postShowerStartNuVertexEnergyAsymmetryW;
+    m_minPostShowerStartNuVertexEnergyAsymmetry = rhs.m_minPostShowerStartNuVertexEnergyAsymmetry;
+    m_middlePostShowerStartNuVertexEnergyAsymmetry = rhs.m_middlePostShowerStartNuVertexEnergyAsymmetry;
+    m_maxPostShowerStartNuVertexEnergyAsymmetry = rhs.m_maxPostShowerStartNuVertexEnergyAsymmetry;
+    m_postShowerStartShowerStartHitAsymmetryW = rhs.m_postShowerStartShowerStartHitAsymmetryW;
+    m_minPostShowerStartShowerStartHitAsymmetry = rhs.m_minPostShowerStartShowerStartHitAsymmetry;
+    m_middlePostShowerStartShowerStartHitAsymmetry = rhs.m_middlePostShowerStartShowerStartHitAsymmetry;
+    m_maxPostShowerStartShowerStartHitAsymmetry = rhs.m_maxPostShowerStartShowerStartHitAsymmetry;
+    m_postShowerStartShowerStartEnergyAsymmetryW = rhs.m_postShowerStartShowerStartEnergyAsymmetryW;
+    m_minPostShowerStartShowerStartEnergyAsymmetry = rhs.m_minPostShowerStartShowerStartEnergyAsymmetry;
+    m_middlePostShowerStartShowerStartEnergyAsymmetry = rhs.m_middlePostShowerStartShowerStartEnergyAsymmetry;
+    m_maxPostShowerStartShowerStartEnergyAsymmetry = rhs.m_maxPostShowerStartShowerStartEnergyAsymmetry;        
+    m_postShowerStartNuVertexMeanRadialDistanceW = rhs.m_postShowerStartNuVertexMeanRadialDistanceW;
+    m_minPostShowerStartNuVertexMeanRadialDistance = rhs.m_minPostShowerStartNuVertexMeanRadialDistance;
+    m_middlePostShowerStartNuVertexMeanRadialDistance = rhs.m_middlePostShowerStartNuVertexMeanRadialDistance;
+    m_maxPostShowerStartNuVertexMeanRadialDistance = rhs.m_maxPostShowerStartNuVertexMeanRadialDistance;
+    m_postShowerStartNuVertexEnergyWeightedMeanRadialDistanceW = rhs.m_postShowerStartNuVertexEnergyWeightedMeanRadialDistanceW;
+    m_minPostShowerStartNuVertexEnergyWeightedMeanRadialDistance = rhs.m_minPostShowerStartNuVertexEnergyWeightedMeanRadialDistance;
+    m_middlePostShowerStartNuVertexEnergyWeightedMeanRadialDistance = rhs.m_middlePostShowerStartNuVertexEnergyWeightedMeanRadialDistance;
+    m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance = rhs.m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance;
+    m_postShowerStartShowerStartMeanRadialDistanceW = rhs.m_postShowerStartShowerStartMeanRadialDistanceW;
+    m_minPostShowerStartShowerStartMeanRadialDistance = rhs.m_minPostShowerStartShowerStartMeanRadialDistance;
+    m_middlePostShowerStartShowerStartMeanRadialDistance = rhs.m_middlePostShowerStartShowerStartMeanRadialDistance;
+    m_maxPostShowerStartShowerStartMeanRadialDistance = rhs.m_maxPostShowerStartShowerStartMeanRadialDistance;
+    m_postShowerStartShowerStartEnergyWeightedMeanRadialDistanceW = rhs.m_postShowerStartShowerStartEnergyWeightedMeanRadialDistanceW;
+    m_minPostShowerStartShowerStartEnergyWeightedMeanRadialDistance = rhs.m_minPostShowerStartShowerStartEnergyWeightedMeanRadialDistance;
+    m_middlePostShowerStartShowerStartEnergyWeightedMeanRadialDistance = rhs.m_middlePostShowerStartShowerStartEnergyWeightedMeanRadialDistance;
+    m_maxPostShowerStartShowerStartEnergyWeightedMeanRadialDistance = rhs.m_maxPostShowerStartShowerStartEnergyWeightedMeanRadialDistance;
+    m_postShowerStartNuVertexMoliereRadiusW = rhs.m_postShowerStartNuVertexMoliereRadiusW;
+    m_minPostShowerStartNuVertexMoliereRadius = rhs.m_minPostShowerStartNuVertexMoliereRadius;
+    m_middlePostShowerStartNuVertexMoliereRadius = rhs.m_middlePostShowerStartNuVertexMoliereRadius;
+    m_maxPostShowerStartNuVertexMoliereRadius = rhs.m_maxPostShowerStartNuVertexMoliereRadius;
+    m_postShowerStartShowerStartMoliereRadiusW = rhs.m_postShowerStartShowerStartMoliereRadiusW;
+    m_minPostShowerStartShowerStartMoliereRadius = rhs.m_minPostShowerStartShowerStartMoliereRadius;
+    m_middlePostShowerStartShowerStartMoliereRadius = rhs.m_middlePostShowerStartShowerStartMoliereRadius;
+    m_maxPostShowerStartShowerStartMoliereRadius = rhs.m_maxPostShowerStartShowerStartMoliereRadius;
+    m_positiveOpeningAngleW = rhs.m_positiveOpeningAngleW;
+    m_negativeOpeningAngleW = rhs.m_negativeOpeningAngleW;
+    m_maxOpeningAngleW = rhs.m_maxOpeningAngleW;
+    m_showerApexLW = rhs.m_showerApexLW;
+    m_minShowerApexL = rhs.m_minShowerApexL;
+    m_middleShowerApexL = rhs.m_middleShowerApexL;
+    m_maxShowerApexL = rhs.m_maxShowerApexL;
+    m_showerApexTW = rhs.m_showerApexTW;
+    m_minShowerApexT = rhs.m_minShowerApexT;
+    m_middleShowerApexT = rhs.m_middleShowerApexT;
+    m_maxShowerApexT = rhs.m_maxShowerApexT;
+    m_foundHitRatioW = rhs.m_foundHitRatioW;
+    m_minFoundHitRatio = rhs.m_minFoundHitRatio;
+    m_middleFoundHitRatio = rhs.m_middleFoundHitRatio;
+    m_maxFoundHitRatio = rhs.m_maxFoundHitRatio;
+    m_fitShowerStartLW = rhs.m_fitShowerStartLW;
+    m_fitShowerStartTW = rhs.m_fitShowerStartTW;
+    m_postShowerStartMinHalfOpeningAngle = rhs.m_postShowerStartMinHalfOpeningAngle;
+    m_postShowerStartMaxHalfOpeningAngle = rhs.m_postShowerStartMaxHalfOpeningAngle;
+    m_postShowerStartOpeningAngle = rhs.m_postShowerStartOpeningAngle;
+    m_postShowerStartOpeningAngleAsymmetry = rhs.m_postShowerStartOpeningAngleAsymmetry;
+    m_postShowerStartMeanTransverseAngle = rhs.m_postShowerStartMeanTransverseAngle;
+    m_postShowerStartMeanLWeightedTransverseAngle = rhs.m_postShowerStartMeanLWeightedTransverseAngle;
+    m_postShowerStartMeanRadialDistance = rhs.m_postShowerStartMeanRadialDistance;
+    m_postShowerStartRadialDistanceSigma = rhs.m_postShowerStartRadialDistanceSigma;
+    m_postShowerStartEnergyWeightedMeanRadialDistance = rhs.m_postShowerStartEnergyWeightedMeanRadialDistance;
+    m_postShowerStartEstimatedMoliereRadius = rhs.m_postShowerStartEstimatedMoliereRadius;
+    m_postShowerStartLWeightedMeanRadialDistance = rhs.m_postShowerStartLWeightedMeanRadialDistance;
+    m_postShowerStartLWeightedRadialDistanceSigma = rhs.m_postShowerStartLWeightedRadialDistanceSigma;
+    m_postShowerStartInitialGapSize = rhs.m_postShowerStartInitialGapSize;
+    m_postShowerStartMaxGapSize = rhs.m_postShowerStartMaxGapSize;
+    m_initialRegionDistanceToNuVertex = rhs.m_initialRegionDistanceToNuVertex;
+    m_initialRegionDistanceInGaps = rhs.m_initialRegionDistanceInGaps;
+    m_initialRegionMaxGapSize = rhs.m_initialRegionMaxGapSize;
+    m_initialGapSizeW = rhs.m_initialGapSizeW;
+    m_minInitialGapSize = rhs.m_minInitialGapSize;
+    m_middleInitialGapSize = rhs.m_middleInitialGapSize;
+    m_maxInitialGapSize = rhs.m_maxInitialGapSize;
+    m_largestGapSizeW = rhs.m_largestGapSizeW;
+    m_minLargestGapSize = rhs.m_minLargestGapSize;
+    m_middleLargestGapSize = rhs.m_middleLargestGapSize;
+    m_maxLargestGapSize = rhs.m_maxLargestGapSize;
+    m_largestProjectedGapSizeW = rhs.m_largestProjectedGapSizeW;
+    m_minLargestProjectedGapSize = rhs.m_minLargestProjectedGapSize;
+    m_middleLargestProjectedGapSize = rhs.m_middleLargestProjectedGapSize;
+    m_maxLargestProjectedGapSize = rhs.m_maxLargestProjectedGapSize;
+    m_hitLineDensityW = rhs.m_hitLineDensityW;
+    m_minHitLineDensity = rhs.m_minHitLineDensity;
+    m_middleHitLineDensity = rhs.m_middleHitLineDensity;
+    m_maxHitLineDensity = rhs.m_maxHitLineDensity;
+    m_nViewsWithAmbiguousHits = rhs.m_nViewsWithAmbiguousHits;
+    m_nAmbiguousHits2D = rhs.m_nAmbiguousHits2D;
+    m_minNAmbiguousHits = rhs.m_minNAmbiguousHits;
+    m_maxNAmbiguousHits = rhs.m_maxNAmbiguousHits;
+    m_ambiguousHitUnaccountedEnergyU = rhs.m_ambiguousHitUnaccountedEnergyU;
+    m_ambiguousHitUnaccountedEnergyV = rhs.m_ambiguousHitUnaccountedEnergyV;
+    m_ambiguousHitUnaccountedEnergyW = rhs.m_ambiguousHitUnaccountedEnergyW;
+    m_ambiguousHitMinUnaccountedEnergy = rhs.m_ambiguousHitMinUnaccountedEnergy;
+    m_ambiguousHitMaxUnaccountedEnergy = rhs.m_ambiguousHitMaxUnaccountedEnergy;
+    m_ambiguousHitShowerEnergyRatioU = rhs.m_ambiguousHitShowerEnergyRatioU;
+    m_ambiguousHitShowerEnergyRatioV = rhs.m_ambiguousHitShowerEnergyRatioV;
+    m_ambiguousHitShowerEnergyRatioW = rhs.m_ambiguousHitShowerEnergyRatioW;
+    m_ambiguousHitMinShowerEnergyRatio = rhs.m_ambiguousHitMinShowerEnergyRatio;
+    m_ambiguousHitMaxShowerEnergyRatio = rhs.m_ambiguousHitMaxShowerEnergyRatio;
+
+    return *this;
+}       
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArConnectionPathwayHelper::FillElectronTreeVariables(pandora::Algorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
-    const ElectronProtoShower &protoShowerU, const ElectronProtoShower &protoShowerV, const ElectronProtoShower &protoShowerW, const CartesianVector &nuVertexPosition, 
+    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const CartesianVector &nuVertexPosition, 
     const CaloHitList *const pCaloHitListU, const CaloHitList *const pCaloHitListV, const CaloHitList *const pCaloHitListW,
     const LArConnectionPathwayHelper::Consistency &consistency, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
 {
@@ -119,10 +357,18 @@ void LArConnectionPathwayHelper::FillElectronTreeVariables(pandora::Algorithm *c
         minShowerStart3D, middleShowerStart3D, maxShowerStart3D))
     {
         /////////////////////////////////
-        //std::cout << "COULD NOT FIND ANY SHOWER VERTICES!" << std::endl;
+        std::cout << "COULD NOT FIND ANY SHOWER VERTICES!" << std::endl;
         /////////////////////////////////
         return;
     }
+
+    electronTreeVariables.m_showerStartX = minShowerStart3D.GetX();
+    electronTreeVariables.m_showerStartY = minShowerStart3D.GetY();
+    electronTreeVariables.m_showerStartZ = minShowerStart3D.GetZ();
+
+    std::cout << "electronTreeVariables.m_showerStartX: " << electronTreeVariables.m_showerStartX << std::endl;
+    std::cout << "electronTreeVariables.m_showerStartY: " << electronTreeVariables.m_showerStartY << std::endl;
+    std::cout << "electronTreeVariables.m_showerStartZ: " << electronTreeVariables.m_showerStartZ << std::endl;
 
     /////////////////////////////////
     /*
@@ -170,7 +416,7 @@ void LArConnectionPathwayHelper::FillElectronTreeVariables(pandora::Algorithm *c
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArConnectionPathwayHelper::FillAmbiguousHitVariables(pandora::Algorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
-    const ElectronProtoShower &protoShowerU, const ElectronProtoShower &protoShowerV, const ElectronProtoShower &protoShowerW, const CartesianVector &nuVertexPosition,
+    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const CartesianVector &nuVertexPosition,
     CartesianVector &middleShowerStart3D, const CaloHitList *const pCaloHitListU, const CaloHitList *const pCaloHitListV, const CaloHitList *const pCaloHitListW,
     LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
 {
@@ -258,8 +504,13 @@ bool LArConnectionPathwayHelper::FillAmbiguousHitVariables(pandora::Algorithm *c
         if (!LArConnectionPathwayHelper::FindDirection3D(pAlgorithm, isDownstream, protoShowerU.m_connectionPathway.m_startPosition, protoShowerV.m_connectionPathway.m_startPosition,
             protoShowerW.m_connectionPathway.m_startPosition, nuVertexPosition, startDirectionU, startDirectionV, startDirectionW, connectionPathwayDirection3D))
         {
-            //std::cout << "CANT FIND A DIRECTION FOR THE START OF THE CONNECTION PATHWAY" << std::endl;
-            return false;
+            if (!LArConnectionPathwayHelper::FindDirection3D(pAlgorithm, isDownstream, protoShowerU.m_connectionPathway.m_startPosition, protoShowerV.m_connectionPathway.m_startPosition,
+                protoShowerW.m_connectionPathway.m_startPosition, nuVertexPosition, protoShowerU.m_connectionPathway.m_startDirection, protoShowerV.m_connectionPathway.m_startDirection, 
+                protoShowerW.m_connectionPathway.m_startDirection, connectionPathwayDirection3D))
+            {
+                //std::cout << "CANT FIND A DIRECTION FOR THE START OF THE CONNECTION PATHWAY" << std::endl;
+                return false;
+            }
         }
 
         bool found(false);
@@ -347,7 +598,7 @@ bool LArConnectionPathwayHelper::FillAmbiguousHitVariables(pandora::Algorithm *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::GetViewAmbiguousHitVariables(pandora::Algorithm *const pAlgorithm, const ElectronProtoShower &protoShower, 
+bool LArConnectionPathwayHelper::GetViewAmbiguousHitVariables(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
     const HitType hitType, const CartesianVector &nuVertexPosition, const CartesianVector &connectionPathwayDirection3D,
     const CaloHitList *const pCaloHitList, float &unaccountedHitEnergy, float &showerEnergyRatio)
 {
@@ -441,10 +692,10 @@ bool LArConnectionPathwayHelper::GetViewAmbiguousHitVariables(pandora::Algorithm
     // But we can make sure that we only consider a certain length of true spine (lets say 5cm)
     // Pick this to avoid going into the shower i.e. hopefully shower dedx will be a bit constant
 
-    const CartesianVector seedPoint3D(nuVertexPosition + (connectionPathwayDirection3D * 5.f));
+    const CartesianVector seedPoint3D(nuVertexPosition + (connectionPathwayDirection3D * 3.f));
     const CartesianVector seedPoint(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), seedPoint3D, hitType));
-    const CartesianVector startDirection(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), connectionPathwayDirection3D, hitType));
-    const float lRange(startDirection.GetDotProduct(seedPoint - projectedNuVertex));
+    const CartesianVector startDirection((seedPoint - projectedNuVertex).GetUnitVector());
+    const float lRange((seedPoint - projectedNuVertex).GetMagnitude());
 
     // Need to find max start position...
     float ambiguousHitEnergyMean(0.f);
@@ -570,14 +821,19 @@ CaloHitList LArConnectionPathwayHelper::FindAmbiguousContinuousSpine(const CaloH
 
                 if (LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), connectedHitList) < 1.f)
                 {
-                    found = true;
-                    connectedHitList.push_back(pCaloHit);
+                    // to avoid ends of tracks
+                    if (static_cast<float>(connectedHitList.size()) < static_cast<float>(caloHitVector.size() * 0.8f))
+                    {
+                        found = true;
+                        connectedHitList.push_back(pCaloHit);
+                    }
+
                     break;
                 }
             }
         }
 
-        if ((connectedHitList.size() >= 2) || (connectedHitList.size() == caloHitVector.size()))
+        if (connectedHitList.size() >= 2)
         {
             continuousHitList.insert(continuousHitList.begin(), connectedHitList.begin(), connectedHitList.end());
             break;
@@ -588,11 +844,54 @@ CaloHitList LArConnectionPathwayHelper::FindAmbiguousContinuousSpine(const CaloH
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// ALSO ADD DISTANCE FROM NU VERTEX
 
 bool LArConnectionPathwayHelper::FillInitialRegionVariables(pandora::Algorithm *const pAlgorithm, const CartesianVector &nuVertexPosition, 
     const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, 
     CartesianVector &middleShowerStart3D, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
 {
+    float initialGapSizeU(-10.f), maxGapSizeU(-10.f), maxProjectedGapSizeU(-10.f), hitLineDensityU(-10.f);
+
+    LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pAlgorithm, nuVertexPosition, protoShowerU, TPC_VIEW_U, initialGapSizeU, maxGapSizeU, 
+        maxProjectedGapSizeU, hitLineDensityU);
+
+    float initialGapSizeV(-10.f), maxGapSizeV(-10.f), maxProjectedGapSizeV(-10.f), hitLineDensityV(-10.f);
+
+    LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pAlgorithm, nuVertexPosition, protoShowerV, TPC_VIEW_V, initialGapSizeV, maxGapSizeV, 
+        maxProjectedGapSizeV, hitLineDensityV);
+
+    float initialGapSizeW(-10.f), maxGapSizeW(-10.f), maxProjectedGapSizeW(-10.f), hitLineDensityW(-10.f);
+
+    LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pAlgorithm, nuVertexPosition, protoShowerW, TPC_VIEW_W, initialGapSizeW, maxGapSizeW, 
+        maxProjectedGapSizeW, hitLineDensityW);
+
+    float minInitialGapSize(-10.f), middleInitialGapSize(-10.f), maxInitialGapSize(-10.f);
+    float minLargestGapSize(-10.f), middleLargestGapSize(-10.f), maxLargestGapSize(-10.f);
+    float minLargestProjectedGapSize(-10.f), middleLargestProjectedGapSize(-10.f), maxLargestProjectedGapSize(-10.f);
+    float minHitLineDensity(-10.f), middleHitLineDensity(-10.f), maxHitLineDensity(-10.f);
+
+    LArConnectionPathwayHelper::GetMinMiddleMax(initialGapSizeU, initialGapSizeV, initialGapSizeW, minInitialGapSize, middleInitialGapSize, maxInitialGapSize);
+    LArConnectionPathwayHelper::GetMinMiddleMax(maxGapSizeU, maxGapSizeV, maxGapSizeW, minLargestGapSize, middleLargestGapSize, maxLargestGapSize);
+    LArConnectionPathwayHelper::GetMinMiddleMax(maxProjectedGapSizeU, maxProjectedGapSizeV, maxProjectedGapSizeW, minLargestProjectedGapSize, middleLargestProjectedGapSize, maxLargestProjectedGapSize);
+    LArConnectionPathwayHelper::GetMinMiddleMax(hitLineDensityU, hitLineDensityV, hitLineDensityW, minHitLineDensity, middleHitLineDensity, maxHitLineDensity);
+
+    electronTreeVariables.m_initialGapSizeW = initialGapSizeW;
+    electronTreeVariables.m_minInitialGapSize = minInitialGapSize;
+    electronTreeVariables.m_middleInitialGapSize = middleInitialGapSize;
+    electronTreeVariables.m_maxInitialGapSize = std::min(maxInitialGapSize, 4.f);
+    electronTreeVariables.m_largestGapSizeW = maxGapSizeW;
+    electronTreeVariables.m_minLargestGapSize = minLargestGapSize;
+    electronTreeVariables.m_middleLargestGapSize = middleLargestGapSize;
+    electronTreeVariables.m_maxLargestGapSize = maxLargestGapSize;
+    electronTreeVariables.m_largestProjectedGapSizeW = maxProjectedGapSizeW;
+    electronTreeVariables.m_minLargestProjectedGapSize = std::min(minLargestProjectedGapSize, 2.f);
+    electronTreeVariables.m_middleLargestProjectedGapSize = middleLargestProjectedGapSize;
+    electronTreeVariables.m_maxLargestProjectedGapSize = maxLargestProjectedGapSize;
+    electronTreeVariables.m_hitLineDensityW = hitLineDensityW;
+    electronTreeVariables.m_minHitLineDensity = minHitLineDensity;
+    electronTreeVariables.m_middleHitLineDensity = middleHitLineDensity;
+    electronTreeVariables.m_maxHitLineDensity = maxHitLineDensity;
+
     const bool isDownstream(middleShowerStart3D.GetZ() > nuVertexPosition.GetZ());
 
     CartesianPointVector spinePositionsU, spinePositionsV, spinePositionsW;
@@ -613,17 +912,24 @@ bool LArConnectionPathwayHelper::FillInitialRegionVariables(pandora::Algorithm *
         const TwoDSlidingFitResult spineFitV(&spinePositionsV, 20, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
         const TwoDSlidingFitResult spineFitW(&spinePositionsW, 20, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
 
-        const CartesianVector &startDirectionU(isDownstream ? spineFitU.GetGlobalMinLayerDirection() : spineFitU.GetGlobalMaxLayerDirection() * (-1.f));
-        const CartesianVector &startDirectionV(isDownstream ? spineFitV.GetGlobalMinLayerDirection() : spineFitV.GetGlobalMaxLayerDirection() * (-1.f));
-        const CartesianVector &startDirectionW(isDownstream ? spineFitW.GetGlobalMinLayerDirection() : spineFitW.GetGlobalMaxLayerDirection() * (-1.f));
+        CartesianVector startDirectionU(isDownstream ? spineFitU.GetGlobalMinLayerDirection() : spineFitU.GetGlobalMaxLayerDirection() * (-1.f));
+        CartesianVector startDirectionV(isDownstream ? spineFitV.GetGlobalMinLayerDirection() : spineFitV.GetGlobalMaxLayerDirection() * (-1.f));
+        CartesianVector startDirectionW(isDownstream ? spineFitW.GetGlobalMinLayerDirection() : spineFitW.GetGlobalMaxLayerDirection() * (-1.f));
 
         CartesianVector connectionPathwayDirection3D(0.f, 0.f, 0.f);
 
         if (!LArConnectionPathwayHelper::FindDirection3D(pAlgorithm, isDownstream, protoShowerU.m_connectionPathway.m_startPosition, protoShowerV.m_connectionPathway.m_startPosition,
             protoShowerW.m_connectionPathway.m_startPosition, nuVertexPosition, startDirectionU, startDirectionV, startDirectionW, connectionPathwayDirection3D))
         {
-            //std::cout << "CANT FIND A DIRECTION FOR THE START OF THE CONNECTION PATHWAY - I CAN USE OTHER VARIABLES PERHAPS????" << std::endl;
-            return false;
+                std::cout << "CANT FIND A DIRECTION FOR THE START OF THE CONNECTION PATHWAY - USING ANOTHER METHOD..." << std::endl;
+
+            if (!LArConnectionPathwayHelper::FindDirection3D(pAlgorithm, isDownstream, protoShowerU.m_connectionPathway.m_startPosition, protoShowerV.m_connectionPathway.m_startPosition,
+                protoShowerW.m_connectionPathway.m_startPosition, nuVertexPosition, protoShowerU.m_connectionPathway.m_startDirection, protoShowerV.m_connectionPathway.m_startDirection, 
+                protoShowerW.m_connectionPathway.m_startDirection, connectionPathwayDirection3D))
+            {
+                std::cout << "CANT FIND A DIRECTION FOR THE START OF THE CONNECTION PATHWAY" << std::endl;
+                return false;
+            }
         }
 
         const CartesianVector projectedNuVertexU(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_U));
@@ -644,10 +950,10 @@ bool LArConnectionPathwayHelper::FillInitialRegionVariables(pandora::Algorithm *
             longitudinalProjectionsW[startDirectionW.GetDotProduct(pCaloHit->GetPositionVector() - projectedNuVertexW)] = pCaloHit;
 
         // maybe we want to limit this? to be like 10cm?
-        const float length(std::min(10.f, (middleShowerStart3D - nuVertexPosition).GetMagnitude()));
+        const float length((middleShowerStart3D - nuVertexPosition).GetMagnitude());
 
         bool inPathway(true);
-        float stepSize(0.5f);
+        float stepSize(2.0f);
         unsigned int count(0);
 
         // search for the closest point
@@ -682,6 +988,45 @@ bool LArConnectionPathwayHelper::FillInitialRegionVariables(pandora::Algorithm *
             const float uUpperBoundaryProjectionL(startDirectionU.GetDotProduct(upperBoundaryU - projectedNuVertexU));
             const float vUpperBoundaryProjectionL(startDirectionV.GetDotProduct(upperBoundaryV - projectedNuVertexV));
             const float wUpperBoundaryProjectionL(startDirectionW.GetDotProduct(upperBoundaryW - projectedNuVertexW));
+
+            //////////////////////////////
+            /*
+            for (const auto &entryU : longitudinalProjectionsU)
+            {
+                if ((entryU.first > uLowerBoundaryProjectionL) && (entryU.first < uUpperBoundaryProjectionL))
+                {
+                    const CartesianVector &hitPosition(entryU.second->GetPositionVector());
+                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "hitPosition", GREEN, 2);
+                }
+            }
+
+            for (const auto &entryV : longitudinalProjectionsV)
+            {
+                if ((entryV.first > vLowerBoundaryProjectionL) && (entryV.first < vUpperBoundaryProjectionL))
+                {
+                    const CartesianVector &hitPosition(entryV.second->GetPositionVector());
+                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "hitPosition", GREEN, 2);
+                }
+            }
+
+            for (const auto &entryW : longitudinalProjectionsW)
+            {
+                if ((entryW.first > wLowerBoundaryProjectionL) && (entryW.first < wUpperBoundaryProjectionL))
+                {
+                    const CartesianVector &hitPosition(entryW.second->GetPositionVector());
+                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "hitPosition", GREEN, 2);
+                }
+            }
+
+            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &lowerBoundaryU, "lowerBoundaryU", BLACK, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &upperBoundaryU, "upperBoundaryU", BLACK, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &lowerBoundaryV, "lowerBoundaryV", BLACK, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &upperBoundaryV, "upperBoundaryV", BLACK, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &lowerBoundaryW, "lowerBoundaryW", BLACK, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &upperBoundaryW, "upperBoundaryW", BLACK, 2);
+            PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+            */
+            //////////////////////////////
 
             bool foundHit3D(false);
             float lowestL(std::numeric_limits<float>::max());
@@ -763,7 +1108,7 @@ bool LArConnectionPathwayHelper::FillInitialRegionVariables(pandora::Algorithm *
                 foundClosestPoint = true;
             }
 
-            if ((upperBoundary - nuVertexPosition).GetMagnitude() > length)
+            if (((upperBoundary - nuVertexPosition).GetMagnitude() > length) || (foundClosestPoint))
                 inPathway = false;
 
             ++count;
@@ -786,12 +1131,76 @@ bool LArConnectionPathwayHelper::FillInitialRegionVariables(pandora::Algorithm *
     }
     catch (...)
     {
+        //std::cout << "am i here??" << std::endl;
         return false;
     }
 
     return true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+// I think I can do this at the hit level and avoid outliers because i'm already following a fit?    
+bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorithm *const pAlgorithm, const CartesianVector &nuVertexPosition, const ProtoShower &protoShower, 
+    const HitType hitType, float &initialGapSize, float &maxGapSize, float &maxProjectedGapSize, float &hitLineDensity)
+{
+    // First look at longitudinal projections
+    ///////////////////////////////////////////////////////
+
+    maxProjectedGapSize = -10.f;
+
+    const CartesianVector projectedNuVertexPosition(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, hitType));
+    const CartesianVector &startDirection(protoShower.m_connectionPathway.m_startDirection);
+
+    FloatVector longitudinalProjections;
+
+    for (const CaloHit *const pCaloHit : protoShower.m_spineHitList)
+        longitudinalProjections.push_back(startDirection.GetDotProduct(pCaloHit->GetPositionVector() - projectedNuVertexPosition));
+
+    std::sort(longitudinalProjections.begin(), longitudinalProjections.end());
+
+    const long unsigned int nSampleHits(10);
+    const unsigned int nIterations(std::min(longitudinalProjections.size(), nSampleHits) - 1); // basically how many hits you want to consider
+
+    for (unsigned int i = 0; i < nIterations; ++i)
+        maxProjectedGapSize = std::max(std::fabs(longitudinalProjections[i] - longitudinalProjections[i + 1]), maxProjectedGapSize);
+
+    // average gap between hits
+    hitLineDensity = std::fabs(longitudinalProjections[nIterations] - longitudinalProjections.front()) / static_cast<float>(nIterations);
+
+    // Next look at absolute disance between hits
+    ///////////////////////////////////////////////////////
+
+    CaloHitVector spineHitVector(protoShower.m_spineHitList.begin(), protoShower.m_spineHitList.end());
+    std::sort(spineHitVector.begin(), spineHitVector.end(), LArConnectionPathwayHelper::SortByDistanceToPoint(projectedNuVertexPosition));
+
+    initialGapSize = (projectedNuVertexPosition - spineHitVector.front()->GetPositionVector()).GetMagnitude();
+
+    spineHitVector.resize(nIterations);
+
+    maxGapSize = -10.f;
+
+    for (unsigned int i = 0; i < spineHitVector.size(); ++i)
+    {
+        float closestDistance(std::numeric_limits<float>::max());
+
+        for (unsigned int j = 0; j < spineHitVector.size(); ++j)
+        {
+            if (i == j)
+                continue;
+
+            float distance((spineHitVector[i]->GetPositionVector() - spineHitVector[j]->GetPositionVector()).GetMagnitude());
+
+            if (distance < closestDistance)
+                closestDistance = distance;
+        }
+
+        if (closestDistance > maxGapSize)
+            maxGapSize = closestDistance;
+    }
+
+    return true;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -831,6 +1240,10 @@ bool LArConnectionPathwayHelper::FillPostShowerStartVariables(pandora::Algorithm
         const CartesianVector projectedShowerStartU(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), middleShowerStart3D, TPC_VIEW_U));
         const CartesianVector projectedShowerStartV(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), middleShowerStart3D, TPC_VIEW_V));
         const CartesianVector projectedShowerStartW(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), middleShowerStart3D, TPC_VIEW_W));
+
+        const CartesianVector projectedNuVertexU(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_U));
+        const CartesianVector projectedNuVertexV(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_V));
+        const CartesianVector projectedNuVertexW(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_W));
 
         // attempt to get a 3D direction...
         float lShowerStartU(0.f), lShowerStartV(0.f), lShowerStartW(0.f);
@@ -883,94 +1296,187 @@ bool LArConnectionPathwayHelper::FillPostShowerStartVariables(pandora::Algorithm
         spineFitV.GetGlobalDirection(gradientV, showerDirectionV);
         spineFitW.GetGlobalDirection(gradientW, showerDirectionW);
 
-        bool found(false);
-        int minNViewPostShowerHits(std::numeric_limits<int>::max()), maxNViewPostShowerHits(-std::numeric_limits<int>::max());
-        float minPostShowerStartViewScatterAngle(std::numeric_limits<float>::max()), maxPostShowerStartViewScatterAngle(-std::numeric_limits<float>::max());
+        int nHitsU(-10);
+        float scatterAngleU(-10.f), openingAngleU(-10.f), openingAngleAsymmetryU(-10.f), nuVertexHitAsymmetryU(-10.f), nuVertexEnergyAsymmetryU(-0.5f),
+            showerStartHitAsymmetryU(-10.f), showerStartEnergyAsymmetryU(-0.5f), nuVertexMeanRadialDistanceU(-10.f), nuVertexEnergyWeightedMeanRadialDistanceU(-10.f),
+            showerStartMeanRadialDistanceU(-10.f), showerStartEnergyWeightedMeanRadialDistanceU(-10.f), nuVertexMoliereRadiusU(-10.f), showerStartMoliereRadiusU(-10.f), 
+            positiveOpeningAngleU(-10.f), negativeOpeningAngleU(-10.f), showerApexLU(-9999.f), showerApexTU(-10.f), fitShowerStartLU(-10.f), fitShowerStartTU(-10.f), 
+            foundHitRatioU(-0.5f);
 
-        int nViewPostShowerHitsU(-10);
-        float postShowerStartViewScatterAngleU(-10.f);
+        LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pAlgorithm, protoShowerU.m_spineHitList, pShowerPfo, TPC_VIEW_U, isDownstream, projectedNuVertexU, 
+            projectedShowerStartU, showerDirectionU, startDirectionU, nHitsU, scatterAngleU, openingAngleU, openingAngleAsymmetryU, nuVertexHitAsymmetryU, nuVertexEnergyAsymmetryU, 
+            showerStartHitAsymmetryU, showerStartEnergyAsymmetryU, nuVertexMeanRadialDistanceU, nuVertexEnergyWeightedMeanRadialDistanceU, showerStartMeanRadialDistanceU, 
+            showerStartEnergyWeightedMeanRadialDistanceU, nuVertexMoliereRadiusU, showerStartMoliereRadiusU, positiveOpeningAngleU, negativeOpeningAngleU, 
+            showerApexLU, showerApexTU, fitShowerStartLU, fitShowerStartTU, foundHitRatioU);
 
-        if (LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pAlgorithm, pShowerPfo, TPC_VIEW_U, protoShowerU, isDownstream, projectedShowerStartU, showerDirectionU,
-            startDirectionU, nViewPostShowerHitsU, postShowerStartViewScatterAngleU))
-        {
-            found = true;
-            minNViewPostShowerHits = std::min(minNViewPostShowerHits, nViewPostShowerHitsU);
-            maxNViewPostShowerHits = std::max(maxNViewPostShowerHits, nViewPostShowerHitsU);
-            minPostShowerStartViewScatterAngle = std::min(minPostShowerStartViewScatterAngle, postShowerStartViewScatterAngleU);
-            maxPostShowerStartViewScatterAngle = std::max(maxPostShowerStartViewScatterAngle, postShowerStartViewScatterAngleU);
-        }
+        openingAngleU = std::max(positiveOpeningAngleU, negativeOpeningAngleU);
 
-        electronTreeVariables.m_postShowerStartNHitsU = nViewPostShowerHitsU;
-        //std::cout << "electronTreeVariables.m_postShowerStartNHitsU: " << electronTreeVariables.m_postShowerStartNHitsU << std::endl;
+        int nHitsV(-10);
+        float scatterAngleV(-10.f), openingAngleV(-10.f), openingAngleAsymmetryV(-10.f), nuVertexHitAsymmetryV(-10.f), nuVertexEnergyAsymmetryV(-0.5f),
+            showerStartHitAsymmetryV(-10.f), showerStartEnergyAsymmetryV(-0.5f), nuVertexMeanRadialDistanceV(-10.f), nuVertexEnergyWeightedMeanRadialDistanceV(-10.f),
+            showerStartMeanRadialDistanceV(-10.f), showerStartEnergyWeightedMeanRadialDistanceV(-10.f), nuVertexMoliereRadiusV(-10.f), showerStartMoliereRadiusV(-10.f),
+            positiveOpeningAngleV(-10.f), negativeOpeningAngleV(-10.f), showerApexLV(-9999.f), showerApexTV(-10.f), fitShowerStartLV(-10.f), fitShowerStartTV(-10.f),
+            foundHitRatioV(-0.5f);
 
-        electronTreeVariables.m_postShowerStartScatterAngleU = postShowerStartViewScatterAngleU;
-        //std::cout << "electronTreeVariables.m_postShowerStartViewScatterAngleU: " << electronTreeVariables.m_postShowerStartScatterAngleU << std::endl;
+        LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pAlgorithm, protoShowerV.m_spineHitList, pShowerPfo, TPC_VIEW_V, isDownstream, projectedNuVertexV, 
+            projectedShowerStartV, showerDirectionV, startDirectionV, nHitsV, scatterAngleV, openingAngleV, openingAngleAsymmetryV, nuVertexHitAsymmetryV, nuVertexEnergyAsymmetryV, 
+            showerStartHitAsymmetryV, showerStartEnergyAsymmetryV, nuVertexMeanRadialDistanceV, nuVertexEnergyWeightedMeanRadialDistanceV, showerStartMeanRadialDistanceV, 
+            showerStartEnergyWeightedMeanRadialDistanceV, nuVertexMoliereRadiusV, showerStartMoliereRadiusV, positiveOpeningAngleV, negativeOpeningAngleV, 
+            showerApexLV, showerApexTV, fitShowerStartLV, fitShowerStartTV, foundHitRatioV);
 
-        int nViewPostShowerHitsV(-10);
-        float postShowerStartViewScatterAngleV(-10.f);
+        openingAngleV = std::max(positiveOpeningAngleV, negativeOpeningAngleV);
 
-        if (LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pAlgorithm, pShowerPfo, TPC_VIEW_V, protoShowerV, isDownstream, projectedShowerStartV, showerDirectionV,
-            startDirectionV, nViewPostShowerHitsV, postShowerStartViewScatterAngleV))
-        {
-            found = true;
-            minNViewPostShowerHits = std::min(minNViewPostShowerHits, nViewPostShowerHitsV);
-            maxNViewPostShowerHits = std::max(maxNViewPostShowerHits, nViewPostShowerHitsV);
-            minPostShowerStartViewScatterAngle = std::min(minPostShowerStartViewScatterAngle, postShowerStartViewScatterAngleV);
-            maxPostShowerStartViewScatterAngle = std::max(maxPostShowerStartViewScatterAngle, postShowerStartViewScatterAngleV);
-        }
+        int nHitsW(-10);
+        float scatterAngleW(-10.f), openingAngleW(-10.f), openingAngleAsymmetryW(-10.f), nuVertexHitAsymmetryW(-10.f), nuVertexEnergyAsymmetryW(-0.5f),
+            showerStartHitAsymmetryW(-10.f), showerStartEnergyAsymmetryW(-0.5f), nuVertexMeanRadialDistanceW(-10.f), nuVertexEnergyWeightedMeanRadialDistanceW(-10.f),
+            showerStartMeanRadialDistanceW(-10.f), showerStartEnergyWeightedMeanRadialDistanceW(-10.f), nuVertexMoliereRadiusW(-10.f), showerStartMoliereRadiusW(-10.f),
+            positiveOpeningAngleW(-10.f), negativeOpeningAngleW(-10.f), showerApexLW(-9999.f), showerApexTW(-10.f), fitShowerStartLW(-10.f), fitShowerStartTW(-10.f),
+            foundHitRatioW(-0.5f);
 
-        electronTreeVariables.m_postShowerStartNHitsV = nViewPostShowerHitsV;
-        //std::cout << "electronTreeVariables.m_postShowerStartNHitsV: " << electronTreeVariables.m_postShowerStartNHitsV << std::endl;
+        LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pAlgorithm, protoShowerW.m_spineHitList, pShowerPfo, TPC_VIEW_W, isDownstream, projectedNuVertexW, 
+            projectedShowerStartW, showerDirectionW, startDirectionW, nHitsW, scatterAngleW, openingAngleW, openingAngleAsymmetryW, nuVertexHitAsymmetryW, nuVertexEnergyAsymmetryW, 
+            showerStartHitAsymmetryW, showerStartEnergyAsymmetryW, nuVertexMeanRadialDistanceW, nuVertexEnergyWeightedMeanRadialDistanceW, showerStartMeanRadialDistanceW, 
+            showerStartEnergyWeightedMeanRadialDistanceW, nuVertexMoliereRadiusW, showerStartMoliereRadiusW, positiveOpeningAngleW, negativeOpeningAngleW, 
+            showerApexLW, showerApexTW, fitShowerStartLW, fitShowerStartTW, foundHitRatioW);
 
-        electronTreeVariables.m_postShowerStartScatterAngleV = postShowerStartViewScatterAngleV;
-        //std::cout << "electronTreeVariables.m_postShowerStartViewScatterAngleV: " << electronTreeVariables.m_postShowerStartScatterAngleV << std::endl;
+        openingAngleW = std::max(positiveOpeningAngleW, negativeOpeningAngleW);
 
-        int nViewPostShowerHitsW(-10);
-        float postShowerStartViewScatterAngleW(-10.f);
+        float minNHits(-10.f), middleNHits(-10.f), maxNHits(-10.f);
+        float minScatterAngle(-10.f), middleScatterAngle(-10.f), maxScatterAngle(-10.f);
+        float minOpeningAngle(-10.f), middleOpeningAngle(-10.f), maxOpeningAngle(-10.f);
+        float minOpeningAngleAsymmetry(-10.f), middleOpeningAngleAsymmetry(-10.f), maxOpeningAngleAsymmetry(-10.f);
+        float minNuVertexHitAsymmetry(-10.f), middleNuVertexHitAsymmetry(-10.f), maxNuVertexHitAsymmetry(-10.f);
+        float minNuVertexEnergyAsymmetry(-0.5f), middleNuVertexEnergyAsymmetry(-0.5f), maxNuVertexEnergyAsymmetry(-0.5f);
+        float minShowerStartHitAsymmetry(-10.f), middleShowerStartHitAsymmetry(-10.f), maxShowerStartHitAsymmetry(-10.f);
+        float minShowerStartEnergyAsymmetry(-0.5f), middleShowerStartEnergyAsymmetry(-0.5f), maxShowerStartEnergyAsymmetry(-0.5f);
+        float minNuVertexMeanRadialDistance(-10.f), middleNuVertexMeanRadialDistance(-10.f), maxNuVertexMeanRadialDistance(-10.f);
+        float minNuVertexEnergyWeightedMeanRadialDistance(-10.f), middleNuVertexEnergyWeightedMeanRadialDistance(-10.f), maxNuVertexEnergyWeightedMeanRadialDistance(-10.f);
+        float minShowerStartMeanRadialDistance(-10.f), middleShowerStartMeanRadialDistance(-10.f), maxShowerStartMeanRadialDistance(-10.f);
+        float minShowerStartEnergyWeightedMeanRadialDistance(-10.f), middleShowerStartEnergyWeightedMeanRadialDistance(-10.f), maxShowerStartEnergyWeightedMeanRadialDistance(-10.f);
+        float minNuVertexMoliereRadius(-10.f), middleNuVertexMoliereRadius(-10.f), maxNuVertexMoliereRadius(-10.f);
+        float minShowerStartMoliereRadius(-10.f), middleShowerStartMoliereRadius(-10.f), maxShowerStartMoliereRadius(-10.f);
+        float minShowerApexL(-9999.f), middleShowerApexL(-9999.f), maxShowerApexL(-9999.f);
+        float minShowerApexT(-10.f), middleShowerApexT(-10.f), maxShowerApexT(-10.f);
+        float minFoundHitRatio(-0.5f), middleFoundHitRatio(-0.5), maxFoundHitRatio(-0.5f);
 
-        if (LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pAlgorithm, pShowerPfo, TPC_VIEW_W, protoShowerW, isDownstream, projectedShowerStartW, showerDirectionW,
-            startDirectionW, nViewPostShowerHitsW, postShowerStartViewScatterAngleW))
-        {
-            found = true;
-            minNViewPostShowerHits = std::min(minNViewPostShowerHits, nViewPostShowerHitsW);
-            maxNViewPostShowerHits = std::max(maxNViewPostShowerHits, nViewPostShowerHitsW);
-            minPostShowerStartViewScatterAngle = std::min(minPostShowerStartViewScatterAngle, postShowerStartViewScatterAngleW);
-            maxPostShowerStartViewScatterAngle = std::max(maxPostShowerStartViewScatterAngle, postShowerStartViewScatterAngleW);
-        }
+        LArConnectionPathwayHelper::GetMinMiddleMax(nHitsU, nHitsV, nHitsW, minNHits, middleNHits, maxNHits);
+        LArConnectionPathwayHelper::GetMinMiddleMax(scatterAngleU, scatterAngleV, scatterAngleW, minScatterAngle, middleScatterAngle, maxScatterAngle);
+        LArConnectionPathwayHelper::GetMinMiddleMax(openingAngleU, openingAngleV, openingAngleW, minOpeningAngle, middleOpeningAngle, maxOpeningAngle);
+        LArConnectionPathwayHelper::GetMinMiddleMax(openingAngleAsymmetryU, openingAngleAsymmetryV, openingAngleAsymmetryW, minOpeningAngleAsymmetry, 
+            middleOpeningAngleAsymmetry, maxOpeningAngleAsymmetry);
+        LArConnectionPathwayHelper::GetMinMiddleMax(nuVertexHitAsymmetryU, nuVertexHitAsymmetryV, nuVertexHitAsymmetryW, minNuVertexHitAsymmetry, 
+            middleNuVertexHitAsymmetry, maxNuVertexHitAsymmetry);
+        LArConnectionPathwayHelper::GetMinMiddleMax(nuVertexEnergyAsymmetryU, nuVertexEnergyAsymmetryV, nuVertexEnergyAsymmetryW, minNuVertexEnergyAsymmetry, 
+            middleNuVertexEnergyAsymmetry, maxNuVertexEnergyAsymmetry);
+        LArConnectionPathwayHelper::GetMinMiddleMax(showerStartHitAsymmetryU, showerStartHitAsymmetryV, showerStartHitAsymmetryW, minShowerStartHitAsymmetry, 
+            middleShowerStartHitAsymmetry, maxShowerStartHitAsymmetry);
+        LArConnectionPathwayHelper::GetMinMiddleMax(showerStartEnergyAsymmetryU, showerStartEnergyAsymmetryV, showerStartEnergyAsymmetryW, minShowerStartEnergyAsymmetry, 
+            middleShowerStartEnergyAsymmetry, maxShowerStartEnergyAsymmetry);
+        LArConnectionPathwayHelper::GetMinMiddleMax(nuVertexMeanRadialDistanceU, nuVertexMeanRadialDistanceV, nuVertexMeanRadialDistanceW, minNuVertexMeanRadialDistance, 
+            middleNuVertexMeanRadialDistance, maxNuVertexMeanRadialDistance);
+        LArConnectionPathwayHelper::GetMinMiddleMax(nuVertexEnergyWeightedMeanRadialDistanceU, nuVertexEnergyWeightedMeanRadialDistanceV, nuVertexEnergyWeightedMeanRadialDistanceW, 
+            minNuVertexEnergyWeightedMeanRadialDistance, middleNuVertexEnergyWeightedMeanRadialDistance, maxNuVertexEnergyWeightedMeanRadialDistance);
+        LArConnectionPathwayHelper::GetMinMiddleMax(showerStartMeanRadialDistanceU, showerStartMeanRadialDistanceV, showerStartMeanRadialDistanceW, minShowerStartMeanRadialDistance, 
+            middleShowerStartMeanRadialDistance, maxShowerStartMeanRadialDistance);
+        LArConnectionPathwayHelper::GetMinMiddleMax(showerStartEnergyWeightedMeanRadialDistanceU, showerStartEnergyWeightedMeanRadialDistanceV, showerStartEnergyWeightedMeanRadialDistanceW, 
+            minShowerStartEnergyWeightedMeanRadialDistance, middleShowerStartEnergyWeightedMeanRadialDistance, maxShowerStartEnergyWeightedMeanRadialDistance);
+        LArConnectionPathwayHelper::GetMinMiddleMax(nuVertexMoliereRadiusU, nuVertexMoliereRadiusV, nuVertexMoliereRadiusW, minNuVertexMoliereRadius, 
+            middleNuVertexMoliereRadius, maxNuVertexMoliereRadius);
+        LArConnectionPathwayHelper::GetMinMiddleMax(showerStartMoliereRadiusU, showerStartMoliereRadiusV, showerStartMoliereRadiusW, minShowerStartMoliereRadius, 
+            middleShowerStartMoliereRadius, maxShowerStartMoliereRadius);
+        LArConnectionPathwayHelper::GetMinMiddleMax(showerApexLU, showerApexLV, showerApexLW, minShowerApexL, middleShowerApexL, maxShowerApexL);
+        LArConnectionPathwayHelper::GetMinMiddleMax(showerApexTU, showerApexTV, showerApexTW, minShowerApexT, middleShowerApexT, maxShowerApexT);
+        LArConnectionPathwayHelper::GetMinMiddleMax(foundHitRatioU, foundHitRatioV, foundHitRatioW, minFoundHitRatio, middleFoundHitRatio, maxFoundHitRatio);
 
-        electronTreeVariables.m_postShowerStartNHitsW = nViewPostShowerHitsW;
-        //std::cout << "electronTreeVariables.m_postShowerStartNHitsW: " << electronTreeVariables.m_postShowerStartNHitsW << std::endl;
+        electronTreeVariables.m_postShowerStartNHitsW = nHitsW;
+        electronTreeVariables.m_minNPostShowerStartHits = minNHits;
+        electronTreeVariables.m_middleNPostShowerStartHits = middleNHits;
+        electronTreeVariables.m_maxNPostShowerStartHits = std::min(maxNHits, 2000.f);
+        electronTreeVariables.m_postShowerStartScatterAngleW = scatterAngleW;
+        electronTreeVariables.m_minPostShowerStartScatterAngle = minScatterAngle;
+        electronTreeVariables.m_middlePostShowerStartScatterAngle = middleScatterAngle;
+        electronTreeVariables.m_maxPostShowerStartScatterAngle = std::min(maxScatterAngle, 40.f);
+        electronTreeVariables.m_postShowerStartOpeningAngleW = std::min(openingAngleW, 20.f);
+        electronTreeVariables.m_minPostShowerStartOpeningAngle = std::min(minOpeningAngle, 20.f);
+        electronTreeVariables.m_middlePostShowerStartOpeningAngle = std::min(middleOpeningAngle, 20.f);
+        electronTreeVariables.m_maxPostShowerStartOpeningAngle = std::min(maxOpeningAngle, 20.f);
+        electronTreeVariables.m_postShowerStartOpeningAngleAsymmetryW = openingAngleAsymmetryW;
+        electronTreeVariables.m_minPostShowerStartOpeningAngleAsymmetry = minOpeningAngleAsymmetry;
+        electronTreeVariables.m_middlePostShowerStartOpeningAngleAsymmetry = middleOpeningAngleAsymmetry;
+        electronTreeVariables.m_maxPostShowerStartOpeningAngleAsymmetry = maxOpeningAngleAsymmetry;
+        electronTreeVariables.m_postShowerStartNuVertexHitAsymmetryW = nuVertexHitAsymmetryW;
+        electronTreeVariables.m_minPostShowerStartNuVertexHitAsymmetry = minNuVertexHitAsymmetry;
+        electronTreeVariables.m_middlePostShowerStartNuVertexHitAsymmetry = middleNuVertexHitAsymmetry;
+        electronTreeVariables.m_maxPostShowerStartNuVertexHitAsymmetry = maxNuVertexHitAsymmetry;
+        electronTreeVariables.m_postShowerStartNuVertexEnergyAsymmetryW = nuVertexEnergyAsymmetryW;
+        electronTreeVariables.m_minPostShowerStartNuVertexEnergyAsymmetry = minNuVertexEnergyAsymmetry;
+        electronTreeVariables.m_middlePostShowerStartNuVertexEnergyAsymmetry = middleNuVertexEnergyAsymmetry;
+        electronTreeVariables.m_maxPostShowerStartNuVertexEnergyAsymmetry = maxNuVertexEnergyAsymmetry;
+        electronTreeVariables.m_postShowerStartShowerStartHitAsymmetryW = showerStartHitAsymmetryW;
+        electronTreeVariables.m_minPostShowerStartShowerStartHitAsymmetry = minShowerStartHitAsymmetry;
+        electronTreeVariables.m_middlePostShowerStartShowerStartHitAsymmetry = middleShowerStartHitAsymmetry;
+        electronTreeVariables.m_maxPostShowerStartShowerStartHitAsymmetry = maxShowerStartHitAsymmetry;
+        electronTreeVariables.m_postShowerStartShowerStartEnergyAsymmetryW = showerStartEnergyAsymmetryW;
+        electronTreeVariables.m_minPostShowerStartShowerStartEnergyAsymmetry = minShowerStartEnergyAsymmetry;
+        electronTreeVariables.m_middlePostShowerStartShowerStartEnergyAsymmetry = middleShowerStartEnergyAsymmetry;
+        electronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry = maxShowerStartEnergyAsymmetry;
+        electronTreeVariables.m_postShowerStartNuVertexMeanRadialDistanceW = nuVertexMeanRadialDistanceW;
+        electronTreeVariables.m_minPostShowerStartNuVertexMeanRadialDistance = minNuVertexMeanRadialDistance;
+        electronTreeVariables.m_middlePostShowerStartNuVertexMeanRadialDistance = middleNuVertexMeanRadialDistance;
+        electronTreeVariables.m_maxPostShowerStartNuVertexMeanRadialDistance = maxNuVertexMeanRadialDistance;
+        electronTreeVariables.m_postShowerStartNuVertexEnergyWeightedMeanRadialDistanceW = nuVertexEnergyWeightedMeanRadialDistanceW;
+        electronTreeVariables.m_minPostShowerStartNuVertexEnergyWeightedMeanRadialDistance = minNuVertexEnergyWeightedMeanRadialDistance;
+        electronTreeVariables.m_middlePostShowerStartNuVertexEnergyWeightedMeanRadialDistance = middleNuVertexEnergyWeightedMeanRadialDistance;
+        electronTreeVariables.m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance = std::min(maxNuVertexEnergyWeightedMeanRadialDistance, 20.f);
+        electronTreeVariables.m_postShowerStartShowerStartMeanRadialDistanceW = showerStartMeanRadialDistanceW;
+        electronTreeVariables.m_minPostShowerStartShowerStartMeanRadialDistance = minShowerStartMeanRadialDistance;
+        electronTreeVariables.m_middlePostShowerStartShowerStartMeanRadialDistance = middleShowerStartMeanRadialDistance;
+        electronTreeVariables.m_maxPostShowerStartShowerStartMeanRadialDistance = maxShowerStartMeanRadialDistance;
+        electronTreeVariables.m_postShowerStartShowerStartEnergyWeightedMeanRadialDistanceW = showerStartEnergyWeightedMeanRadialDistanceW;
+        electronTreeVariables.m_minPostShowerStartShowerStartEnergyWeightedMeanRadialDistance = minShowerStartEnergyWeightedMeanRadialDistance;
+        electronTreeVariables.m_middlePostShowerStartShowerStartEnergyWeightedMeanRadialDistance = middleShowerStartEnergyWeightedMeanRadialDistance;
+        electronTreeVariables.m_maxPostShowerStartShowerStartEnergyWeightedMeanRadialDistance = maxShowerStartEnergyWeightedMeanRadialDistance;
+        electronTreeVariables.m_postShowerStartNuVertexMoliereRadiusW = nuVertexMoliereRadiusW;
+        electronTreeVariables.m_minPostShowerStartNuVertexMoliereRadius = minNuVertexMoliereRadius;
+        electronTreeVariables.m_middlePostShowerStartNuVertexMoliereRadius = middleNuVertexMoliereRadius;
+        electronTreeVariables.m_maxPostShowerStartNuVertexMoliereRadius = maxNuVertexMoliereRadius;
+        electronTreeVariables.m_postShowerStartShowerStartMoliereRadiusW = showerStartMoliereRadiusW;
+        electronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius = std::min(minShowerStartMoliereRadius, 10.f);
+        electronTreeVariables.m_middlePostShowerStartShowerStartMoliereRadius = middleShowerStartMoliereRadius;
+        electronTreeVariables.m_maxPostShowerStartShowerStartMoliereRadius = maxShowerStartMoliereRadius;
+        electronTreeVariables.m_positiveOpeningAngleW = positiveOpeningAngleW;
+        electronTreeVariables.m_negativeOpeningAngleW = negativeOpeningAngleW;
+        //electronTreeVariables.m_maxOpeningAngleW = std::min(std::max(positiveOpeningAngleW, negativeOpeningAngleW), 20.f);
+        electronTreeVariables.m_showerApexLW = showerApexLW;
+        electronTreeVariables.m_minShowerApexL = minShowerApexL;
+        electronTreeVariables.m_middleShowerApexL = middleShowerApexL;
+        electronTreeVariables.m_maxShowerApexL = maxShowerApexL;
+        electronTreeVariables.m_showerApexTW = showerApexTW;
+        electronTreeVariables.m_minShowerApexT = minShowerApexT;
+        electronTreeVariables.m_middleShowerApexT = middleShowerApexT;
+        electronTreeVariables.m_maxShowerApexT = maxShowerApexT;
+        electronTreeVariables.m_foundHitRatioW = foundHitRatioW;
+        electronTreeVariables.m_minFoundHitRatio = minFoundHitRatio;
+        electronTreeVariables.m_middleFoundHitRatio = middleFoundHitRatio;
+        electronTreeVariables.m_maxFoundHitRatio = std::min(maxFoundHitRatio, 1.5f);
+        electronTreeVariables.m_fitShowerStartLW = fitShowerStartLW;
+        electronTreeVariables.m_fitShowerStartTW = fitShowerStartTW;
 
-        electronTreeVariables.m_postShowerStartScatterAngleW = postShowerStartViewScatterAngleW;
-        //std::cout << "electronTreeVariables.m_postShowerStartViewScatterAngleW: " << electronTreeVariables.m_postShowerStartScatterAngleW << std::endl;
-
-        if (!found)
-        {
-            minNViewPostShowerHits = -10.f;
-            maxNViewPostShowerHits = -10.f;
-            minPostShowerStartViewScatterAngle = -10.f;
-            maxPostShowerStartViewScatterAngle = -10.f;
-        }
-
-        electronTreeVariables.m_minNPostShowerStartHits = minNViewPostShowerHits;
-        //std::cout << "electronTreeVariables.m_minNPostShowerStartHit: " << electronTreeVariables.m_minNPostShowerStartHits << std::endl;
-
-        electronTreeVariables.m_maxNPostShowerStartHits = maxNViewPostShowerHits;
-        //std::cout << "electronTreeVariables.m_maxNPostShowerStartHit: " << electronTreeVariables.m_maxNPostShowerStartHits << std::endl;
-
-        electronTreeVariables.m_minPostShowerStartScatterAngle = minPostShowerStartViewScatterAngle;
-        //std::cout << "electronTreeVariables.m_minPostShowerStartScatterAngle: " << electronTreeVariables.m_minPostShowerStartScatterAngle << std::endl;
-
-        electronTreeVariables.m_maxPostShowerStartScatterAngle = maxPostShowerStartViewScatterAngle;
-        //std::cout << "electronTreeVariables.m_maxPostShowerStartScatterAngle: " << electronTreeVariables.m_maxPostShowerStartScatterAngle << std::endl;
+        // Now do 3D shower variables....
+        //////////////////////////////////////////////////
 
         CartesianVector connectionPathwayDirection3D(0.f, 0.f, 0.f);
 
         if (!LArConnectionPathwayHelper::FindDirection3D(pAlgorithm, isDownstream, protoShowerU.m_connectionPathway.m_startPosition, protoShowerV.m_connectionPathway.m_startPosition,
             protoShowerW.m_connectionPathway.m_startPosition, nuVertexPosition, startDirectionU, startDirectionV, startDirectionW, connectionPathwayDirection3D))
         {
-            //std::cout << "CANT FIND A DIRECTION FOR THE START OF THE CONNECTION PATHWAY" << std::endl;
-            return false;
+            if (!LArConnectionPathwayHelper::FindDirection3D(pAlgorithm, isDownstream, protoShowerU.m_connectionPathway.m_startPosition, protoShowerV.m_connectionPathway.m_startPosition,
+                protoShowerW.m_connectionPathway.m_startPosition, nuVertexPosition, protoShowerU.m_connectionPathway.m_startDirection, protoShowerV.m_connectionPathway.m_startDirection, 
+                protoShowerW.m_connectionPathway.m_startDirection, connectionPathwayDirection3D))
+            {
+                //std::cout << "CANT FIND A DIRECTION FOR THE START OF THE CONNECTION PATHWAY" << std::endl;
+                return false;
+            }
         }
 
         ////////////////////////////////////
@@ -1022,17 +1528,6 @@ bool LArConnectionPathwayHelper::FillPostShowerStartVariables(pandora::Algorithm
             }
         }
 
-        ///////////////////////////                
-        /*
-        const CartesianVector start4(middleShowerStart3D - (postShowerStartDirection3D*1000.f));
-        const CartesianVector end4(middleShowerStart3D + (postShowerStartDirection3D*1000.f));
-        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &start4, &end4, "DIRECTION AXIS", VIOLET, 2, 2);
-
-        PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &postShowerHitList3D, "postShowerHitList3D", RED);
-        PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-        */
-        ///////////////////////////                
-
         int nPostShowerHits(postShowerHitList3D.size());
         electronTreeVariables.m_postShowerStartNHits = nPostShowerHits;
         //std::cout << "electronTreeVariables.m_postShowerStartNHits: " << electronTreeVariables.m_postShowerStartNHits << std::endl;
@@ -1080,157 +1575,93 @@ bool LArConnectionPathwayHelper::FillPostShowerStartVariables(pandora::Algorithm
         electronTreeVariables.m_postShowerStartScatterAngle = pathwayShowerAngle;
         //std::cout << "electronTreeVariables.m_postShowerStartScatterAngle: " << electronTreeVariables.m_postShowerStartScatterAngle << std::endl; 
  
-        // Me checking the coordinate system of the 3D sliding fit
+        try
+        {
+            const CartesianVector edgeDirectionAxis(fullSlidingFitResult3D.GetGlobalMinLayerDirection());
+            CartesianVector edgeOrthoAxis1(edgeDirectionAxis.GetCrossProduct(CartesianVector(1.f, 1.f, 1.f)).GetUnitVector());
+            const CartesianVector edgeOrthoAxis2(edgeDirectionAxis.GetCrossProduct(edgeOrthoAxis1).GetUnitVector());
 
-        ///////////////////////////        
-        /*
-        //std::cout << "axis direction from 3D: " << fullSlidingFitResult3D.GetAxisDirection() << std::endl;
-        //std::cout << "axis direction from first fit: " << fullSlidingFitResult3D.GetFirstFitResult().GetAxisDirection() << std::endl;
-        //std::cout << "ortho axis direction from first fit: " << fullSlidingFitResult3D.GetFirstFitResult().GetOrthoDirection() << std::endl;
-        //std::cout << "axis direction from second fit: " << fullSlidingFitResult3D.GetSecondFitResult().GetAxisDirection() << std::endl;
-        //std::cout << "ortho axis direction from second fit: " << fullSlidingFitResult3D.GetSecondFitResult().GetOrthoDirection() << std::endl;
+            std::map<int, float> positiveEdges, negativeEdges;
 
-        //std::cout << "axis intercept: " << fullSlidingFitResult3D.GetAxisIntercept() << std::endl;
-        //std::cout << "first axis intercept: " << fullSlidingFitResult3D.GetFirstFitResult().GetAxisIntercept() << std::endl;
-        //std::cout << "second axis intercept: " << fullSlidingFitResult3D.GetSecondFitResult().GetAxisIntercept() << std::endl;
+            for (const CaloHit *const pCaloHit : postShowerHitList3D)
+            {
+                const CartesianVector position(pCaloHit->GetPositionVector() - middleShowerStart3D);
 
-        //std::cout << "3D axis with first ortho: " << fullSlidingFitResult3D.GetAxisDirection().GetDotProduct(fullSlidingFitResult3D.GetFirstFitResult().GetOrthoDirection()) << std::endl;
-        //std::cout << "3D axis with second ortho: " << fullSlidingFitResult3D.GetAxisDirection().GetDotProduct(fullSlidingFitResult3D.GetSecondFitResult().GetOrthoDirection()) << std::endl;
+                const float thisT(edgeDirectionAxis.GetCrossProduct(position).GetMagnitude());
+                const float thisL(edgeDirectionAxis.GetDotProduct(position));
+                const float orthoL(edgeOrthoAxis1.GetDotProduct(position));
 
-        //std::cout << "RIGHT HANDED CHECK: " << fullSlidingFitResult3D.GetFirstFitResult().GetOrthoDirection().GetCrossProduct(fullSlidingFitResult3D.GetSecondFitResult().GetOrthoDirection()) 
-                  << std::endl;
-        */
-        ///////////////////////////        
+                std::map<int, float> &edgeMap(orthoL > 0.f ? positiveEdges : negativeEdges);
 
-        const CartesianVector directionAxis(fullSlidingFitResult3D.GetGlobalMinLayerDirection());
+                const int lIndex(std::floor(thisL / 2.f));
+
+                edgeMap[lIndex] = (edgeMap.find(lIndex) == edgeMap.end() ? thisT : std::max(edgeMap[lIndex] , thisT));;
+            }
+
+            CartesianPointVector positiveEdgePositions, negativeEdgePositions;
+
+            for (auto &entry : positiveEdges)
+                positiveEdgePositions.push_back(CartesianVector(entry.second, 0.f, entry.first));
+
+            for (auto &entry : negativeEdges)
+                negativeEdgePositions.push_back(CartesianVector(entry.second, 0.f, entry.first));
+
+            const TwoDSlidingFitResult positiveEdgeFit(&positiveEdgePositions, 1000, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
+            const TwoDSlidingFitResult negativeEdgeFit(&negativeEdgePositions, 1000, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
+
+            const CartesianVector positiveMinLayer(positiveEdgeFit.GetGlobalMinLayerPosition());
+            const CartesianVector positiveMaxLayer(positiveEdgeFit.GetGlobalMaxLayerPosition());
+            const CartesianVector negativeMinLayer(negativeEdgeFit.GetGlobalMinLayerPosition());
+            const CartesianVector negativeMaxLayer(negativeEdgeFit.GetGlobalMaxLayerPosition());
+
+            const float positiveGradient((positiveMaxLayer.GetZ() - positiveMinLayer.GetZ()) / (positiveMaxLayer.GetX() - positiveMinLayer.GetX()));
+            const float negativeGradient((negativeMaxLayer.GetZ() - negativeMinLayer.GetZ()) / (negativeMaxLayer.GetX() - negativeMinLayer.GetX()));
+            const float positiveIntercept(positiveMaxLayer.GetZ() - (positiveGradient * positiveMaxLayer.GetX()));
+            const float negativeIntercept(negativeMaxLayer.GetZ() - (negativeGradient * negativeMaxLayer.GetX()));
+
+            const float collisionT((-1.f) * (positiveIntercept + negativeIntercept) / (positiveGradient + negativeGradient));
+            const float collisionL((positiveGradient * collisionT) + positiveIntercept);
+
+            const float positiveStartL(positiveIntercept);
+            const float negativeStartL(negativeIntercept);
+
+            const CartesianVector globalPositiveMinLayer(middleShowerStart3D + (edgeDirectionAxis * positiveMinLayer.GetZ()) + (edgeOrthoAxis1 * positiveMinLayer.GetX()));
+            const CartesianVector globalPositiveMaxLayer(middleShowerStart3D + (edgeDirectionAxis * positiveMaxLayer.GetZ()) + (edgeOrthoAxis1 * positiveMaxLayer.GetX()));
+            const CartesianVector globalNegativeMinLayer(middleShowerStart3D + (edgeDirectionAxis * negativeMinLayer.GetZ()) + (edgeOrthoAxis1 * negativeMinLayer.GetX()));
+            const CartesianVector globalNegativeMaxLayer(middleShowerStart3D + (edgeDirectionAxis * negativeMaxLayer.GetZ()) + (edgeOrthoAxis1 * negativeMaxLayer.GetX()));
+            const CartesianVector collisionPoint(middleShowerStart3D + (edgeDirectionAxis * collisionL));
+            const CartesianVector positiveStart(middleShowerStart3D + (edgeDirectionAxis * positiveStartL));
+            const CartesianVector negativeStart(middleShowerStart3D + (edgeDirectionAxis * negativeStartL));
+
+            const CartesianVector positiveEdgeVector((globalPositiveMaxLayer - globalPositiveMinLayer).GetUnitVector());
+            const CartesianVector negativeEdgeVector((globalNegativeMaxLayer - globalNegativeMinLayer).GetUnitVector());
+
+            const float positiveOpeningAngle(edgeDirectionAxis.GetOpeningAngle(positiveEdgeVector) * 180.f / M_PI);
+            const float negativeOpeningAngle(edgeDirectionAxis.GetOpeningAngle(negativeEdgeVector) * 180.f / M_PI);
+
+            const float minOpeningAngle3D(std::min(positiveOpeningAngle, negativeOpeningAngle));
+            electronTreeVariables.m_postShowerStartMinHalfOpeningAngle = minOpeningAngle3D;
+            //std::cout << "electronTreeVariables.m_postShowerStartMinHalfOpeningAngle: " << electronTreeVariables.m_postShowerStartMinHalfOpeningAngle << std::endl;
+
+            const float maxOpeningAngle3D(std::max(positiveOpeningAngle, negativeOpeningAngle));
+            electronTreeVariables.m_postShowerStartMaxHalfOpeningAngle = maxOpeningAngle3D;
+            //std::cout << "electronTreeVariables.m_postShowerStartMaxHalfOpeningAngle: " << electronTreeVariables.m_postShowerStartMaxHalfOpeningAngle << std::endl;
+
+            const float openingAngle3D(positiveOpeningAngle + negativeOpeningAngle);
+            electronTreeVariables.m_postShowerStartOpeningAngle = openingAngle3D;
+            //std::cout << "electronTreeVariables.m_postShowerStartOpeningAngle: " << electronTreeVariables.m_postShowerStartOpeningAngle << std::endl;
+
+            const float openingAngleAsymmetry3D(std::fabs(positiveOpeningAngle - negativeOpeningAngle));
+            electronTreeVariables.m_postShowerStartOpeningAngleAsymmetry = openingAngleAsymmetry3D;
+            //std::cout << "electronTreeVariables.m_postShowerStartOpeningAngleAsymmetry: " << electronTreeVariables.m_postShowerStartOpeningAngleAsymmetry << std::endl;
+        }
+        catch (...)
+        {
+        }
+
+        const CartesianVector directionAxis(connectionPathwayDirection3D);
         CartesianVector orthoAxis1(directionAxis.GetCrossProduct(CartesianVector(1.f, 1.f, 1.f)).GetUnitVector());
         const CartesianVector orthoAxis2(directionAxis.GetCrossProduct(orthoAxis1).GetUnitVector());
-
-        
-        ///////////////////////////        
-        /*
-        const CartesianVector start(middleShowerStart3D - (directionAxis*100.f));
-        const CartesianVector end(middleShowerStart3D + (directionAxis*100.f));
-        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &start, &end, "DIRECTION AXIS", VIOLET, 2, 2);
-        */
-        ///////////////////////////        
-
-        std::map<int, FloatVector> positiveEdges, negativeEdges;
-
-        for (const CaloHit *const pCaloHit : postShowerHitList3D)
-        {
-            const CartesianVector position(pCaloHit->GetPositionVector() - middleShowerStart3D);
-
-            const float thisT(directionAxis.GetCrossProduct(position).GetMagnitude());
-            const float thisL(directionAxis.GetDotProduct(position));
-            const float orthoL(orthoAxis1.GetDotProduct(position));
-
-            std::map<int, FloatVector> &edgeMap(orthoL > 0.f ? positiveEdges : negativeEdges);
-
-            const int lIndex(std::floor(thisL / 2.f));
-
-            edgeMap[lIndex].push_back(thisT);
-        }
-
-        CartesianPointVector positiveEdgePositions, negativeEdgePositions;
-
-        for (auto &entry : positiveEdges)
-        {
-            FloatVector jam(entry.second);
-
-            if (jam.empty())
-                continue;
-
-            std::sort(jam.begin(), jam.end());
-
-            positiveEdgePositions.push_back(CartesianVector(jam.back(), 0.f, entry.first));
-        }
-
-        for (auto &entry : negativeEdges)
-        {
-            FloatVector jam(entry.second);
-
-            if (jam.empty())
-                continue;
-
-            std::sort(jam.begin(), jam.end());
-
-            negativeEdgePositions.push_back(CartesianVector(jam.back(), 0.f, entry.first));
-        }
-
-        const TwoDSlidingFitResult positiveEdgeFit(&positiveEdgePositions, 1000, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
-        const TwoDSlidingFitResult negativeEdgeFit(&negativeEdgePositions, 1000, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
-
-        const CartesianVector positiveMinLayer(positiveEdgeFit.GetGlobalMinLayerPosition());
-        const CartesianVector positiveMaxLayer(positiveEdgeFit.GetGlobalMaxLayerPosition());
-        const CartesianVector negativeMinLayer(negativeEdgeFit.GetGlobalMinLayerPosition());
-        const CartesianVector negativeMaxLayer(negativeEdgeFit.GetGlobalMaxLayerPosition());
-
-        const float positiveGradient((positiveMaxLayer.GetZ() - positiveMinLayer.GetZ()) / (positiveMaxLayer.GetX() - positiveMinLayer.GetX()));
-        const float negativeGradient((negativeMaxLayer.GetZ() - negativeMinLayer.GetZ()) / (negativeMaxLayer.GetX() - negativeMinLayer.GetX()));
-        const float positiveIntercept(positiveMaxLayer.GetZ() - (positiveGradient * positiveMaxLayer.GetX()));
-        const float negativeIntercept(negativeMaxLayer.GetZ() - (negativeGradient * negativeMaxLayer.GetX()));
-
-        //std::cout << "positiveGradient: " << positiveGradient << std::endl;
-        //std::cout << "negativeGradient: " << negativeGradient << std::endl;
-        //std::cout << "positiveIntercept: " << positiveIntercept << std::endl;
-        //std::cout << "negativeIntercept: " << negativeIntercept << std::endl;
-
-        const float collisionT((-1.f) * (positiveIntercept + negativeIntercept) / (positiveGradient + negativeGradient));
-        const float collisionL((positiveGradient * collisionT) + positiveIntercept);
-
-        const float positiveStartL(positiveIntercept);
-        const float negativeStartL(negativeIntercept);
-
-        //std::cout << "positiveStartL: " << positiveStartL << std::endl;
-        //std::cout << "negativeStartL: " << negativeStartL << std::endl;
-
-        const CartesianVector globalPositiveMinLayer(middleShowerStart3D + (directionAxis * positiveMinLayer.GetZ()) + (orthoAxis1 * positiveMinLayer.GetX()));
-        const CartesianVector globalPositiveMaxLayer(middleShowerStart3D + (directionAxis * positiveMaxLayer.GetZ()) + (orthoAxis1 * positiveMaxLayer.GetX()));
-        const CartesianVector globalNegativeMinLayer(middleShowerStart3D + (directionAxis * negativeMinLayer.GetZ()) + (orthoAxis1 * negativeMinLayer.GetX()));
-        const CartesianVector globalNegativeMaxLayer(middleShowerStart3D + (directionAxis * negativeMaxLayer.GetZ()) + (orthoAxis1 * negativeMaxLayer.GetX()));
-        const CartesianVector collisionPoint(middleShowerStart3D + (directionAxis * collisionL));
-        const CartesianVector positiveStart(middleShowerStart3D + (directionAxis * positiveStartL));
-        const CartesianVector negativeStart(middleShowerStart3D + (directionAxis * negativeStartL));
-
-        const CartesianVector positiveEdgeVector((globalPositiveMaxLayer - globalPositiveMinLayer).GetUnitVector());
-        const CartesianVector negativeEdgeVector((globalNegativeMaxLayer - globalNegativeMinLayer).GetUnitVector());
-
-        const float positiveOpeningAngle(directionAxis.GetOpeningAngle(positiveEdgeVector) * 180.f / M_PI);
-        const float negativeOpeningAngle(directionAxis.GetOpeningAngle(negativeEdgeVector) * 180.f / M_PI);
-
-        const float minOpeningAngle(std::min(positiveOpeningAngle, negativeOpeningAngle));
-        electronTreeVariables.m_postShowerStartMinHalfOpeningAngle = minOpeningAngle;
-        //std::cout << "electronTreeVariables.m_postShowerStartMinHalfOpeningAngle: " << electronTreeVariables.m_postShowerStartMinHalfOpeningAngle << std::endl;
-
-        const float maxOpeningAngle(std::max(positiveOpeningAngle, negativeOpeningAngle));
-        electronTreeVariables.m_postShowerStartMaxHalfOpeningAngle = maxOpeningAngle;
-        //std::cout << "electronTreeVariables.m_postShowerStartMaxHalfOpeningAngle: " << electronTreeVariables.m_postShowerStartMaxHalfOpeningAngle << std::endl;
-
-        const float openingAngle(positiveOpeningAngle + negativeOpeningAngle);
-        electronTreeVariables.m_postShowerStartOpeningAngle = openingAngle;
-        //std::cout << "electronTreeVariables.m_postShowerStartOpeningAngle: " << electronTreeVariables.m_postShowerStartOpeningAngle << std::endl;
-
-        const float openingAngleAsymmetry(std::fabs(positiveOpeningAngle - negativeOpeningAngle));
-        electronTreeVariables.m_postShowerStartOpeningAngleAsymmetry = openingAngleAsymmetry;
-        //std::cout << "electronTreeVariables.m_postShowerStartOpeningAngleAsymmetry: " << electronTreeVariables.m_postShowerStartOpeningAngleAsymmetry << std::endl;
-
-        ///////////////////////////        
-        /*
-        //std::cout << "positive opening angle: " << positiveOpeningAngle << std::endl;
-        //std::cout << "negative opening angle: " << negativeOpeningAngle << std::endl;
-        //std::cout << "positiveEdgeVector: " << positiveEdgeVector << std::endl;
-        //std::cout << "negativeEdgeVector: " << negativeEdgeVector << std::endl;
-        //std::cout << "openingAngle: " << openingAngle << std::endl;
-        
-        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &globalPositiveMinLayer, &globalPositiveMaxLayer, "POSITIVE SHOWER EDGE", BLUE, 2, 2);
-        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &globalNegativeMinLayer, &globalNegativeMaxLayer, "NEGATIVE SHOWER EDGE", BLUE, 2, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &positiveStart, "positiveStart", BLUE, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &collisionPoint, "collisionPoint", BLUE, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &negativeStart, "negativeStart", BLUE, 2);
-        PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-        */
-        ///////////////////////////                
 
         // Get angular asymmetry of hits (i don't think that there is any reason for this to be energy weighted)
 
@@ -1421,7 +1852,9 @@ bool LArConnectionPathwayHelper::FillPostShowerStartVariables(pandora::Algorithm
         //std::cout << "electronTreeVariables.m_postShowerStartLWeightedRadialDistanceSigma: " << electronTreeVariables.m_postShowerStartLWeightedRadialDistanceSigma << std::endl;
 
         // now look for any gaps (do this from the middle shower start)
-        const CartesianVector &fitShowerDirection3D(fullSlidingFitResult3D.GetGlobalMinLayerDirection() * (isDownstream ? 1.f : -1.f));
+        const bool isShowerDownstream((middleShowerStart3D - fullSlidingFitResult3D.GetGlobalMinLayerPosition()).GetMagnitude() < 
+            (middleShowerStart3D - fullSlidingFitResult3D.GetGlobalMaxLayerPosition()).GetMagnitude());
+        const CartesianVector &fitShowerDirection3D(fullSlidingFitResult3D.GetGlobalMinLayerDirection() * (isShowerDownstream ? 1.f : -1.f));
 
         FloatVector longitudinalProjections;
 
@@ -1440,7 +1873,7 @@ bool LArConnectionPathwayHelper::FillPostShowerStartVariables(pandora::Algorithm
         electronTreeVariables.m_postShowerStartInitialGapSize = initialGapSize;
         //std::cout << "electronTreeVariables.m_postShowerStartInitialGapSize: " << electronTreeVariables.m_postShowerStartInitialGapSize << std::endl;
 
-        float maxGapSize(-std::numeric_limits<float>::max());
+        float maxGapSize(-10.f);
 
         for (unsigned int i = 1; i < longitudinalProjections.size(); ++i)
         {
@@ -1467,10 +1900,16 @@ bool LArConnectionPathwayHelper::FillPostShowerStartVariables(pandora::Algorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo,
-    const HitType hitType, const ProtoShower &protoShower, const bool isDownstream, const CartesianVector &projectedShowerStart, const CartesianVector &initialShowerDirection, 
-    const CartesianVector &connectionPathwayDirection, int &nViewPostShowerHits, float &postShowerStartViewScatterAngle)
+bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorithm *const pAlgorithm, const CaloHitList &spineHitList, const ParticleFlowObject *const pShowerPfo,
+    const HitType hitType, const bool isDownstream3D, const CartesianVector &projectedNuVertex, const CartesianVector &projectedShowerStart, 
+    const CartesianVector &initialShowerDirection, const CartesianVector &connectionPathwayDirection, int &nHits, float &scatterAngle,
+    float &openingAngle, float &openingAngleAsymmetry, float &nuVertexHitAsymmetry, float &nuVertexEnergyAsymmetry, float &showerStartHitAsymmetry, 
+    float &showerStartEnergyAsymmetry, float &nuVertexMeanRadialDistance, float &nuVertexEnergyWeightedMeanRadialDistance, float &showerStartMeanRadialDistance, 
+    float &showerStartEnergyWeightedMeanRadialDistance, float &nuVertexMoliereRadius, float &showerStartMoliereRadius, float &positiveOpeningAngle, 
+    float &negativeOpeningAngle, float &showerApexL, float &showerApexT, float &fitShowerStartL, float &fitShowerStartT, float &foundHitRatio)
 {
+    const bool isDownstream(projectedShowerStart.GetZ() > projectedNuVertex.GetZ());
+
     CaloHitList caloHitList;
     LArPfoHelper::GetCaloHits(pShowerPfo, hitType, caloHitList);
 
@@ -1484,6 +1923,7 @@ bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorit
         const float l(initialShowerDirection.GetDotProduct(displacement));
         const float t(initialShowerDirection.GetCrossProduct(displacement).GetMagnitude());
 
+        // used to be t < 14.f, should be using the opening angle?? WHO KNOWS
         if (((isDownstream && (l > 0.f)) || (!isDownstream && (l < 0.f))) && (t < 14.f))
         {
             postShowerHitList.push_back(pCaloHit);
@@ -1491,7 +1931,16 @@ bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorit
         }
     }
 
-    nViewPostShowerHits = postShowerHitList.size();
+    nHits = postShowerHitList.size();
+
+    int foundHits(spineHitList.size());
+    for (const CaloHit *const pCaloHit : postShowerHitList)
+    {
+        if (std::find(spineHitList.begin(), spineHitList.end(), pCaloHit) == spineHitList.end())
+            ++foundHits;
+    }
+
+    foundHitRatio = static_cast<float>(foundHits) / static_cast<float>(caloHitList.size());
 
     try
     {
@@ -1507,6 +1956,7 @@ bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorit
             const float l(slidingFitResult.GetGlobalMinLayerDirection().GetDotProduct(displacement));
             const float t(slidingFitResult.GetGlobalMinLayerDirection().GetCrossProduct(displacement).GetMagnitude());
 
+            // used to be t < 14.f, should be using the opening angle?? WHO KNOWS
             if (((isDownstream && (l > 0.f)) || (!isDownstream && (l < 0.f))) && (t < 14.f))
             {
                 postShowerHitList.push_back(pCaloHit);
@@ -1514,7 +1964,36 @@ bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorit
             }
         }
 
-        nViewPostShowerHits = postShowerHitList.size();
+        nHits = postShowerHitList.size();
+
+        foundHits = spineHitList.size();
+        for (const CaloHit *const pCaloHit : postShowerHitList)
+        {
+            if (std::find(spineHitList.begin(), spineHitList.end(), pCaloHit) == spineHitList.end())
+                ++foundHits;
+        }
+
+        foundHitRatio = static_cast<float>(foundHits) / static_cast<float>(caloHitList.size());
+
+        ////////////////////////////////////////
+        /*
+        PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &postShowerHitList, "postShowerHitList", BLUE);
+        const CartesianVector start1(projectedShowerStart - (initialShowerDirection * 100.f));
+        const CartesianVector end1(projectedShowerStart + (initialShowerDirection * 100.f));
+        const CartesianVector start2(projectedShowerStart - (slidingFitResult.GetGlobalMinLayerDirection() * 100.f));
+        const CartesianVector end2(projectedShowerStart + (slidingFitResult.GetGlobalMinLayerDirection() * 100.f));
+        const CartesianVector start3(slidingFitResult.GetGlobalMinLayerPosition() - (slidingFitResult.GetGlobalMinLayerDirection() * 100.f));
+        const CartesianVector end3(slidingFitResult.GetGlobalMinLayerPosition() + (slidingFitResult.GetGlobalMinLayerDirection() * 100.f));
+        const CartesianVector start4(projectedNuVertex - (connectionPathwayDirection*200.f));
+        const CartesianVector end4(projectedNuVertex + (connectionPathwayDirection*200.f));
+        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &start1, &end1, "INITIAL DIRECTION", RED, 2, 2);
+        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &start2, &end2, "FIT DIRECTION", BLACK, 2, 2);
+        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &start3, &end3, "FIT DIRECTION FROM FIT POSIION", VIOLET, 2, 2);
+        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &start4, &end4, "BEGINNING", BLUE, 2, 2);
+        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectedShowerStart, "projectedShowerStart", GREEN, 2);
+        PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+        */
+        ///////////////////////////////////////
 
         const bool isShowerDownstream((projectedShowerStart - slidingFitResult.GetGlobalMinLayerPosition()).GetMagnitude() < 
             (projectedShowerStart - slidingFitResult.GetGlobalMaxLayerPosition()).GetMagnitude());
@@ -1522,19 +2001,261 @@ bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorit
         const CartesianVector streamCorrectedConnectionPathwayDirection(connectionPathwayDirection * (isDownstream ? 1.f : -1.f));
         const CartesianVector streamCorrectedShowerDirection(isShowerDownstream ? slidingFitResult.GetGlobalMinLayerDirection() : slidingFitResult.GetGlobalMaxLayerDirection() * (-1.f));
 
-        /*
-        const CartesianVector pathwayEnd(projectedShowerStart + (streamCorrectedConnectionPathwayDirection * (100.f)));
-        const CartesianVector showerEnd(projectedShowerStart + (streamCorrectedShowerDirection * (100.f)));
+        scatterAngle = streamCorrectedConnectionPathwayDirection.GetOpeningAngle(streamCorrectedShowerDirection) * 180.f / M_PI;
 
-        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &projectedShowerStart, &pathwayEnd, "pathway direction", RED, 2, 2);
-        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &projectedShowerStart, &showerEnd, "shower direction", BLACK, 2, 2);
-        PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-        */
+        try
+        {
+             // Now try to characterise the shower // will change this so dw....
+            CartesianVector directionAxis1 = slidingFitResult.GetGlobalMinLayerDirection();
+            CartesianVector orthoAxis1 = directionAxis1.GetCrossProduct(CartesianVector(0.f, 1.f, 0.f));
 
-        postShowerStartViewScatterAngle = streamCorrectedConnectionPathwayDirection.GetOpeningAngle(streamCorrectedShowerDirection) * 180.f / M_PI;
+            std::map<int, float> positiveEdges, negativeEdges;
+
+            for (const CaloHit *const pCaloHit : postShowerHitList)
+            {
+                const CartesianVector position(pCaloHit->GetPositionVector() - projectedShowerStart);
+                const float thisT(directionAxis1.GetCrossProduct(position).GetMagnitude());
+                const float thisL(directionAxis1.GetDotProduct(position));
+                const float orthoL(orthoAxis1.GetDotProduct(position));
+
+                std::map<int, float> &edgeMap(orthoL > 0.f ? positiveEdges : negativeEdges);
+
+                const int lIndex(std::floor(thisL / 2.f));
+
+                edgeMap[lIndex] = (edgeMap.find(lIndex) == edgeMap.end() ? thisT : std::max(edgeMap[lIndex] , thisT));;
+            }
+
+            CartesianPointVector positiveEdgePositions, negativeEdgePositions;
+
+            for (auto &entry : positiveEdges)
+                positiveEdgePositions.push_back(CartesianVector(entry.second, 0.f, entry.first));
+
+            for (auto &entry : negativeEdges)
+                negativeEdgePositions.push_back(CartesianVector(entry.second, 0.f, entry.first));
+
+            const TwoDSlidingFitResult positiveEdgeFit(&positiveEdgePositions, 1000, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
+            const TwoDSlidingFitResult negativeEdgeFit(&negativeEdgePositions, 1000, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
+
+            const CartesianVector positiveMinLayer(positiveEdgeFit.GetGlobalMinLayerPosition());
+            const CartesianVector positiveMaxLayer(positiveEdgeFit.GetGlobalMaxLayerPosition());
+            const CartesianVector negativeMinLayer(negativeEdgeFit.GetGlobalMinLayerPosition());
+            const CartesianVector negativeMaxLayer(negativeEdgeFit.GetGlobalMaxLayerPosition());
+
+            const CartesianVector globalPositiveMinLayer(projectedShowerStart + (directionAxis1 * positiveMinLayer.GetZ()) + (orthoAxis1 * positiveMinLayer.GetX()));
+            const CartesianVector globalPositiveMaxLayer(projectedShowerStart + (directionAxis1 * positiveMaxLayer.GetZ()) + (orthoAxis1 * positiveMaxLayer.GetX()));
+            const CartesianVector globalNegativeMinLayer(projectedShowerStart + (directionAxis1 * negativeMinLayer.GetZ()) - (orthoAxis1 * negativeMinLayer.GetX()));
+            const CartesianVector globalNegativeMaxLayer(projectedShowerStart + (directionAxis1 * negativeMaxLayer.GetZ()) - (orthoAxis1 * negativeMaxLayer.GetX()));
+
+            const float positiveGradient((positiveMaxLayer.GetZ() - positiveMinLayer.GetZ()) / (positiveMaxLayer.GetX() - positiveMinLayer.GetX()));
+            const float negativeGradient((negativeMaxLayer.GetZ() - negativeMinLayer.GetZ()) / (negativeMaxLayer.GetX() - negativeMinLayer.GetX()));
+            const float positiveIntercept(positiveMaxLayer.GetZ() - (positiveGradient * positiveMaxLayer.GetX()));
+            const float negativeIntercept(negativeMaxLayer.GetZ() - (negativeGradient * negativeMaxLayer.GetX()));
+
+            const float collisionT((-1.f) * (positiveIntercept - negativeIntercept) / (positiveGradient + negativeGradient));
+            const float collisionL((positiveGradient * collisionT) + positiveIntercept);
+
+            const CartesianVector collisionPoint(projectedShowerStart + (directionAxis1 * collisionL) + (orthoAxis1 * collisionT));
+
+            const CartesianVector positiveEdgeVector((globalPositiveMaxLayer - globalPositiveMinLayer).GetUnitVector());
+            const CartesianVector negativeEdgeVector((globalNegativeMaxLayer - globalNegativeMinLayer).GetUnitVector());
+
+            positiveOpeningAngle = directionAxis1.GetOpeningAngle(positiveEdgeVector) * 180.f / M_PI;
+            negativeOpeningAngle = directionAxis1.GetOpeningAngle(negativeEdgeVector) * 180.f / M_PI;
+            openingAngle = positiveOpeningAngle + negativeOpeningAngle;
+
+            const CartesianVector fitShowerStart(isShowerDownstream ? slidingFitResult.GetGlobalMinLayerPosition() : slidingFitResult.GetGlobalMaxLayerPosition());
+            showerApexL = std::min(std::max(streamCorrectedShowerDirection.GetDotProduct(collisionPoint - fitShowerStart), -1000.f), 1000.f);
+            showerApexT = streamCorrectedShowerDirection.GetCrossProduct(collisionPoint - fitShowerStart).GetMagnitude();
+
+            //////////////////////////////////////
+            /*
+            std::cout << "showerApexL: " << showerApexL << std::endl;
+            std::cout << "showerApexT: " << showerApexT << std::endl;
+            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &collisionPoint, "collisionPoint", BLACK, 2);
+            PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &globalPositiveMinLayer, &globalPositiveMaxLayer, "POSITIVE SHOWER EDGE", BLUE, 2, 2);
+            PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &globalNegativeMinLayer, &globalNegativeMaxLayer, "NEGATIVE SHOWER EDGE", BLUE, 2, 2);
+            PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+            */
+            //////////////////////////////////////
+        }
+        catch(...)
+        {
+            //std::cout << "CAUGHT" << std::endl;
+            positiveOpeningAngle = -10.f;
+            negativeOpeningAngle = -10.f;
+            openingAngle = -10.f;
+            showerApexL = -9999.f;
+            showerApexT = -10.f;
+            foundHitRatio = -0.5f;
+        }
+
+        CartesianVector directionAxis1 = connectionPathwayDirection;
+        CartesianVector orthoAxis1 = directionAxis1.GetCrossProduct(CartesianVector(0.f, 1.f, 0.f));
+
+        // does it look like the shower is coming from the nu vertex?
+        const CartesianVector fitShowerStart(isShowerDownstream ? slidingFitResult.GetGlobalMinLayerPosition() : slidingFitResult.GetGlobalMaxLayerPosition());
+
+        fitShowerStartL = directionAxis1.GetDotProduct(fitShowerStart - projectedNuVertex);
+        fitShowerStartT = directionAxis1.GetCrossProduct(fitShowerStart - projectedNuVertex).GetMagnitude();
+
+        CartesianVector directionAxis2 = streamCorrectedShowerDirection;
+        CartesianVector orthoAxis2 = directionAxis2.GetCrossProduct(CartesianVector(0.f, 1.f, 0.f));
+
+        nuVertexHitAsymmetry = 0.f;
+
+        for (const CaloHit *const pCaloHit : postShowerHitList)
+        {
+            const CartesianVector position(pCaloHit->GetPositionVector() - projectedNuVertex);
+            const float thisL(orthoAxis1.GetDotProduct(position));
+
+            nuVertexHitAsymmetry += (thisL < 0.f) ? -1.f : 1.f;
+        }
+
+        nuVertexHitAsymmetry = std::fabs(nuVertexHitAsymmetry);
+
+        float totalEnergy(0.f);
+        nuVertexEnergyAsymmetry = 0.f;
+
+        for (const CaloHit *const pCaloHit : postShowerHitList)
+        {
+            const float hitEnergy(std::fabs(pCaloHit->GetElectromagneticEnergy()));
+
+            totalEnergy += hitEnergy;
+
+            const CartesianVector position(pCaloHit->GetPositionVector() - projectedNuVertex);
+            const float thisL(orthoAxis1.GetDotProduct(position));
+
+            nuVertexEnergyAsymmetry += (thisL < 0.f) ? (-1.f * hitEnergy) : hitEnergy;
+        }
+
+        nuVertexEnergyAsymmetry = (totalEnergy < std::numeric_limits<float>::epsilon()) ? -0.5f : (nuVertexEnergyAsymmetry / totalEnergy);
+        nuVertexEnergyAsymmetry = std::fabs(nuVertexEnergyAsymmetry);
+
+        showerStartHitAsymmetry = 0.f;
+
+        for (const CaloHit *const pCaloHit : postShowerHitList)
+        {
+            const CartesianVector position(pCaloHit->GetPositionVector() - fitShowerStart);
+            const float thisL(orthoAxis2.GetDotProduct(position));
+
+            showerStartHitAsymmetry += (thisL < 0.f) ? -1.f : 1.f;
+        }
+
+        showerStartHitAsymmetry = std::fabs(showerStartHitAsymmetry);
+
+        showerStartEnergyAsymmetry = 0.f;
+
+        for (const CaloHit *const pCaloHit : postShowerHitList)
+        {
+            const float hitEnergy(std::fabs(pCaloHit->GetElectromagneticEnergy()));
+            const CartesianVector position(pCaloHit->GetPositionVector() - fitShowerStart);
+            const float thisL(orthoAxis2.GetDotProduct(position));
+
+            showerStartEnergyAsymmetry += (thisL < 0.f) ? (-1.f * hitEnergy) : hitEnergy;
+        }
+
+        showerStartEnergyAsymmetry = (totalEnergy < std::numeric_limits<float>::epsilon()) ? -0.5f : (showerStartEnergyAsymmetry / totalEnergy);
+        showerStartEnergyAsymmetry = std::fabs(showerStartEnergyAsymmetry);
+
+        // Get mean radial distance
+
+        nuVertexMeanRadialDistance = 0.f;
+        nuVertexEnergyWeightedMeanRadialDistance = 0.f;
+        showerStartMeanRadialDistance = 0.f;
+        showerStartEnergyWeightedMeanRadialDistance = 0.f;
+
+        for (const CaloHit *const pCaloHit : postShowerHitList)
+        {
+            const CartesianVector nuPosition(pCaloHit->GetPositionVector() - projectedNuVertex);
+            const CartesianVector showerStartPosition(pCaloHit->GetPositionVector() - fitShowerStart);
+            const float hitEnergy(std::fabs(pCaloHit->GetElectromagneticEnergy()));
+
+            nuVertexMeanRadialDistance += directionAxis1.GetCrossProduct(nuPosition).GetMagnitude();
+            nuVertexEnergyWeightedMeanRadialDistance += (directionAxis1.GetCrossProduct(nuPosition).GetMagnitude() * hitEnergy);
+            showerStartMeanRadialDistance += directionAxis2.GetCrossProduct(showerStartPosition).GetMagnitude();
+            showerStartEnergyWeightedMeanRadialDistance += (directionAxis2.GetCrossProduct(showerStartPosition).GetMagnitude() * hitEnergy);
+        }
+
+        nuVertexMeanRadialDistance = (postShowerHitList.size() > 0) ? nuVertexMeanRadialDistance / postShowerHitList.size() : -10.f;
+        nuVertexEnergyWeightedMeanRadialDistance = (totalEnergy < std::numeric_limits<float>::epsilon()) ? -10.f : nuVertexEnergyWeightedMeanRadialDistance / totalEnergy;
+        showerStartMeanRadialDistance = (postShowerHitList.size() > 0) ? showerStartMeanRadialDistance / postShowerHitList.size() : -10.f;
+        showerStartEnergyWeightedMeanRadialDistance = (totalEnergy < std::numeric_limits<float>::epsilon()) ? -10.f : showerStartEnergyWeightedMeanRadialDistance / totalEnergy;
+
+        //std::cout << "111111111111" << std::endl;
+        // Get Molliere radius...
+
+        CaloHitVector nuVertexPostShowerHitVector(postShowerHitList.begin(), postShowerHitList.end());
+
+        std::sort(nuVertexPostShowerHitVector.begin(), nuVertexPostShowerHitVector.end(),
+            [&projectedNuVertex, &directionAxis1](const CaloHit *const pCaloHitA, const CaloHit *const pCaloHitB) -> bool {
+                const CartesianVector positionA(pCaloHitA->GetPositionVector() - projectedNuVertex);
+                const CartesianVector positionB(pCaloHitB->GetPositionVector() - projectedNuVertex);
+
+                const float tA(directionAxis1.GetCrossProduct(positionA).GetMagnitude());
+                const float tB(directionAxis1.GetCrossProduct(positionB).GetMagnitude());
+
+                return tA < tB;
+            });
+
+        float nuVertexRunningEnergySum(0.f);
+        nuVertexMoliereRadius = -10.f;
+
+        for (const CaloHit *const pCaloHit : nuVertexPostShowerHitVector)
+        {
+            const float hitEnergy(std::fabs(pCaloHit->GetElectromagneticEnergy()));
+            nuVertexRunningEnergySum += hitEnergy;
+
+            if ((nuVertexRunningEnergySum / totalEnergy) > 0.9f)
+            {
+                const CartesianVector position(pCaloHit->GetPositionVector() - projectedNuVertex);
+                nuVertexMoliereRadius = directionAxis1.GetCrossProduct(position).GetMagnitude();
+                break;
+            }
+        }
+
+        CaloHitVector showerStartPostShowerHitVector(postShowerHitList.begin(), postShowerHitList.end());
+
+        std::sort(showerStartPostShowerHitVector.begin(), showerStartPostShowerHitVector.end(),
+            [&fitShowerStart, &directionAxis2](const CaloHit *const pCaloHitA, const CaloHit *const pCaloHitB) -> bool {
+                const CartesianVector positionA(pCaloHitA->GetPositionVector() - fitShowerStart);
+                const CartesianVector positionB(pCaloHitB->GetPositionVector() - fitShowerStart);
+
+                const float tA(directionAxis2.GetCrossProduct(positionA).GetMagnitude());
+                const float tB(directionAxis2.GetCrossProduct(positionB).GetMagnitude());
+
+                return tA < tB;
+            });
+
+        float showerStartRunningEnergySum(0.f);
+        showerStartMoliereRadius = -10.f;
+
+        for (const CaloHit *const pCaloHit : showerStartPostShowerHitVector)
+        {
+            const float hitEnergy(std::fabs(pCaloHit->GetElectromagneticEnergy()));
+            showerStartRunningEnergySum += hitEnergy;
+
+            if ((showerStartRunningEnergySum / totalEnergy) > 0.9f)
+            {
+                const CartesianVector position(pCaloHit->GetPositionVector() - fitShowerStart);
+                showerStartMoliereRadius = directionAxis2.GetCrossProduct(position).GetMagnitude();
+                break;
+            }
+        }
     }
     catch (...)
     {
+        scatterAngle = -10.f;
+        openingAngle = -10.f;
+        openingAngleAsymmetry = -10.f;
+        nuVertexHitAsymmetry = -10.f;
+        nuVertexEnergyAsymmetry = -0.5f;
+        showerStartHitAsymmetry = -10.f;
+        showerStartEnergyAsymmetry = -0.5f;
+        nuVertexMeanRadialDistance = -10.f;
+        nuVertexEnergyWeightedMeanRadialDistance = -10.f;
+        showerStartMeanRadialDistance = -10.f;
+        showerStartEnergyWeightedMeanRadialDistance = -10.f;
+
         return false;
     }
 
@@ -1547,7 +2268,7 @@ bool LArConnectionPathwayHelper::FillConnectionPathwayVariables(pandora::Algorit
     const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertexPosition, CartesianVector &minShowerStart3D,
     CartesianVector &middleShowerStart3D, CartesianVector &maxShowerStart3D, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
 {
-    electronTreeVariables.m_pathwayLengthMin = (nuVertexPosition - minShowerStart3D).GetMagnitude();
+    electronTreeVariables.m_pathwayLengthMin = std::min((nuVertexPosition - minShowerStart3D).GetMagnitude(), 30.f);
     electronTreeVariables.m_pathwayLengthMiddle = (nuVertexPosition - middleShowerStart3D).GetMagnitude();
     electronTreeVariables.m_pathwayLengthMax = (nuVertexPosition - maxShowerStart3D).GetMagnitude();
     electronTreeVariables.m_pathwayShowerStartDelta = (maxShowerStart3D - minShowerStart3D).GetMagnitude();
@@ -1569,12 +2290,12 @@ bool LArConnectionPathwayHelper::FillConnectionPathwayVariables(pandora::Algorit
         const TwoDSlidingFitResult spineFitV(&spinePositionsV, 10, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
         const TwoDSlidingFitResult spineFitW(&spinePositionsW, 10, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
 
-        electronTreeVariables.m_pathwayMaxScatteringAngle = LArConnectionPathwayHelper::GetLargest3DKink(pAlgorithm, spineFitU, spineFitV, spineFitW,
-            nuVertexPosition, maxShowerStart3D);
+        electronTreeVariables.m_pathwayMaxScatteringAngle = std::min(LArConnectionPathwayHelper::GetLargest3DKink(pAlgorithm, spineFitU, spineFitV, spineFitW,
+            nuVertexPosition, maxShowerStart3D), 20.f);
 
         electronTreeVariables.m_minShowerStartPathwayScatteringAngle2D = LArConnectionPathwayHelper::Get2DKink(pAlgorithm, spineFitU, spineFitV, spineFitW, minShowerStart3D);
         electronTreeVariables.m_middleShowerStartPathwayScatteringAngle2D = LArConnectionPathwayHelper::Get2DKink(pAlgorithm, spineFitU, spineFitV, spineFitW, middleShowerStart3D);
-        electronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D = LArConnectionPathwayHelper::Get2DKink(pAlgorithm, spineFitU, spineFitV, spineFitW, maxShowerStart3D);
+        electronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D = std::min(LArConnectionPathwayHelper::Get2DKink(pAlgorithm, spineFitU, spineFitV, spineFitW, maxShowerStart3D), 10.f);
     }
     catch(...)
     {
@@ -1869,7 +2590,7 @@ bool LArConnectionPathwayHelper::FillConnectionPathwayVariables(pandora::Algorit
     */
 
     //////////////////////////////
-    /*
+    /*    
     std::cout << "electronTreeVariables.m_pathwayLengthMin: " << electronTreeVariables.m_pathwayLengthMin << std::endl;
     std::cout << "electronTreeVariables.m_pathwayLengthMiddle: " << electronTreeVariables.m_pathwayLengthMiddle << std::endl;
     std::cout << "electronTreeVariables.m_pathwayLengthMax: " << electronTreeVariables.m_pathwayLengthMax << std::endl;
@@ -2102,52 +2823,103 @@ float LArConnectionPathwayHelper::GetLargest2DKinkFromView(pandora::Algorithm *c
     const LayerFitResultMap &layerFitResultMap(spineFit.GetLayerFitResultMap());
     const int minLayer(layerFitResultMap.begin()->first), maxLayer(layerFitResultMap.rbegin()->first);
 
-    const int nLayersHalfWindow(spineFit.GetLayerFitHalfWindow());
+    const int nLayersHalfWindow(5);
     const int nLayersSpanned(1 + maxLayer - minLayer);
 
     if (nLayersSpanned <= 2 * nLayersHalfWindow)
+    {
+        std::cout << "NOT ENOUGH LAYERS SPANNED" << std::endl;
         return -10.f;
+    }
 
     const CartesianVector projectedShowerStart(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), showerStart3D, hitType));
 
     float showerStartL(0.f), showerStartT(0.f);
     spineFit.GetLocalPosition(projectedShowerStart, showerStartL, showerStartT);
+
     float maxCentralLayer(spineFit.GetLayer(showerStartL) - nLayersHalfWindow);
+    float minCentralLayer(layerFitResultMap.begin()->first + nLayersHalfWindow + 1);
 
     float highestOpeningAngle(-10.f);
     CartesianVector kinkPosition(0.f, 0.f, 0.f);
+    CartesianVector highestKinkPosition(0.f, 0.f, 0.f);
 
     for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
     {
-        const int iLayer(iter->first);
+        const int layer(iter->first);
 
-        if (iLayer > maxCentralLayer)
+        if (layer < minCentralLayer)
             continue;
 
-        const float rL(spineFit.GetL(iLayer));
-        const float rL1(spineFit.GetL(iLayer - nLayersHalfWindow));
-        const float rL2(spineFit.GetL(iLayer + nLayersHalfWindow));
+        if (layer > maxCentralLayer)
+            continue;
 
-        CartesianVector firstPosition(0.f, 0.f, 0.f), centralPosition(0.f, 0.f, 0.f), secondPosition(0.f, 0.f, 0.f);
+        bool found(false);
+        float openingAngle2D(std::numeric_limits<float>::max());
 
-        if ((STATUS_CODE_SUCCESS != spineFit.GetGlobalFitPosition(rL1, firstPosition)) ||
-            (STATUS_CODE_SUCCESS != spineFit.GetGlobalFitPosition(rL, centralPosition)) ||
-            (STATUS_CODE_SUCCESS != spineFit.GetGlobalFitPosition(rL2, secondPosition)))
-       {
-           continue;
-       }
-
-        const CartesianVector firstDirection((centralPosition - firstPosition).GetUnitVector());
-        const CartesianVector secondDirection((secondPosition - centralPosition).GetUnitVector());
-
-        const float openingAngle2D(secondDirection.GetOpeningAngle(firstDirection) * 180.f / M_PI);
-
-        if (openingAngle2D > highestOpeningAngle)
+        float thisHighestOpeningAngle(-10.f);
+        CartesianVector thisHighestKinkPosition(0.f, 0.f, 0.f);
+        for (int i = 0; i < nLayersHalfWindow; ++i)
         {
-            highestOpeningAngle = openingAngle2D;
-            kinkPosition = centralPosition;
+            const int testLayer(layer + i);
+            const float rL(spineFit.GetL(testLayer));
+            const float rL1(spineFit.GetL(testLayer - nLayersHalfWindow));
+            const float rL2(spineFit.GetL(testLayer + nLayersHalfWindow));
+
+            CartesianVector firstPosition(0.f, 0.f, 0.f), centralPosition(0.f, 0.f, 0.f), secondPosition(0.f, 0.f, 0.f);
+
+            if ((STATUS_CODE_SUCCESS != spineFit.GetGlobalFitPosition(rL1, firstPosition)) ||
+                (STATUS_CODE_SUCCESS != spineFit.GetGlobalFitPosition(rL, centralPosition)) ||
+                (STATUS_CODE_SUCCESS != spineFit.GetGlobalFitPosition(rL2, secondPosition)))
+            {
+                continue;
+            }
+
+            const CartesianVector firstDirection((centralPosition - firstPosition).GetUnitVector());
+            const CartesianVector secondDirection((secondPosition - centralPosition).GetUnitVector());
+
+            const float testOpeningAngle2D(secondDirection.GetOpeningAngle(firstDirection) * 180.f / M_PI);
+
+            //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &centralPosition, "centralPosition", ORANGE, 2);
+
+            if (testOpeningAngle2D < openingAngle2D)
+            {
+                openingAngle2D = testOpeningAngle2D;
+                found = true;
+            }
+
+            if (testOpeningAngle2D > thisHighestOpeningAngle)
+            {
+                thisHighestOpeningAngle = openingAngle2D;
+                thisHighestKinkPosition = centralPosition;
+            }
+        }
+
+        if (found)
+        {
+            ////////////////////////////
+            //std::cout << "openingAngle2D: " << openingAngle2D << std::endl;
+            //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+            ////////////////////////////
+        }
+
+        if (found)
+        {
+            if (openingAngle2D > highestOpeningAngle)
+            {
+                highestOpeningAngle = std::max(highestOpeningAngle, openingAngle2D);
+                highestKinkPosition = thisHighestKinkPosition;
+            }
         }
     }
+
+    ///////////////////////////////
+    /*
+    std::cout << "highestOpeningAngle: " << highestOpeningAngle << std::endl;
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &highestKinkPosition, "highestKinkPosition", RED, 2);
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+    */
+    ///////////////////////////////
 
     return highestOpeningAngle;
 }
@@ -2198,6 +2970,8 @@ bool LArConnectionPathwayHelper::FillConnectionPathwayEnergyVariables(pandora::A
             electronTreeVariables.m_pathwayMiddleEnergySigma = sigma;
         }
     }
+
+    electronTreeVariables.m_pathwayMaxEnergySigma = std::min(electronTreeVariables.m_pathwayMaxEnergySigma, 4.f);
 
     return true;
 }
@@ -2319,36 +3093,45 @@ bool LArConnectionPathwayHelper::FindShowerStarts3D(pandora::Algorithm *const pA
     if (!uFound || (consistency == LArConnectionPathwayHelper::Consistency::X_PROJECTION))
     {
         if (LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, maxSeparation, uShowerStart3D) || 
-            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerU, protoShowerV, maxSeparation, uShowerStart3D) ||
-            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerU, protoShowerW, maxSeparation, uShowerStart3D))
+            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerU, protoShowerV, protoShowerW, maxSeparation, uShowerStart3D) ||
+            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerU, protoShowerW, protoShowerV, maxSeparation, uShowerStart3D))
         {
+                uFound = true;
+            /*
             if (LArClusterHelper::GetClosestDistance(uShowerStart3D, caloHitList3D) < 3.f)
             {
                 //std::cout << "FOUND U FROM X PROJECTION" << std::endl;
                 uFound = true;
             }
+            */
         }
 
         if (LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, protoShowerV, protoShowerW, protoShowerU, maxSeparation, vShowerStart3D) || 
-            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerV, protoShowerW, maxSeparation, vShowerStart3D) ||
-            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerV, protoShowerU, maxSeparation, vShowerStart3D))
+            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerV, protoShowerW, protoShowerU, maxSeparation, vShowerStart3D) ||
+            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerV, protoShowerU, protoShowerW, maxSeparation, vShowerStart3D))
         {
+                vFound = true;
+            /*
             if (LArClusterHelper::GetClosestDistance(vShowerStart3D, caloHitList3D) < 3.f)
             {
                 //std::cout << "FOUND V FROM X PROJECTION" << std::endl;
                 vFound = true;
             }
+            */
         }
 
         if (LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, protoShowerW, protoShowerU, protoShowerV, maxSeparation, wShowerStart3D) ||
-            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerW, protoShowerU, maxSeparation, wShowerStart3D) ||
-            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerW, protoShowerV, maxSeparation, wShowerStart3D))
+            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerW, protoShowerU, protoShowerV, maxSeparation, wShowerStart3D) ||
+            LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerW, protoShowerV, protoShowerU, maxSeparation, wShowerStart3D))
         {
+                wFound = true;
+            /*
             if (LArClusterHelper::GetClosestDistance(wShowerStart3D, caloHitList3D) < 3.f)
             {
                 //std::cout << "FOUND W FROM X PROJECTION" << std::endl;
                 wFound = true;
             }
+            */
         }
     }
 
@@ -2435,6 +3218,7 @@ bool LArConnectionPathwayHelper::AreShowerStartsConsistent(pandora::Algorithm *c
     return (metric < maxSeparation);
 }
 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArConnectionPathwayHelper::AreDirectionsConsistent(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
@@ -2442,6 +3226,14 @@ bool LArConnectionPathwayHelper::AreDirectionsConsistent(pandora::Algorithm *con
 {
     float metric(0.0);
 
+    return LArConnectionPathwayHelper::AreDirectionsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, maxOpeningAngle, metric);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArConnectionPathwayHelper::AreDirectionsConsistent(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
+    const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float maxOpeningAngle, float &metric)
+{
     const CartesianVector &directionU1(protoShowerU.m_connectionPathway.m_startDirection);
     const CartesianVector &directionV1(protoShowerV.m_connectionPathway.m_startDirection);
     const CartesianVector &directionW1(protoShowerW.m_connectionPathway.m_startDirection);
@@ -2560,8 +3352,8 @@ bool LArConnectionPathwayHelper::AreDirectionsConsistent(pandora::Algorithm *con
     std::cout << "angularDeviationU: " << openingAngleU << std::endl;
     std::cout << "angularDeviationV: " << openingAngleV << std::endl;
     std::cout << "angularDeviationW: " << openingAngleW << std::endl;
-    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-    */
+   //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+   */
     /////////////////////////////////
 
     if ((openingAngleU > maxOpeningAngle) || (openingAngleV > maxOpeningAngle) || (openingAngleW > maxOpeningAngle))
@@ -2784,12 +3576,16 @@ bool LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pandora::Algori
 bool LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
     const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation, CartesianVector &showerStart3D)
 {
+    std::cout << "YO IZZIE WE COULD DO A THING HERE WE'RE WE TRY AND SEE IF HIGHER OR LOWER L HYPOTHESIS IS BETTER" << std::endl;
+
     const CartesianVector showerStart(protoShower.m_showerCore.m_startPosition);
     CartesianVector showerStart1(0.f, 0.f, 0.f), showerStart2(0.f, 0.f, 0.f);
 
-    const HitType hitType(protoShower.m_connectionPathway.m_pathwayHitList.front()->GetHitType());
-    const HitType hitType1(protoShower1.m_connectionPathway.m_pathwayHitList.front()->GetHitType());
-    const HitType hitType2(protoShower2.m_connectionPathway.m_pathwayHitList.front()->GetHitType());
+    //std::cout << "HERE 1" << std::endl;
+    const HitType hitType(protoShower.m_spineHitList.front()->GetHitType());
+    const HitType hitType1(protoShower1.m_spineHitList.front()->GetHitType());
+    const HitType hitType2(protoShower2.m_spineHitList.front()->GetHitType());
+    //std::cout << "HERE 2" << std::endl;
 
     bool found1(false);
     float lowestL1(std::numeric_limits<float>::max());
@@ -2809,8 +3605,10 @@ bool LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pandora::Algori
         }
     }
 
+    //std::cout << "AAAAA" << std::endl;
     if (!found1)
         return false;
+    //std::cout << "BBBBB" << std::endl;
 
     bool found2(false);
     float lowestL2(std::numeric_limits<float>::max());
@@ -2829,10 +3627,10 @@ bool LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pandora::Algori
             found2 = true;
         }
     }
-
+    //std::cout << "CCCCCC" << std::endl;
     if (!found2)
         return false;
-
+    //std::cout << "DDDDDD" << std::endl;
     // Now make sure that they agree...
 
     float chi2(0.f);
@@ -2847,15 +3645,17 @@ bool LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pandora::Algori
     LArGeometryHelper::MergeTwoPositions(pAlgorithm->GetPandora(), hitType, hitType1, showerStart, showerStart1, projection2, chi2);
     const float separationSquared2((projection2 - showerStart2).GetMagnitudeSquared());
 
+    //std::cout << "EEEEEEEEEEEEE" << std::endl;
+
     //////////////////
     /*
     std::cout << "SETTING THE NEW VERTEX" << std::endl;
-    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectionU, "U PROJECTION", RED, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectionV, "V PROJECTION", RED, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectionW, "W PROJECTION", RED, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartU, "U SHOWER START", BLACK, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartV, "V SHOWER START", BLACK, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartW, "W SHOWER START", BLACK, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projection, "PROJECTION", RED, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projection1, "1 PROJECTION", RED, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projection2, "2 PROJECTION", RED, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStart, "SHOWER START", BLACK, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStart1, "1 SHOWER START", BLACK, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStart2, "2 SHOWER START", BLACK, 2);
     PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
     */
     //////////////////
@@ -2865,8 +3665,11 @@ bool LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pandora::Algori
     {
         return false;
     }
+    //std::cout << "FFFFFFFFFFFF" << std::endl;
 
     LArGeometryHelper::MergeThreePositions3D(pAlgorithm->GetPandora(), hitType, hitType1, hitType2, showerStart, showerStart1, showerStart2, showerStart3D, chi2);
+
+    //std::cout << "GGGGGGGGGGGGGGG" << std::endl;
 
     return true;
 }
@@ -2874,23 +3677,13 @@ bool LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pandora::Algori
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pandora::Algorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
-    const ProtoShower &protoShower, const ProtoShower &protoShower1, const float maxSeparation, CartesianVector &showerStart3D)
+    const ProtoShower &protoShower, const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation, CartesianVector &showerStart3D)
 {
     const CartesianVector showerStart(protoShower.m_showerCore.m_startPosition);
     CartesianVector showerStart1(0.f, 0.f, 0.f);
 
-    const HitType hitType(protoShower.m_connectionPathway.m_pathwayHitList.front()->GetHitType());
-    const HitType hitType1(protoShower1.m_connectionPathway.m_pathwayHitList.front()->GetHitType());
-    HitType hitType2(TPC_VIEW_U);
-
-    for (const HitType testHitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
-    {
-        if ((testHitType != hitType) && (testHitType != hitType1))
-        {
-            hitType2 = testHitType;
-            break;
-        }
-    }
+    const HitType hitType(protoShower.m_spineHitList.front()->GetHitType());
+    const HitType hitType1(protoShower1.m_spineHitList.front()->GetHitType());
 
     bool found1(false);
     float lowestL1(std::numeric_limits<float>::max());
@@ -2914,8 +3707,7 @@ bool LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pandora::Algori
         return false;
 
     // Now make sure that they agree...
-    CaloHitList caloHitList2;
-    LArPfoHelper::GetCaloHits(pShowerPfo, hitType2, caloHitList2);
+    const CaloHitList &caloHitList2(protoShower2.m_spineHitList);
 
     float chi2(0.f);
     CartesianVector projection2(0.f, 0.f, 0.f);
@@ -2924,6 +3716,17 @@ bool LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pandora::Algori
     const float separation(LArClusterHelper::GetClosestDistance(projection2, caloHitList2));
 
     //////////////////
+
+    //////////////////
+    /*
+    std::cout << "SETTING THE NEW VERTEX" << std::endl;
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projection2, "PROJECTION", GREEN, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStart, "SHOWER START", VIOLET, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStart1, "1 SHOWER START", VIOLET, 2);
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+    */
+    //////////////////
+
     
     if (separation > maxSeparation)
         return false;
@@ -2931,6 +3734,27 @@ bool LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pandora::Algori
     LArGeometryHelper::MergeTwoPositions3D(pAlgorithm->GetPandora(), hitType, hitType1, showerStart, showerStart1, showerStart3D, chi2);
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArConnectionPathwayHelper::GetMinMiddleMax(const float value1, const float value2, const float value3, float &minValue, float &middleValue, 
+    float &maxValue)
+{
+    minValue = std::min(std::min(value1, value2), value3);
+    maxValue = std::max(std::max(value1, value2), value3);
+    middleValue = minValue;
+
+    for (const float value : {value1, value2, value3})
+    {
+        if ((std::fabs(value - minValue) < std::numeric_limits<float>::epsilon()) || 
+            (std::fabs(value - maxValue) < std::numeric_limits<float>::epsilon()))
+        {
+            continue;
+        }
+
+        middleValue = value;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -37,7 +37,8 @@ ElectronStartRefinementTool::ElectronStartRefinementTool() :
     m_maxXSeparation(5.f),
     m_maxSeparation(2.f),
     m_extendMode(true),
-    m_moveVertexMode(true)
+    m_moveVertexMode(true),
+    m_truncateGammaMode(false)
 {
 }
 
@@ -69,33 +70,19 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
     this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_V, protoShowerVectorV, usedHitListV);
     this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_W, protoShowerVectorW, usedHitListW);
 
+    bool isGamma(false);
+    float highestNHits(0.f);
+    float highestOpeningAngle(-std::numeric_limits<float>::max()); // tie-breaker
+    float showerVertexX(0.f),showerVertexY(0.f), showerVertexZ(0.f);
+
+    int count(0);
+
     for (ElectronProtoShower &protoShowerU : protoShowerVectorU)
     {
         for (ElectronProtoShower &protoShowerV : protoShowerVectorV)
         {
             for (ElectronProtoShower &protoShowerW : protoShowerVectorW)
             {
-                //////////////////////////////
-                /*
-                const CartesianVector projectedNuVertexPositionU(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_U));
-                const CartesianVector projectedNuVertexPositionV(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_V));
-                const CartesianVector projectedNuVertexPositionW(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_W));
-
-                PfoList visualize;
-                visualize.push_back(pShowerPfo);
-                PandoraMonitoringApi::VisualizeParticleFlowObjects(pAlgorithm->GetPandora(), &visualize, "ShowerPfo", BLUE);
-                PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerU.m_connectionPathway.m_pathwayHitList, "Shower Spine U", BLACK);
-                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &protoShowerU.m_showerCore.m_startPosition, "Shower start position U", BLACK, 2);
-                PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerV.m_connectionPathway.m_pathwayHitList, "Shower Spine V", BLACK);
-                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &protoShowerV.m_showerCore.m_startPosition, "Shower start position V", BLACK, 2);
-                PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerW.m_connectionPathway.m_pathwayHitList, "Shower Spine W", BLACK);
-                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &protoShowerW.m_showerCore.m_startPosition, "Shower start position W", BLACK, 2);
-                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPositionU, "Nu vertex position", GREEN, 2);
-                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPositionV, "Nu vertex position", GREEN, 2);
-                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPositionW, "Nu vertex position", GREEN, 2);
-                PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-                */
-                /////////////////////////////
                 LArConnectionPathwayHelper::Consistency consistency(LArConnectionPathwayHelper::Consistency::POSITION);
 
                 if (!this->ArePathwaysConsistent(pAlgorithm, nuVertexPosition, protoShowerU, protoShowerV, protoShowerW, consistency))
@@ -108,31 +95,102 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
                 }
                 else
                 {
+                    ++count;
+                    //////////////////////////////
+                    /*
+                    const CartesianVector projectedNuVertexPositionU(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_U));
+                    const CartesianVector projectedNuVertexPositionV(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_V));
+                    const CartesianVector projectedNuVertexPositionW(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_W));
+
+                    PfoList visualize;
+                    visualize.push_back(pShowerPfo);
+                    PandoraMonitoringApi::VisualizeParticleFlowObjects(pAlgorithm->GetPandora(), &visualize, "ShowerPfo", BLUE);
+                    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerU.m_connectionPathway.m_pathwayHitList, "Shower Pathway U", BLACK);
+                    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerU.m_spineHitList, "Shower Spine U", RED);
+                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &protoShowerU.m_showerCore.m_startPosition, "Shower start position U", BLACK, 2);
+                    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerV.m_connectionPathway.m_pathwayHitList, "Shower Pathway V", BLACK);
+                    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerV.m_spineHitList, "Shower Spine V", RED);
+                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &protoShowerV.m_showerCore.m_startPosition, "Shower start position V", BLACK, 2);
+                    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerW.m_connectionPathway.m_pathwayHitList, "Shower Pathway W", BLACK);
+                    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerW.m_spineHitList, "Shower Spine W", RED);
+                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &protoShowerW.m_showerCore.m_startPosition, "Shower start position W", BLACK, 2);
+                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPositionU, "Nu vertex position", GREEN, 2);
+                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPositionV, "Nu vertex position", GREEN, 2);
+                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPositionW, "Nu vertex position", GREEN, 2);
+                    */
+                    /////////////////////////////
+
                     LArConnectionPathwayHelper::ElectronTreeVariables electronTreeVariables;
 
                     LArConnectionPathwayHelper::FillElectronTreeVariables(pAlgorithm, pShowerPfo, protoShowerU, protoShowerV, protoShowerW, nuVertexPosition,
                         pCaloHitListU, pCaloHitListV, pCaloHitListW, consistency, electronTreeVariables);
 
-                    std::string treeString(pAlgorithm->IsElectron(pShowerPfo) ? "ElectronSignalTree" : "ElectronBackgroundTree");
+                    /////////////////////////////
+                    /*
+                    std::cout << "electronTreeVariables.m_maxNPostShowerStartHits: " << electronTreeVariables.m_maxNPostShowerStartHits << std::endl;
+                    std::cout << "electronTreeVariables.m_maxPostShowerStartOpeningAngle: " << electronTreeVariables.m_maxPostShowerStartOpeningAngle << std::endl;
+                    std::cout << "electronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius: " << electronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius << std::endl;
+                    std::cout << "electronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry: " << electronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry << std::endl;
+
+                    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+                    */
+                    /////////////////////////////
 
                     if (pAlgorithm->m_createTrainingTrees)
+                    {
+                        std::cout << "IN m_createTrainingTrees SECTION" << std::endl;
+                        std::string treeString(pAlgorithm->IsElectron(pShowerPfo) ? "ElectronSignalTree" : "ElectronBackgroundTree");
                         pAlgorithm->FillTree(treeString, electronTreeVariables);
+                        return false;
+                    }
 
-                    //std::cout << "truth: " << treeString << std::endl;
+                    if (count == 1)
+                        pAlgorithm->SetElectronTreeMetadata(pShowerPfo, electronTreeVariables);
 
-                    //if (!pAlgorithm->TMVAIsElectron(electronTreeVariables))
-                    //continue;
+                    if (pAlgorithm->m_hybridMode)
+                    {
+                        std::cout << "IN HYBRID MODE SECTION" << std::endl;
 
-                    continue;
+                        if (!pAlgorithm->IsElectron(pShowerPfo))
+                            continue;
+                    }
+                    else
+                    {                    
+                        std::cout << "IN REAL RECO MODE!!" << std::endl;
+                        std::cout << "m_electronTMVACut: " << pAlgorithm->m_electronTMVACut << std::endl;
 
-                    // past the point of no return
+                        if (!pAlgorithm->TMVAIsElectron(electronTreeVariables, pShowerPfo, true))
+                        {
+                            if (pAlgorithm->TMVAIsGamma(electronTreeVariables, pShowerPfo) && this->IsSensibleShower(electronTreeVariables))
+                            {
+                                if ((std::fabs(electronTreeVariables.m_maxNPostShowerStartHits - highestNHits) == std::numeric_limits<float>::epsilon() && 
+                                     (electronTreeVariables.m_maxPostShowerStartOpeningAngle > highestOpeningAngle)) || (electronTreeVariables.m_maxNPostShowerStartHits > highestNHits))
+                                {
+                                    isGamma = true;
+                                    highestNHits = electronTreeVariables.m_maxNPostShowerStartHits;
+                                    highestOpeningAngle = electronTreeVariables.m_maxPostShowerStartOpeningAngle;
+                                    showerVertexX = electronTreeVariables.m_showerStartX;
+                                    showerVertexY = electronTreeVariables.m_showerStartY;
+                                    showerVertexZ = electronTreeVariables.m_showerStartZ;
+                                }
+                            }
+
+                            continue;
+                        }
+                    }
+
+                    // This is an electron so do electron things...
+
+                    // if electron make sure this is the metadata saved
+                    pAlgorithm->SetElectronTreeMetadata(pShowerPfo, electronTreeVariables);
 
                     if (m_extendMode)
                     {
                         if (this->IsShowerExtendable(pAlgorithm, protoShowerU, protoShowerV, protoShowerW))
                             this->ExtendShower(pAlgorithm, pShowerPfo, protoShowerU, protoShowerV, protoShowerW);
                     }
-                        // set vertex
+
+                    // Set vertex metadata parameters... Only referred to in the shift configuration
                     if (m_moveVertexMode)
                         pAlgorithm->SetElectronMetadata(nuVertexPosition, pShowerPfo);
 
@@ -142,7 +200,52 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
         }
     }
 
+    // Now remove if instead it looks to be a gamma
+    if (m_truncateGammaMode && isGamma)
+    {
+        //ONLY MOVE VERTEX IF IT LOOKS LIKE THE VERTEX IS FURTHER AWAY FROM THE NU VERTEX THEN ORIGINAL SHOWER VERTEX?? AND IF IT IS CONNECTED I.E. DO WE NEED TO DO THIS?
+
+        std::cout << "THIS IS A GAMMA" << std::endl;
+        std::cout << "showerVertexX: " << showerVertexX << std::endl;
+        std::cout << "showerVertexY: " << showerVertexY << std::endl;
+        std::cout << "showerVertexZ: " << showerVertexZ << std::endl;
+
+        ClusterList clusterList;
+        LArPfoHelper::GetClusters(pShowerPfo, TPC_3D, clusterList);
+
+        const float currentSeparation(LArClusterHelper::GetClosestDistance(nuVertexPosition, clusterList));
+
+        const CartesianVector newVertex(showerVertexX, showerVertexY, showerVertexZ);
+        const float newSeparation((newVertex - nuVertexPosition).GetMagnitude());
+
+        if (newSeparation > currentSeparation)
+            pAlgorithm->SetGammaVertex(newVertex, pShowerPfo);
+    }
+
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ElectronStartRefinementTool::IsSensibleShower(const LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
+{
+    // Hits
+    if (electronTreeVariables.m_maxNPostShowerStartHits < 200.f)
+        return false;
+
+    // Scattering Angle
+    if (electronTreeVariables.m_maxPostShowerStartOpeningAngle < 2.f)
+        return false;
+
+    // Moliere Radius
+    if (electronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius < 2.f)
+        return false;
+
+    // Shower Energy Asymmetry
+    if (electronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry < 0.f)
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -983,6 +1086,9 @@ StatusCode ElectronStartRefinementTool::ReadSettings(const TiXmlHandle xmlHandle
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MoveVertexMode", m_moveVertexMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "TruncateGammaMode", m_truncateGammaMode));
 
     ShowerStartRefinementBaseTool::ReadSettings(xmlHandle);
 

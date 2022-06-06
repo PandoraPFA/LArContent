@@ -31,29 +31,32 @@ namespace lar_content
 ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm() : 
     m_binSize(0.005),     
     m_electronFraction(0.3f),
-    m_createTrainingTrees(true),
+    m_createTrainingTrees(false),
+    m_hybridMode(true),
+    m_electronTMVACut(-0.1),
+    m_gammaTMVACut(-0.1),
     m_minElectronCompleteness(0.33f),
     m_minElectronPurity(0.5f),
     m_minGammaCompleteness(0.33f),
     m_thresholdSignalGammaDisplacement(-3.f),
-    m_electronTMVACut(-0.2987),
     m_TMVAReader("")
 {
     m_TMVAReader.AddVariable("PathwayLengthMin", &m_TMVAElectronTreeVariables.m_pathwayLengthMin);
-    m_TMVAReader.AddVariable("PathwayMaxScatteringAngle", &m_TMVAElectronTreeVariables.m_pathwayMaxScatteringAngle);
-    m_TMVAReader.AddVariable("PathwayMiddleEnergySigma", &m_TMVAElectronTreeVariables.m_pathwayMiddleEnergySigma);
+    m_TMVAReader.AddVariable("MaxShowerStartPathwayScatteringAngle2D", &m_TMVAElectronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D);
     m_TMVAReader.AddVariable("MaxNPostShowerStartHits", &m_TMVAElectronTreeVariables.m_maxNPostShowerStartHits);
     m_TMVAReader.AddVariable("MaxPostShowerStartScatterAngle", &m_TMVAElectronTreeVariables.m_maxPostShowerStartScatterAngle);
-    m_TMVAReader.AddVariable("PostShowerStartOpeningAngle", &m_TMVAElectronTreeVariables.m_postShowerStartOpeningAngle);
-    m_TMVAReader.AddVariable("PostShowerStartMeanTransverseAngle", &m_TMVAElectronTreeVariables.m_postShowerStartMeanTransverseAngle);
-    m_TMVAReader.AddVariable("PostShowerStartEnergyWeightedMeanRadialDistance", &m_TMVAElectronTreeVariables.m_postShowerStartEnergyWeightedMeanRadialDistance);
-    m_TMVAReader.AddVariable("PostShowerStartEstimatedMoliereRadius", &m_TMVAElectronTreeVariables.m_postShowerStartEstimatedMoliereRadius);
-    m_TMVAReader.AddVariable("PostShowerStartInitialGapSize", &m_TMVAElectronTreeVariables.m_postShowerStartInitialGapSize);
-    m_TMVAReader.AddVariable("InitialRegionDistanceToNuVertex", &m_TMVAElectronTreeVariables.m_initialRegionDistanceToNuVertex);
+    m_TMVAReader.AddVariable("MaxPostShowerStartNuVertexEnergyAsymmetry", &m_TMVAElectronTreeVariables.m_maxPostShowerStartNuVertexEnergyAsymmetry);
+    m_TMVAReader.AddVariable("MaxPostShowerStartShowerStartEnergyAsymmetry", &m_TMVAElectronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry);
+    m_TMVAReader.AddVariable("MaxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance", &m_TMVAElectronTreeVariables.m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance);
+    m_TMVAReader.AddVariable("MinPostShowerStartShowerStartMoliereRadius", &m_TMVAElectronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius);
+    m_TMVAReader.AddVariable("MaxPostShowerStartOpeningAngle", &m_TMVAElectronTreeVariables.m_maxPostShowerStartOpeningAngle);
+    m_TMVAReader.AddVariable("MaxFoundHitRatio", &m_TMVAElectronTreeVariables.m_maxFoundHitRatio);
+    m_TMVAReader.AddVariable("MaxInitialGapSize", &m_TMVAElectronTreeVariables.m_maxInitialGapSize);
+    m_TMVAReader.AddVariable("MinLargestProjectedGapSize", &m_TMVAElectronTreeVariables.m_minLargestProjectedGapSize);
     m_TMVAReader.AddVariable("NViewsWithAmbiguousHits", &m_TMVAElectronTreeVariables.m_nViewsWithAmbiguousHits);
-    m_TMVAReader.AddVariable("AmbiguousHitMinUnaccountedEnergy", &m_TMVAElectronTreeVariables.m_ambiguousHitMinUnaccountedEnergy);
+    m_TMVAReader.AddVariable("AmbiguousHitMaxUnaccountedEnergy", &m_TMVAElectronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy);
 
-    std::string weightFilePath = "/dune/app/users/imawby/selection/connectionPathwayBDT/showerStartMiddle/dataset_electronsel/weights/TMVAClassification_BDTG.weights.xml";
+    std::string weightFilePath = "TMVAClassification_BDTG_FINAL.weights.xml";
     m_TMVAReader.BookMVA("BDTG", weightFilePath);
 }
 
@@ -75,6 +78,24 @@ ShowerStartRefinementAlgorithm::~ShowerStartRefinementAlgorithm()
         try
         {
             PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ElectronBackgroundTree", "ConnectionPathwayTrees.root", "UPDATE"));
+        }
+        catch (const StatusCodeException &)
+        {
+            std::cout << "THE LIMIT DOES NOT EXIST" << std::endl;
+        }
+
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "GammaSignalTree", "ConnectionPathwayTrees.root", "UPDATE"));
+        }
+        catch (const StatusCodeException &)
+        {
+            std::cout << "THE LIMIT DOES NOT EXIST" << std::endl;
+        }
+
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "GammaBackgroundTree", "ConnectionPathwayTrees.root", "UPDATE"));
         }
         catch (const StatusCodeException &)
         {
@@ -127,135 +148,152 @@ StatusCode ShowerStartRefinementAlgorithm::Run()
 
 void ShowerStartRefinementAlgorithm::FillTree(const std::string &treeName, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
 {
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayLengthMin", electronTreeVariables.m_pathwayLengthMin));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayLengthMiddle", electronTreeVariables.m_pathwayLengthMiddle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayLengthMax", electronTreeVariables.m_pathwayLengthMax));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayShowerStartDelta", electronTreeVariables.m_pathwayShowerStartDelta));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayMaxScatteringAngle", electronTreeVariables.m_pathwayMaxScatteringAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "MinShowerStartPathwayScatteringAngle2D", electronTreeVariables.m_minShowerStartPathwayScatteringAngle2D));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "MiddleShowerStartPathwayScatteringAngle2D", electronTreeVariables.m_middleShowerStartPathwayScatteringAngle2D));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "MaxShowerStartPathwayScatteringAngle2D", electronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayEnergyMeanU", electronTreeVariables.m_pathwayEnergyMeanU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayEnergyMeanV", electronTreeVariables.m_pathwayEnergyMeanV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayEnergyMeanW", electronTreeVariables.m_pathwayEnergyMeanW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayEnergySigmaU", electronTreeVariables.m_pathwayEnergySigmaU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayEnergySigmaV", electronTreeVariables.m_pathwayEnergySigmaV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayEnergySigmaW", electronTreeVariables.m_pathwayEnergySigmaW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayMinEnergyMean", electronTreeVariables.m_pathwayMinEnergyMean));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayMiddleEnergyMean", electronTreeVariables.m_pathwayMiddleEnergyMean));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayMaxEnergyMean", electronTreeVariables.m_pathwayMaxEnergyMean));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayMinEnergySigma", electronTreeVariables.m_pathwayMinEnergySigma));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayMiddleEnergySigma", electronTreeVariables.m_pathwayMiddleEnergySigma));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayMaxEnergySigma", electronTreeVariables.m_pathwayMaxEnergySigma));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartLength", electronTreeVariables.m_postShowerStartLength));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartNHits", electronTreeVariables.m_postShowerStartNHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartNHitsU", electronTreeVariables.m_postShowerStartNHitsU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartNHitsV", electronTreeVariables.m_postShowerStartNHitsV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartNHitsW", electronTreeVariables.m_postShowerStartNHitsW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "MinNPostShowerStartHits", electronTreeVariables.m_minNPostShowerStartHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "MaxNPostShowerStartHits", electronTreeVariables.m_maxNPostShowerStartHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartScatterAngle", electronTreeVariables.m_postShowerStartScatterAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartScatterAngleU", electronTreeVariables.m_postShowerStartScatterAngleU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartScatterAngleV", electronTreeVariables.m_postShowerStartScatterAngleV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartScatterAngleW", electronTreeVariables.m_postShowerStartScatterAngleW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "MinPostShowerStartScatterAngle", electronTreeVariables.m_minPostShowerStartScatterAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "MaxPostShowerStartScatterAngle", electronTreeVariables.m_maxPostShowerStartScatterAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartMinHalfOpeningAngle", electronTreeVariables.m_postShowerStartMinHalfOpeningAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartMaxHalfOpeningAngle", electronTreeVariables.m_postShowerStartMaxHalfOpeningAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartOpeningAngle", electronTreeVariables.m_postShowerStartOpeningAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartOpeningAngleAsymmetry", electronTreeVariables.m_postShowerStartOpeningAngleAsymmetry));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartMeanTransverseAngle", electronTreeVariables.m_postShowerStartMeanTransverseAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartMeanLWeightedTransverseAngle", electronTreeVariables.m_postShowerStartMeanLWeightedTransverseAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartMeanRadialDistance", electronTreeVariables.m_postShowerStartMeanRadialDistance));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartRadialDistanceSigma", electronTreeVariables.m_postShowerStartRadialDistanceSigma));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartEnergyWeightedMeanRadialDistance", electronTreeVariables.m_postShowerStartEnergyWeightedMeanRadialDistance));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartEstimatedMoliereRadius", electronTreeVariables.m_postShowerStartEstimatedMoliereRadius));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartLWeightedMeanRadialDistance", electronTreeVariables.m_postShowerStartLWeightedMeanRadialDistance));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartLWeightedRadialDistanceSigma", electronTreeVariables.m_postShowerStartLWeightedRadialDistanceSigma));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartInitialGapSize", electronTreeVariables.m_postShowerStartInitialGapSize));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PostShowerStartMaxGapSize", electronTreeVariables.m_postShowerStartMaxGapSize));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "InitialRegionDistanceToNuVertex", electronTreeVariables.m_initialRegionDistanceToNuVertex));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "InitialRegionDistanceInGaps", electronTreeVariables.m_initialRegionDistanceInGaps));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "InitialRegionMaxGapSize", electronTreeVariables.m_initialRegionMaxGapSize));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "NViewsWithAmbiguousHits", electronTreeVariables.m_nViewsWithAmbiguousHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "NAmbiguousHits2D", electronTreeVariables.m_nAmbiguousHits2D));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "MinNAmbiguousHits", electronTreeVariables.m_minNAmbiguousHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "MaxNAmbiguousHits", electronTreeVariables.m_maxNAmbiguousHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "AmbiguousHitUnaccountedEnergyU", electronTreeVariables.m_ambiguousHitUnaccountedEnergyU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "AmbiguousHitUnaccountedEnergyV", electronTreeVariables.m_ambiguousHitUnaccountedEnergyV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "AmbiguousHitUnaccountedEnergyW", electronTreeVariables.m_ambiguousHitUnaccountedEnergyW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "AmbiguousHitMinUnaccountedEnergy", electronTreeVariables.m_ambiguousHitMinUnaccountedEnergy));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "AmbiguousHitMaxUnaccountedEnergy", electronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "AmbiguousHitShowerEnergyRatioU", electronTreeVariables.m_ambiguousHitShowerEnergyRatioU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "AmbiguousHitShowerEnergyRatioV", electronTreeVariables.m_ambiguousHitShowerEnergyRatioV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "AmbiguousHitShowerEnergyRatioW", electronTreeVariables.m_ambiguousHitShowerEnergyRatioW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "AmbiguousHitMinShowerEnergyRatio", electronTreeVariables.m_ambiguousHitMinShowerEnergyRatio));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "AmbiguousHitMaxShowerEnergyRatio", electronTreeVariables.m_ambiguousHitMaxShowerEnergyRatio));
-
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayLengthMin", electronTreeVariables.m_pathwayLengthMin));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayLengthMiddle", electronTreeVariables.m_pathwayLengthMiddle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayLengthMax", electronTreeVariables.m_pathwayLengthMax));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayShowerStartDelta", electronTreeVariables.m_pathwayShowerStartDelta));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayMaxScatteringAngle", electronTreeVariables.m_pathwayMaxScatteringAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "MinShowerStartPathwayScatteringAngle2D", electronTreeVariables.m_minShowerStartPathwayScatteringAngle2D));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "MiddleShowerStartPathwayScatteringAngle2D", electronTreeVariables.m_middleShowerStartPathwayScatteringAngle2D));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "MaxShowerStartPathwayScatteringAngle2D", electronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayEnergyMeanU", electronTreeVariables.m_pathwayEnergyMeanU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayEnergyMeanV", electronTreeVariables.m_pathwayEnergyMeanV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayEnergyMeanW", electronTreeVariables.m_pathwayEnergyMeanW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayEnergySigmaU", electronTreeVariables.m_pathwayEnergySigmaU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayEnergySigmaV", electronTreeVariables.m_pathwayEnergySigmaV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayEnergySigmaW", electronTreeVariables.m_pathwayEnergySigmaW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayMinEnergyMean", electronTreeVariables.m_pathwayMinEnergyMean));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayMiddleEnergyMean", electronTreeVariables.m_pathwayMiddleEnergyMean));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayMaxEnergyMean", electronTreeVariables.m_pathwayMaxEnergyMean));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayMinEnergySigma", electronTreeVariables.m_pathwayMinEnergySigma));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayMiddleEnergySigma", electronTreeVariables.m_pathwayMiddleEnergySigma));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayMaxEnergySigma", electronTreeVariables.m_pathwayMaxEnergySigma));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartLength", electronTreeVariables.m_postShowerStartLength));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartNHits", electronTreeVariables.m_postShowerStartNHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartNHitsU", electronTreeVariables.m_postShowerStartNHitsU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartNHitsV", electronTreeVariables.m_postShowerStartNHitsV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartNHitsW", electronTreeVariables.m_postShowerStartNHitsW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "MinNPostShowerStartHits", electronTreeVariables.m_minNPostShowerStartHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "MaxNPostShowerStartHits", electronTreeVariables.m_maxNPostShowerStartHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartScatterAngle", electronTreeVariables.m_postShowerStartScatterAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartScatterAngleU", electronTreeVariables.m_postShowerStartScatterAngleU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartScatterAngleV", electronTreeVariables.m_postShowerStartScatterAngleV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartScatterAngleW", electronTreeVariables.m_postShowerStartScatterAngleW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "MinPostShowerStartScatterAngle", electronTreeVariables.m_minPostShowerStartScatterAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "MaxPostShowerStartScatterAngle", electronTreeVariables.m_maxPostShowerStartScatterAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartMinHalfOpeningAngle", electronTreeVariables.m_postShowerStartMinHalfOpeningAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartMaxHalfOpeningAngle", electronTreeVariables.m_postShowerStartMaxHalfOpeningAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartOpeningAngle", electronTreeVariables.m_postShowerStartOpeningAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartOpeningAngleAsymmetry", electronTreeVariables.m_postShowerStartOpeningAngleAsymmetry));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartMeanTransverseAngle", electronTreeVariables.m_postShowerStartMeanTransverseAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartMeanLWeightedTransverseAngle", electronTreeVariables.m_postShowerStartMeanLWeightedTransverseAngle));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartMeanRadialDistance", electronTreeVariables.m_postShowerStartMeanRadialDistance));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartRadialDistanceSigma", electronTreeVariables.m_postShowerStartRadialDistanceSigma));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartEnergyWeightedMeanRadialDistance", electronTreeVariables.m_postShowerStartEnergyWeightedMeanRadialDistance));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartEstimatedMoliereRadius", electronTreeVariables.m_postShowerStartEstimatedMoliereRadius));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartLWeightedMeanRadialDistance", electronTreeVariables.m_postShowerStartLWeightedMeanRadialDistance));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartLWeightedRadialDistanceSigma", electronTreeVariables.m_postShowerStartLWeightedRadialDistanceSigma));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartInitialGapSize", electronTreeVariables.m_postShowerStartInitialGapSize));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PostShowerStartMaxGapSize", electronTreeVariables.m_postShowerStartMaxGapSize));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "InitialRegionDistanceToNuVertex", electronTreeVariables.m_initialRegionDistanceToNuVertex));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "InitialRegionDistanceInGaps", electronTreeVariables.m_initialRegionDistanceInGaps));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "InitialRegionMaxGapSize", electronTreeVariables.m_initialRegionMaxGapSize));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "NViewsWithAmbiguousHits", electronTreeVariables.m_nViewsWithAmbiguousHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "NAmbiguousHits2D", electronTreeVariables.m_nAmbiguousHits2D));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "MinNAmbiguousHits", electronTreeVariables.m_minNAmbiguousHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "MaxNAmbiguousHits", electronTreeVariables.m_maxNAmbiguousHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "AmbiguousHitUnaccountedEnergyU", electronTreeVariables.m_ambiguousHitUnaccountedEnergyU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "AmbiguousHitUnaccountedEnergyV", electronTreeVariables.m_ambiguousHitUnaccountedEnergyV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "AmbiguousHitUnaccountedEnergyW", electronTreeVariables.m_ambiguousHitUnaccountedEnergyW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "AmbiguousHitMinUnaccountedEnergy", electronTreeVariables.m_ambiguousHitMinUnaccountedEnergy));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "AmbiguousHitMaxUnaccountedEnergy", electronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "AmbiguousHitShowerEnergyRatioU", electronTreeVariables.m_ambiguousHitShowerEnergyRatioU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "AmbiguousHitShowerEnergyRatioV", electronTreeVariables.m_ambiguousHitShowerEnergyRatioV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "AmbiguousHitShowerEnergyRatioW", electronTreeVariables.m_ambiguousHitShowerEnergyRatioW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "AmbiguousHitMinShowerEnergyRatio", electronTreeVariables.m_ambiguousHitMinShowerEnergyRatio));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "AmbiguousHitMaxShowerEnergyRatio", electronTreeVariables.m_ambiguousHitMaxShowerEnergyRatio));
+    std::cout << "electronTreeVariables.m_pathwayLengthMin: " << electronTreeVariables.m_pathwayLengthMin << std::endl;
+    std::cout << "electronTreeVariables.m_initialRegionDistanceToNuVertex: " << electronTreeVariables.m_initialRegionDistanceToNuVertex << std::endl;
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "NConnectionPathways", electronTreeVariables.m_nConnectionPathways));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayLengthMin", electronTreeVariables.m_pathwayLengthMin));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayLengthMiddle", electronTreeVariables.m_pathwayLengthMiddle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayLengthMax", electronTreeVariables.m_pathwayLengthMax));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayShowerStartDelta", electronTreeVariables.m_pathwayShowerStartDelta));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayMaxScatteringAngle", electronTreeVariables.m_pathwayMaxScatteringAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinShowerStartPathwayScatteringAngle2D", electronTreeVariables.m_minShowerStartPathwayScatteringAngle2D));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddleShowerStartPathwayScatteringAngle2D", electronTreeVariables.m_middleShowerStartPathwayScatteringAngle2D));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxShowerStartPathwayScatteringAngle2D", electronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayEnergyMeanU", electronTreeVariables.m_pathwayEnergyMeanU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayEnergyMeanV", electronTreeVariables.m_pathwayEnergyMeanV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayEnergyMeanW", electronTreeVariables.m_pathwayEnergyMeanW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayEnergySigmaU", electronTreeVariables.m_pathwayEnergySigmaU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayEnergySigmaV", electronTreeVariables.m_pathwayEnergySigmaV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayEnergySigmaW", electronTreeVariables.m_pathwayEnergySigmaW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayMinEnergyMean", electronTreeVariables.m_pathwayMinEnergyMean));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayMiddleEnergyMean", electronTreeVariables.m_pathwayMiddleEnergyMean));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayMaxEnergyMean", electronTreeVariables.m_pathwayMaxEnergyMean));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayMinEnergySigma", electronTreeVariables.m_pathwayMinEnergySigma));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayMiddleEnergySigma", electronTreeVariables.m_pathwayMiddleEnergySigma));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayMaxEnergySigma", electronTreeVariables.m_pathwayMaxEnergySigma));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartLength", electronTreeVariables.m_postShowerStartLength));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartNHits", electronTreeVariables.m_postShowerStartNHits));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartNHitsW", electronTreeVariables.m_postShowerStartNHitsW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinNPostShowerStartHits", electronTreeVariables.m_minNPostShowerStartHits));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddleNPostShowerStartHits", electronTreeVariables.m_middleNPostShowerStartHits));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxNPostShowerStartHits", electronTreeVariables.m_maxNPostShowerStartHits));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartScatterAngle", electronTreeVariables.m_postShowerStartScatterAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartScatterAngleW", electronTreeVariables.m_postShowerStartScatterAngleW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartScatterAngle", electronTreeVariables.m_minPostShowerStartScatterAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartScatterAngle", electronTreeVariables.m_middlePostShowerStartScatterAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartScatterAngle", electronTreeVariables.m_maxPostShowerStartScatterAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartOpeningAngleW", electronTreeVariables.m_postShowerStartOpeningAngleW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartOpeningAngle", electronTreeVariables.m_minPostShowerStartOpeningAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartOpeningAngle", electronTreeVariables.m_middlePostShowerStartOpeningAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartOpeningAngle", electronTreeVariables.m_maxPostShowerStartOpeningAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartOpeningAngleAsymmetryW", electronTreeVariables.m_postShowerStartOpeningAngleAsymmetryW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartOpeningAngleAsymmetry", electronTreeVariables.m_minPostShowerStartOpeningAngleAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartOpeningAngleAsymmetry", electronTreeVariables.m_middlePostShowerStartOpeningAngleAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartOpeningAngleAsymmetry", electronTreeVariables.m_maxPostShowerStartOpeningAngleAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartNuVertexHitAsymmetryW", electronTreeVariables.m_postShowerStartNuVertexHitAsymmetryW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartNuVertexHitAsymmetry", electronTreeVariables.m_minPostShowerStartNuVertexHitAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartNuVertexHitAsymmetry", electronTreeVariables.m_middlePostShowerStartNuVertexHitAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartNuVertexHitAsymmetry", electronTreeVariables.m_maxPostShowerStartNuVertexHitAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartNuVertexEnergyAsymmetryW", electronTreeVariables.m_postShowerStartNuVertexEnergyAsymmetryW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartNuVertexEnergyAsymmetry", electronTreeVariables.m_minPostShowerStartNuVertexEnergyAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartNuVertexEnergyAsymmetry", electronTreeVariables.m_middlePostShowerStartNuVertexEnergyAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartNuVertexEnergyAsymmetry", electronTreeVariables.m_maxPostShowerStartNuVertexEnergyAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartShowerStartHitAsymmetryW", electronTreeVariables.m_postShowerStartShowerStartHitAsymmetryW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartShowerStartHitAsymmetry", electronTreeVariables.m_minPostShowerStartShowerStartHitAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartShowerStartHitAsymmetry", electronTreeVariables.m_middlePostShowerStartShowerStartHitAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartShowerStartHitAsymmetry", electronTreeVariables.m_maxPostShowerStartShowerStartHitAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartShowerStartEnergyAsymmetryW", electronTreeVariables.m_postShowerStartShowerStartEnergyAsymmetryW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartShowerStartEnergyAsymmetry", electronTreeVariables.m_minPostShowerStartShowerStartEnergyAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartShowerStartEnergyAsymmetry", electronTreeVariables.m_middlePostShowerStartShowerStartEnergyAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartShowerStartEnergyAsymmetry", electronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartNuVertexMeanRadialDistanceW", electronTreeVariables.m_postShowerStartNuVertexMeanRadialDistanceW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartNuVertexMeanRadialDistance", electronTreeVariables.m_minPostShowerStartNuVertexMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartNuVertexMeanRadialDistance", electronTreeVariables.m_middlePostShowerStartNuVertexMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartNuVertexMeanRadialDistance", electronTreeVariables.m_maxPostShowerStartNuVertexMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartNuVertexEnergyWeightedMeanRadialDistanceW", electronTreeVariables.m_postShowerStartNuVertexEnergyWeightedMeanRadialDistanceW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartNuVertexEnergyWeightedMeanRadialDistance", electronTreeVariables.m_minPostShowerStartNuVertexEnergyWeightedMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartNuVertexEnergyWeightedMeanRadialDistance", electronTreeVariables.m_middlePostShowerStartNuVertexEnergyWeightedMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance", electronTreeVariables.m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartShowerStartMeanRadialDistanceW", electronTreeVariables.m_postShowerStartShowerStartMeanRadialDistanceW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartShowerStartMeanRadialDistance", electronTreeVariables.m_minPostShowerStartShowerStartMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartShowerStartMeanRadialDistance", electronTreeVariables.m_middlePostShowerStartShowerStartMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartShowerStartMeanRadialDistance", electronTreeVariables.m_maxPostShowerStartShowerStartMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartShowerStartEnergyWeightedMeanRadialDistanceW", electronTreeVariables.m_postShowerStartShowerStartEnergyWeightedMeanRadialDistanceW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartShowerStartEnergyWeightedMeanRadialDistance", electronTreeVariables.m_minPostShowerStartShowerStartEnergyWeightedMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartShowerStartEnergyWeightedMeanRadialDistance", electronTreeVariables.m_middlePostShowerStartShowerStartEnergyWeightedMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartShowerStartEnergyWeightedMeanRadialDistance", electronTreeVariables.m_maxPostShowerStartShowerStartEnergyWeightedMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartNuVertexMoliereRadiusW", electronTreeVariables.m_postShowerStartNuVertexMoliereRadiusW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartNuVertexMoliereRadius", electronTreeVariables.m_minPostShowerStartNuVertexMoliereRadius));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartNuVertexMoliereRadius", electronTreeVariables.m_middlePostShowerStartNuVertexMoliereRadius));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartNuVertexMoliereRadius", electronTreeVariables.m_maxPostShowerStartNuVertexMoliereRadius));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartShowerStartMoliereRadiusW", electronTreeVariables.m_postShowerStartShowerStartMoliereRadiusW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinPostShowerStartShowerStartMoliereRadius", electronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddlePostShowerStartShowerStartMoliereRadius", electronTreeVariables.m_middlePostShowerStartShowerStartMoliereRadius));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxPostShowerStartShowerStartMoliereRadius", electronTreeVariables.m_maxPostShowerStartShowerStartMoliereRadius));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PositiveOpeningAngleW", electronTreeVariables.m_positiveOpeningAngleW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "NegativeOpeningAngleW", electronTreeVariables.m_negativeOpeningAngleW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxOpeningAngleW", electronTreeVariables.m_maxOpeningAngleW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "ShowerApexLW", electronTreeVariables.m_showerApexLW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinShowerApexL", electronTreeVariables.m_minShowerApexL));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddleShowerApexL", electronTreeVariables.m_middleShowerApexL));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxShowerApexL", electronTreeVariables.m_maxShowerApexL));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "ShowerApexTW", electronTreeVariables.m_showerApexTW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinShowerApexT", electronTreeVariables.m_minShowerApexT));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddleShowerApexT", electronTreeVariables.m_middleShowerApexT));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxShowerApexT", electronTreeVariables.m_maxShowerApexT));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "FoundHitRatioW", electronTreeVariables.m_foundHitRatioW))
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinFoundHitRatio", electronTreeVariables.m_minFoundHitRatio));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddleFoundHitRatio", electronTreeVariables.m_middleFoundHitRatio));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxFoundHitRatio", electronTreeVariables.m_maxFoundHitRatio));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "FitShowerStartLW", electronTreeVariables.m_fitShowerStartLW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "FitShowerStartTW", electronTreeVariables.m_fitShowerStartTW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartMinHalfOpeningAngle", electronTreeVariables.m_postShowerStartMinHalfOpeningAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartMaxHalfOpeningAngle", electronTreeVariables.m_postShowerStartMaxHalfOpeningAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartOpeningAngle", electronTreeVariables.m_postShowerStartOpeningAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartOpeningAngleAsymmetry", electronTreeVariables.m_postShowerStartOpeningAngleAsymmetry));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartMeanTransverseAngle", electronTreeVariables.m_postShowerStartMeanTransverseAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartMeanLWeightedTransverseAngle", electronTreeVariables.m_postShowerStartMeanLWeightedTransverseAngle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartMeanRadialDistance", electronTreeVariables.m_postShowerStartMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartRadialDistanceSigma", electronTreeVariables.m_postShowerStartRadialDistanceSigma));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartEnergyWeightedMeanRadialDistance", electronTreeVariables.m_postShowerStartEnergyWeightedMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartEstimatedMoliereRadius", electronTreeVariables.m_postShowerStartEstimatedMoliereRadius));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartLWeightedMeanRadialDistance", electronTreeVariables.m_postShowerStartLWeightedMeanRadialDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartLWeightedRadialDistanceSigma", electronTreeVariables.m_postShowerStartLWeightedRadialDistanceSigma));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartInitialGapSize", electronTreeVariables.m_postShowerStartInitialGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PostShowerStartMaxGapSize", electronTreeVariables.m_postShowerStartMaxGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "InitialRegionDistanceToNuVertex", electronTreeVariables.m_initialRegionDistanceToNuVertex));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "InitialRegionDistanceInGaps", electronTreeVariables.m_initialRegionDistanceInGaps));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "InitialRegionMaxGapSize", electronTreeVariables.m_initialRegionMaxGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "InitialGapSizeW", electronTreeVariables.m_initialGapSizeW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinInitialGapSize", electronTreeVariables.m_minInitialGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddleInitialGapSize", electronTreeVariables.m_middleInitialGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxInitialGapSize", electronTreeVariables.m_maxInitialGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "LargestGapSizeW", electronTreeVariables.m_largestGapSizeW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinLargestGapSize", electronTreeVariables.m_minLargestGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddleLargestGapSize", electronTreeVariables.m_middleLargestGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxLargestGapSize", electronTreeVariables.m_maxLargestGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "LargestProjectedGapSizeW", electronTreeVariables.m_largestProjectedGapSizeW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinLargestProjectedGapSize", electronTreeVariables.m_minLargestProjectedGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddleLargestProjectedGapSize", electronTreeVariables.m_middleLargestProjectedGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxLargestProjectedGapSize", electronTreeVariables.m_maxLargestProjectedGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "HitLineDensityW", electronTreeVariables.m_hitLineDensityW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinHitLineDensity", electronTreeVariables.m_minHitLineDensity));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MiddleHitLineDensity", electronTreeVariables.m_middleHitLineDensity));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxHitLineDensity", electronTreeVariables.m_maxHitLineDensity));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "NViewsWithAmbiguousHits", electronTreeVariables.m_nViewsWithAmbiguousHits));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "NAmbiguousHits2D", electronTreeVariables.m_nAmbiguousHits2D));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinNAmbiguousHits", electronTreeVariables.m_minNAmbiguousHits));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxNAmbiguousHits", electronTreeVariables.m_maxNAmbiguousHits));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "AmbiguousHitUnaccountedEnergyU", electronTreeVariables.m_ambiguousHitUnaccountedEnergyU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "AmbiguousHitUnaccountedEnergyV", electronTreeVariables.m_ambiguousHitUnaccountedEnergyV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "AmbiguousHitUnaccountedEnergyW", electronTreeVariables.m_ambiguousHitUnaccountedEnergyW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "AmbiguousHitMinUnaccountedEnergy", electronTreeVariables.m_ambiguousHitMinUnaccountedEnergy));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "AmbiguousHitMaxUnaccountedEnergy", electronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "AmbiguousHitShowerEnergyRatioU", electronTreeVariables.m_ambiguousHitShowerEnergyRatioU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "AmbiguousHitShowerEnergyRatioV", electronTreeVariables.m_ambiguousHitShowerEnergyRatioV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "AmbiguousHitShowerEnergyRatioW", electronTreeVariables.m_ambiguousHitShowerEnergyRatioW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "AmbiguousHitMinShowerEnergyRatio", electronTreeVariables.m_ambiguousHitMinShowerEnergyRatio));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "AmbiguousHitMaxShowerEnergyRatio", electronTreeVariables.m_ambiguousHitMaxShowerEnergyRatio));
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), treeName));
 }
@@ -614,27 +652,59 @@ bool ShowerStartRefinementAlgorithm::IsElectron(const ParticleFlowObject *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ShowerStartRefinementAlgorithm::TMVAIsElectron(LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
+bool ShowerStartRefinementAlgorithm::TMVAIsElectron(LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables, const ParticleFlowObject *const pShowerPfo, const bool alterMetadata)
 {
     m_TMVAElectronTreeVariables.m_pathwayLengthMin = electronTreeVariables.m_pathwayLengthMin;
-    m_TMVAElectronTreeVariables.m_pathwayMaxScatteringAngle = electronTreeVariables.m_pathwayMaxScatteringAngle;
-    m_TMVAElectronTreeVariables.m_pathwayMiddleEnergySigma = electronTreeVariables.m_pathwayMiddleEnergySigma;
+    m_TMVAElectronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D = electronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D;
     m_TMVAElectronTreeVariables.m_maxNPostShowerStartHits = electronTreeVariables.m_maxNPostShowerStartHits;
     m_TMVAElectronTreeVariables.m_maxPostShowerStartScatterAngle = electronTreeVariables.m_maxPostShowerStartScatterAngle;
-    m_TMVAElectronTreeVariables.m_postShowerStartOpeningAngle = electronTreeVariables.m_postShowerStartOpeningAngle;
-    m_TMVAElectronTreeVariables.m_postShowerStartMeanTransverseAngle = electronTreeVariables.m_postShowerStartMeanTransverseAngle;
-    m_TMVAElectronTreeVariables.m_postShowerStartEnergyWeightedMeanRadialDistance = electronTreeVariables.m_postShowerStartEnergyWeightedMeanRadialDistance;
-    m_TMVAElectronTreeVariables.m_postShowerStartEstimatedMoliereRadius = electronTreeVariables.m_postShowerStartEstimatedMoliereRadius;
-    m_TMVAElectronTreeVariables.m_postShowerStartInitialGapSize = electronTreeVariables.m_postShowerStartInitialGapSize;
-    m_TMVAElectronTreeVariables.m_initialRegionDistanceToNuVertex = electronTreeVariables.m_initialRegionDistanceToNuVertex;
+    m_TMVAElectronTreeVariables.m_maxPostShowerStartNuVertexEnergyAsymmetry = electronTreeVariables.m_maxPostShowerStartNuVertexEnergyAsymmetry;
+    m_TMVAElectronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry = electronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry;
+    m_TMVAElectronTreeVariables.m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance = electronTreeVariables.m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance;
+    m_TMVAElectronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius = electronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius;
+    m_TMVAElectronTreeVariables.m_maxPostShowerStartOpeningAngle = electronTreeVariables.m_maxPostShowerStartOpeningAngle;
+    m_TMVAElectronTreeVariables.m_maxFoundHitRatio = electronTreeVariables.m_maxFoundHitRatio;
+    m_TMVAElectronTreeVariables.m_maxInitialGapSize = electronTreeVariables.m_maxInitialGapSize;
+    m_TMVAElectronTreeVariables.m_minLargestProjectedGapSize = electronTreeVariables.m_minLargestProjectedGapSize;
     m_TMVAElectronTreeVariables.m_nViewsWithAmbiguousHits = electronTreeVariables.m_nViewsWithAmbiguousHits;
-    m_TMVAElectronTreeVariables.m_ambiguousHitMinUnaccountedEnergy = electronTreeVariables.m_ambiguousHitMinUnaccountedEnergy;
+    m_TMVAElectronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy = electronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy;
 
     float bdtScore(m_TMVAReader.EvaluateMVA("BDTG"));
+
+    if (alterMetadata)
+    {
+        object_creation::ParticleFlowObject::Metadata metadata;
+        metadata.m_propertiesToAdd["ElectronConnectionPathwayScore"] = bdtScore;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pShowerPfo, metadata));
+    }
 
     std::cout << "bdtScore: " << bdtScore << std::endl;
 
     return bdtScore > m_electronTMVACut;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ShowerStartRefinementAlgorithm::TMVAIsGamma(LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables, const ParticleFlowObject *const pShowerPfo)
+{
+    m_TMVAElectronTreeVariables.m_pathwayLengthMin = electronTreeVariables.m_pathwayLengthMin;
+    m_TMVAElectronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D = electronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D;
+    m_TMVAElectronTreeVariables.m_maxNPostShowerStartHits = electronTreeVariables.m_maxNPostShowerStartHits;
+    m_TMVAElectronTreeVariables.m_maxPostShowerStartScatterAngle = electronTreeVariables.m_maxPostShowerStartScatterAngle;
+    m_TMVAElectronTreeVariables.m_maxPostShowerStartNuVertexEnergyAsymmetry = electronTreeVariables.m_maxPostShowerStartNuVertexEnergyAsymmetry;
+    m_TMVAElectronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry = electronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry;
+    m_TMVAElectronTreeVariables.m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance = electronTreeVariables.m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance;
+    m_TMVAElectronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius = electronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius;
+    m_TMVAElectronTreeVariables.m_maxPostShowerStartOpeningAngle = electronTreeVariables.m_maxPostShowerStartOpeningAngle;
+    m_TMVAElectronTreeVariables.m_maxFoundHitRatio = electronTreeVariables.m_maxFoundHitRatio;
+    m_TMVAElectronTreeVariables.m_maxInitialGapSize = electronTreeVariables.m_maxInitialGapSize;
+    m_TMVAElectronTreeVariables.m_minLargestProjectedGapSize = electronTreeVariables.m_minLargestProjectedGapSize;
+    m_TMVAElectronTreeVariables.m_nViewsWithAmbiguousHits = electronTreeVariables.m_nViewsWithAmbiguousHits;
+    m_TMVAElectronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy = electronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy;
+
+    float bdtScore(m_TMVAReader.EvaluateMVA("BDTG"));
+
+    return bdtScore < m_gammaTMVACut;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -648,8 +718,6 @@ bool ShowerStartRefinementAlgorithm::IsGamma(const ParticleFlowObject *const pPf
 
     if (pdg == 11)
         return false;
-
-    std::cout << "DDDDDDDDD" << std::endl;
 
     // but does it contain a large chunk of a gamma even if it is not the main owner?
     // find gamma with highest number of shared hits that has a completeness of >50 % in one view
@@ -701,57 +769,37 @@ bool ShowerStartRefinementAlgorithm::IsGamma(const ParticleFlowObject *const pPf
     if (pdg != 22)
         return false;
 
-    std::cout << "AAAAAAAAAAAAA" << std::endl;
-
     CaloHitList caloHitList3D;
     LArPfoHelper::GetCaloHits(pPfo, TPC_3D, caloHitList3D);
 
     if (caloHitList3D.empty())
         return false;
 
-    std::cout << "BBBBBBBBBBBBB" << std::endl;
-
     float closestDistance(std::numeric_limits<float>::max());
     CartesianVector showerVertex(0.f, 0.f, 0.f);
 
-        for (const CaloHit *const pCaloHit : caloHitList3D)
+    for (const CaloHit *const pCaloHit : caloHitList3D)
+    {
+        float jam = (pCaloHit->GetPositionVector() - nuVertexPosition).GetMagnitude();
+        if (jam < closestDistance)
         {
-            float jam = (pCaloHit->GetPositionVector() - nuVertexPosition).GetMagnitude();
-            if (jam < closestDistance)
-            {
-                closestDistance = jam;
-                showerVertex = pCaloHit->GetPositionVector();
-            }
+            closestDistance = jam;
+            showerVertex = pCaloHit->GetPositionVector();
         }
-
-
-        /*
-        LArPointingCluster pointingCluster(clusters3D.front(), 20, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-
-        const CartesianVector innerVertex(pointingCluster.GetInnerVertex().GetPosition());
-        const CartesianVector outerVertex(pointingCluster.GetOuterVertex().GetPosition());
-
-        if ((outerVertex - nuVertexPosition).GetMagnitude() < (innerVertex - nuVertexPosition).GetMagnitude())
-        {
-            showerVertex = outerVertex;
-        }
-        else
-        {
-            showerVertex = innerVertex;
-        }
-        */
+    }
 
     const CartesianVector &mcVertex(pMainMCParticle->GetVertex());
     const float mcSeparation((mcVertex - nuVertexPosition).GetMagnitude());
     const float recoSeparation((showerVertex - nuVertexPosition).GetMagnitude());
     const float difference(recoSeparation - mcSeparation);
 
-
+    //////////////////////////////////////
+    /*
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &mcVertex, "mcVertex", BLACK, 2);
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &showerVertex, "showerVertex", GREEN, 2);
     PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
-    std::cout << "CCCCCCCC" << std::endl;
+    */
+    //////////////////////////////////////
 
     if (difference > m_thresholdSignalGammaDisplacement)
         return false;
@@ -935,6 +983,32 @@ void ShowerStartRefinementAlgorithm::AddElectronPathway(const ParticleFlowObject
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ShowerStartRefinementAlgorithm::SetElectronTreeMetadata(const ParticleFlowObject *const pShowerPfo, 
+    LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
+{
+    object_creation::ParticleFlowObject::Metadata metadata;
+
+    metadata.m_propertiesToAdd["PathwayLengthMin"] = electronTreeVariables.m_pathwayLengthMin;
+    metadata.m_propertiesToAdd["MaxShowerStartPathwayScatteringAngle2D"] = electronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D;
+    metadata.m_propertiesToAdd["MaxNPostShowerStartHits"] = electronTreeVariables.m_maxNPostShowerStartHits;
+    metadata.m_propertiesToAdd["MaxPostShowerStartScatterAngle"] = electronTreeVariables.m_maxPostShowerStartScatterAngle;
+    metadata.m_propertiesToAdd["MaxPostShowerStartNuVertexEnergyAsymmetry"] = electronTreeVariables.m_maxPostShowerStartNuVertexEnergyAsymmetry;
+    metadata.m_propertiesToAdd["MaxPostShowerStartShowerStartEnergyAsymmetry"] = electronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry;
+    metadata.m_propertiesToAdd["MaxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance"] = electronTreeVariables.m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance;
+    metadata.m_propertiesToAdd["MinPostShowerStartShowerStartMoliereRadius"] = electronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius;
+    metadata.m_propertiesToAdd["MaxPostShowerStartOpeningAngle"] = electronTreeVariables.m_maxPostShowerStartOpeningAngle;
+    metadata.m_propertiesToAdd["MaxFoundHitRatio"] = electronTreeVariables.m_maxFoundHitRatio;
+    metadata.m_propertiesToAdd["MaxInitialGapSize"] = electronTreeVariables.m_maxInitialGapSize;
+    metadata.m_propertiesToAdd["MinLargestProjectedGapSize"] = electronTreeVariables.m_minLargestProjectedGapSize;
+    metadata.m_propertiesToAdd["NViewsWithAmbiguousHits"] = electronTreeVariables.m_nViewsWithAmbiguousHits;
+    metadata.m_propertiesToAdd["AmbiguousHitMaxUnaccountedEnergy"] = electronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy;
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pShowerPfo, metadata));
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ShowerStartRefinementAlgorithm::SetElectronMetadata(const CartesianVector &nuVertexPosition, const ParticleFlowObject *const pShowerPfo)
 {
     object_creation::ParticleFlowObject::Metadata metadata;
@@ -1028,10 +1102,19 @@ StatusCode ShowerStartRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHan
         XmlHelper::ReadValue(xmlHandle, "ElectronFraction", m_electronFraction));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "CreateTrainingTrees", m_createTrainingTrees));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "HybridMode", m_hybridMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ThresholdSignalGammaDisplacement", m_thresholdSignalGammaDisplacement));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ElectronTMVACut", m_electronTMVACut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "GammaTMVACut", m_gammaTMVACut));
 
     PfoMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 

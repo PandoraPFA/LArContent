@@ -41,6 +41,9 @@ public:
     void FillOutPathways(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerPfoHits, 
         pandora::CaloHitList &unavailableHits, ProtoShowerVector &protoShowerVector);
 
+    void AssignAmbiguousHits(ShowerStartRefinementAlgorithm *const pAlgorithm, ProtoShowerVector &protoShowerVector,
+        const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType);
+
     bool IsShowerTruncatable(const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV, 
         const ProtoShowerVector &protoShowerVectorW);
 
@@ -49,7 +52,7 @@ public:
 
     void MatchConnectionPathways(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector &nuVertexPosition, 
         const pandora::ParticleFlowObject *const pShowerPfo, const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV, 
-        const ProtoShowerVector &protoShowerVectorW, MatchedConnectionPathwayMap &threeViewConnectionPathways, MatchedConnectionPathwayMap &twoViewConnectionPathways, 
+        const ProtoShowerVector &protoShowerVectorW, MatchedConnectionPathwayMap &positionMatchedConnectionPathways, MatchedConnectionPathwayMap &directionMatchedConnectionPathways,
         MatchedConnectionPathwayMap &oneViewConnectionPathways);
 
     void MatchShowerStart(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV, 
@@ -88,8 +91,9 @@ public:
 
     void AddUnmatched(const ProtoShowerVector &protoShowerVector, pandora::IntVector &matchedProtoShowers, MatchedConnectionPathwayMap &matchedConnectionPathwayMap);
 
-    void RemoveThreeViewConnectionPathways(ShowerStartRefinementAlgorithm *const pAlgorithm, const MatchedConnectionPathwayMap &threeViewConnectionPathways, 
-        const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertexPosition);
+    bool FillGammaTreeVariables(ShowerStartRefinementAlgorithm *const pAlgorithm, const MatchedConnectionPathwayMap &positionMatchedConnectionPathways,
+        const MatchedConnectionPathwayMap &directionMatchedConnectionPathways, const pandora::ParticleFlowObject *const pShowerPfo, 
+        const pandora::CartesianVector &nuVertexPosition, LArConnectionPathwayHelper::ElectronTreeVariables &gammaTreeVariables);
 
     bool FindShowerVertex(ShowerStartRefinementAlgorithm *const pAlgorithm, const MatchedConnectionPathwayMap &threeViewConnectionPathways, const pandora::IntVector &toRefineIndices, 
         const pandora::CartesianVector &nuVertexPosition, const pandora::ParticleFlowObject *const pShowerPfo, pandora::CartesianVector &showerVertex);
@@ -104,6 +108,11 @@ public:
 
     bool FindShowerVertexFromPosition(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShowerVector &protoShowerVector, 
         const pandora::CartesianVector &nuVertexPosition, pandora::CartesianVector &showerStart3D);
+   
+    bool TMVAIsGamma(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList *const pCaloHitListU, const pandora::CaloHitList *const pCaloHitListV, 
+        const pandora::CaloHitList *const pCaloHitListW, const MatchedConnectionPathwayMap &positionMatchedConnectionPathways, 
+        const MatchedConnectionPathwayMap &directionMatchedConnectionPathways, const pandora::ParticleFlowObject *const pShowerPfo, 
+        const pandora::CartesianVector &nuVertexPosition, pandora::CartesianVector &showerVertex);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

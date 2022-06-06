@@ -96,13 +96,16 @@ class ProtoShower
 public: 
     ProtoShower();
 
-    ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const pandora::CaloHitList &spineHitList, const bool isHelper);
+    ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const pandora::CaloHitList &spineHitList, const bool isHelper,
+        const pandora::CaloHitList &ambiguousHitList, const pandora::CartesianPointVector &ambiguousDirectionVector);
 
     // when you're not feeling lazy, change this to private  
     ShowerCore m_showerCore;
     ConnectionPathway m_connectionPathway;
     pandora::CaloHitList m_spineHitList;
     bool m_isHelper;
+    pandora::CaloHitList m_ambiguousHitList;
+    pandora::CartesianPointVector m_ambiguousDirectionVector;
 };
 
 typedef std::vector<ProtoShower> ProtoShowerVector;
@@ -110,14 +113,15 @@ typedef std::vector<ProtoShower> ProtoShowerVector;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ProtoShower::ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const pandora::CaloHitList &spineHitList, 
-    const bool isHelper) : 
-        m_showerCore(showerCore), m_connectionPathway(connectionPathway), m_spineHitList(spineHitList), m_isHelper(isHelper)
+    const bool isHelper, const pandora::CaloHitList &ambiguousHitList, const pandora::CartesianPointVector &ambiguousDirectionVector) : 
+        m_showerCore(showerCore), m_connectionPathway(connectionPathway), m_spineHitList(spineHitList), m_isHelper(isHelper), 
+        m_ambiguousHitList(ambiguousHitList), m_ambiguousDirectionVector(ambiguousDirectionVector)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ProtoShower::ProtoShower() : m_showerCore(), m_connectionPathway(), m_spineHitList(), m_isHelper(false)
+inline ProtoShower::ProtoShower() : m_showerCore(), m_connectionPathway(), m_spineHitList(), m_isHelper(false), m_ambiguousHitList(), m_ambiguousDirectionVector()
 {
 }
 
@@ -130,8 +134,6 @@ public:
     ElectronProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const pandora::CaloHitList &spineHitList, 
         const bool isHelper, const pandora::CaloHitList &ambiguousHitList, const pandora::CartesianPointVector &ambiguousDirectionVector, const pandora::CaloHitList &hitsToAdd);
 
-    pandora::CaloHitList m_ambiguousHitList;
-    pandora::CartesianPointVector m_ambiguousDirectionVector;
     pandora::CaloHitList m_hitsToAdd;
 };
 
@@ -141,7 +143,7 @@ typedef std::vector<ElectronProtoShower> ElectronProtoShowerVector;
 
 inline ElectronProtoShower::ElectronProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const pandora::CaloHitList &spineHitList, 
     const bool isHelper, const pandora::CaloHitList &ambiguousHitList, const pandora::CartesianPointVector &ambiguousDirectionVector, const pandora::CaloHitList &hitsToAdd) : 
-        ProtoShower(showerCore, connectionPathway, spineHitList, isHelper), m_hitsToAdd(hitsToAdd)
+        ProtoShower(showerCore, connectionPathway, spineHitList, isHelper, ambiguousHitList, ambiguousDirectionVector), m_hitsToAdd(hitsToAdd)
 {
 }
 

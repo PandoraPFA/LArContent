@@ -10,6 +10,8 @@
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
+#include "larpandoracontent/LArHelpers/LArConnectionPathwayHelper.h"
+
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementBaseTool.h"
 
@@ -30,6 +32,8 @@ public:
     bool Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
         const pandora::CartesianVector &nuVertexPosition, const pandora::CaloHitList *const pCaloHitListU, const pandora::CaloHitList *const pCaloHitListV, 
         const pandora::CaloHitList *const pCaloHitListW);
+
+    bool IsSensibleShower(const LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
 
     void BuildProtoShowers(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo,
         const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType, ElectronProtoShowerVector &protoShowerVector,
@@ -98,6 +102,7 @@ private:
     float m_maxSeparation;
     bool m_extendMode;
     bool m_moveVertexMode;
+    bool m_truncateGammaMode;
 };
 
 } // namespace lar_content

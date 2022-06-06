@@ -57,10 +57,12 @@ public:
     bool IsElectronPathway(const pandora::CaloHitList &hitsToAdd);
     void AddElectronPathway(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CaloHitList &pathwayHitList);
 
+    void SetElectronTreeMetadata(const pandora::ParticleFlowObject *const pShowerPfo, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
     void SetElectronMetadata(const pandora::CartesianVector &nuVertexPosition, const pandora::ParticleFlowObject *const pShowerPfo);
     void SetGammaVertex(const pandora::CartesianVector &showerVertex, const pandora::ParticleFlowObject *const pShowerPfo);
     bool IsTrack(const ProtoShower &protoShower);
-    bool TMVAIsElectron(LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
+    bool TMVAIsElectron(LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables, const pandora::ParticleFlowObject *const pShowerPfo, const bool alterMetadata);
+    bool TMVAIsGamma(LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables, const pandora::ParticleFlowObject *const pShowerPfo);
     void RemoveConnectionPathway(const pandora::ParticleFlowObject *const pShowerPfo, const ProtoShower &protoShower);
 
     void FillGammaHitMap();
@@ -70,6 +72,9 @@ public:
     void FillTree(const std::string &treeName, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
 
     bool m_createTrainingTrees;
+    bool m_hybridMode;
+    float m_electronTMVACut;
+    float m_gammaTMVACut;
     LArConnectionPathwayHelper::ElectronTreeVariables m_electronTreeVariables;
 
 private:
@@ -89,7 +94,6 @@ private:
     float m_minElectronPurity;
     float m_minGammaCompleteness;
     float m_thresholdSignalGammaDisplacement;
-    float m_electronTMVACut;
 
     TMVA::Reader m_TMVAReader;
     LArConnectionPathwayHelper::ElectronTreeVariables m_TMVAElectronTreeVariables;
