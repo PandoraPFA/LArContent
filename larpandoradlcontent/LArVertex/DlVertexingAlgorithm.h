@@ -111,14 +111,13 @@ private:
      *
      *  @param  networkOutput The TorchOutput object populated by the network inference step
      *  @param  pixelVector The vector of populated pixels
-     *  @param  thresholds The fractional distance thresholds representing the classes predicted by the network
      *  @param  columnOffset The output column offset for the canvas
      *  @param  rowOffset The output row offset for the canvas
      *  @param  width The output width for the canvas
      *  @param  height The output height for the canvas
      */
-    void GetCanvasParameters(const LArDLHelper::TorchOutput &networkOutput, const PixelVector &pixelVector, const double *const thresholds,
-        int &columnOffset, int &rowOffset, int &width, int &height) const;
+    void GetCanvasParameters(const LArDLHelper::TorchOutput &networkOutput, const PixelVector &pixelVector, int &columnOffset, int &rowOffset,
+        int &width, int &height) const;
 
     /**
      *  @brief  Add a filled ring to the specified canvas.
@@ -229,6 +228,7 @@ private:
     LArDLHelper::TorchModel m_modelW;                   ///< The model for the W view
     int                     m_event;                    ///< The current event number
     int                     m_pass;                     ///< The pass of the train/infer step
+    int                     m_nClasses;                 ///< The number of distance classes
     int                     m_height;                   ///< The height of the images
     int                     m_width;                    ///< The width of the images
     float                   m_maxHitAdc;                ///< Maximum ADC value to allow
@@ -238,6 +238,7 @@ private:
     std::string             m_rootTreeName;             ///< The ROOT tree name
     std::string             m_rootFileName;             ///< The ROOT file name
     std::mt19937            m_rng;                      ///< The random number generator
+    std::vector<double>     m_thresholds;               ///< Distance class thresholds
     const double            PY_EPSILON{1.1920929e-7};   ///< The value of epsilon in Python
 };
 
