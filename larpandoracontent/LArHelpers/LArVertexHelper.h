@@ -48,13 +48,14 @@ public:
      *  @brief  Determine if a vertex is within a detector's fiducial volume. This throws a STATUS_CODE_INVALID_PARAMETER exception if the detector
      *          is not recognised.
      *
+     *  @param  pandora The Pandora instance
      *  @param  vertex The vertex to check
      *  @param  detector The string describing the detector of interest
      *                      DUNEFD HD: dune_fd_hd
      *
      *  @return true if in fiducial volume, false if not
      */
-    static bool IsInFiducialVolume(const pandora::CartesianVector &vertex, const std::string &detector);
+    static bool IsInFiducialVolume(const pandora::Pandora &pandora, const pandora::CartesianVector &vertex, const std::string &detector);
 };
 
 } // namespace lar_content

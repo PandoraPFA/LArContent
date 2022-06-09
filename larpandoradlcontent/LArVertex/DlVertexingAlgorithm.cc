@@ -758,7 +758,7 @@ void DlVertexingAlgorithm::PopulateRootTree(const std::vector<VertexTuple> &vert
                         {
                             const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
                             const CartesianVector &trueVertex{primaries.front()->GetVertex()};
-                            if (LArVertexHelper::IsInFiducialVolume(trueVertex, "dune_fd_hd"))
+                            if (LArVertexHelper::IsInFiducialVolume(this->GetPandora(), trueVertex, "dune_fd_hd"))
                             {
                                 const CartesianVector &recoVertex{vertexTuples.front().GetPosition()};
                                 const float tx{trueVertex.GetX()};
