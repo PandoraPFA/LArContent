@@ -6,13 +6,13 @@
  *  $Log: $
  */
 
-#include "Managers/GeometryManager.h"
 #include "Geometry/LArTPC.h"
+#include "Managers/GeometryManager.h"
 
-#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
 #include <algorithm>
 #include <limits>
@@ -78,7 +78,7 @@ bool LArVertexHelper::IsInFiducialVolume(const Pandora &pandora, const Cartesian
     float tpcMinY{std::numeric_limits<float>::max()}, tpcMaxY{-std::numeric_limits<float>::max()};
     float tpcMinZ{std::numeric_limits<float>::max()}, tpcMaxZ{-std::numeric_limits<float>::max()};
 
-    for (const auto & [ volumeId, pLArTPC ] : larTPCMap)
+    for (const auto &[volumeId, pLArTPC] : larTPCMap)
     {
         (void)volumeId;
         const float centreX{pLArTPC->GetCenterX()}, halfWidthX{0.5f * pLArTPC->GetWidthX()};
@@ -97,8 +97,8 @@ bool LArVertexHelper::IsInFiducialVolume(const Pandora &pandora, const Cartesian
         const float x{vertex.GetX()};
         const float y{vertex.GetY()};
         const float z{vertex.GetZ()};
-        return (tpcMinX + 50.f) < x && x < (tpcMaxX - 50.f) && (tpcMinY + 50.f) < y && y < (tpcMaxY - 50.f) &&
-            (tpcMinZ + 50.f) < z && z < (tpcMaxZ - 150.f);
+        return (tpcMinX + 50.f) < x && x < (tpcMaxX - 50.f) && (tpcMinY + 50.f) < y && y < (tpcMaxY - 50.f) && (tpcMinZ + 50.f) < z &&
+               z < (tpcMaxZ - 150.f);
     }
     else
     {

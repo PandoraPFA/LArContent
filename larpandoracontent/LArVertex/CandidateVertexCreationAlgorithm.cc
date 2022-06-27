@@ -387,7 +387,7 @@ void CandidateVertexCreationAlgorithm::AddInputVertices() const
 {
     const VertexList *pInputVertexList{nullptr};
     try
-    {   // ATTN - No guarantee the list has been initialised, but silent failure here is ok
+    { // ATTN - No guarantee the list has been initialised, but silent failure here is ok
         PandoraContentApi::GetList(*this, m_inputVertexListName, pInputVertexList);
         if (!pInputVertexList)
             return;
@@ -403,7 +403,7 @@ void CandidateVertexCreationAlgorithm::AddInputVertices() const
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
         }
     }
-    catch(const StatusCodeException &)
+    catch (const StatusCodeException &)
     {
         return;
     }
@@ -445,11 +445,10 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputVertexListName", m_inputVertexListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_inputVertexListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputVertexListName", m_outputVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ReplaceCurrentVertexList", m_replaceCurrentVertexList));

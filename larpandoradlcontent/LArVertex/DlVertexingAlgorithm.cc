@@ -25,7 +25,7 @@ using namespace lar_content;
 namespace lar_dl_content
 {
 
-DlVertexingAlgorithm::DlVertexingAlgorithm():
+DlVertexingAlgorithm::DlVertexingAlgorithm() :
     m_trainingMode{false},
     m_trainingOutputFile{""},
     m_event{-1},
@@ -187,7 +187,7 @@ StatusCode DlVertexingAlgorithm::Infer()
         int colOffset{0}, rowOffset{0}, canvasWidth{m_width}, canvasHeight{m_height};
         this->GetCanvasParameters(output, pixelVector, colOffset, rowOffset, canvasWidth, canvasHeight);
 
-        float **canvas{new float*[canvasHeight]};
+        float **canvas{new float *[canvasHeight]};
         for (int row = 0; row < canvasHeight; ++row)
             canvas[row] = new float[canvasWidth]{};
 
@@ -199,7 +199,7 @@ StatusCode DlVertexingAlgorithm::Infer()
         auto classesAccessor{classes.accessor<long, 3>()};
         const double scaleFactor{std::sqrt(m_height * m_height + m_width * m_width)};
         std::map<int, bool> haveSeenMap;
-        for (const auto [ row, col ] : pixelVector)
+        for (const auto [row, col] : pixelVector)
         {
             const auto cls{classesAccessor[0][row][col]};
             if (cls > 0 && cls < m_nClasses)
@@ -258,7 +258,7 @@ StatusCode DlVertexingAlgorithm::Infer()
             delete[] canvas[row];
         delete[] canvas;
     }
-    
+
     int nEmptyLists{0};
     if (vertexCandidatesU.empty())
         ++nEmptyLists;
@@ -270,29 +270,25 @@ StatusCode DlVertexingAlgorithm::Infer()
     CartesianPointVector candidates3D;
     if (nEmptyLists == 0)
     {
-        vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesU.front(), vertexCandidatesV.front(),
-            vertexCandidatesW.front()));
+        vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesU.front(), vertexCandidatesV.front(), vertexCandidatesW.front()));
     }
     else if (nEmptyLists == 1)
     {
         if (vertexCandidatesU.empty())
-        {   // V and W available
-            vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesV.front(), vertexCandidatesW.front(), TPC_VIEW_V,
-                TPC_VIEW_W));
+        { // V and W available
+            vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesV.front(), vertexCandidatesW.front(), TPC_VIEW_V, TPC_VIEW_W));
         }
         else if (vertexCandidatesV.empty())
-        {   // U and W available
-            vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesU.front(), vertexCandidatesW.front(), TPC_VIEW_U,
-                TPC_VIEW_W));
+        { // U and W available
+            vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesU.front(), vertexCandidatesW.front(), TPC_VIEW_U, TPC_VIEW_W));
         }
         else
-        {   // U and V available
-            vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesU.front(), vertexCandidatesV.front(), TPC_VIEW_U,
-                TPC_VIEW_W));
+        { // U and V available
+            vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesU.front(), vertexCandidatesV.front(), TPC_VIEW_U, TPC_VIEW_W));
         }
     }
     else
-    {   // Not enough views to reconstruct a 3D vertex
+    { // Not enough views to reconstruct a 3D vertex
         std::cout << "Insufficient 2D vertices to reconstruct a 3D vertex" << std::endl;
         return STATUS_CODE_NOT_FOUND;
     }
@@ -325,8 +321,8 @@ StatusCode DlVertexingAlgorithm::Infer()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(const pandora::CaloHitList &caloHits, LArDLHelper::TorchInput &networkInput,
-    PixelVector &pixelVector) const
+StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(
+    const pandora::CaloHitList &caloHits, LArDLHelper::TorchInput &networkInput, PixelVector &pixelVector) const
 {
     // Determine the range of coordinates for the view
     float xMin{0.f}, xMax{0.f}, zMin{0.f}, zMax{0.f};
@@ -383,8 +379,8 @@ StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(const pandora::CaloHit
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromPixels(const CaloHitList &caloHits, const PixelVector &pixelVector,
-    CartesianPointVector &positionVector) const
+StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromPixels(
+    const CaloHitList &caloHits, const PixelVector &pixelVector, CartesianPointVector &positionVector) const
 {
     // Determine the range of coordinates for the view
     float xMin{0.f}, xMax{0.f}, zMin{0.f}, zMax{0.f};
@@ -399,7 +395,7 @@ StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromPixels(const CaloHi
     const float xShift{static_cast<float>(dx * 0.5f)};
     const float zShift{static_cast<float>(dz * 0.5f)};
 
-    for (const auto [ row, col ] : pixelVector)
+    for (const auto [row, col] : pixelVector)
     {
         const float x{static_cast<float>(col * dx + xMin + xShift)};
         const float z{static_cast<float>(dz * ((m_height - 1) - row) + zMin + zShift)};
@@ -459,7 +455,7 @@ void DlVertexingAlgorithm::GetCanvasParameters(const LArDLHelper::TorchOutput &n
     // the argmax result is a 1 x height x width tensor where each element is a class id
     auto classesAccessor{classes.accessor<long, 3>()};
     int colOffsetMin{0}, colOffsetMax{0}, rowOffsetMin{0}, rowOffsetMax{0};
-    for (const auto [ row, col ] : pixelVector)
+    for (const auto [row, col] : pixelVector)
     {
         const auto cls{classesAccessor[0][row][col]};
         const double threshold{m_thresholds[cls]};
@@ -497,7 +493,7 @@ void DlVertexingAlgorithm::DrawRing(float **canvas, const int row, const int col
         // Note also that the inner row is always the same as the outer row, so no need to define rp1
         int cp1{c1};
         if (c1 <= r1)
-        {   // We've completed the arc of the inner ring already, so just move radially out from here (see Update comment below)
+        { // We've completed the arc of the inner ring already, so just move radially out from here (see Update comment below)
             cp1 = r2;
         }
         // Fill the pixels from inner to outer in the current row and their mirror pixels in the other octants
@@ -563,21 +559,21 @@ StatusCode DlVertexingAlgorithm::GetMCToHitsMap(LArMCParticleHelper::MCContribut
 
     LArMCParticleHelper::PrimaryParameters parameters;
     parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList2D, parameters,
-        LArMCParticleHelper::IsBeamNeutrinoFinalState, mcToHitsMap);
+    LArMCParticleHelper::SelectReconstructableMCParticles(
+        pMCParticleList, pCaloHitList2D, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcToHitsMap);
 
     return STATUS_CODE_SUCCESS;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlVertexingAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, MCParticleList& mcHierarchy)
-    const
+StatusCode DlVertexingAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, MCParticleList &mcHierarchy) const
 {
     try
     {
-        for (const auto [ mc, hits ] : mcToHitsMap)
-        {   (void) hits;
+        for (const auto [mc, hits] : mcToHitsMap)
+        {
+            (void)hits;
             mcHierarchy.push_back(mc);
             LArMCParticleHelper::GetAllAncestorMCParticles(mc, mcHierarchy);
         }
@@ -588,9 +584,9 @@ StatusCode DlVertexingAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::
     }
 
     // Move the neutrino to the front of the list
-    auto pivot = std::find_if(mcHierarchy.begin(), mcHierarchy.end(),
-        [](const MCParticle* mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); });
-    (void) pivot;
+    auto pivot =
+        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); });
+    (void)pivot;
     if (pivot != mcHierarchy.end())
         std::rotate(mcHierarchy.begin(), pivot, std::next(pivot));
     else
@@ -603,8 +599,10 @@ StatusCode DlVertexingAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::
 
 void DlVertexingAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax) const
 {
-    xMin = std::numeric_limits<float>::max(); xMax = -std::numeric_limits<float>::max();
-    zMin = std::numeric_limits<float>::max(); zMax = -std::numeric_limits<float>::max();
+    xMin = std::numeric_limits<float>::max();
+    xMax = -std::numeric_limits<float>::max();
+    zMin = std::numeric_limits<float>::max();
+    zMax = -std::numeric_limits<float>::max();
     // Find the range of x and z values in the view
     for (const CaloHit *pCaloHit : caloHitList)
     {
@@ -643,8 +641,10 @@ void DlVertexingAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &x
                 break;
         }
 
-        xMin = std::max(xMin, xCentroid - m_regionSize); xMax = std::min(xMax, xCentroid + m_regionSize);
-        zMin = std::max(zMin, zCentroid - m_regionSize); zMax = std::min(zMax, zCentroid + m_regionSize);
+        xMin = std::max(xMin, xCentroid - m_regionSize);
+        xMax = std::min(xMax, xCentroid + m_regionSize);
+        zMin = std::max(zMin, zCentroid - m_regionSize);
+        zMax = std::min(zMax, zCentroid + m_regionSize);
     }
 
     // Avoid unreasonable rescaling of very small hit regions
@@ -800,16 +800,11 @@ void DlVertexingAlgorithm::PopulateRootTree(const std::vector<VertexTuple> &vert
 
 StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode",
-        m_trainingMode));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualise",
-        m_visualise));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Pass",
-        m_pass));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageHeight",
-        m_height));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageWidth",
-        m_width));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualise", m_visualise));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Pass", m_pass));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageHeight", m_height));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageWidth", m_width));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DistanceThresholds", m_thresholds));
     m_nClasses = m_thresholds.size() - 1;
 
@@ -844,8 +839,8 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         }
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "CaloHitListNames", m_caloHitListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -853,8 +848,8 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-DlVertexingAlgorithm::VertexTuple::VertexTuple(const Pandora &pandora, const CartesianVector &vertexU, const CartesianVector &vertexV,
-    const CartesianVector &vertexW) :
+DlVertexingAlgorithm::VertexTuple::VertexTuple(
+    const Pandora &pandora, const CartesianVector &vertexU, const CartesianVector &vertexV, const CartesianVector &vertexW) :
     m_pos{0.f, 0.f, 0.f},
     m_chi2{0.f}
 {
@@ -889,14 +884,14 @@ DlVertexingAlgorithm::VertexTuple::VertexTuple(const Pandora &pandora, const Car
             m_chi2 = chi2VW;
         }
     }
-//    std::cout << "Merging 3, position (" << m_pos.GetX() << ", " << m_pos.GetY() << ", " << m_pos.GetZ() << ") with chi2 " << m_chi2 <<
-//        std::endl;
+    //    std::cout << "Merging 3, position (" << m_pos.GetX() << ", " << m_pos.GetY() << ", " << m_pos.GetZ() << ") with chi2 " << m_chi2 <<
+    //        std::endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-DlVertexingAlgorithm::VertexTuple::VertexTuple(const Pandora &pandora, const CartesianVector &vertex1, const CartesianVector &vertex2,
-    const HitType view1, const HitType view2) :
+DlVertexingAlgorithm::VertexTuple::VertexTuple(
+    const Pandora &pandora, const CartesianVector &vertex1, const CartesianVector &vertex2, const HitType view1, const HitType view2) :
     m_pos{0.f, 0.f, 0.f},
     m_chi2{0.f}
 {
@@ -927,4 +922,3 @@ std::string DlVertexingAlgorithm::VertexTuple::ToString() const
 }
 
 } // namespace lar_dl_content
-
