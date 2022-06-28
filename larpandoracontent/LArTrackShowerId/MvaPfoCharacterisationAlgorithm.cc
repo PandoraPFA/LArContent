@@ -110,8 +110,9 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     // Map version
     const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(
 	wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
-    const std::vector<std::string> chosenFeatureToolOrder(wClusterList.empty() ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
-    const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(chosenFeatureToolMap, chosenFeatureToolOrder, this, pPfo));
+    const LArMvaHelper::StringVector chosenFeatureToolOrder(wClusterList.empty() ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
+    LArMvaHelper::StringVector featureOrder;
+    const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(featureOrder, chosenFeatureToolMap, chosenFeatureToolOrder, this, pPfo));
     //LArMvaHelper::MvaFeatureVector featureVector;
     //LArMvaHelper::MvaFeatureMap featureMap;
     //LArMvaHelper::FillFeaturesMap(featureMap,featureVector,chosenFeatureToolMap,chosenFeatureToolOrder, this, pPfo);
@@ -278,25 +279,30 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     }
     else
     {
-        const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), chosenFeatureToolOrder, featureMap));
+        //////
+        //std::cout << "Order to evaluate: ";
+        //for ( auto const& pName : featureOrder ) std::cout << pName << " ";
+        //std::cout << std::endl;
+        //for ( auto const &[pName, pValue] : featureMap)
+	//std::cout << "   --> " << pName << " " << pValue.Get() << std::endl;
+        //////
+        const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureOrder, featureMap));
         object_creation::ParticleFlowObject::Metadata metadata;
         metadata.m_propertiesToAdd["TrackScore"] = score;
 	// -- insert featureMap values... do I need to do something above?  --
-	std::cout << "Feature vector values: ";
-	//for ( auto const& iFeature : featureVector )
-	//  std::cout << iFeature.Get() << " ";
-	for (auto const &[name, value] : featureMap)
-	  std::cout << value.Get() << " ";
-	std::cout << std::endl;
-	int ct_items=0;
+	//std::cout << "Feature vector values: ";
+	//for (auto const &[name, value] : featureMap)
+	//  std::cout << value.Get() << " ";
+	//std::cout << std::endl;
+	//int ct_items=0;
 	if ( m_persistFeatures ) {
 	    for (auto const &[name, value] : featureMap) {
 	        metadata.m_propertiesToAdd[name] = value.Get();
-		std::cout << "TEST!!!!!!!!! " << name << " --> " << value.Get() << std::endl;
-		ct_items+=1;
+		//std::cout << "TEST!!!!!!!!! " << name << " --> " << value.Get() << std::endl;
+		//ct_items+=1;
 	    }
 	}
-	std::cout << ct_items << " items in the map." << std::endl;
+	//std::cout << ct_items << " items in the map." << std::endl;
 	//////////////////////////////////////////////////////////////////////
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
         return (m_minProbabilityCut <= score);

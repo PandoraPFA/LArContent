@@ -358,7 +358,7 @@ void ThreeDLinearFitFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDLinearFitFeatureTool::Run(const std::string featureToolName, LArMvaHelper::MvaFeatureMap &featureMap,
+void ThreeDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
 				     const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     LArMvaHelper::MvaFeatureVector toolFeatureVec;
@@ -372,6 +372,11 @@ void ThreeDLinearFitFeatureTool::Run(const std::string featureToolName, LArMvaHe
 	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 	return;
     }
+
+    featureOrder.push_back( featureToolName+"_Length" );
+    featureOrder.push_back( featureToolName+"_DiffStraightLineMean" );
+    featureOrder.push_back( featureToolName+"_MaxFitGapLength" );
+    featureOrder.push_back( featureToolName+"_SlidingLinearFitRMS" );
 
     featureMap[ featureToolName+"_Length" ] = toolFeatureVec[0].Get();
     featureMap[ featureToolName+"_DiffStraightLineMean" ] = toolFeatureVec[1].Get();
@@ -531,7 +536,7 @@ void ThreeDVertexDistanceFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDVertexDistanceFeatureTool::Run(const std::string featureToolName, LArMvaHelper::MvaFeatureMap &featureMap,
+void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
 					  const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     LArMvaHelper::MvaFeatureVector toolFeatureVec;
@@ -542,6 +547,8 @@ void ThreeDVertexDistanceFeatureTool::Run(const std::string featureToolName, LAr
 	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 	return;
     }
+
+    featureOrder.push_back( featureToolName+"_VertexDistance" );
 
     featureMap[ featureToolName+"_VertexDistance" ] = toolFeatureVec[0].Get();
 }
@@ -610,7 +617,7 @@ void ThreeDOpeningAngleFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDOpeningAngleFeatureTool::Run(const std::string featureToolName, LArMvaHelper::MvaFeatureMap &featureMap,
+void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
 					const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     LArMvaHelper::MvaFeatureVector toolFeatureVec;
@@ -621,6 +628,8 @@ void ThreeDOpeningAngleFeatureTool::Run(const std::string featureToolName, LArMv
 	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 	return;
     }
+
+    featureOrder.push_back( featureToolName+"_AngleDiff" );
 
     featureMap[ featureToolName+"_AngleDiff" ] = toolFeatureVec[0].Get();
 }
@@ -777,8 +786,8 @@ void ThreeDPCAFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDPCAFeatureTool::Run(const std::string featureToolName, LArMvaHelper::MvaFeatureMap &featureMap,
-				  const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+			       const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     LArMvaHelper::MvaFeatureVector toolFeatureVec;
     this->Run( toolFeatureVec, pAlgorithm, pInputPfo );
@@ -789,6 +798,9 @@ void ThreeDPCAFeatureTool::Run(const std::string featureToolName, LArMvaHelper::
 	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 	return;
     }
+
+    featureOrder.push_back( featureToolName+"_SecondaryPCARatio" );
+    featureOrder.push_back( featureToolName+"_TertiaryPCARatio" );
 
     featureMap[ featureToolName+"_SecondaryPCARatio" ] = toolFeatureVec[0].Get();
     featureMap[ featureToolName+"_TertiaryPCARatio" ] = toolFeatureVec[1].Get();
@@ -837,21 +849,24 @@ void ThreeDChargeFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDChargeFeatureTool::Run(const std::string featureToolName, LArMvaHelper::MvaFeatureMap &featureMap,
+void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
 				  const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
-  LArMvaHelper::MvaFeatureVector toolFeatureVec;
-  this->Run( toolFeatureVec, pAlgorithm, pInputPfo );
+    LArMvaHelper::MvaFeatureVector toolFeatureVec;
+    this->Run( toolFeatureVec, pAlgorithm, pInputPfo );
 
-  if ( featureMap.find(featureToolName+"_FractionalSpread")!=featureMap.end() ||
-       featureMap.find(featureToolName+"_EndFraction")!=featureMap.end() ) {
-      std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
-      throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-      return;
-  }
+    if ( featureMap.find(featureToolName+"_FractionalSpread")!=featureMap.end() ||
+	 featureMap.find(featureToolName+"_EndFraction")!=featureMap.end() ) {
+        std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+	return;
+    }
 
-  featureMap[ featureToolName+"_FractionalSpread" ] = toolFeatureVec[0].Get();
-  featureMap[ featureToolName+"_EndFraction" ] = toolFeatureVec[1].Get();
+    featureOrder.push_back( featureToolName+"_FractionalSpread" );
+    featureOrder.push_back( featureToolName+"_EndFraction" );
+
+    featureMap[ featureToolName+"_FractionalSpread" ] = toolFeatureVec[0].Get();
+    featureMap[ featureToolName+"_EndFraction" ] = toolFeatureVec[1].Get();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
