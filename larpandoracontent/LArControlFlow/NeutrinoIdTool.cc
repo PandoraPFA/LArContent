@@ -259,7 +259,7 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
 
             if (m_persistFeatures)
             {
-                LArMvaHelper::MvaFeatureMap featureMap;
+                LArMvaHelper::MvaFeatureMapDbl featureMap;
                 sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
 
                 for (auto const &[name, value] : featureMap)
@@ -276,7 +276,7 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
 
             if (m_persistFeatures)
             {
-                LArMvaHelper::MvaFeatureMap featureMap;
+                LArMvaHelper::MvaFeatureMapDbl featureMap;
                 sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
 
                 for (auto const &[name, value] : featureMap)
@@ -466,7 +466,7 @@ void NeutrinoIdTool<T>::SliceFeatures::GetFeatureVector(LArMvaHelper::MvaFeature
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void NeutrinoIdTool<T>::SliceFeatures::GetFeatureMap(LArMvaHelper::MvaFeatureMap &featureMap) const
+void NeutrinoIdTool<T>::SliceFeatures::GetFeatureMap(LArMvaHelper::MvaFeatureMapDbl &featureMap) const
 {
     if (!m_isAvailable)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);

@@ -50,7 +50,7 @@ public:
      *  @param  args arguments to pass to the tool
      */
     virtual void Run(MvaTypes::MvaFeatureVector &featureVector, Ts... args) = 0;
-    virtual void Run(const std::string featureToolName, MvaTypes::MvaFeatureMap &featureMap, Ts... args){ return; };
+    virtual void Run(MvaTypes::MvaFeatureMap &featureMap, std::vector<std::string> &featureOrder, const std::string featureToolName, Ts... args){ return; };
 };
 
 template <typename... Ts>
@@ -70,7 +70,7 @@ class LArMvaHelper
 public:
     typedef MvaTypes::MvaFeature MvaFeature;
     typedef MvaTypes::MvaFeatureVector MvaFeatureVector;
-    typedef std::map<std::string, double> MvaFeatureMap;
+    typedef std::map<std::string, double> MvaFeatureMapDbl;
 
     typedef pandora::StringVector StringVector;
     typedef MvaTypes::MvaFeatureMap MvaFeatureMap;
@@ -175,7 +175,7 @@ public:
      *  @return the map of features
      */
     template <typename... Ts, typename... TARGS>
-    static MvaFeatureMap CalculateFeatures(const MvaFeatureToolMap<Ts...> &featureToolMap, const StringVector &featureToolOrder, TARGS &&... args);
+    static MvaFeatureMap CalculateFeatures(StringVector &featureOrder, const MvaFeatureToolMap<Ts...> &featureToolMap, const StringVector &featureToolOrder, TARGS &&... args);
 
     /**
      *  @brief  Calculate the features of a given derived feature tool type in a feature tool vector
@@ -307,8 +307,10 @@ pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trai
     LArMvaHelper::MvaFeatureVector featureVector;
 
     for ( auto const& pFeatureToolName : featureToolOrder ) {
-        if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() )
+        if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() ) {
+	    std::cout << "ERROR IN PRODUCE TRAINING EXAMPLE" << std::endl;
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+	}
 	featureVector.push_back( featureContainer.at( pFeatureToolName ) );
     }
 
@@ -332,8 +334,10 @@ bool LArMvaHelper::Classify(const MvaInterface &classifier, const LArMvaHelper::
     LArMvaHelper::MvaFeatureVector featureVector;
 
     for ( auto const& pFeatureToolName : featureToolOrder ) {
-        if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() )
+        if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() ) {
+	    std::cout << "ERROR IN CLASSIFY" << std::endl;
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+	}
 	featureVector.push_back( featureContainer.at( pFeatureToolName ) );
     }
 
@@ -365,8 +369,11 @@ double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, const 
     LArMvaHelper::MvaFeatureVector featureVector;
 
     for ( auto const& pFeatureToolName : featureToolOrder ) {
-        if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() )
+        //std::cout << pFeatureToolName << " <-- Trying to find this..." << std::endl;
+        if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() ) {
+	    std::cout << "ERROR IN CALCULATE PROBABILITY" << std::endl;
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+	}
 	featureVector.push_back( featureContainer.at( pFeatureToolName ) );
     }
 
@@ -389,14 +396,17 @@ LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeatures(const MvaFeatureT
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename... Ts, typename... TARGS>
-LArMvaHelper::MvaFeatureMap LArMvaHelper::CalculateFeatures(const MvaFeatureToolMap<Ts...> &featureToolMap, const LArMvaHelper::StringVector &featureToolOrder, TARGS &&... args)
+LArMvaHelper::MvaFeatureMap LArMvaHelper::CalculateFeatures(LArMvaHelper::StringVector &featureOrder, const MvaFeatureToolMap<Ts...> &featureToolMap,
+							    const LArMvaHelper::StringVector &featureToolOrder, TARGS &&... args)
 {
-  LArMvaHelper::MvaFeatureMap featureMap;
+    LArMvaHelper::MvaFeatureMap featureMap;
 
     for ( auto const& pFeatureToolName : featureToolOrder ) {
-      if ( featureToolMap.find( pFeatureToolName ) == featureToolMap.end() )
-	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-      featureToolMap.at(pFeatureToolName)->Run(pFeatureToolName, featureMap, std::forward<TARGS>(args)...);
+        if ( featureToolMap.find( pFeatureToolName ) == featureToolMap.end() ) {
+	    std::cout << "ERROR IN CALCULATE FEATURES" << std::endl;
+	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+	}
+	featureToolMap.at(pFeatureToolName)->Run(featureMap, featureOrder, pFeatureToolName, std::forward<TARGS>(args)...);
     }
 
     return featureMap;
