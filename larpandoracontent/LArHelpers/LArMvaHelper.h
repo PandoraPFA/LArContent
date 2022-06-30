@@ -173,7 +173,7 @@ public:
      *  @return the map of features
      */
     template <typename... Ts, typename... TARGS>
-    static MvaFeatureMap CalculateFeatures(StringVector &featureOrder, const MvaFeatureToolMap<Ts...> &featureToolMap, const StringVector &featureToolOrder, TARGS &&... args);
+    static MvaFeatureMap CalculateFeatures(const StringVector &featureToolOrder, const MvaFeatureToolMap<Ts...> &featureToolMap, StringVector &featureOrder, TARGS &&... args);
 
     /**
      *  @brief  Calculate the features of a given derived feature tool type in a feature tool vector
@@ -393,8 +393,8 @@ LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeatures(const MvaFeatureT
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename... Ts, typename... TARGS>
-LArMvaHelper::MvaFeatureMap LArMvaHelper::CalculateFeatures(LArMvaHelper::StringVector &featureOrder, const MvaFeatureToolMap<Ts...> &featureToolMap,
-							    const LArMvaHelper::StringVector &featureToolOrder, TARGS &&... args)
+LArMvaHelper::MvaFeatureMap LArMvaHelper::CalculateFeatures(const LArMvaHelper::StringVector &featureToolOrder, const MvaFeatureToolMap<Ts...> &featureToolMap,
+							    LArMvaHelper::StringVector &featureOrder, TARGS &&... args)
 {
     LArMvaHelper::MvaFeatureMap featureMap;
 
