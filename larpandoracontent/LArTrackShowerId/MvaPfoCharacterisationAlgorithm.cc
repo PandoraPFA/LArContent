@@ -269,9 +269,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureOrder, featureMap));
         object_creation::ParticleFlowObject::Metadata metadata;
         metadata.m_propertiesToAdd["TrackScore"] = score;
-	std::cout << "PERSIST? " << m_persistFeatures<< std::endl;
 	if ( m_persistFeatures ) {
-	  std::cout << "PERSIST? " << m_persistFeatures << std::endl;
 	    for (auto const &[name, value] : featureMap) {
 	        metadata.m_propertiesToAdd[name] = value.Get();
 	    }
