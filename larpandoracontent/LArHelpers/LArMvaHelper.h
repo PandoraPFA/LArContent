@@ -17,9 +17,7 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 #include "Pandora/StatusCodes.h"
-// BH - commenting now but may be necessary (pandora::StringVector)
 #include "Pandora/PandoraInternal.h"
-#include "Pandora/StatusCodes.h"
 
 #include <chrono>
 #include <ctime>
@@ -369,7 +367,6 @@ double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, const 
     LArMvaHelper::MvaFeatureVector featureVector;
 
     for ( auto const& pFeatureToolName : featureToolOrder ) {
-        //std::cout << pFeatureToolName << " <-- Trying to find this..." << std::endl;
         if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() ) {
 	    std::cout << "ERROR IN CALCULATE PROBABILITY" << std::endl;
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
@@ -456,34 +453,6 @@ pandora::StatusCode LArMvaHelper::AddFeatureToolToMap(pandora::AlgorithmTool *co
 
     return pandora::STATUS_CODE_FAILURE;
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/*
-pandora::StatusCode LArMvaHelper::ProcessAlgorithmToolListToMap(const pandora::Algorithm &algorithm, const pandora::TiXmlHandle &xmlHandle, const std::string &listName,
-								AlgorithmToolMap &algorithmToolMap)
-{
-    if ("algorithm" != xmlHandle.ToNode()->ValueStr())
-        return pandora::STATUS_CODE_NOT_ALLOWED;
-
-    const pandora::TiXmlHandle algorithmListHandle = pandora::TiXmlHandle(xmlHandle.FirstChild(listName).Element());
-
-    std::cout << "ALG NAMES: ";
-
-    for (pandora::TiXmlElement *pXmlElement = algorithmListHandle.FirstChild("tool").Element(); nullptr != pXmlElement;
-	 pXmlElement = pXmlElement->NextSiblingElement("tool"))
-    {
-        pandora::AlgorithmTool *pAlgorithmTool(nullptr);
-	PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateAlgorithmTool(algorithm, pXmlElement, pAlgorithmTool));
-	std::cout << pXmlElement->Attribute("type") << " ";
-	algorithmToolMap[ pXmlElement->Attribute("type") ] = pAlgorithmTool;
-    }
-
-    std::cout << std::endl;
-
-    return pandora::STATUS_CODE_SUCCESS;
-}
-*/
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
