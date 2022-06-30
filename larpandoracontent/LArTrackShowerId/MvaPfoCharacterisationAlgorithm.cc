@@ -116,7 +116,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 	wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
     const LArMvaHelper::StringVector chosenFeatureToolOrder(wClusterList.empty() ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
     LArMvaHelper::StringVector featureOrder;
-    const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(featureOrder, chosenFeatureToolMap, chosenFeatureToolOrder, this, pPfo));
+    const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(chosenFeatureToolOrder, chosenFeatureToolMap, featureOrder, this, pPfo));
 
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
     {
