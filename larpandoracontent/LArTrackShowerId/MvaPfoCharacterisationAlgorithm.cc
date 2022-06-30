@@ -22,6 +22,7 @@ namespace lar_content
 
 template <typename T>
 MvaPfoCharacterisationAlgorithm<T>::MvaPfoCharacterisationAlgorithm() :
+    m_persistFeatures(false),
     m_trainingSetMode(false),
     m_testBeamMode(false),
     m_enableProbability(true),
@@ -97,25 +98,11 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
 
-    /*
-    const PfoCharacterisationFeatureTool::FeatureToolVector &chosenFeatureToolVector(
-        wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
-    const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
-    */
-
-    // TEST -- USING FUNCTION TO PRINTOUT MAP
-    this->PrintFeatureToolMap();
-    // --------------------------------------
-
-    // Map version
     const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(
 	wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
     const LArMvaHelper::StringVector chosenFeatureToolOrder(wClusterList.empty() ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
     LArMvaHelper::StringVector featureOrder;
     const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(featureOrder, chosenFeatureToolMap, chosenFeatureToolOrder, this, pPfo));
-    //LArMvaHelper::MvaFeatureVector featureVector;
-    //LArMvaHelper::MvaFeatureMap featureMap;
-    //LArMvaHelper::FillFeaturesMap(featureMap,featureVector,chosenFeatureToolMap,chosenFeatureToolOrder, this, pPfo);
 
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
     {
@@ -279,31 +266,16 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     }
     else
     {
-        //////
-        //std::cout << "Order to evaluate: ";
-        //for ( auto const& pName : featureOrder ) std::cout << pName << " ";
-        //std::cout << std::endl;
-        //for ( auto const &[pName, pValue] : featureMap)
-	//std::cout << "   --> " << pName << " " << pValue.Get() << std::endl;
-        //////
         const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureOrder, featureMap));
         object_creation::ParticleFlowObject::Metadata metadata;
         metadata.m_propertiesToAdd["TrackScore"] = score;
-	// -- insert featureMap values... do I need to do something above?  --
-	//std::cout << "Feature vector values: ";
-	//for (auto const &[name, value] : featureMap)
-	//  std::cout << value.Get() << " ";
-	//std::cout << std::endl;
-	//int ct_items=0;
+	std::cout << "PERSIST? " << m_persistFeatures<< std::endl;
 	if ( m_persistFeatures ) {
+	  std::cout << "PERSIST? " << m_persistFeatures << std::endl;
 	    for (auto const &[name, value] : featureMap) {
 	        metadata.m_propertiesToAdd[name] = value.Get();
-		//std::cout << "TEST!!!!!!!!! " << name << " --> " << value.Get() << std::endl;
-		//ct_items+=1;
 	    }
 	}
-	//std::cout << ct_items << " items in the map." << std::endl;
-	//////////////////////////////////////////////////////////////////////
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
         return (m_minProbabilityCut <= score);
     }
@@ -450,7 +422,7 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
 	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapThreeD));
 
 	// ---- AND TEST USING FUNCTION TO PRINT BACK MAP NAMES
-	this->PrintFeatureToolMap();
+	//this->PrintFeatureToolMap();
 
 	for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMapNoChargeInfo)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapNoChargeInfo));
