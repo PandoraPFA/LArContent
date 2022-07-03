@@ -54,7 +54,6 @@ public:
 template <typename... Ts>
 using MvaFeatureToolVector = std::vector<MvaFeatureTool<Ts...> *>;
 
-// ?
 template <typename... Ts>
 using MvaFeatureToolMap = std::map<std::string, MvaFeatureTool<Ts...> *>;
 
@@ -91,6 +90,8 @@ public:
      *  @param  trainingOutputFile the file to which to append the example
      *  @param  featureToolOrder the vector of strings corresponding to ordered list of keys
      *  @param  featureContainer the container of features
+     *
+     *  @return success
      */
     template <typename TCONTAINER>
     static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, const StringVector &featureToolOrder, TCONTAINER && featureContainer);
@@ -113,7 +114,7 @@ public:
      *  @param  featureToolOrder the vector of strings corresponding to ordered list of keys
      *  @param  featureContainer the container of features
      *
-     *  @return success
+     *  @return the predicted boolean class of the example
      */
     template <typename TCONTAINER>
     static bool Classify(const MvaInterface &classifier, const StringVector &featureToolOrder, TCONTAINER && featureContainer);
@@ -164,10 +165,11 @@ public:
     static MvaFeatureVector CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
 
     /**
-     *  @brief  Calculate the features in a given feature tool map, and fill a MvaFeatureMap and MvaFeatureVector
+     *  @brief  Calculate the features in a given feature tool map, and fill an MvaFeatureMap and vector with feature order
      *
-     *  @param  featureToolMap the feature tool map
      *  @param  featureToolOrder vector of strings of the ordered keys
+     *  @param  featureToolMap the feature tool map
+     *  @param  featureOrder a vector that is to be filled with the order of features in the function
      *  @param  args arguments to pass to the tool
      *
      *  @return the map of features
@@ -298,9 +300,6 @@ template <typename TCONTAINER>
 pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trainingOutputFile, const bool result,
 							 const LArMvaHelper::StringVector &featureToolOrder, TCONTAINER && featureContainer)
 {
-    //static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureMap>::value,
-    //		  "LArMvaHelper: Could not Produce Training Example as the list was not a map of MvaFeatures, yet this structure of parameters is being used.");
-
     // Make a feature vector from the map and calculate the features
     LArMvaHelper::MvaFeatureVector featureVector;
 
