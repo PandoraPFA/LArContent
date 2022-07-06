@@ -10,7 +10,6 @@
 
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
-
 namespace lar_content
 {
 
