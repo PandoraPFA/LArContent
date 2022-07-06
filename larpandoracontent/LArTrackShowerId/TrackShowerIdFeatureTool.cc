@@ -7,6 +7,7 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
+#include "Pandora/StatusCodes.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
@@ -466,6 +467,34 @@ void ThreeDLinearFitFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+				     const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+{
+    LArMvaHelper::MvaFeatureVector toolFeatureVec;
+    this->Run( toolFeatureVec, pAlgorithm, pInputPfo );
+
+    if ( featureMap.find(featureToolName+"_Length") != featureMap.end() ||
+	 featureMap.find(featureToolName+"_DiffStraightLineMean") != featureMap.end() ||
+	 featureMap.find(featureToolName+"_MaxFitGapLength") != featureMap.end() ||
+         featureMap.find(featureToolName+"_SlidingLinearFitRMS") != featureMap.end() ){
+        std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+	return;
+    }
+
+    featureOrder.push_back( featureToolName+"_Length" );
+    featureOrder.push_back( featureToolName+"_DiffStraightLineMean" );
+    featureOrder.push_back( featureToolName+"_MaxFitGapLength" );
+    featureOrder.push_back( featureToolName+"_SlidingLinearFitRMS" );
+
+    featureMap[ featureToolName+"_Length" ] = toolFeatureVec[0].Get();
+    featureMap[ featureToolName+"_DiffStraightLineMean" ] = toolFeatureVec[1].Get();
+    featureMap[ featureToolName+"_MaxFitGapLength" ] = toolFeatureVec[2].Get();
+    featureMap[ featureToolName+"_SlidingLinearFitRMS" ] = toolFeatureVec[3].Get();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora::Cluster *const pCluster, float &straightLineLengthLarge,
     float &diffWithStraightLineMean, float &maxFitGapLength, float &rmsSlidingLinearFit) const
 {
@@ -616,6 +645,25 @@ void ThreeDVertexDistanceFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+					  const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+{
+    LArMvaHelper::MvaFeatureVector toolFeatureVec;
+    this->Run( toolFeatureVec, pAlgorithm, pInputPfo );
+
+    if ( featureMap.find(featureToolName+"_VertexDistance")!=featureMap.end() ) {
+        std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+	return;
+    }
+
+    featureOrder.push_back( featureToolName+"_VertexDistance" );
+
+    featureMap[ featureToolName+"_VertexDistance" ] = toolFeatureVec[0].Get();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
@@ -674,6 +722,25 @@ void ThreeDOpeningAngleFeatureTool::Run(
     }
 
     featureVector.push_back(diffAngle);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+					const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+{
+    LArMvaHelper::MvaFeatureVector toolFeatureVec;
+    this->Run( toolFeatureVec, pAlgorithm, pInputPfo );
+
+    if ( featureMap.find(featureToolName+"_AngleDiff")!=featureMap.end() ) {
+        std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+	return;
+    }
+
+    featureOrder.push_back( featureToolName+"_AngleDiff" );
+
+    featureMap[ featureToolName+"_AngleDiff" ] = toolFeatureVec[0].Get();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -828,6 +895,28 @@ void ThreeDPCAFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+			       const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+{
+    LArMvaHelper::MvaFeatureVector toolFeatureVec;
+    this->Run( toolFeatureVec, pAlgorithm, pInputPfo );
+
+    if ( featureMap.find(featureToolName+"_SecondaryPCARatio")!=featureMap.end() ||
+	 featureMap.find(featureToolName+"_TertiaryPCARatio")!=featureMap.end() ) {
+        std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+	return;
+    }
+
+    featureOrder.push_back( featureToolName+"_SecondaryPCARatio" );
+    featureOrder.push_back( featureToolName+"_TertiaryPCARatio" );
+
+    featureMap[ featureToolName+"_SecondaryPCARatio" ] = toolFeatureVec[0].Get();
+    featureMap[ featureToolName+"_TertiaryPCARatio" ] = toolFeatureVec[1].Get();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ThreeDPCAFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
@@ -865,6 +954,28 @@ void ThreeDChargeFeatureTool::Run(
 
     featureVector.push_back(charge1);
     featureVector.push_back(charge2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+				  const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+{
+    LArMvaHelper::MvaFeatureVector toolFeatureVec;
+    this->Run( toolFeatureVec, pAlgorithm, pInputPfo );
+
+    if ( featureMap.find(featureToolName+"_FractionalSpread")!=featureMap.end() ||
+	 featureMap.find(featureToolName+"_EndFraction")!=featureMap.end() ) {
+        std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+	return;
+    }
+
+    featureOrder.push_back( featureToolName+"_FractionalSpread" );
+    featureOrder.push_back( featureToolName+"_EndFraction" );
+
+    featureMap[ featureToolName+"_FractionalSpread" ] = toolFeatureVec[0].Get();
+    featureMap[ featureToolName+"_EndFraction" ] = toolFeatureVec[1].Get();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

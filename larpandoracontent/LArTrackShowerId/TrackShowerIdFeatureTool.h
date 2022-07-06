@@ -147,6 +147,8 @@ public:
     ThreeDLinearFitFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+    void Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+             const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -183,6 +185,8 @@ public:
     ThreeDVertexDistanceFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+    void Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+	     const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -261,6 +265,8 @@ public:
     ThreeDOpeningAngleFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+    void Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+	     const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -305,6 +311,8 @@ public:
     ThreeDPCAFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+    void Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+	     const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -347,6 +355,8 @@ public:
     };
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+    void Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+	     const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
     /**

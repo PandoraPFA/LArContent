@@ -22,6 +22,7 @@ namespace lar_content
 
 template <typename T>
 MvaPfoCharacterisationAlgorithm<T>::MvaPfoCharacterisationAlgorithm() :
+    m_persistFeatures(false),
     m_trainingSetMode(false),
     m_testBeamMode(false),
     m_enableProbability(true),
@@ -97,22 +98,24 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
 
-    const PfoCharacterisationFeatureTool::FeatureToolVector &chosenFeatureToolVector(
-        wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
-    const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
+    const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(
+	wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
+    const LArMvaHelper::StringVector chosenFeatureToolOrder(wClusterList.empty() ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
+    LArMvaHelper::StringVector featureOrder;
+    const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(chosenFeatureToolOrder, chosenFeatureToolMap, featureOrder, this, pPfo));
 
-    for (const LArMvaHelper::MvaFeature &featureValue : featureVector)
+    for ( auto const &[featureKey, featureValue] : featureMap )
     {
         if (!featureValue.IsInitialized())
-        {
+	{
             if (m_enableProbability)
             {
-                object_creation::ParticleFlowObject::Metadata metadata;
-                metadata.m_propertiesToAdd["TrackScore"] = -1.f;
+		object_creation::ParticleFlowObject::Metadata metadata;
+		metadata.m_propertiesToAdd["TrackScore"] = -1.f;
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
-            }
-            return (pPfo->GetParticleId() == MU_MINUS);
-        }
+	    }
+	    return (pPfo->GetParticleId() == MU_MINUS);
+	}
     }
 
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
@@ -225,7 +228,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
                 std::string outputFile(m_trainingOutputFile);
                 const std::string end = ((wClusterList.empty()) ? "noChargeInfo.txt" : ".txt");
                 outputFile.append(end);
-                LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
+                LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, chosenFeatureToolOrder, featureMap);
             }
         }
 
@@ -250,7 +253,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         {
             std::string outputFile(m_trainingOutputFile);
             outputFile.append(wClusterList.empty() ? "noChargeInfo.txt" : ".txt");
-            LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
+            LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, chosenFeatureToolOrder, featureMap);
         }
 
         return isTrueTrack;
@@ -259,13 +262,18 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     // If no failures, proceed with MvaPfoCharacterisationAlgorithm classification
     if (!m_enableProbability)
     {
-        return LArMvaHelper::Classify((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureVector);
+        return LArMvaHelper::Classify((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), chosenFeatureToolOrder, featureMap);
     }
     else
     {
-        const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureVector));
+        const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureOrder, featureMap));
         object_creation::ParticleFlowObject::Metadata metadata;
         metadata.m_propertiesToAdd["TrackScore"] = score;
+	if ( m_persistFeatures ) {
+	    for (auto const &[name, value] : featureMap) {
+	        metadata.m_propertiesToAdd[name] = value.Get();
+	    }
+	}
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
         return (m_minProbabilityCut <= score);
     }
@@ -296,6 +304,8 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "FoldToPrimaries", m_primaryParameters.m_foldBackHierarchy));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PersistFeatures", m_persistFeatures));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingSetMode", m_trainingSetMode));
 
@@ -383,20 +393,25 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
         }
     }
 
+    // Need this in case we end up using the non-3d info version
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));
+    // and the map
+    LArMvaHelper::AlgorithmToolMap algorithmToolMap;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureTools", m_algorithmToolNames, algorithmToolMap));
 
     if (m_useThreeDInformation)
     {
-        AlgorithmToolVector algorithmToolVectorNoChargeInfo;
+	// and the map for NoChargeInfo
+	LArMvaHelper::AlgorithmToolMap algorithmToolMapNoChargeInfo;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureToolsNoChargeInfo", algorithmToolVectorNoChargeInfo));
+				 LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureToolsNoChargeInfo", m_algorithmToolNamesNoChargeInfo, algorithmToolMapNoChargeInfo));
 
-        for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorThreeD));
+	for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMap)
+	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapThreeD));
 
-        for (AlgorithmTool *const pAlgorithmTool : algorithmToolVectorNoChargeInfo)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorNoChargeInfo));
+	for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMapNoChargeInfo)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapNoChargeInfo));
     }
     else
     {
@@ -415,6 +430,8 @@ bool MvaPfoCharacterisationAlgorithm<T>::PassesFiducialCut(const CartesianVector
     const float vx(vertex.GetX()), vy(vertex.GetY()), vz(vertex.GetZ());
     return m_fiducialMinX <= vx && vx <= m_fiducialMaxX && m_fiducialMinY <= vy && vy <= m_fiducialMaxY && m_fiducialMinZ <= vz && vz <= m_fiducialMaxZ;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 template class MvaPfoCharacterisationAlgorithm<AdaBoostDecisionTree>;
 template class MvaPfoCharacterisationAlgorithm<SupportVectorMachine>;

@@ -150,7 +150,7 @@ const pandora::Vertex *MvaVertexSelectionAlgorithm<T>::CompareVertices(const Ver
             VertexSharedFeatureInfo sharedFeatureInfo(separation, axisHits);
             this->AddSharedFeaturesToVector(sharedFeatureInfo, sharedFeatureList);
 
-            if (LArMvaHelper::Classify(t, eventFeatureList, featureList, chosenFeatureList, sharedFeatureList))
+            if (LArMvaHelper::Classify(t, LArMvaHelper::ConcatenateFeatureLists(eventFeatureList, featureList, chosenFeatureList, sharedFeatureList)))
             {
                 pBestVertex = pVertex;
                 chosenFeatureList = featureList;
@@ -158,7 +158,7 @@ const pandora::Vertex *MvaVertexSelectionAlgorithm<T>::CompareVertices(const Ver
         }
         else
         {
-            if (LArMvaHelper::Classify(t, eventFeatureList, featureList, chosenFeatureList))
+	    if (LArMvaHelper::Classify(t, LArMvaHelper::ConcatenateFeatureLists(eventFeatureList, featureList, chosenFeatureList)))
             {
                 pBestVertex = pVertex;
                 chosenFeatureList = featureList;

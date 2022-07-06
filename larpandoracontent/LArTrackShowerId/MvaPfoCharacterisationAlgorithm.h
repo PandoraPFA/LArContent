@@ -37,11 +37,17 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     ClusterCharacterisationFeatureTool::FeatureToolVector m_featureToolVector;         ///< The feature tool map
-    PfoCharacterisationFeatureTool::FeatureToolVector m_featureToolVectorThreeD;       ///< The feature tool map for 3D info
-    PfoCharacterisationFeatureTool::FeatureToolVector m_featureToolVectorNoChargeInfo; ///< The feature tool map for missing W view
+
+    PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapThreeD;             ///< FeatureToolMap as a map for 3D info
+    PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapNoChargeInfo;       ///< FeatureToolMap as a map for missing W view
+
+    std::vector<std::string> m_algorithmToolNames;                                     ///< Vector of strings saving feature tool order for use in feature calculation
+    std::vector<std::string> m_algorithmToolNamesNoChargeInfo;                         ///< Vector of strings saving feature tool order for use in feature calculation (missing W view)
 
     T m_mva;             ///< The mva
     T m_mvaNoChargeInfo; ///< The mva for missing W view
+
+    bool m_persistFeatures;               ///< Whether to write the features to the properties map
 
     bool m_trainingSetMode;               ///< Whether to train
     bool m_testBeamMode;                  ///< Whether the training set is from a test beam experiment
