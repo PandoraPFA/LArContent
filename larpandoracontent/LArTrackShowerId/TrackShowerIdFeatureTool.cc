@@ -7,8 +7,6 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-// BH.
-//#include "Pandora/PandoraInternal.h"
 #include "Pandora/StatusCodes.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
