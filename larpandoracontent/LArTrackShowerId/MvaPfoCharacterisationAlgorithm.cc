@@ -393,34 +393,22 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
         }
     }
 
-    // Still need this in case we end up using the non-3d info version... (TODO: make sure this links up correctly)
+    // Need this in case we end up using the non-3d info version
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));
-    // and the map:
+    // and the map
     LArMvaHelper::AlgorithmToolMap algorithmToolMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureTools", m_algorithmToolNames, algorithmToolMap));
 
     if (m_useThreeDInformation)
     {
-        //AlgorithmToolVector algorithmToolVectorNoChargeInfo;
-        //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        //    XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureToolsNoChargeInfo", algorithmToolVectorNoChargeInfo));
-	// and the map
+	// and the map for NoChargeInfo
 	LArMvaHelper::AlgorithmToolMap algorithmToolMapNoChargeInfo;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
 				 LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureToolsNoChargeInfo", m_algorithmToolNamesNoChargeInfo, algorithmToolMapNoChargeInfo));
 
-        //for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
-        //    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorThreeD));
-
-        //for (AlgorithmTool *const pAlgorithmTool : algorithmToolVectorNoChargeInfo)
-        //    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorNoChargeInfo));
-
 	for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMap)
 	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapThreeD));
-
-	// ---- AND TEST USING FUNCTION TO PRINT BACK MAP NAMES
-	//this->PrintFeatureToolMap();
 
 	for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMapNoChargeInfo)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapNoChargeInfo));
@@ -444,15 +432,6 @@ bool MvaPfoCharacterisationAlgorithm<T>::PassesFiducialCut(const CartesianVector
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-void MvaPfoCharacterisationAlgorithm<T>::PrintFeatureToolMap() const
-{
-    std::cout << "USING FUNCTION TO READ BACK THE MAP:" << std::endl;
-    for ( auto const &[pName, pValue] : m_featureToolMapThreeD)
-        std::cout << pName << " ";
-    std::cout << std::endl;
-}
 
 template class MvaPfoCharacterisationAlgorithm<AdaBoostDecisionTree>;
 template class MvaPfoCharacterisationAlgorithm<SupportVectorMachine>;
