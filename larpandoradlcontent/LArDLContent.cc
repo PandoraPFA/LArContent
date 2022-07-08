@@ -18,6 +18,7 @@
 #include "larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlPfoCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTwoDReco/DlTrackShowerStreamSelectionAlgorithm.h"
+#include "larpandoradlcontent/LArVertex/DlVertexingAlgorithm.h"
 
 #include "larpandoradlcontent/LArDLContent.h"
 
@@ -28,7 +29,8 @@
     d("LArDLHitTrackShowerId", DlHitTrackShowerIdAlgorithm)                                                                                \
     d("LArDLPfoCharacterisation", DlPfoCharacterisationAlgorithm)                                                                          \
     d("LArDLHitValidation", DlHitValidationAlgorithm)                                                                                      \
-    d("LArDLTrackShowerStreamSelection", DlTrackShowerStreamSelectionAlgorithm)
+    d("LArDLTrackShowerStreamSelection", DlTrackShowerStreamSelectionAlgorithm)                                                            \
+    d("LArDLVertexing",                         DlVertexingAlgorithm)
 
 #define LAR_DL_ALGORITHM_TOOL_LIST(d)
 

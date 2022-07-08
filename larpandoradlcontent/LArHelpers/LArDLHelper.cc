@@ -20,9 +20,9 @@ StatusCode LArDLHelper::LoadModel(const std::string &filename, LArDLHelper::Torc
         model = torch::jit::load(filename);
         std::cout << "Loaded the TorchScript model \'" << filename << "\'" << std::endl;
     }
-    catch (...)
+    catch (const std::exception &e)
     {
-        std::cout << "Error loading the TorchScript model \'" << filename << "\'" << std::endl;
+        std::cout << "Error loading the TorchScript model \'" << filename << "\':\n" << e.what() << std::endl;
         return STATUS_CODE_FAILURE;
     }
 

@@ -106,6 +106,11 @@ private:
         const pandora::HitType hitType1, const pandora::HitType hitType2, unsigned int &nCrossingCandidates) const;
 
     /**
+     *  @brief  Add candidate vertices from any input vertices
+     */
+    void AddInputVertices() const;
+
+    /**
      *  @brief  Creates a 2D sliding fit of a cluster and stores it for later use
      *
      *  @param  pCluster address of the relevant cluster
@@ -129,6 +134,7 @@ private:
     typedef std::unordered_map<const pandora::Cluster *, pandora::CartesianPointVector> ClusterToSpacepointsMap;
 
     pandora::StringVector m_inputClusterListNames; ///< The list of cluster list names
+    std::string m_inputVertexListName;             ///< The list name for existing candidate vertices
     std::string m_outputVertexListName;            ///< The name under which to save the output vertex list
     bool m_replaceCurrentVertexList;               ///< Whether to replace the current vertex list with the output list
 

@@ -6,11 +6,15 @@
  *  $Log: $
  */
 
-#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
+#include "Geometry/LArTPC.h"
+#include "Managers/GeometryManager.h"
+
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
+#include <algorithm>
 #include <limits>
 
 using namespace pandora;
@@ -56,6 +60,50 @@ LArVertexHelper::ClusterDirection LArVertexHelper::GetClusterDirectionInZ(
     }
 
     throw StatusCodeException(STATUS_CODE_FAILURE);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArVertexHelper::IsInFiducialVolume(const Pandora &pandora, const CartesianVector &vertex, const std::string &detector)
+{
+    const LArTPCMap &larTPCMap(pandora.GetGeometry()->GetLArTPCMap());
+
+    if (larTPCMap.empty())
+    {
+        std::cout << "LArVertexHelper::IsInFiducialVolume - LArTPC description not registered with Pandora as required " << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    }
+
+    float tpcMinX{std::numeric_limits<float>::max()}, tpcMaxX{-std::numeric_limits<float>::max()};
+    float tpcMinY{std::numeric_limits<float>::max()}, tpcMaxY{-std::numeric_limits<float>::max()};
+    float tpcMinZ{std::numeric_limits<float>::max()}, tpcMaxZ{-std::numeric_limits<float>::max()};
+
+    for (const auto &[volumeId, pLArTPC] : larTPCMap)
+    {
+        (void)volumeId;
+        const float centreX{pLArTPC->GetCenterX()}, halfWidthX{0.5f * pLArTPC->GetWidthX()};
+        const float centreY{pLArTPC->GetCenterY()}, halfWidthY{0.5f * pLArTPC->GetWidthY()};
+        const float centreZ{pLArTPC->GetCenterZ()}, halfWidthZ{0.5f * pLArTPC->GetWidthZ()};
+        tpcMinX = std::min(tpcMinX, centreX - halfWidthX);
+        tpcMaxX = std::max(tpcMaxX, centreX + halfWidthX);
+        tpcMinY = std::min(tpcMinY, centreY - halfWidthY);
+        tpcMaxY = std::max(tpcMaxY, centreY + halfWidthY);
+        tpcMinZ = std::min(tpcMinZ, centreZ - halfWidthZ);
+        tpcMaxZ = std::max(tpcMaxZ, centreZ + halfWidthZ);
+    }
+
+    if (detector == "dune_fd_hd")
+    {
+        const float x{vertex.GetX()};
+        const float y{vertex.GetY()};
+        const float z{vertex.GetZ()};
+        return (tpcMinX + 50.f) < x && x < (tpcMaxX - 50.f) && (tpcMinY + 50.f) < y && y < (tpcMaxY - 50.f) && (tpcMinZ + 50.f) < z &&
+               z < (tpcMaxZ - 150.f);
+    }
+    else
+    {
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    }
 }
 
 } // namespace lar_content
