@@ -228,7 +228,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
                 std::string outputFile(m_trainingOutputFile);
                 const std::string end = ((wClusterList.empty()) ? "noChargeInfo.txt" : ".txt");
                 outputFile.append(end);
-                LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, chosenFeatureToolOrder, featureMap);
+                LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureOrder, featureMap);
             }
         }
 
@@ -253,7 +253,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         {
             std::string outputFile(m_trainingOutputFile);
             outputFile.append(wClusterList.empty() ? "noChargeInfo.txt" : ".txt");
-            LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, chosenFeatureToolOrder, featureMap);
+            LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureOrder, featureMap);
         }
 
         return isTrueTrack;
@@ -262,7 +262,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     // If no failures, proceed with MvaPfoCharacterisationAlgorithm classification
     if (!m_enableProbability)
     {
-        return LArMvaHelper::Classify((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), chosenFeatureToolOrder, featureMap);
+        return LArMvaHelper::Classify((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureOrder, featureMap);
     }
     else
     {
