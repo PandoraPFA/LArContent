@@ -88,13 +88,13 @@ public:
      *  @brief  Produce a training example with the given features and result - using a map
      *
      *  @param  trainingOutputFile the file to which to append the example
-     *  @param  featureToolOrder the vector of strings corresponding to ordered list of keys
+     *  @param  featureOrder the vector of strings corresponding to ordered list of keys
      *  @param  featureContainer the container of features
      *
      *  @return success
      */
     template <typename TCONTAINER>
-    static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, const StringVector &featureToolOrder, TCONTAINER && featureContainer);
+    static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, const StringVector &featureOrder, TCONTAINER && featureContainer);
 
     /**
      *  @brief  Use the trained classifier to predict the boolean class of an example
@@ -111,13 +111,13 @@ public:
      *  @brief  Use the trained classifier to predict the boolean class of an example -- using a map
      *
      *  @param  classifier the classifier
-     *  @param  featureToolOrder the vector of strings corresponding to ordered list of keys
+     *  @param  featureOrder the vector of strings corresponding to ordered list of keys
      *  @param  featureContainer the container of features
      *
      *  @return the predicted boolean class of the example
      */
     template <typename TCONTAINER>
-    static bool Classify(const MvaInterface &classifier, const StringVector &featureToolOrder, TCONTAINER && featureContainer);
+    static bool Classify(const MvaInterface &classifier, const StringVector &featureOrder, TCONTAINER && featureContainer);
 
     /**
      *  @brief  Use the trained classifer to calculate the classification score of an example (>0 means boolean class true)
@@ -145,13 +145,13 @@ public:
      *  @brief  Use the trained mva to calculate a classification probability for an example -- using a map
      *
      *  @param  classifier the classifier
-     *  @param  featureToolOrder the vector of strings corresponding to ordered list of keys
+     *  @param  featureOrder the vector of strings corresponding to ordered list of keys
      *  @param  featureContainer the container of features
      *
      *  @return the classification probability
      */
     template <typename TCONTAINER>
-    static double CalculateProbability(const MvaInterface &classifier, const StringVector &featureToolOrder, TCONTAINER && featureContainer );
+    static double CalculateProbability(const MvaInterface &classifier, const StringVector &featureOrder, TCONTAINER && featureContainer );
 
     /**
      *  @brief  Calculate the features in a given feature tool vector
@@ -298,12 +298,12 @@ pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trai
 
 template <typename TCONTAINER>
 pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trainingOutputFile, const bool result,
-							 const LArMvaHelper::StringVector &featureToolOrder, TCONTAINER && featureContainer)
+							 const LArMvaHelper::StringVector &featureOrder, TCONTAINER && featureContainer)
 {
     // Make a feature vector from the map and calculate the features
     LArMvaHelper::MvaFeatureVector featureVector;
 
-    for ( auto const& pFeatureToolName : featureToolOrder ) {
+    for ( auto const& pFeatureToolName : featureOrder ) {
         if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() ) {
 	    std::cout << "ERROR IN PRODUCE TRAINING EXAMPLE" << std::endl;
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
@@ -325,12 +325,12 @@ bool LArMvaHelper::Classify(const MvaInterface &classifier, TCONTAINER && featur
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TCONTAINER>
-bool LArMvaHelper::Classify(const MvaInterface &classifier, const LArMvaHelper::StringVector &featureToolOrder, TCONTAINER && featureContainer )
+bool LArMvaHelper::Classify(const MvaInterface &classifier, const LArMvaHelper::StringVector &featureOrder, TCONTAINER && featureContainer )
 {
     // Make a feature vector from the map and calculate the features
     LArMvaHelper::MvaFeatureVector featureVector;
 
-    for ( auto const& pFeatureToolName : featureToolOrder ) {
+    for ( auto const& pFeatureToolName : featureOrder ) {
         if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() ) {
 	    std::cout << "ERROR IN CLASSIFY" << std::endl;
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
@@ -360,12 +360,12 @@ double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, TCONTA
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TCONTAINER>
-double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, const LArMvaHelper::StringVector &featureToolOrder, TCONTAINER && featureContainer )
+double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, const LArMvaHelper::StringVector &featureOrder, TCONTAINER && featureContainer )
 {
     // Make a feature vector from the map and calculate the features
     LArMvaHelper::MvaFeatureVector featureVector;
 
-    for ( auto const& pFeatureToolName : featureToolOrder ) {
+    for ( auto const& pFeatureToolName : featureOrder ) {
         if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() ) {
 	    std::cout << "ERROR IN CALCULATE PROBABILITY" << std::endl;
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
