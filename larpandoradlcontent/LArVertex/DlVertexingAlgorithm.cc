@@ -191,8 +191,6 @@ StatusCode DlVertexingAlgorithm::Infer()
         for (int row = 0; row < canvasHeight; ++row)
             canvas[row] = new float[canvasWidth]{};
 
-        // output is a 1 x num_classes x height x width tensor
-        auto outputAccessor{output.accessor<float, 4>()};
         // we want the maximum value in the num_classes dimension (1) for every pixel
         auto classes{torch::argmax(output, 1)};
         // the argmax result is a 1 x height x width tensor where each element is a class id
