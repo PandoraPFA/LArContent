@@ -151,8 +151,6 @@ StatusCode VertexSelectionBaseAlgorithm::Run()
 
         return STATUS_CODE_SUCCESS;
     }
-    VertexList dlVertexList;
-    dlVertexList.emplace_back(pInputVertexList->back());
 
     HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
     this->InitializeKDTrees(kdTreeU, kdTreeV, kdTreeW);
@@ -174,8 +172,7 @@ StatusCode VertexSelectionBaseAlgorithm::Run()
 
     if (!selectedVertexList.empty())
     {
-        //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, selectedVertexList));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, dlVertexList));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, selectedVertexList));
 
         if (m_replaceCurrentVertexList)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
