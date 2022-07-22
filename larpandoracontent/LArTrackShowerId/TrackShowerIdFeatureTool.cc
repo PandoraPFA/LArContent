@@ -467,7 +467,7 @@ void ThreeDLinearFitFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+void ThreeDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string &featureToolName,
 				     const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     LArMvaHelper::MvaFeatureVector toolFeatureVec;
@@ -645,7 +645,7 @@ void ThreeDVertexDistanceFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string &featureToolName,
 					  const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     LArMvaHelper::MvaFeatureVector toolFeatureVec;
@@ -726,7 +726,7 @@ void ThreeDOpeningAngleFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string &featureToolName,
 					const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     LArMvaHelper::MvaFeatureVector toolFeatureVec;
@@ -895,7 +895,7 @@ void ThreeDPCAFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string &featureToolName,
 			       const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     LArMvaHelper::MvaFeatureVector toolFeatureVec;
@@ -958,7 +958,7 @@ void ThreeDChargeFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string featureToolName,
+void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::StringVector &featureOrder, const std::string &featureToolName,
 				  const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     LArMvaHelper::MvaFeatureVector toolFeatureVec;
