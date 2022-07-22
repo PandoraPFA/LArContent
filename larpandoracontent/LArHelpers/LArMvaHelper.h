@@ -67,7 +67,7 @@ class LArMvaHelper
 public:
     typedef MvaTypes::MvaFeature MvaFeature;
     typedef MvaTypes::MvaFeatureVector MvaFeatureVector;
-    typedef std::map<std::string, double> MvaFeatureMapDbl;
+    typedef std::map<std::string, double> DoubleMap;
 
     typedef pandora::StringVector StringVector;
     typedef MvaTypes::MvaFeatureMap MvaFeatureMap;
