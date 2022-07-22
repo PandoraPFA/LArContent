@@ -100,6 +100,8 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 
     for ( auto const &[featureKey, featureValue] : featureMap )
     {
+        (void)featureKey;
+
         if (!featureValue.IsInitialized())
 	{
             if (m_enableProbability)
