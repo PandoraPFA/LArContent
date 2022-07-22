@@ -305,7 +305,8 @@ pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trai
 
     for ( auto const& pFeatureToolName : featureOrder ) {
         if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() ) {
-	    std::cout << "ERROR IN PRODUCE TRAINING EXAMPLE" << std::endl;
+	    std::cout << "LArMvaHelper::ProduceTrainingExample "
+		      << "- Error: feature tool " << pFeatureToolName << " not found." << std::endl;
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 	}
 	featureVector.push_back( featureContainer.at( pFeatureToolName ) );
@@ -332,7 +333,8 @@ bool LArMvaHelper::Classify(const MvaInterface &classifier, const LArMvaHelper::
 
     for ( auto const& pFeatureToolName : featureOrder ) {
         if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() ) {
-	    std::cout << "ERROR IN CLASSIFY" << std::endl;
+	    std::cout << "LArMvaHelper::Classify "
+		      << "- Error: feature tool " << pFeatureToolName << " not found." << std::endl;
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 	}
 	featureVector.push_back( featureContainer.at( pFeatureToolName ) );
@@ -367,7 +369,8 @@ double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, const 
 
     for ( auto const& pFeatureToolName : featureOrder ) {
         if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() ) {
-	    std::cout << "ERROR IN CALCULATE PROBABILITY" << std::endl;
+	    std::cout << "LArMvaHelper::CalculateProbability "
+		      << "- Error: feature tool " << pFeatureToolName << " not found." << std::endl;
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 	}
 	featureVector.push_back( featureContainer.at( pFeatureToolName ) );
@@ -399,7 +402,8 @@ LArMvaHelper::MvaFeatureMap LArMvaHelper::CalculateFeatures(const LArMvaHelper::
 
     for ( auto const& pFeatureToolName : featureToolOrder ) {
         if ( featureToolMap.find( pFeatureToolName ) == featureToolMap.end() ) {
-	    std::cout << "ERROR IN CALCULATE FEATURES" << std::endl;
+	    std::cout << "LArMvaHelper::CalculateFeatures "
+		      << "- Error: feature tool " << pFeatureToolName << " not found." << std::endl;
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 	}
 	featureToolMap.at(pFeatureToolName)->Run(featureMap, featureOrder, pFeatureToolName, std::forward<TARGS>(args)...);
