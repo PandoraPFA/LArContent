@@ -35,8 +35,6 @@ StatusCode LArMvaHelper::ProcessAlgorithmToolListToMap(const Algorithm &algorith
 	algorithmToolNameVector.push_back( toolName );
     }
 
-    std::cout << std::endl;
-
     return STATUS_CODE_SUCCESS;
 }
 

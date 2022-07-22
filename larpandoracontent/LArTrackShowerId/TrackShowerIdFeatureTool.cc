@@ -478,8 +478,7 @@ void ThreeDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LA
 	 featureMap.find(featureToolName+"_MaxFitGapLength") != featureMap.end() ||
          featureMap.find(featureToolName+"_SlidingLinearFitRMS") != featureMap.end() ){
         std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
-	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-	return;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
     }
 
     featureOrder.push_back( featureToolName+"_Length" );
@@ -653,8 +652,7 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMa
 
     if ( featureMap.find(featureToolName+"_VertexDistance")!=featureMap.end() ) {
         std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
-	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-	return;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
     }
 
     featureOrder.push_back( featureToolName+"_VertexDistance" );
@@ -734,8 +732,7 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap,
 
     if ( featureMap.find(featureToolName+"_AngleDiff")!=featureMap.end() ) {
         std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
-	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-	return;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
     }
 
     featureOrder.push_back( featureToolName+"_AngleDiff" );
@@ -904,8 +901,7 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHe
     if ( featureMap.find(featureToolName+"_SecondaryPCARatio")!=featureMap.end() ||
 	 featureMap.find(featureToolName+"_TertiaryPCARatio")!=featureMap.end() ) {
         std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
-	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-	return;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
     }
 
     featureOrder.push_back( featureToolName+"_SecondaryPCARatio" );
@@ -967,8 +963,7 @@ void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, LArMv
     if ( featureMap.find(featureToolName+"_FractionalSpread")!=featureMap.end() ||
 	 featureMap.find(featureToolName+"_EndFraction")!=featureMap.end() ) {
         std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
-	throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-	return;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
     }
 
     featureOrder.push_back( featureToolName+"_FractionalSpread" );
