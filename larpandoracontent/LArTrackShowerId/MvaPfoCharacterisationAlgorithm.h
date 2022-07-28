@@ -16,6 +16,8 @@
 #include "larpandoracontent/LArTrackShowerId/PfoCharacterisationBaseAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/TrackShowerIdFeatureTool.h"
 
+#include "Pandora/PandoraInternal.h"
+
 namespace lar_content
 {
 
