@@ -10,6 +10,8 @@
 
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
+#include "Pandora/PandoraInternal.h"
+
 namespace lar_content
 {
 
