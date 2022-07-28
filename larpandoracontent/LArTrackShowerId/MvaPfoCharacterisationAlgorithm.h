@@ -41,8 +41,8 @@ protected:
     PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapThreeD;             ///< FeatureToolMap as a map for 3D info
     PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapNoChargeInfo;       ///< FeatureToolMap as a map for missing W view
 
-    std::vector<std::string> m_algorithmToolNames;                                     ///< Vector of strings saving feature tool order for use in feature calculation
-    std::vector<std::string> m_algorithmToolNamesNoChargeInfo;                         ///< Vector of strings saving feature tool order for use in feature calculation (missing W view)
+    pandora::StringVector m_algorithmToolNames;                                     ///< Vector of strings saving feature tool order for use in feature calculation
+    pandora::StringVector m_algorithmToolNamesNoChargeInfo;                         ///< Vector of strings saving feature tool order for use in feature calculation (missing W view)
 
     T m_mva;             ///< The mva
     T m_mvaNoChargeInfo; ///< The mva for missing W view

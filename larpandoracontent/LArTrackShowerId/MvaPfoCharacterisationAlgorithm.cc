@@ -100,8 +100,8 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 
     const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(
 	wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
-    const LArMvaHelper::StringVector chosenFeatureToolOrder(wClusterList.empty() ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
-    LArMvaHelper::StringVector featureOrder;
+    const pandora::StringVector chosenFeatureToolOrder(wClusterList.empty() ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
+    pandora::StringVector featureOrder;
     const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(chosenFeatureToolOrder, chosenFeatureToolMap, featureOrder, this, pPfo));
 
     for ( auto const &[featureKey, featureValue] : featureMap )
