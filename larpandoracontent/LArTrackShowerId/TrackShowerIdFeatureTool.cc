@@ -53,6 +53,23 @@ void TwoDShowerFitFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void TwoDShowerFitFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, StringVector &featureOrder, const std::string &featureToolName,
+				   const Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster)
+{
+    LArMvaHelper::MvaFeatureVector toolFeatureVec;
+    this->Run( toolFeatureVec, pAlgorithm, pCluster );
+
+    if ( featureMap.find(featureToolName+"_WidthLenRatio") != featureMap.end() ){
+        std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    }
+
+    featureOrder.push_back(featureToolName+"_WidthLenRatio");
+    featureMap[ featureToolName+"_WidthLenRatio" ] = toolFeatureVec[0].Get();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode TwoDShowerFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(
@@ -98,6 +115,39 @@ void TwoDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector
     featureVector.push_back(dTdLWidth);
     featureVector.push_back(maxFitGapLength);
     featureVector.push_back(rmsSlidingLinearFit);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, StringVector &featureOrder, const std::string &featureToolName,
+				   const Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster)
+{
+    LArMvaHelper::MvaFeatureVector toolFeatureVec;
+    this->Run( toolFeatureVec, pAlgorithm, pCluster );
+
+    if ( featureMap.find(featureToolName+"_StLineLenLarge") != featureMap.end() ||
+	 featureMap.find(featureToolName+"_DiffStLineMean") != featureMap.end() ||
+	 featureMap.find(featureToolName+"_DiffStLineSigma") != featureMap.end() ||
+	 featureMap.find(featureToolName+"_dTdLWidth") != featureMap.end() ||
+	 featureMap.find(featureToolName+"_MaxFitGapLen") != featureMap.end() ||
+	 featureMap.find(featureToolName+"_rmsSlidingLinFit") != featureMap.end() ){
+        std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    }
+
+    featureOrder.push_back(featureToolName+"_StLineLenLarge");
+    featureOrder.push_back(featureToolName+"_DiffStLineMean");
+    featureOrder.push_back(featureToolName+"_DiffStLineSigma");
+    featureOrder.push_back(featureToolName+"_dTdLWidth");
+    featureOrder.push_back(featureToolName+"_MaxFitGapLen");
+    featureOrder.push_back(featureToolName+"_rmsSlidingLinFit");
+
+    featureMap[ featureToolName+"_StLineLenLarge" ]   = toolFeatureVec[0].Get();
+    featureMap[ featureToolName+"_DiffStLineMean" ]   = toolFeatureVec[1].Get();
+    featureMap[ featureToolName+"_DiffStLineSigma" ]  = toolFeatureVec[2].Get();
+    featureMap[ featureToolName+"_dTdLWidth" ]        = toolFeatureVec[3].Get();
+    featureMap[ featureToolName+"_MaxFitGapLen" ]     = toolFeatureVec[4].Get();
+    featureMap[ featureToolName+"_rmsSlidingLinFit" ] = toolFeatureVec[5].Get();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -229,6 +279,23 @@ void TwoDVertexDistanceFeatureTool::Run(
         ratio = -1.f;
     }
     featureVector.push_back(ratio);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, StringVector &featureOrder, const std::string &featureToolName,
+					const Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster)
+{
+    LArMvaHelper::MvaFeatureVector toolFeatureVec;
+    this->Run( toolFeatureVec, pAlgorithm, pCluster );
+
+    if ( featureMap.find(featureToolName+"_DistLenRatio") != featureMap.end() ){
+      std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
+      throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    }
+
+    featureOrder.push_back(featureToolName+"_DistLenRatio");
+    featureMap[ featureToolName+"_DistLenRatio" ] = toolFeatureVec[0].Get();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

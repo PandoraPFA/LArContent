@@ -49,7 +49,8 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const Cluster *const pClus
     if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
         return false;
 
-    const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(m_featureToolVector, this, pCluster));
+    StringVector featureOrder;
+    const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(m_algorithmToolNames, m_featureToolMap, featureOrder, this, pCluster));
 
     if (m_trainingSetMode)
     {
@@ -64,17 +65,17 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const Cluster *const pClus
         {
         }
 
-        LArMvaHelper::ProduceTrainingExample(m_trainingOutputFile, isTrueTrack, featureVector);
+        LArMvaHelper::ProduceTrainingExample(m_trainingOutputFile, isTrueTrack, featureOrder, featureMap);
         return isTrueTrack;
     }
 
     if (!m_enableProbability)
     {
-        return LArMvaHelper::Classify(m_mva, featureVector);
+        return LArMvaHelper::Classify(m_mva, featureOrder, featureMap);
     }
     else
     {
-        return (LArMvaHelper::CalculateProbability(m_mva, featureVector) > m_minProbabilityCut);
+        return (LArMvaHelper::CalculateProbability(m_mva, featureOrder, featureMap) > m_minProbabilityCut);
     }
 }
 
@@ -395,10 +396,6 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
         }
     }
 
-    // Need this in case we end up using the non-3d info version
-    AlgorithmToolVector algorithmToolVector;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));
-    // and the map
     LArMvaHelper::AlgorithmToolMap algorithmToolMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureTools", m_algorithmToolNames, algorithmToolMap));
 
@@ -417,8 +414,8 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
     }
     else
     {
-        for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
+        for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMap)
+	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMap));
     }
 
     return PfoCharacterisationBaseAlgorithm::ReadSettings(xmlHandle);
