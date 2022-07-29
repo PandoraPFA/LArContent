@@ -358,6 +358,30 @@ void PfoHierarchyFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, StringVector &featureOrder, const std::string &featureToolName,
+				  const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+{
+    LArMvaHelper::MvaFeatureVector toolFeatureVec;
+    this->Run( toolFeatureVec, pAlgorithm, pInputPfo );
+
+    if ( featureMap.find(featureToolName+"_NDaughters") != featureMap.end() ||
+         featureMap.find(featureToolName+"_NDaughterHits3D") != featureMap.end() ||
+         featureMap.find(featureToolName+"_DaughterParentHitRatio") != featureMap.end() ){
+        std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    }
+
+    featureOrder.push_back( featureToolName+"_NDaughters" );
+    featureOrder.push_back( featureToolName+"_NDaughterHits3D" );
+    featureOrder.push_back( featureToolName+"_DaughterParentHitRatio" );
+
+    featureMap[ featureToolName+"_NDaughters" ] = toolFeatureVec[0].Get();
+    featureMap[ featureToolName+"_NDaughterHits3D" ] = toolFeatureVec[1].Get();
+    featureMap[ featureToolName+"_DaughterParentHitRatio" ] = toolFeatureVec[2].Get();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode PfoHierarchyFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
@@ -405,6 +429,30 @@ void ConeChargeFeatureTool::Run(
     featureVector.push_back(haloTotalRatio);
     featureVector.push_back(concentration);
     featureVector.push_back(conicalness);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ConeChargeFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, StringVector &featureOrder, const std::string &featureToolName,
+				const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+{
+    LArMvaHelper::MvaFeatureVector toolFeatureVec;
+    this->Run( toolFeatureVec, pAlgorithm, pInputPfo );
+
+    if ( featureMap.find(featureToolName+"_HaloTotalRatio") != featureMap.end() ||
+         featureMap.find(featureToolName+"_Concentration") != featureMap.end() ||
+         featureMap.find(featureToolName+"_Conicalness") != featureMap.end() ){
+        std::cout << "Already wrote this feature into map! Not writing again." << std::endl;
+	throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    }
+
+    featureOrder.push_back( featureToolName+"_HaloTotalRatio" );
+    featureOrder.push_back( featureToolName+"_Concentration" );
+    featureOrder.push_back( featureToolName+"_Conicalness" );
+
+    featureMap[ featureToolName+"_HaloTotalRatio" ] = toolFeatureVec[0].Get();
+    featureMap[ featureToolName+"_Concentration" ] = toolFeatureVec[1].Get();
+    featureMap[ featureToolName+"_Conicalness" ] = toolFeatureVec[2].Get();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
