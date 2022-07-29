@@ -38,7 +38,7 @@ protected:
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    ClusterCharacterisationFeatureTool::FeatureToolVector m_featureToolVector;         ///< The feature tool map
+    ClusterCharacterisationFeatureTool::FeatureToolMap m_featureToolMap;               ///< The feature tool map
 
     PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapThreeD;             ///< FeatureToolMap as a map for 3D info
     PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapNoChargeInfo;       ///< FeatureToolMap as a map for missing W view

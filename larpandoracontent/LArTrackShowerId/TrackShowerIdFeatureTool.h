@@ -32,6 +32,8 @@ public:
     TwoDShowerFitFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
+    void Run(LArMvaHelper::MvaFeatureMap &featureMap, pandora::StringVector &featureOrder, const std::string &featureToolName,
+	     const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -64,6 +66,8 @@ public:
     TwoDLinearFitFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
+    void Run(LArMvaHelper::MvaFeatureMap &featureMap, pandora::StringVector &featureOrder, const std::string &featureToolName,
+             const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -100,6 +104,8 @@ public:
     TwoDVertexDistanceFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
+    void Run(LArMvaHelper::MvaFeatureMap &featureMap, pandora::StringVector &featureOrder, const std::string &featureToolName,
+             const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
