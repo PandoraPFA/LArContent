@@ -157,8 +157,8 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
         const int nNodes{static_cast<int>(matchInfo.GetNMCNodes())};
 
         const int nTrackNodes{static_cast<int>(trackNodeSet.size())}, nShowerNodes{static_cast<int>(showerNodeSet.size())};
-        const CartesianVector &trueVertex{matchInfo.GetMCNeutrino()->GetVertex()};
-        const CartesianVector &recoVertex{LArPfoHelper::GetVertex(matchInfo.GetRecoNeutrino())->GetPosition()};
+        const CartesianVector trueVertex(0, 0, 0);//{matchInfo.GetMCNeutrino()->GetVertex()};
+        const CartesianVector recoVertex(0, 0, 0);//{LArPfoHelper::GetVertex(matchInfo.GetRecoNeutrino())->GetPosition()};
         const float vtxDx{recoVertex.GetX() - trueVertex.GetX()};
         const float vtxDy{recoVertex.GetY() - trueVertex.GetY()};
         const float vtxDz{recoVertex.GetZ() - trueVertex.GetZ()};
@@ -206,6 +206,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
 
 void HierarchyValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo) const
 {
+    (void)matchInfo;
     const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
     const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
     const int isCosmicRay{!isTestBeam && pMCNode->IsCosmicRay() ? 1 : 0};
@@ -254,7 +255,7 @@ void HierarchyValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &mat
         if (nMatches == 1)
         {
             // Only makes sense to calculate vertex delta if we have a one-to-one match
-            const CartesianVector &recoVertex{LArPfoHelper::GetVertex(matchInfo.GetRecoNeutrino())->GetPosition()};
+            const CartesianVector recoVertex(0, 0, 0);//{LArPfoHelper::GetVertex(matchInfo.GetRecoNeutrino())->GetPosition()};
             vtxDx = recoVertex.GetX() - trueVertex.GetX();
             vtxDy = recoVertex.GetY() - trueVertex.GetY();
             vtxDz = recoVertex.GetZ() - trueVertex.GetZ();
