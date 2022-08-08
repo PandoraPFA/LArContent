@@ -177,6 +177,16 @@ public:
     static void GetTrueTestBeamParticles(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleVector &trueTestBeamParticles);
 
     /**
+     *  @brief  Get the first visible MC particles given a root particle. For example, given a neutrino this would return the primaries (the visible
+     *          final state particles or the first visible descendents of invisible final state particles - note photons and neutrons are considered
+     *          visible for this purpose).
+     *
+     *  @param  pRoot the input mc particle
+     *  @param  visibleParticleList the output list of visible particles (if pRoot is visible this will contain only pRoot)
+     */
+    static void GetFirstVisibleMCParticles(const pandora::MCParticle *const pRoot, pandora::MCParticleList &visibleParticleList);
+
+    /**
      *  @brief  Get the primary parent mc particle
      *
      *  @param  pMCParticle the input mc particle

@@ -49,8 +49,6 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
-    const PfoList *pPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
 
     LArHierarchyHelper::MCHierarchy::ReconstructabilityCriteria criteria(15, 5, 2, false);
     LArHierarchyHelper::MCHierarchy mcHierarchy(criteria);
@@ -62,9 +60,16 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
         foldParameters.m_foldDynamic = true;
 
     if (m_visualizeMC || m_match)
+    {
         LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
+        std::cout << mcHierarchy.ToString() << std::endl;
+    }
     if (m_visualizeReco || m_match)
+    {
+        const PfoList *pPfoList(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
         LArHierarchyHelper::FillRecoHierarchy(*pPfoList, foldParameters, recoHierarchy);
+    }
     if (m_match)
     {
         LArHierarchyHelper::MatchInfo matchInfo;
@@ -98,8 +103,11 @@ void HierarchyMonitoringAlgorithm::VisualizeMC(const LArHierarchyHelper::MCHiera
     const std::map<int, const std::string> keys = {{13, "mu"}, {11, "e"}, {22, "gamma"}, {321, "kaon"}, {211, "pi"}, {2212, "p"}};
     const std::map<std::string, int> colors = {{"mu", 5}, {"e", 2}, {"gamma", 9}, {"kaon", 1}, {"pi", 3}, {"p", 4}, {"other", 14}};
 
+    MCParticleList rootMCParticles;
+    hierarchy.GetRootMCParticles(rootMCParticles);
     LArHierarchyHelper::MCHierarchy::NodeVector nodes;
-    hierarchy.GetFlattenedNodes(nodes);
+    // ATTN: For now just get the first root node, will need to handle all nodes in the future
+    hierarchy.GetFlattenedNodes(rootMCParticles.front(), nodes);
 
     int nodeIdx{0};
     for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
@@ -129,8 +137,11 @@ void HierarchyMonitoringAlgorithm::VisualizeMCDistinct(const LArHierarchyHelper:
     const int nColours{9};
     const int colors[nColours] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 
+    MCParticleList rootMCParticles;
+    hierarchy.GetRootMCParticles(rootMCParticles);
     LArHierarchyHelper::MCHierarchy::NodeVector nodes;
-    hierarchy.GetFlattenedNodes(nodes);
+    // ATTN: For now just get the first root node, will need to handle all nodes in the future
+    hierarchy.GetFlattenedNodes(rootMCParticles.front(), nodes);
 
     int nodeIdx{0}, colorIdx{0};
     for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
@@ -178,8 +189,12 @@ void HierarchyMonitoringAlgorithm::VisualizeMCProcess(const LArHierarchyHelper::
         {"ioni", 5}, {"brem", 6}, {"conv", 3}, {"capture", 6}, {"inelastic", 9}, {"elastic", 8}, {"decay", 7}, {"coulomb", 9},
         {"pair_prod", 4}, {"transport", 1}, {"rayleigh", 9}, {"kill", 2}, {"nuclear", 5}, {"background", 7}};
 
+
+    MCParticleList rootMCParticles;
+    hierarchy.GetRootMCParticles(rootMCParticles);
     LArHierarchyHelper::MCHierarchy::NodeVector nodes;
-    hierarchy.GetFlattenedNodes(nodes);
+    // ATTN: For now just get the first root node, will need to handle all nodes in the future
+    hierarchy.GetFlattenedNodes(rootMCParticles.front(), nodes);
 
     int nodeIdx{0};
     for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
