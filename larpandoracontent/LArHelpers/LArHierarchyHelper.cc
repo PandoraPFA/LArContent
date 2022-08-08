@@ -1224,8 +1224,6 @@ LArHierarchyHelper::MatchInfo::MatchInfo() : MatchInfo(QualityCuts())
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArHierarchyHelper::MatchInfo::MatchInfo(const QualityCuts &qualityCuts) :
-    m_pMCNeutrino{nullptr},
-    m_pRecoNeutrino{nullptr},
     m_qualityCuts{qualityCuts}
 {
 }
@@ -1234,8 +1232,6 @@ LArHierarchyHelper::MatchInfo::MatchInfo(const QualityCuts &qualityCuts) :
 
 void LArHierarchyHelper::MatchInfo::Match(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy)
 {
-    m_pMCNeutrino = mcHierarchy.GetNeutrino();
-    m_pRecoNeutrino = recoHierarchy.GetNeutrino();
     MCParticleList rootMCParticles;
     mcHierarchy.GetRootMCParticles(rootMCParticles);
     MCHierarchy::NodeVector mcNodes;
@@ -1368,7 +1364,8 @@ unsigned int LArHierarchyHelper::MatchInfo::GetNTestBeamMCNodes() const
 
 void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
 {
-    unsigned int nNeutrinoMCParticles{this->GetNNeutrinoMCNodes()}, nNeutrinoRecoParticles{0};
+    (void)mcHierarchy;
+/*    unsigned int nNeutrinoMCParticles{this->GetNNeutrinoMCNodes()}, nNeutrinoRecoParticles{0};
     unsigned int nCosmicMCParticles{this->GetNCosmicRayMCNodes()}, nCosmicRecoParticles{0}, nCosmicRecoBTParticles{0};
     unsigned int nTestBeamMCParticles{this->GetNTestBeamMCNodes()}, nTestBeamRecoParticles{0}, nTestBeamRecoBTParticles{0};
     std::cout << "=== Matches ===" << std::endl;
@@ -1437,7 +1434,7 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
         }
     }
     if (!this->GetUnmatchedReco().empty())
-        std::cout << "Unmatched reco: " << this->GetUnmatchedReco().size() << std::endl;
+        std::cout << "Unmatched reco: " << this->GetUnmatchedReco().size() << std::endl;*/
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

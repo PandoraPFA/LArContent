@@ -379,20 +379,6 @@ public:
          */
         const std::string ToString() const;
 
-        /**
-         *  @brief  Check if this is a neutrino hierarchy.
-         *
-         *  @return Whether or not this is a neutrino hierarchy.
-         */
-        bool IsNeutrinoHierarchy() const;
-
-        /**
-         *  @brief  Check if this is a test beam hierarchy.
-         *
-         *  @return Whether or not this is a test beam hierarchy.
-         */
-        bool IsTestBeamHierarchy() const;
-
     private:
         /**
          *  @brief  Identify downstream particles that represent continuations of the parent particle from a reconstruction perspective
@@ -764,20 +750,6 @@ public:
         const RecoHierarchy::NodeVector &GetUnmatchedReco() const;
 
         /**
-         *  @brief  Retrieve the parent MC neutrino if it exists
-         *
-         *  @param  The parent neutrino if it exists (nullptr otherwise)
-         */
-        const pandora::MCParticle *GetMCNeutrino() const;
-
-        /**
-         *  @brief  Retrieve the parent reco neutrino if it exists
-         *
-         *  @param  The parent neutrino if it exists (nullptr otherwise)
-         */
-        const pandora::ParticleFlowObject *GetRecoNeutrino() const;
-
-        /**
          *  @brief  Retrieve the number of MC nodes available to match
          *
          *  @return The number of MC nodes available to match
@@ -821,9 +793,6 @@ public:
         void Print(const MCHierarchy &mcHierarchy) const;
 
     private:
-        const pandora::MCParticle *m_pMCNeutrino;           ///< The parent neutrino if it exists
-        const pandora::ParticleFlowObject *m_pRecoNeutrino; ///< The parent neutrino if it exists
-
         MCMatchesVector m_matches;                 ///< The vector of good matches from MC to reco
         MCMatchesVector m_goodMatches;             ///< The vector of good matches - above threshold one reco to one MC matches
         MCMatchesVector m_aboveThresholdMatches;   ///< The vector of matches that pass quality but with multiple reco matches to the MC
@@ -1000,20 +969,6 @@ inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo:
 inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::MatchInfo::GetUnmatchedReco() const
 {
     return m_unmatchedReco;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::MCParticle *LArHierarchyHelper::MatchInfo::GetMCNeutrino() const
-{
-    return m_pMCNeutrino;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::ParticleFlowObject *LArHierarchyHelper::MatchInfo::GetRecoNeutrino() const
-{
-    return m_pRecoNeutrino;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
