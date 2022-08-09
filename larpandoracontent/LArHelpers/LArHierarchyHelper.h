@@ -425,6 +425,7 @@ public:
         class Node;
         typedef std::vector<const Node *> NodeVector;
         typedef std::list<const Node *> NodeList;
+        typedef std::map<const pandora::ParticleFlowObject *, NodeVector> RecoNodeVectorMap;
 
         /**
          *  @brief  Node class
@@ -548,18 +549,28 @@ public:
         void FillHierarchy(const pandora::PfoList &pfoList, const FoldingParameters &foldParameters);
 
         /**
-         *  @brief  Retrieve the root nodes in this hierarchy
+         *  @brief  Retrieve the root nodes in the hierarchy for a given interaction
+         *
+         *  @param  pRoot The root of the interaction hierarchy
          *
          *  @return The root nodes in this hierarchy
          */
-        const NodeVector &GetRootNodes() const;
+        const NodeVector &GetInteractions(const pandora::ParticleFlowObject *pRoot) const;
+
+        /**
+         *  @brief  Retrieve the root particle flow objects of the interaction hierarchies
+         *
+         *  @param  rootPfos The output list of root particle flow objects
+         */
+        void GetRootPfos(pandora::PfoList &rootPfos) const;
 
         /**
          *  @brief  Retrieve a flat vector of the nodes in the hierarchy
          *
+         *  @param  pRoot The root particle flow object for an interaction
          *  @param  nodeVector The output vector for the nodes in the hierarchy in breadth first order
          */
-        void GetFlattenedNodes(NodeVector &nodeVector) const;
+        void GetFlattenedNodes(const pandora::ParticleFlowObject *const pRoot, NodeVector &nodeVector) const;
 
         /**
          *  @brief  Retrieve the neutrino at the root of the hierarchy if it exists
@@ -576,7 +587,7 @@ public:
         const std::string ToString() const;
 
     private:
-        NodeVector m_rootNodes;                         ///< The leading nodes (e.g. primary particles, cosmic rays, ...)
+        RecoNodeVectorMap m_interactions; ///< Map from the root PFO (e.g. neutrino) to primaries
     };
 
     /**
@@ -846,12 +857,10 @@ private:
     /**
      *  @brief  Retrieves the primary PFOs from a list and returns the root (neutrino) for hierarchy, if it exists.
      *
-     *  @param  pfoList The input list of PFOs
+     *  @param  pRoot The root particle flow object (e.g. neutrino) for which primaries should be collected
      *  @param  primaries The output set of primary PFOs
-     *
-     *  @return The root neutrino, if it exists, or nullptr
      */
-    static const pandora::ParticleFlowObject *GetRecoPrimaries(const pandora::PfoList &pfoList, PfoSet &primaries);
+    static void GetRecoPrimaries(const pandora::ParticleFlowObject *pRoot, PfoSet &primaries);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -924,14 +933,6 @@ inline void LArHierarchyHelper::MCHierarchy::Node::SetLeadingLepton()
 inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::RecoHierarchy::Node::GetChildren() const
 {
     return m_children;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::RecoHierarchy::GetRootNodes() const
-{
-    return m_rootNodes;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -69,6 +69,7 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
         const PfoList *pPfoList(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
         LArHierarchyHelper::FillRecoHierarchy(*pPfoList, foldParameters, recoHierarchy);
+        std::cout << recoHierarchy.ToString() << std::endl;
     }
     if (m_match)
     {
@@ -245,7 +246,10 @@ void HierarchyMonitoringAlgorithm::VisualizeReco(const LArHierarchyHelper::RecoH
     const int colors[nColors] = {5, 2, 9, 1, 3, 4, 14};
 
     LArHierarchyHelper::RecoHierarchy::NodeVector nodes;
-    hierarchy.GetFlattenedNodes(nodes);
+    // ATTN: For now just get the first root node, will need to handle all nodes in the future
+    PfoList rootPfos;
+    hierarchy.GetRootPfos(rootPfos);
+    hierarchy.GetFlattenedNodes(rootPfos.front(), nodes);
 
     int colorIdx{0};
     int pfoIdx{0};

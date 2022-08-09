@@ -474,7 +474,7 @@ const std::string LArHierarchyHelper::MCHierarchy::ToString() const
     std::string str;
     for (const auto &[pRoot, nodeVector] : m_interactions)
     {
-        str += "=== Interaction : PDG " + std::to_string(pRoot->GetParticleId()) + "\n";
+        str += "=== MC Interaction : PDG " + std::to_string(pRoot->GetParticleId()) + "\n";
         for (const Node *pNode : nodeVector)
             str += "   " + pNode->ToString("") + "\n";
     }
@@ -811,84 +811,122 @@ LArHierarchyHelper::RecoHierarchy::RecoHierarchy()
 
 LArHierarchyHelper::RecoHierarchy::~RecoHierarchy()
 {
-    for (const Node *pNode : m_rootNodes)
-        delete pNode;
-    m_rootNodes.clear();
+    for (const auto &[ pRoot, nodeVector ] : m_interactions)
+    {
+        for (const Node *pNode : nodeVector)
+            delete pNode;
+    }
+    m_interactions.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArHierarchyHelper::RecoHierarchy::FillHierarchy(const PfoList &pfoList, const FoldingParameters &foldParameters)
 {
-    PfoSet primarySet;
-    LArHierarchyHelper::GetRecoPrimaries(pfoList, primarySet);
-    PfoList primaries(primarySet.begin(), primarySet.end());
-    primaries.sort(LArPfoHelper::SortByNHits);
-    if (foldParameters.m_foldToTier && foldParameters.m_tier == 1)
+    PfoList rootNodes;
+    for (const ParticleFlowObject *pPfo : pfoList)
     {
-        for (const ParticleFlowObject *pPrimary : primaries)
+        const PfoList &parentList{pPfo->GetParentPfoList()};
+        if (parentList.empty())
         {
-            PfoList allParticles;
-            // ATTN - pPrimary gets added to the list of downstream PFOs, not just the child PFOs
-            LArPfoHelper::GetAllDownstreamPfos(pPrimary, allParticles);
-            CaloHitList allHits;
-            for (const ParticleFlowObject *pPfo : allParticles)
-                LArPfoHelper::GetAllCaloHits(pPfo, allHits);
-            m_rootNodes.emplace_back(new Node(*this, allParticles, allHits));
+            rootNodes.emplace_back(pPfo);
+            if (LArPfoHelper::IsNeutrino(pPfo))
+                std::cout << "Found root reco neutrino " << pPfo << std::endl;
+            else
+                std::cout << "Found root reco non-neutrino " << pPfo << std::endl;
         }
     }
-    else if (foldParameters.m_foldToLeadingShowers)
-    {
-        for (const ParticleFlowObject *pPrimary : primaries)
-        {
-            PfoList allParticles;
-            int pdg{std::abs(pPrimary->GetParticleId())};
-            const bool isShower{pdg == E_MINUS};
-            // ATTN - pPrimary gets added to the list of downstream PFOs, not just the child PFOs
-            if (isShower)
-                LArPfoHelper::GetAllDownstreamPfos(pPrimary, allParticles);
-            else
-                allParticles.emplace_back(pPrimary);
 
-            CaloHitList allHits;
-            for (const ParticleFlowObject *pPfo : allParticles)
-                LArPfoHelper::GetAllCaloHits(pPfo, allHits);
-            Node *pNode{new Node(*this, allParticles, allHits)};
-            m_rootNodes.emplace_back(pNode);
-            if (!isShower)
+    for (const ParticleFlowObject *const pRoot : rootNodes)
+    {
+        PfoSet primarySet;
+        LArHierarchyHelper::GetRecoPrimaries(pRoot, primarySet);
+        PfoList primaries(primarySet.begin(), primarySet.end());
+        primaries.sort(LArPfoHelper::SortByNHits);
+        if (foldParameters.m_foldToTier && foldParameters.m_tier == 1)
+        {
+            for (const ParticleFlowObject *pPrimary : primaries)
             {
+                PfoList allParticles;
+                // ATTN - pPrimary gets added to the list of downstream PFOs, not just the child PFOs
+                LArPfoHelper::GetAllDownstreamPfos(pPrimary, allParticles);
+                CaloHitList allHits;
+                for (const ParticleFlowObject *pPfo : allParticles)
+                    LArPfoHelper::GetAllCaloHits(pPfo, allHits);
+                m_interactions[pRoot].emplace_back(new Node(*this, allParticles, allHits));
+            }
+        }
+        else if (foldParameters.m_foldToLeadingShowers)
+        {
+            for (const ParticleFlowObject *pPrimary : primaries)
+            {
+                PfoList allParticles;
+                int pdg{std::abs(pPrimary->GetParticleId())};
+                const bool isShower{pdg == E_MINUS};
+                // ATTN - pPrimary gets added to the list of downstream PFOs, not just the child PFOs
+                if (isShower)
+                    LArPfoHelper::GetAllDownstreamPfos(pPrimary, allParticles);
+                else
+                    allParticles.emplace_back(pPrimary);
+
+                CaloHitList allHits;
+                for (const ParticleFlowObject *pPfo : allParticles)
+                    LArPfoHelper::GetAllCaloHits(pPfo, allHits);
+                Node *pNode{new Node(*this, allParticles, allHits)};
+                m_interactions[pRoot].emplace_back(pNode);
+                if (!isShower)
+                {
+                    // Find the children of this particle and recursively add them to the hierarchy
+                    const PfoList &children{pPrimary->GetDaughterPfoList()};
+                    for (const ParticleFlowObject *pChild : children)
+                        pNode->FillHierarchy(pChild, foldParameters);
+                }
+            }
+        }
+        else
+        {
+            // Dynamic fold, Unfolded and fold to tier > 1 have the same behaviour for primaries
+            for (const ParticleFlowObject *pPrimary : primaries)
+            {
+                PfoList allParticles{pPrimary};
+                CaloHitList allHits;
+                for (const ParticleFlowObject *pPfo : allParticles)
+                    LArPfoHelper::GetAllCaloHits(pPfo, allHits);
+                Node *pNode{new Node(*this, allParticles, allHits)};
+                m_interactions[pRoot].emplace_back(pNode);
                 // Find the children of this particle and recursively add them to the hierarchy
                 const PfoList &children{pPrimary->GetDaughterPfoList()};
                 for (const ParticleFlowObject *pChild : children)
-                    pNode->FillHierarchy(pChild, foldParameters);
+                    pNode->FillHierarchy(pChild, foldParameters.m_foldToLeadingShowers);
             }
-        }
-    }
-    else
-    {
-        // Dynamic fold, Unfolded and fold to tier > 1 have the same behaviour for primaries
-        for (const ParticleFlowObject *pPrimary : primaries)
-        {
-            PfoList allParticles{pPrimary};
-            CaloHitList allHits;
-            for (const ParticleFlowObject *pPfo : allParticles)
-                LArPfoHelper::GetAllCaloHits(pPfo, allHits);
-            Node *pNode{new Node(*this, allParticles, allHits)};
-            m_rootNodes.emplace_back(pNode);
-            // Find the children of this particle and recursively add them to the hierarchy
-            const PfoList &children{pPrimary->GetDaughterPfoList()};
-            for (const ParticleFlowObject *pChild : children)
-                pNode->FillHierarchy(pChild, foldParameters.m_foldToLeadingShowers);
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHierarchyHelper::RecoHierarchy::GetFlattenedNodes(NodeVector &nodeVector) const
+const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::RecoHierarchy::GetInteractions(const pandora::ParticleFlowObject *pRoot) const
+{
+    if (m_interactions.find(pRoot) == m_interactions.end())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return m_interactions.at(pRoot);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArHierarchyHelper::RecoHierarchy::GetRootPfos(PfoList &rootPfos) const
+{
+    for (auto iter = m_interactions.begin(); iter != m_interactions.end(); ++iter)
+        rootPfos.emplace_back(iter->first);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArHierarchyHelper::RecoHierarchy::GetFlattenedNodes(const ParticleFlowObject *pRoot, NodeVector &nodeVector) const
 {
     NodeList queue;
-    for (const Node *pNode : m_rootNodes)
+    for (const Node *pNode : m_interactions.at(pRoot))
     {
         nodeVector.emplace_back(pNode);
         queue.emplace_back(pNode);
@@ -910,8 +948,12 @@ void LArHierarchyHelper::RecoHierarchy::GetFlattenedNodes(NodeVector &nodeVector
 const std::string LArHierarchyHelper::RecoHierarchy::ToString() const
 {
     std::string str;
-    for (const Node *pNode : m_rootNodes)
-        str += pNode->ToString("") + "\n";
+    for (const auto &[pRoot, nodeVector] : m_interactions)
+    {
+        str += "=== Reco Interaction : PDG " + std::to_string(pRoot->GetParticleId()) + "\n";
+        for (const Node *pNode : nodeVector)
+            str += "   " + pNode->ToString("") + "\n";
+    }
 
     return str;
 }
@@ -1237,8 +1279,10 @@ void LArHierarchyHelper::MatchInfo::Match(const MCHierarchy &mcHierarchy, const 
     MCHierarchy::NodeVector mcNodes;
     // ATTN: For now just get the first root node, will need to handle all nodes in the future
     mcHierarchy.GetFlattenedNodes(rootMCParticles.front(), mcNodes);
+    PfoList rootPfos;
+    recoHierarchy.GetRootPfos(rootPfos);
     RecoHierarchy::NodeVector recoNodes;
-    recoHierarchy.GetFlattenedNodes(recoNodes);
+    recoHierarchy.GetFlattenedNodes(rootPfos.front(), recoNodes);
 
     std::sort(mcNodes.begin(), mcNodes.end(),
         [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs) { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
@@ -1481,58 +1525,21 @@ void LArHierarchyHelper::GetMCPrimaries(const MCParticle *pRoot, MCParticleSet &
     }
 }
 
-const ParticleFlowObject *LArHierarchyHelper::GetRecoPrimaries(const PfoList &pfoList, PfoSet &primaries)
+void LArHierarchyHelper::GetRecoPrimaries(const ParticleFlowObject *pRoot, PfoSet &primaries)
 {
-    const ParticleFlowObject *pRoot{nullptr};
-    PfoSet cosmicPfos;
-    for (const ParticleFlowObject *pPfo : pfoList)
-    {
-        if (LArPfoHelper::IsNeutrino(pPfo))
-        {
-            pRoot = pPfo;
-            break;
-        }
-        else
-        {
-            const ParticleFlowObject *const pParent{LArPfoHelper::GetParentPfo(pPfo)};
-            if (pParent && LArPfoHelper::IsNeutrino(pParent))
-            {
-                pRoot = pParent;
-                break;
-            }
-            else
-            {
-                // Should be in a test beam scenario
-                const int tier{LArPfoHelper::GetHierarchyTier(pPfo)};
-                if (tier == 0 && LArPfoHelper::IsTestBeam(pPfo))
-                {
-                    // Triggered beam particle
-                    primaries.insert(pPfo);
-                    continue;
-                }
-                if (tier > 1)
-                    continue;
-                if (!LArPfoHelper::IsTestBeam(pPfo))
-                {
-                    // Cosmic induced
-                    cosmicPfos.insert(pPfo);
-                }
-            }
-        }
-    }
-    if (pRoot && LArPfoHelper::IsNeutrino(pRoot))
+    if (LArPfoHelper::IsNeutrino(pRoot))
     {
         const PfoList &children{pRoot->GetDaughterPfoList()};
-        for (const ParticleFlowObject *pPrimary : children)
-            primaries.insert(pPrimary);
+        // Check if we still need to use sets here
+        for (const ParticleFlowObject *const pPfo : children)
+            primaries.insert(pPfo);
     }
     else
     {
-        for (const ParticleFlowObject *pPfo : cosmicPfos)
-            primaries.insert(pPfo);
+        // Might want different handling here for test beam and cosmic ray particles, but for now, just treat
+        // a non-neutrino root node as something to be stored in the primaries set directly
+        primaries.insert(pRoot);
     }
-
-    return pRoot;
 }
 
 } // namespace lar_content
