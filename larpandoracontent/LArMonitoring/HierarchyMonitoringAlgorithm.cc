@@ -104,28 +104,30 @@ void HierarchyMonitoringAlgorithm::VisualizeMC(const LArHierarchyHelper::MCHiera
 
     MCParticleList rootMCParticles;
     hierarchy.GetRootMCParticles(rootMCParticles);
-    LArHierarchyHelper::MCHierarchy::NodeVector nodes;
-    // ATTN: For now just get the first root node, will need to handle all nodes in the future
-    hierarchy.GetFlattenedNodes(rootMCParticles.front(), nodes);
-
-    int nodeIdx{0};
-    for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
+    for (const MCParticle *const pRoot : rootMCParticles)
     {
-        std::string key("other");
-        const int pdg{std::abs(pNode->GetParticleId())};
-        if (keys.find(pdg) != keys.end())
-            key = keys.at(pdg);
+        LArHierarchyHelper::MCHierarchy::NodeVector nodes;
+        hierarchy.GetFlattenedNodes(pRoot, nodes);
 
-        CaloHitList uHits, vHits, wHits;
-        this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
-        std::string suffix{std::to_string(nodeIdx) + "_" + key};
-        this->Visualize(uHits, "u_" + suffix, colors.at(key));
-        this->Visualize(vHits, "v_" + suffix, colors.at(key));
-        this->Visualize(wHits, "w_" + suffix, colors.at(key));
-        ++nodeIdx;
+        int nodeIdx{0};
+        for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
+        {
+            std::string key("other");
+            const int pdg{std::abs(pNode->GetParticleId())};
+            if (keys.find(pdg) != keys.end())
+                key = keys.at(pdg);
+
+            CaloHitList uHits, vHits, wHits;
+            this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
+            std::string suffix{std::to_string(nodeIdx) + "_" + key};
+            this->Visualize(uHits, "u_" + suffix, colors.at(key));
+            this->Visualize(vHits, "v_" + suffix, colors.at(key));
+            this->Visualize(wHits, "w_" + suffix, colors.at(key));
+            ++nodeIdx;
+        }
+
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
-
-    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -138,29 +140,31 @@ void HierarchyMonitoringAlgorithm::VisualizeMCDistinct(const LArHierarchyHelper:
 
     MCParticleList rootMCParticles;
     hierarchy.GetRootMCParticles(rootMCParticles);
-    LArHierarchyHelper::MCHierarchy::NodeVector nodes;
-    // ATTN: For now just get the first root node, will need to handle all nodes in the future
-    hierarchy.GetFlattenedNodes(rootMCParticles.front(), nodes);
-
-    int nodeIdx{0}, colorIdx{0};
-    for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
+    for (const MCParticle *const pRoot : rootMCParticles)
     {
-        std::string key("other");
-        const int pdg{std::abs(pNode->GetParticleId())};
-        if (keys.find(pdg) != keys.end())
-            key = keys.at(pdg);
+        LArHierarchyHelper::MCHierarchy::NodeVector nodes;
+        hierarchy.GetFlattenedNodes(pRoot, nodes);
 
-        CaloHitList uHits, vHits, wHits;
-        this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
-        std::string suffix{std::to_string(nodeIdx) + "_" + key};
-        this->Visualize(uHits, "u_" + suffix, colors[colorIdx]);
-        this->Visualize(vHits, "v_" + suffix, colors[colorIdx]);
-        this->Visualize(wHits, "w_" + suffix, colors[colorIdx]);
-        colorIdx = (colorIdx + 1) >= nColours ? 0 : colorIdx + 1;
-        ++nodeIdx;
+        int nodeIdx{0}, colorIdx{0};
+        for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
+        {
+            std::string key("other");
+            const int pdg{std::abs(pNode->GetParticleId())};
+            if (keys.find(pdg) != keys.end())
+                key = keys.at(pdg);
+
+            CaloHitList uHits, vHits, wHits;
+            this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
+            std::string suffix{std::to_string(nodeIdx) + "_" + key};
+            this->Visualize(uHits, "u_" + suffix, colors[colorIdx]);
+            this->Visualize(vHits, "v_" + suffix, colors[colorIdx]);
+            this->Visualize(wHits, "w_" + suffix, colors[colorIdx]);
+            colorIdx = (colorIdx + 1) >= nColours ? 0 : colorIdx + 1;
+            ++nodeIdx;
+        }
+
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
-
-    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -191,49 +195,51 @@ void HierarchyMonitoringAlgorithm::VisualizeMCProcess(const LArHierarchyHelper::
 
     MCParticleList rootMCParticles;
     hierarchy.GetRootMCParticles(rootMCParticles);
-    LArHierarchyHelper::MCHierarchy::NodeVector nodes;
-    // ATTN: For now just get the first root node, will need to handle all nodes in the future
-    hierarchy.GetFlattenedNodes(rootMCParticles.front(), nodes);
-
-    int nodeIdx{0};
-    for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
+    for (const MCParticle *const pRoot : rootMCParticles)
     {
-        const LArMCParticle *pMC{dynamic_cast<const LArMCParticle *>(pNode->GetLeadingMCParticle())};
-        if (!pMC)
-            continue;
-        const MCProcess process{pMC->GetProcess()};
-        const std::string category{procToCategoryMap.at(process)};
-        const int pdg{std::abs(pNode->GetParticleId())};
-        const int tier{LArMCParticleHelper::GetHierarchyTier(pMC)};
+        LArHierarchyHelper::MCHierarchy::NodeVector nodes;
+        hierarchy.GetFlattenedNodes(pRoot, nodes);
 
-        CaloHitList uHits, vHits, wHits;
-        this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
-        std::string suffix{std::to_string(nodeIdx) + " (" + std::to_string(tier) + ") " + std::to_string(pdg) + " " + category + " " +
-                           std::to_string(process)};
-        if (process == MC_PROC_DECAY)
+        int nodeIdx{0};
+        for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
         {
-            const MCParticleList &parentList{pMC->GetParentList()};
-            if (!parentList.empty())
+            const LArMCParticle *pMC{dynamic_cast<const LArMCParticle *>(pNode->GetLeadingMCParticle())};
+            if (!pMC)
+                continue;
+            const MCProcess process{pMC->GetProcess()};
+            const std::string category{procToCategoryMap.at(process)};
+            const int pdg{std::abs(pNode->GetParticleId())};
+            const int tier{LArMCParticleHelper::GetHierarchyTier(pMC)};
+
+            CaloHitList uHits, vHits, wHits;
+            this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
+            std::string suffix{std::to_string(nodeIdx) + " (" + std::to_string(tier) + ") " + std::to_string(pdg) + " " + category + " " +
+                               std::to_string(process)};
+            if (process == MC_PROC_DECAY)
             {
-                const MCParticle *pParent{parentList.front()};
-                const int parentPdg{std::abs(pParent->GetParticleId())};
-                suffix += " from " + std::to_string(parentPdg);
+                const MCParticleList &parentList{pMC->GetParentList()};
+                if (!parentList.empty())
+                {
+                    const MCParticle *pParent{parentList.front()};
+                    const int parentPdg{std::abs(pParent->GetParticleId())};
+                    suffix += " from " + std::to_string(parentPdg);
+                }
             }
+
+            this->Visualize(uHits, "U " + suffix, categoryToColorMap.at(category));
+            this->Visualize(vHits, "V " + suffix, categoryToColorMap.at(category));
+            this->Visualize(wHits, "W " + suffix, categoryToColorMap.at(category));
+            ++nodeIdx;
+
+            const int proc{static_cast<int>(process)};
+            const float mom{pMC->GetMomentum().GetMagnitude()};
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "processes", "process", proc));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "processes", "momentum", mom));
+            PANDORA_MONITORING_API(FillTree(this->GetPandora(), "processes"));
         }
 
-        this->Visualize(uHits, "U " + suffix, categoryToColorMap.at(category));
-        this->Visualize(vHits, "V " + suffix, categoryToColorMap.at(category));
-        this->Visualize(wHits, "W " + suffix, categoryToColorMap.at(category));
-        ++nodeIdx;
-
-        const int proc{static_cast<int>(process)};
-        const float mom{pMC->GetMomentum().GetMagnitude()};
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "processes", "process", proc));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "processes", "momentum", mom));
-        PANDORA_MONITORING_API(FillTree(this->GetPandora(), "processes"));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
-
-    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -243,48 +249,60 @@ void HierarchyMonitoringAlgorithm::VisualizeReco(const LArHierarchyHelper::RecoH
     const int nColors{7};
     const int colors[nColors] = {5, 2, 9, 1, 3, 4, 14};
 
-    LArHierarchyHelper::RecoHierarchy::NodeVector nodes;
-    // ATTN: For now just get the first root node, will need to handle all nodes in the future
     PfoList rootPfos;
     hierarchy.GetRootPfos(rootPfos);
-    hierarchy.GetFlattenedNodes(rootPfos.front(), nodes);
-
-    int colorIdx{0};
-    int pfoIdx{0};
-    for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : nodes)
+    for (const ParticleFlowObject *const pRoot : rootPfos)
     {
-        CaloHitList uHits, vHits, wHits;
-        this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
-        const int pdg{pNode->GetParticleId()};
-        const std::string key{pdg == MU_MINUS ? "T" : pdg == E_MINUS ? "S" : "?"};
-        const std::string suffix{std::to_string(pfoIdx) + "_" + key};
-        this->Visualize(uHits, "u_" + suffix, colors[colorIdx]);
-        this->Visualize(vHits, "v_" + suffix, colors[colorIdx]);
-        this->Visualize(wHits, "w_" + suffix, colors[colorIdx]);
-        colorIdx = (colorIdx + 1) >= nColors ? 0 : colorIdx + 1;
-        ++pfoIdx;
-    }
+        LArHierarchyHelper::RecoHierarchy::NodeVector nodes;
+        hierarchy.GetFlattenedNodes(pRoot, nodes);
 
-    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        int colorIdx{0};
+        int pfoIdx{0};
+        for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : nodes)
+        {
+            CaloHitList uHits, vHits, wHits;
+            this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
+            const int pdg{pNode->GetParticleId()};
+            const std::string key{pdg == MU_MINUS ? "T" : pdg == E_MINUS ? "S" : "?"};
+            const std::string suffix{std::to_string(pfoIdx) + "_" + key};
+            this->Visualize(uHits, "u_" + suffix, colors[colorIdx]);
+            this->Visualize(vHits, "v_" + suffix, colors[colorIdx]);
+            this->Visualize(wHits, "w_" + suffix, colors[colorIdx]);
+            colorIdx = (colorIdx + 1) >= nColors ? 0 : colorIdx + 1;
+            ++pfoIdx;
+        }
+
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::MatchInfo &matchInfo) const
 {
-    std::map<const LArHierarchyHelper::MCHierarchy::Node *, int> mcIdxMap;
-    int mcIdx{0};
-    for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches())
-        if (mcIdxMap.find(matches.GetMC()) == mcIdxMap.end())
-            mcIdxMap[matches.GetMC()] = mcIdx++;
+    MCParticleList rootMCParticles;
+    matchInfo.GetRootMCParticles(rootMCParticles);
+    for (const MCParticle *const pRoot : rootMCParticles)
+    {
+        std::map<const LArHierarchyHelper::MCHierarchy::Node *, int> mcIdxMap;
+        int mcIdx{0};
+        for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
+            if (mcIdxMap.find(matches.GetMC()) == mcIdxMap.end())
+                mcIdxMap[matches.GetMC()] = mcIdx++;
 
-    for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches())
-        this->VisualizeMatchedMC(matches, mcIdxMap.at(matches.GetMC()));
+        for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
+            this->VisualizeMatchedMC(matches, mcIdxMap.at(matches.GetMC()));
 
-    for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : matchInfo.GetUnmatchedReco())
-        this->VisualizeUnmatchedReco(pNode);
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    }
 
-    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    if (!matchInfo.GetUnmatchedReco().empty())
+    {
+        for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : matchInfo.GetUnmatchedReco())
+            this->VisualizeUnmatchedReco(pNode);
+
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -296,7 +314,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMatchedMC(const LArHierarchyHelper::
     const std::map<int, int> colors = {{0, 5}, {1, 2}, {2, 9}, {3, 1}, {4, 4}};
 
     const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
-    const int pdg{pMCNode->GetParticleId()};
+    const int pdg{std::abs(pMCNode->GetParticleId())};
 
     std::string key("other");
     if (keys.find(pdg) != keys.end())
