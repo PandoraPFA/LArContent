@@ -48,13 +48,6 @@ private:
      */
     void MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const;
 
-    /**
-     *  @brief  Collates variables and fills ROOT tree for MC particles with matches
-     *
-     *  @param  matches The MCMatches object containing the matches
-     *  @param  matchInfo The MatchInfo object with the full event context
-     */
-    void Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo) const;
 #endif
 
     int m_event;                   ///< The current event

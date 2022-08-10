@@ -485,6 +485,13 @@ public:
             const pandora::PfoList &GetRecoParticles() const;
 
             /**
+             *  @brief  Retrieve the leading reco particle for this node
+             *
+             *  return  The leading reco particle for this node
+             */
+            const pandora::ParticleFlowObject *GetLeadingPfo() const;
+
+            /**
              *  @brief  Retrieve the CaloHits associated with this node
              *
              *  @return The list of CaloHits associated with this node
@@ -510,7 +517,8 @@ public:
             const RecoHierarchy &m_hierarchy; ///< The parent reco hierarchy
             pandora::PfoList m_pfos;          ///< The list of PFOs of which this node is composed
             pandora::CaloHitList m_caloHits;  ///< The list of calo hits of which this node is composed
-            NodeVector m_children;            ///< The child nodes of this node
+            NodeVector m_children;            ///< The child nodes of this nodea
+            const pandora::ParticleFlowObject *m_mainPfo; ///< The leading particle flow object for this node
             int m_pdg;                        ///< The particle ID (track = muon, shower = electron)
         };
 
@@ -721,6 +729,7 @@ public:
     };
 
     typedef std::vector<MCMatches> MCMatchesVector;
+    typedef std::map<const pandora::MCParticle*, MCMatchesVector> InteractionInfo;
 
     /**
      *  @brief  MatcheInfo class
@@ -751,9 +760,11 @@ public:
         /**
          *  @brief  Retrieve the vector of matches (this will include null matches - i.e. MC nodes with no corresponding reco)
          *
+         *  @param  pRoot The root of the interaction hierarchy
+         *
          *  @return The vector of matches
          */
-        const MCMatchesVector &GetMatches() const;
+        const MCMatchesVector &GetMatches(const pandora::MCParticle *const pRoot) const;
 
         /**
          *  @brief  Retrieve the vector of unmatched reco nodes
@@ -763,30 +774,45 @@ public:
         /**
          *  @brief  Retrieve the number of MC nodes available to match
          *
+         *  @param  pRoot The root of the interaction hierarchy
+         *
          *  @return The number of MC nodes available to match
          */
-        unsigned int GetNMCNodes() const;
+        unsigned int GetNMCNodes(const pandora::MCParticle *const pRoot) const;
 
         /**
          *  @brief  Retrieve the number of neutrino interaction derived MC nodes available to match
          *
+         *  @param  pRoot The root of the interaction hierarchy
+         *
          *  @return The number of MC nodes available to match
          */
-        unsigned int GetNNeutrinoMCNodes() const;
+        unsigned int GetNNeutrinoMCNodes(const pandora::MCParticle *const pRoot) const;
 
         /**
          *  @brief  Retrieve the number of cosmic ray derived MC nodes available to match
          *
+         *  @param  pRoot The root of the interaction hierarchy
+         *
          *  @return The number of MC nodes available to match
          */
-        unsigned int GetNCosmicRayMCNodes() const;
+        unsigned int GetNCosmicRayMCNodes(const pandora::MCParticle *const pRoot) const;
 
         /**
          *  @brief  Retrieve the number of test beam derived MC nodes available to match
          *
+         *  @param  pRoot The root of the interaction hierarchy
+         *
          *  @return The number of MC nodes available to match
          */
-        unsigned int GetNTestBeamMCNodes() const;
+        unsigned int GetNTestBeamMCNodes(const pandora::MCParticle *const pRoot) const;
+
+        /**
+         *  @brief  Retrieve the root MC particles of the interaction hierarchies
+         *
+         *  @param  rootMCParticles The output list of root MC particles
+         */
+        void GetRootMCParticles(pandora::MCParticleList &rootMCParticles) const;
 
         /**
          *  @brief  Retrieve the quality cuts for matching
@@ -804,11 +830,7 @@ public:
         void Print(const MCHierarchy &mcHierarchy) const;
 
     private:
-        MCMatchesVector m_matches;                 ///< The vector of good matches from MC to reco
-        MCMatchesVector m_goodMatches;             ///< The vector of good matches - above threshold one reco to one MC matches
-        MCMatchesVector m_aboveThresholdMatches;   ///< The vector of matches that pass quality but with multiple reco matches to the MC
-        MCMatchesVector m_subThresholdMatches;     ///< The vector of matches that don't pass quality cuts
-        MCHierarchy::NodeVector m_unmatchedMC;     ///< The vector of unmatched MC nodes
+        InteractionInfo m_matches;                 ///< The map between an interaction and the vector of good matches from MC to reco
         RecoHierarchy::NodeVector m_unmatchedReco; ///< The vector of unmatched reco nodes
         QualityCuts m_qualityCuts;                 ///< The quality cuts to be applied to matches
     };
@@ -936,6 +958,13 @@ inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::ParticleFlowObject *LArHierarchyHelper::RecoHierarchy::Node::GetLeadingPfo() const
+{
+    return m_mainPfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const LArHierarchyHelper::MCHierarchy::Node *LArHierarchyHelper::MCMatches::GetMC() const
@@ -960,9 +989,12 @@ inline size_t LArHierarchyHelper::MCMatches::GetNRecoMatches() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetMatches() const
+inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetMatches(const pandora::MCParticle *const pRoot) const
 {
-    return m_matches;
+    if (m_matches.find(pRoot) == m_matches.end())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+
+    return m_matches.at(pRoot);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
