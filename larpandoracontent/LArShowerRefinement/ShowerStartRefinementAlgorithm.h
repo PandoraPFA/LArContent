@@ -76,6 +76,7 @@ public:
     float m_electronTMVACut;
     float m_gammaTMVACut;
     LArConnectionPathwayHelper::ElectronTreeVariables m_electronTreeVariables;
+    std::string m_connectionBDTWeightsPath;
 
 private:
     pandora::StatusCode Run();

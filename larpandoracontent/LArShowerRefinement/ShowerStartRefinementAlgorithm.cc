@@ -56,7 +56,7 @@ ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm() :
     m_TMVAReader.AddVariable("NViewsWithAmbiguousHits", &m_TMVAElectronTreeVariables.m_nViewsWithAmbiguousHits);
     m_TMVAReader.AddVariable("AmbiguousHitMaxUnaccountedEnergy", &m_TMVAElectronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy);
 
-    std::string weightFilePath = "TMVAClassification_BDTG_FINAL.weights.xml";
+    std::string weightFilePath = "TMVAClassification_BDTG_StandardVertex.weights.xml";
     m_TMVAReader.BookMVA("BDTG", weightFilePath);
 }
 
@@ -1115,6 +1115,8 @@ StatusCode ShowerStartRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "GammaTMVACut", m_gammaTMVACut));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionBDTWeightsPath", m_connectionBDTWeightsPath));
 
     PfoMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 
