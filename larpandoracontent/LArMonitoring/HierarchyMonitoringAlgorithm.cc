@@ -295,7 +295,10 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
         for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
             this->VisualizeMatchedMC(matches, mcIdxMap.at(matches.GetMC()));
 
-        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        if (!mcIdxMap.empty())
+        {
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        }
     }
 
     if (!matchInfo.GetUnmatchedReco().empty())
