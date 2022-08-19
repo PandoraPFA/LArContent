@@ -61,8 +61,8 @@ StatusCode HierarchyValidationAlgorithm::Run()
     LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
     LArHierarchyHelper::RecoHierarchy recoHierarchy;
     LArHierarchyHelper::FillRecoHierarchy(*pPfoList, foldParameters, recoHierarchy);
-    LArHierarchyHelper::MatchInfo matchInfo;
-    LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
+    LArHierarchyHelper::MatchInfo matchInfo(mcHierarchy, recoHierarchy);
+    LArHierarchyHelper::MatchHierarchies(matchInfo);
     //matchInfo.Print(mcHierarchy);
 
 #ifdef MONITORING

@@ -104,8 +104,11 @@ private:
     void FillHitLists(const pandora::CaloHitList &hits, pandora::CaloHitList &uHits, pandora::CaloHitList &vHits, pandora::CaloHitList &wHits) const;
 #endif
 
+    std::string ToStringSF(const float val, const int sf = 2) const;
+
     std::string m_caloHitListName;  ///< Name of input calo hit list
     std::string m_pfoListName;      ///< Name of input PFO list
+    std::string m_rootFileName;     ///< Name of the output ROOT file (optional)
     bool m_visualizeMC;             ///< Whether or not to visualize the MC nodes
     bool m_visualizeReco;           ///< Whether or not to visualize the reco nodes
     bool m_visualizeDistinct;       ///< If true, allocate colours without consideration of particle id

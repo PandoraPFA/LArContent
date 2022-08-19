@@ -1267,35 +1267,38 @@ bool LArHierarchyHelper::MCMatches::IsQuality(const LArHierarchyHelper::QualityC
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArHierarchyHelper::MatchInfo::MatchInfo() : MatchInfo(QualityCuts())
+LArHierarchyHelper::MatchInfo::MatchInfo(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy) :
+    MatchInfo(mcHierarchy, recoHierarchy, QualityCuts())
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArHierarchyHelper::MatchInfo::MatchInfo(const QualityCuts &qualityCuts) :
+LArHierarchyHelper::MatchInfo::MatchInfo(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy, const QualityCuts &qualityCuts) :
+    m_mcHierarchy{mcHierarchy},
+    m_recoHierarchy{recoHierarchy},
     m_qualityCuts{qualityCuts}
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHierarchyHelper::MatchInfo::Match(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy)
+void LArHierarchyHelper::MatchInfo::Match()
 {
     MCParticleList rootMCParticles;
-    mcHierarchy.GetRootMCParticles(rootMCParticles);
+    m_mcHierarchy.GetRootMCParticles(rootMCParticles);
     PfoList rootPfos;
-    recoHierarchy.GetRootPfos(rootPfos);
+    m_recoHierarchy.GetRootPfos(rootPfos);
     std::map<const MCHierarchy::Node *, MCMatches> mcToMatchMap;
 
     for (const MCParticle *const pRootMC : rootMCParticles)
     {
         MCHierarchy::NodeVector mcNodes;
-        mcHierarchy.GetFlattenedNodes(pRootMC, mcNodes);
+        m_mcHierarchy.GetFlattenedNodes(pRootMC, mcNodes);
         for (const ParticleFlowObject *const pRootPfo : rootPfos)
         {
             RecoHierarchy::NodeVector recoNodes;
-            recoHierarchy.GetFlattenedNodes(pRootPfo, recoNodes);
+            m_recoHierarchy.GetFlattenedNodes(pRootPfo, recoNodes);
 
             std::sort(mcNodes.begin(), mcNodes.end(),
                 [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs) { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
@@ -1354,7 +1357,7 @@ void LArHierarchyHelper::MatchInfo::Match(const MCHierarchy &mcHierarchy, const 
         for (const MCParticle *const pRootMC : rootMCParticles)
         {
             MCHierarchy::NodeVector mcNodes;
-            mcHierarchy.GetFlattenedNodes(pRootMC, mcNodes);
+            m_mcHierarchy.GetFlattenedNodes(pRootMC, mcNodes);
             if (std::find(mcNodes.begin(), mcNodes.end(), pMCNode) != mcNodes.end())
             {
                 m_matches[pRootMC].emplace_back(matches);
@@ -1372,7 +1375,7 @@ void LArHierarchyHelper::MatchInfo::Match(const MCHierarchy &mcHierarchy, const 
         std::sort(m_matches[pRootMC].begin(), m_matches[pRootMC].end(), predicate);
 
         MCHierarchy::NodeVector mcNodes;
-        mcHierarchy.GetFlattenedNodes(pRootMC, mcNodes);
+        m_mcHierarchy.GetFlattenedNodes(pRootMC, mcNodes);
 
         for (const MCHierarchy::Node *pMCNode : mcNodes)
         {
@@ -1571,9 +1574,9 @@ void LArHierarchyHelper::FillRecoHierarchy(const PfoList &pfoList, const Folding
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy, MatchInfo &matchInfo)
+void LArHierarchyHelper::MatchHierarchies(MatchInfo &matchInfo)
 {
-    matchInfo.Match(mcHierarchy, recoHierarchy);
+    matchInfo.Match();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
