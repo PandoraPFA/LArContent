@@ -34,7 +34,10 @@ HierarchyMonitoringAlgorithm::HierarchyMonitoringAlgorithm() :
 
 HierarchyMonitoringAlgorithm::~HierarchyMonitoringAlgorithm()
 {
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "processes", "processes.root", "UPDATE"));
+    if (!m_rootFileName.empty())
+    {
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "processes", m_rootFileName, "UPDATE"));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -72,8 +75,8 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
     }
     if (m_match)
     {
-        LArHierarchyHelper::MatchInfo matchInfo;
-        LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
+        LArHierarchyHelper::MatchInfo matchInfo(mcHierarchy, recoHierarchy);
+        LArHierarchyHelper::MatchHierarchies(matchInfo);
         matchInfo.Print(mcHierarchy);
         this->VisualizeMatches(matchInfo);
     }
@@ -109,6 +112,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMC(const LArHierarchyHelper::MCHiera
         LArHierarchyHelper::MCHierarchy::NodeVector nodes;
         hierarchy.GetFlattenedNodes(pRoot, nodes);
 
+        bool depositedHits{false};
         int nodeIdx{0};
         for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
         {
@@ -119,14 +123,20 @@ void HierarchyMonitoringAlgorithm::VisualizeMC(const LArHierarchyHelper::MCHiera
 
             CaloHitList uHits, vHits, wHits;
             this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
-            std::string suffix{std::to_string(nodeIdx) + "_" + key};
-            this->Visualize(uHits, "u_" + suffix, colors.at(key));
-            this->Visualize(vHits, "v_" + suffix, colors.at(key));
-            this->Visualize(wHits, "w_" + suffix, colors.at(key));
+            if (!(uHits.empty() && vHits.empty() && wHits.empty()))
+            {
+                depositedHits = true;
+                std::string suffix{std::to_string(nodeIdx) + "_" + key};
+                this->Visualize(uHits, "u_" + suffix, colors.at(key));
+                this->Visualize(vHits, "v_" + suffix, colors.at(key));
+                this->Visualize(wHits, "w_" + suffix, colors.at(key));
+            }
             ++nodeIdx;
         }
-
-        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        if (depositedHits)
+        {
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        }
     }
 }
 
@@ -145,6 +155,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMCDistinct(const LArHierarchyHelper:
         LArHierarchyHelper::MCHierarchy::NodeVector nodes;
         hierarchy.GetFlattenedNodes(pRoot, nodes);
 
+        bool depositedHits{false};
         int nodeIdx{0}, colorIdx{0};
         for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
         {
@@ -155,15 +166,22 @@ void HierarchyMonitoringAlgorithm::VisualizeMCDistinct(const LArHierarchyHelper:
 
             CaloHitList uHits, vHits, wHits;
             this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
-            std::string suffix{std::to_string(nodeIdx) + "_" + key};
-            this->Visualize(uHits, "u_" + suffix, colors[colorIdx]);
-            this->Visualize(vHits, "v_" + suffix, colors[colorIdx]);
-            this->Visualize(wHits, "w_" + suffix, colors[colorIdx]);
-            colorIdx = (colorIdx + 1) >= nColours ? 0 : colorIdx + 1;
+            if (!(uHits.empty() && vHits.empty() && wHits.empty()))
+            {
+                depositedHits = true;
+                std::string suffix{std::to_string(nodeIdx) + "_" + key};
+                this->Visualize(uHits, "u_" + suffix, colors[colorIdx]);
+                this->Visualize(vHits, "v_" + suffix, colors[colorIdx]);
+                this->Visualize(wHits, "w_" + suffix, colors[colorIdx]);
+                colorIdx = (colorIdx + 1) >= nColours ? 0 : colorIdx + 1;
+            }
             ++nodeIdx;
         }
 
-        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        if (depositedHits)
+        {
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        }
     }
 }
 
@@ -233,9 +251,12 @@ void HierarchyMonitoringAlgorithm::VisualizeMCProcess(const LArHierarchyHelper::
 
             const int proc{static_cast<int>(process)};
             const float mom{pMC->GetMomentum().GetMagnitude()};
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "processes", "process", proc));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "processes", "momentum", mom));
-            PANDORA_MONITORING_API(FillTree(this->GetPandora(), "processes"));
+            if (!m_rootFileName.empty())
+            {
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "processes", "process", proc));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "processes", "momentum", mom));
+                PANDORA_MONITORING_API(FillTree(this->GetPandora(), "processes"));
+            }
         }
 
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
@@ -280,31 +301,128 @@ void HierarchyMonitoringAlgorithm::VisualizeReco(const LArHierarchyHelper::RecoH
 
 void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::MatchInfo &matchInfo) const
 {
+    const int nColors{8};
+    const int colors[nColors] = {2, 3, 4, 5, 6, 7, 8, 9};
     MCParticleList rootMCParticles;
     matchInfo.GetRootMCParticles(rootMCParticles);
+    PfoList rootPfos;
+    const LArHierarchyHelper::MCHierarchy &mcHierarchy{matchInfo.GetMCHierarchy()};
+    const LArHierarchyHelper::RecoHierarchy &recoHierarchy{matchInfo.GetRecoHierarchy()};
+    recoHierarchy.GetRootPfos(rootPfos);
+    std::map<const LArHierarchyHelper::RecoHierarchy::Node *, int> recoNodeToColorMap;
+    std::map<const LArHierarchyHelper::RecoHierarchy::Node *, int> recoNodeToIdMap;
+    std::map<const ParticleFlowObject *, int> recoRootToSliceMap;
+    std::map<const LArHierarchyHelper::RecoHierarchy::Node *, const ParticleFlowObject *> recoNodeToRootMap;
+    std::map<const LArHierarchyHelper::MCHierarchy::Node *, int> mcNodeToIdMap;
+    int colorIdx{0}, recoIdx{0}, sliceIdx{0}, mcIdx{0};
+    for (const ParticleFlowObject *const pRoot : rootPfos)
+    {
+        recoRootToSliceMap[pRoot] = sliceIdx;
+        LArHierarchyHelper::RecoHierarchy::NodeVector nodes;
+        recoHierarchy.GetFlattenedNodes(pRoot, nodes);
+        for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : nodes)
+        {
+            recoNodeToColorMap[pNode] = colors[colorIdx];
+            recoNodeToIdMap[pNode] = recoIdx;
+            recoNodeToRootMap[pNode] = pRoot;
+            ++recoIdx;
+        }
+        ++sliceIdx;
+        ++colorIdx;
+        if (colorIdx >= nColors)
+            colorIdx = 0;
+    }
     for (const MCParticle *const pRoot : rootMCParticles)
     {
-        std::map<const LArHierarchyHelper::MCHierarchy::Node *, int> mcIdxMap;
-        int mcIdx{0};
-        for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
-            if (mcIdxMap.find(matches.GetMC()) == mcIdxMap.end())
-                mcIdxMap[matches.GetMC()] = mcIdx++;
+        bool isReconstructable{false};
+        LArHierarchyHelper::MCHierarchy::NodeVector nodes;
+        mcHierarchy.GetFlattenedNodes(pRoot, nodes);
+    
+        // Display MC
+        for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
+        {
+            const MCParticle *pMC{pNode->GetLeadingMCParticle()};
+            if (!pMC)
+                continue;
+            const int pdg{std::abs(pNode->GetParticleId())};
 
-        for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
-            this->VisualizeMatchedMC(matches, mcIdxMap.at(matches.GetMC()));
+            CaloHitList uHits, vHits, wHits;
+            this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
+            std::string suffix{"MC - ID: " + std::to_string(mcIdx) + " PDG: " + std::to_string(pdg)};
+            this->Visualize(uHits, "U " + suffix, 1);
+            this->Visualize(vHits, "V " + suffix, 1);
+            this->Visualize(wHits, "W " + suffix, 1);
+            if (!(uHits.empty() && vHits.empty() && wHits.empty()))
+                isReconstructable = true;
+            mcNodeToIdMap[pNode] = mcIdx;
+            ++mcIdx;
+        }
 
-        if (!mcIdxMap.empty())
+        // Display reco
+        const LArHierarchyHelper::MCMatchesVector &matches{matchInfo.GetMatches(pRoot)};
+        std::map<const LArHierarchyHelper::RecoHierarchy::Node *, bool> matchedReco;
+        std::map<const ParticleFlowObject *, bool> matchedRoots;
+        for (const auto match : matches)
+        {
+            const LArHierarchyHelper::MCHierarchy::Node *pMC{match.GetMC()};
+            for (const LArHierarchyHelper::RecoHierarchy::Node *pReco : match.GetRecoMatches())
+            {
+                matchedReco[pReco] = true;
+                matchedRoots[recoNodeToRootMap[pReco]] = true;
+                CaloHitList uHits, vHits, wHits;
+                const std::string purityU{this->ToStringSF(match.GetPurity(pReco, TPC_VIEW_U, true))};
+                const std::string completenessU{this->ToStringSF(match.GetCompleteness(pReco, TPC_VIEW_U, true))};
+                const std::string purityV{this->ToStringSF(match.GetPurity(pReco, TPC_VIEW_V, true))};
+                const std::string completenessV{this->ToStringSF(match.GetCompleteness(pReco, TPC_VIEW_V, true))};
+                const std::string purityW{this->ToStringSF(match.GetPurity(pReco, TPC_VIEW_W, true))};
+                const std::string completenessW{this->ToStringSF(match.GetCompleteness(pReco, TPC_VIEW_W, true))};
+
+                this->FillHitLists(pReco->GetCaloHits(), uHits, vHits, wHits);
+                const std::string suffix{"Reco - Slice " + std::to_string(recoRootToSliceMap[recoNodeToRootMap[pReco]]) + " ID " +
+                    std::to_string(recoNodeToIdMap[pReco]) + " -> " + std::to_string(mcNodeToIdMap[pMC])};
+                const float purity{match.GetPurity(pReco, true)};
+                const float completeness{match.GetCompleteness(pReco, true)};
+                const LArHierarchyHelper::QualityCuts &quality{matchInfo.GetQualityCuts()};
+                if (purity >= quality.m_minPurity && completeness >= quality.m_minCompleteness)
+                {
+                    this->Visualize(uHits, "U " + suffix + "(" + purityU + "," + completenessU + ")", recoNodeToColorMap[pReco]);
+                    this->Visualize(vHits, "V " + suffix + "(" + purityV + "," + completenessV + ")", recoNodeToColorMap[pReco]);
+                    this->Visualize(wHits, "W " + suffix + "(" + purityW + "," + completenessW + ")", recoNodeToColorMap[pReco]);
+                }
+                else
+                {
+                    this->Visualize(uHits, "U " + suffix + "(" + purityU + "," + completenessU + ")", 14);
+                    this->Visualize(vHits, "V " + suffix + "(" + purityV + "," + completenessV + ")", 14);
+                    this->Visualize(wHits, "W " + suffix + "(" + purityW + "," + completenessW + ")", 14);
+                }
+            }
+        }
+
+        // Display unmatched reco (for this true slice)
+        for (const auto [ pRecoRoot, val ] : matchedRoots)
+        {
+            (void)val;
+            LArHierarchyHelper::RecoHierarchy::NodeVector recoNodes;
+            recoHierarchy.GetFlattenedNodes(pRecoRoot, recoNodes);
+            for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : recoNodes)
+            {
+                if (matchedReco.find(pNode) == matchedReco.end())
+                {
+                    CaloHitList uHits, vHits, wHits;
+                    this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
+                    const std::string suffix{"Reco - Slice " + std::to_string(recoRootToSliceMap[recoNodeToRootMap[pNode]]) + " ID " +
+                        std::to_string(recoNodeToIdMap[pNode]) + " -> #"};
+                    this->Visualize(uHits, "U " + suffix, 14);
+                    this->Visualize(vHits, "V " + suffix, 14);
+                    this->Visualize(wHits, "W " + suffix, 14);
+                }
+            }
+        }
+
+        if (isReconstructable)
         {
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
-    }
-
-    if (!matchInfo.GetUnmatchedReco().empty())
-    {
-        for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : matchInfo.GetUnmatchedReco())
-            this->VisualizeUnmatchedReco(pNode);
-
-        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 }
 
@@ -405,7 +523,7 @@ void HierarchyMonitoringAlgorithm::VisualizeUnmatchedReco(const LArHierarchyHelp
 
 void HierarchyMonitoringAlgorithm::Visualize(const CaloHitList &hits, const std::string &label, const int color) const
 {
-    if (!hits.empty() && hits.size() > 1)
+    if (!hits.empty())
     {
         if (m_collectionOnly && hits.front()->GetHitType() != TPC_VIEW_W)
             return;
@@ -431,6 +549,16 @@ void HierarchyMonitoringAlgorithm::FillHitLists(const CaloHitList &hits, CaloHit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+std::string HierarchyMonitoringAlgorithm::ToStringSF(const float val, const int sf) const
+{
+    std::ostringstream out;
+    out.precision(sf);
+    out << std::fixed << val;
+    return out.str();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode HierarchyMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
@@ -439,6 +567,7 @@ StatusCode HierarchyMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
     if (m_pfoListName.empty())
         m_pfoListName = "RecreatedPfos";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "RootFileName", m_rootFileName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizeMC", m_visualizeMC));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizeReco", m_visualizeReco));
     PANDORA_RETURN_RESULT_IF_AND_IF(

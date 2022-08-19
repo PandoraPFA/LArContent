@@ -739,23 +739,26 @@ public:
     public:
         /**
          *  @brief  Default constructor
-         */
-        MatchInfo();
-
-        /**
-         *  @brief  Constructor
-         *
-         *  @param  qualityCuts The quality cuts to be applied to matched nodes
-         */
-        MatchInfo(const QualityCuts &qualityCuts);
-
-        /**
-         *  @brief  Match the nodes in the MC and reco hierarchies.
          *
          *  @param  mcHierarchy The MC hierarchy
          *  @param  recoHierarchy The reco hierarchy
          */
-        void Match(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy);
+        MatchInfo(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy);
+
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  mcHierarchy The MC hierarchy
+         *  @param  recoHierarchy The reco hierarchy
+         *  @param  qualityCuts The quality cuts to be applied to matched nodes
+         */
+        MatchInfo(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy, const QualityCuts &qualityCuts);
+
+        /**
+         *  @brief  Match the nodes in the MC and reco hierarchies.
+         *
+         */
+        void Match();
 
         /**
          *  @brief  Retrieve the vector of matches (this will include null matches - i.e. MC nodes with no corresponding reco)
@@ -808,6 +811,20 @@ public:
         unsigned int GetNTestBeamMCNodes(const pandora::MCParticle *const pRoot) const;
 
         /**
+         *  @brief  Retrieve the MC hierarchy used for the matching
+         *
+         *  @return The MCHierarchy used for matching
+         */
+        const MCHierarchy &GetMCHierarchy() const;
+
+        /**
+         *  @brief  Retrieve the reco hierarchy used for the matching
+         *
+         *  @return The RecoHierarchy used for matching
+         */
+        const RecoHierarchy &GetRecoHierarchy() const;
+
+        /**
          *  @brief  Retrieve the root MC particles of the interaction hierarchies
          *
          *  @param  rootMCParticles The output list of root MC particles
@@ -830,6 +847,8 @@ public:
         void Print(const MCHierarchy &mcHierarchy) const;
 
     private:
+        const MCHierarchy &m_mcHierarchy;          ///< The MC hierarchy for the matching procedure
+        const RecoHierarchy &m_recoHierarchy;      ///< The Reco hierarchy for the matching procedure
         InteractionInfo m_matches;                 ///< The map between an interaction and the vector of good matches from MC to reco
         RecoHierarchy::NodeVector m_unmatchedReco; ///< The vector of unmatched reco nodes
         QualityCuts m_qualityCuts;                 ///< The quality cuts to be applied to matches
@@ -858,11 +877,9 @@ public:
     /**
      *  @brief  Finds the matches between reconstructed and MC hierarchies.
      *
-     *  @param  mcHierarchy The MC hiearchy
-     *  @param  recoHierarchy The reconstructed hierarchy
      *  @param  matchInfo The output match information
      */
-    static void MatchHierarchies(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy, MatchInfo &matchInfo);
+    static void MatchHierarchies(MatchInfo &matchInfo);
 
 private:
     typedef std::set<const pandora::MCParticle *> MCParticleSet;
@@ -1002,6 +1019,20 @@ inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo:
 inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::MatchInfo::GetUnmatchedReco() const
 {
     return m_unmatchedReco;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::MCHierarchy &LArHierarchyHelper::MatchInfo::GetMCHierarchy() const
+{
+    return m_mcHierarchy;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::RecoHierarchy &LArHierarchyHelper::MatchInfo::GetRecoHierarchy() const
+{
+    return m_recoHierarchy;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
