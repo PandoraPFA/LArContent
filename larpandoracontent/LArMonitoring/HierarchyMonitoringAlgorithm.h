@@ -102,7 +102,7 @@ private:
      */
     void FillHitLists(const pandora::CaloHitList &hits, pandora::CaloHitList &uHits, pandora::CaloHitList &vHits, pandora::CaloHitList &wHits) const;
 
-    std::string ToStringSF(const float val, const int sf = 2) const;
+    std::string ToStringSF(const float val, const int sf = 3) const;
 
     std::string m_caloHitListName;  ///< Name of input calo hit list
     std::string m_pfoListName;      ///< Name of input PFO list

@@ -370,30 +370,26 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
                 matchedReco[pReco] = true;
                 matchedRoots[recoNodeToRootMap[pReco]] = true;
                 CaloHitList uHits, vHits, wHits;
-                const std::string purityU{this->ToStringSF(match.GetPurity(pReco, TPC_VIEW_U, true))};
-                const std::string completenessU{this->ToStringSF(match.GetCompleteness(pReco, TPC_VIEW_U, true))};
-                const std::string purityV{this->ToStringSF(match.GetPurity(pReco, TPC_VIEW_V, true))};
-                const std::string completenessV{this->ToStringSF(match.GetCompleteness(pReco, TPC_VIEW_V, true))};
-                const std::string purityW{this->ToStringSF(match.GetPurity(pReco, TPC_VIEW_W, true))};
-                const std::string completenessW{this->ToStringSF(match.GetCompleteness(pReco, TPC_VIEW_W, true))};
+                const float purity{match.GetPurity(pReco, true)};
+                const float completeness{match.GetCompleteness(pReco, true)};
+                const std::string purityStr{this->ToStringSF(purity)};
+                const std::string completenessStr{this->ToStringSF(completeness)};
 
                 this->FillHitLists(pReco->GetCaloHits(), uHits, vHits, wHits);
                 const std::string suffix{"Reco - Slice " + std::to_string(recoRootToSliceMap[recoNodeToRootMap[pReco]]) + " ID " +
                     std::to_string(recoNodeToIdMap[pReco]) + " -> " + std::to_string(mcNodeToIdMap[pMC])};
-                const float purity{match.GetPurity(pReco, true)};
-                const float completeness{match.GetCompleteness(pReco, true)};
                 const LArHierarchyHelper::QualityCuts &quality{matchInfo.GetQualityCuts()};
                 if (purity >= quality.m_minPurity && completeness >= quality.m_minCompleteness)
                 {
-                    this->Visualize(uHits, "U " + suffix + "(" + purityU + "," + completenessU + ")", recoNodeToColorMap[pReco]);
-                    this->Visualize(vHits, "V " + suffix + "(" + purityV + "," + completenessV + ")", recoNodeToColorMap[pReco]);
-                    this->Visualize(wHits, "W " + suffix + "(" + purityW + "," + completenessW + ")", recoNodeToColorMap[pReco]);
+                    this->Visualize(uHits, "U " + suffix + "(" + purityStr + "," + completenessStr + ")", recoNodeToColorMap[pReco]);
+                    this->Visualize(vHits, "V " + suffix + "(" + purityStr + "," + completenessStr + ")", recoNodeToColorMap[pReco]);
+                    this->Visualize(wHits, "W " + suffix + "(" + purityStr + "," + completenessStr + ")", recoNodeToColorMap[pReco]);
                 }
                 else
                 {
-                    this->Visualize(uHits, "U " + suffix + "(" + purityU + "," + completenessU + ")", 14);
-                    this->Visualize(vHits, "V " + suffix + "(" + purityV + "," + completenessV + ")", 14);
-                    this->Visualize(wHits, "W " + suffix + "(" + purityW + "," + completenessW + ")", 14);
+                    this->Visualize(uHits, "U " + suffix + "(" + purityStr + "," + completenessStr + ")", 14);
+                    this->Visualize(vHits, "V " + suffix + "(" + purityStr + "," + completenessStr + ")", 14);
+                    this->Visualize(wHits, "W " + suffix + "(" + purityStr + "," + completenessStr + ")", 14);
                 }
             }
         }
