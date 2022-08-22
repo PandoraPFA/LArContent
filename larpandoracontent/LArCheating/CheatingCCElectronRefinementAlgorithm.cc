@@ -21,11 +21,12 @@ namespace lar_content
 {
 
 CheatingCCElectronRefinementAlgorithm::CheatingCCElectronRefinementAlgorithm() : 
-    m_completenessMode(true),
+    m_completenessMode(false),
     m_thresholdCompleteness(0.33f),
     m_thresholdPurity(0.5f),
     m_maxOpeningAngle(5.f),
-    m_extensionMode(true)
+    m_extensionMode(true),
+    m_addInSubdominantHits(false)
 {
 }
 
@@ -88,7 +89,7 @@ StatusCode CheatingCCElectronRefinementAlgorithm::Run()
 
         if (!pElectronPfo)
             continue;
-        
+
         //PfoList displayPfo;
         //displayPfo.push_back(pElectronPfo);
         //PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &displayPfo, "before", RED, true, true);
@@ -97,7 +98,7 @@ StatusCode CheatingCCElectronRefinementAlgorithm::Run()
         this->FillOwnershipMaps(pShowerPfoList);
 
         this->RefineElectronPfos(pElectronPfo, pMCElectron, electronHitMap);
-        
+
         //PfoList displayPfo2;
         //displayPfo2.push_back(pElectronPfo);
         //PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &displayPfo2, "after", BLUE, true, true);
@@ -117,26 +118,30 @@ void CheatingCCElectronRefinementAlgorithm::FillElectronHitMap(const CaloHitList
         const MCParticleWeightMap &weightMap(pCaloHit->GetMCParticleWeightMap());
 
         for (const auto &mapEntry : weightMap)
-            contributingMCParticleVector.push_back(mapEntry.first);
+        {
+            const MCParticle *pMCParticle(mapEntry.first);
+            const bool isLeadingElectron((std::abs(pMCParticle->GetParticleId()) == 11) && (LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle) == pMCParticle));
+
+            if (isLeadingElectron)
+                contributingMCParticleVector.push_back(pMCParticle);
+        }
 
         std::sort(contributingMCParticleVector.begin(), contributingMCParticleVector.end(), PointerLessThan<MCParticle>());
 
-        float highestWeight(0.f);
+        float highestWeight(-1.f);
         const MCParticle *highestElectronContributor(nullptr);
 
         for (const MCParticle *const pMCParticle : contributingMCParticleVector)
         {
-            const bool isLeadingElectron((std::abs(pMCParticle->GetParticleId()) == 11) && (LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle) == pMCParticle));
+            if (weightMap.find(pMCParticle) == weightMap.end())
+                continue;
 
-            if (isLeadingElectron)
+            const float weight(weightMap.at(pMCParticle));
+
+            if (weight > highestWeight)
             {
-                const float weight(weightMap.at(pMCParticle));
-
-                if (weight > highestWeight)
-                {
-                    highestWeight = weight;
-                    highestElectronContributor = pMCParticle;
-                }
+                highestWeight = weight;
+                highestElectronContributor = pMCParticle;
             }
         }
 
@@ -340,10 +345,24 @@ void CheatingCCElectronRefinementAlgorithm::RefineElectronPfos(const ParticleFlo
 
     //PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
-    bool hitsAdded(false);
-
     for (const CaloHit *const pCaloHit : caloHitList)
     {
+        // Only add in dominant hits (if this is true)
+        if (!m_addInSubdominantHits)
+        {
+            try
+            {
+                const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+
+                if (pMCParticle != pMCElectron)
+                    continue;
+            }
+            catch (...)
+            {
+                continue;
+            }
+        }
+
         const HitType hitType(pCaloHit->GetHitType());
         const CartesianVector viewMCVertex(hitType == TPC_VIEW_U ? mcVertexU : hitType == TPC_VIEW_V ? mcVertexV : mcVertexW);
         const CartesianVector viewMCDirection(hitType == TPC_VIEW_U ? mcDirectionU : hitType == TPC_VIEW_V ? mcDirectionV : mcDirectionW);
@@ -351,8 +370,6 @@ void CheatingCCElectronRefinementAlgorithm::RefineElectronPfos(const ParticleFlo
 
         if (!this->DoesPassCut(pCaloHit, viewMCVertex, viewMCDirection, viewConeLength))
             continue;
-
-        hitsAdded = true;
 
         if (m_extensionMode)
         {
@@ -443,16 +460,18 @@ void CheatingCCElectronRefinementAlgorithm::RefineElectronPfos(const ParticleFlo
 
             ClusterList electronClusters;
             LArPfoHelper::GetClusters(pElectronPfo, hitType, electronClusters);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, electronClusters.front(), pCaloHit));
+
+            if (electronClusters.empty())
+            {
+                const Cluster *pNewCluster(this->CreateCluster(pCaloHit, hitType));
+
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,  PandoraContentApi::AddToPfo(*this, pElectronPfo, pNewCluster));
+            }
+            else
+            {
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, electronClusters.front(), pCaloHit));
+            }
         }
-    }
-
-    if (hitsAdded)
-    {
-        object_creation::ParticleFlowObject::Metadata metadata;
-        metadata.m_propertiesToAdd["ActiveCheatingElectronAlg"] = 1.f;
-
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pElectronPfo, metadata));
     }
 
     //PandoraMonitoringApi::ViewEvent(this->GetPandora());
@@ -513,6 +532,37 @@ bool CheatingCCElectronRefinementAlgorithm::DoesPassCut(const CaloHit *const pCa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const Cluster *CheatingCCElectronRefinementAlgorithm::CreateCluster(const CaloHit *const pCaloHit, const HitType hitType) const
+{
+    const ClusterList *pTemporaryList(nullptr);
+    std::string temporaryListName, currentListName;
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, currentListName));
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+        PandoraContentApi::CreateTemporaryListAndSetCurrent<ClusterList>(*this, pTemporaryList, temporaryListName));
+
+    const Cluster *pCluster(nullptr);
+    PandoraContentApi::Cluster::Parameters parameters;
+    parameters.m_caloHitList.push_back(pCaloHit);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
+
+    PandoraContentApi::Cluster::Metadata metadata;
+    metadata.m_particleId = 11;
+
+    if (metadata.m_particleId.IsInitialized())
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
+
+    const std::string &clusterListName(hitType == TPC_VIEW_U ? "ClustersU" : hitType == TPC_VIEW_V ? "ClustersV" : "ClustersW");
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, temporaryListName, clusterListName));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentListName));
+
+    return pCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CheatingCCElectronRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
@@ -540,6 +590,9 @@ StatusCode CheatingCCElectronRefinementAlgorithm::ReadSettings(const TiXmlHandle
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
         XmlHelper::ReadValue(xmlHandle, "ExtensionMode", m_extensionMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "AddInSubdominantHits", m_addInSubdominantHits));
 
     return STATUS_CODE_SUCCESS;
 }

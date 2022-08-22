@@ -50,6 +50,8 @@ private:
     bool DoesPassCut(const pandora::CaloHit *const pCaloHit, const pandora::CartesianVector &mcVertex, const pandora::CartesianVector &mcDirection, 
         const float coneLength) const;
 
+    const pandora::Cluster *CreateCluster(const pandora::CaloHit *const pCaloHit, const pandora::HitType hitType) const;
+
     std::string m_mcParticleListName;
     std::string m_showerPfoListName;
     std::string m_trackPfoListName;
@@ -61,6 +63,7 @@ private:
     float m_thresholdPurity;
     float m_maxOpeningAngle;
     bool m_extensionMode;
+    bool m_addInSubdominantHits;
 
     HitToClusterMap m_hitToClusterMapU;
     HitToClusterMap m_hitToClusterMapV;
