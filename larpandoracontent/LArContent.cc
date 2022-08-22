@@ -77,9 +77,11 @@
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 
 #include "larpandoracontent/LArShowerRefinement/ElectronStartRefinementTool.h"
+#include "larpandoracontent/LArShowerRefinement/HybridElectronStartRefinementTool.h"
 #include "larpandoracontent/LArShowerRefinement/GammaStartRefinementTool.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
+#include "larpandoracontent/LArShowerRefinement/HybridShowerStartRefinementAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/AmbiguousDeltaRayTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayRemovalTool.h"
@@ -265,6 +267,7 @@
     d("LArPreProcessing",                       PreProcessingAlgorithm)                                                         \
     d("LArShowerCharacterisation",              ShowerCharacterisationAlgorithm)                                                \
     d("LArShowerStartRefinement",               ShowerStartRefinementAlgorithm)                                                 \
+    d("LArHybridShowerStartRefinement",         HybridShowerStartRefinementAlgorithm)                                           \
     d("LArSlicing",                             SlicingAlgorithm)                                                               \
     d("LArStreaming",                           StreamingAlgorithm)                                                             \
     d("LArTrackParticleBuilding",               TrackParticleBuildingAlgorithm)                                                 \
@@ -348,6 +351,7 @@
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArElectronStartRefinement",             ElectronStartRefinementTool)                                                    \
+    d("LArHybridElectronStartRefinement",       HybridElectronStartRefinementTool)                                              \
     d("LArGammaStartRefinement",                GammaStartRefinementTool)                                                       \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
     d("LArBeamParticleId",                      BeamParticleIdTool)                                                             \
