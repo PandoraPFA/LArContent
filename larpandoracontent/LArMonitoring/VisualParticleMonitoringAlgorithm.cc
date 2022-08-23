@@ -22,6 +22,7 @@ namespace lar_content
 VisualParticleMonitoringAlgorithm::VisualParticleMonitoringAlgorithm() :
     m_visualizeMC(false),
     m_visualizePfo(false),
+    m_visualizeSlice(false),
     m_groupMCByPdg(false),
     m_showPfoByPid(false),
     m_showPfoMatchedMC(false),
@@ -75,6 +76,12 @@ StatusCode VisualParticleMonitoringAlgorithm::Run()
             else
                 this->VisualizeIndependentPfo(*pPfoList);
         }
+    }
+    if (m_visualizeSlice)
+    {
+        const PfoList *pPfoList(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
+        this->VisualizeReconstructedSlice(*pPfoList);
     }
 #endif // MONITORING
     return STATUS_CODE_SUCCESS;
@@ -316,6 +323,54 @@ void VisualParticleMonitoringAlgorithm::VisualizeIndependentPfo(const PfoList &p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void VisualParticleMonitoringAlgorithm::VisualizeReconstructedSlice(const PfoList &pfoList) const
+{
+    const std::map<int, Color> colors = {{0, RED}, {1, BLACK}, {2, BLUE}, {3, CYAN}, {4, MAGENTA}, {5, GREEN}, {6, ORANGE}, {7, GRAY}};
+    if (pfoList.empty())
+        return;
+
+    PANDORA_MONITORING_API(
+        SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, m_transparencyThresholdE, m_energyScaleThresholdE, m_scalingFactor));
+
+    size_t colorIdx{0};
+    int pfoIdx{0};
+    for (const ParticleFlowObject *pPfo : pfoList)
+    {
+        CaloHitList uHits, vHits, wHits;
+        const bool isTrack{LArPfoHelper::IsTrack(pPfo)};
+        CaloHitList caloHits;
+        for (const auto view : {HitType::TPC_VIEW_U, HitType::TPC_VIEW_V, HitType::TPC_VIEW_W})
+        {
+            LArPfoHelper::GetCaloHits(pPfo, view, caloHits);
+            LArPfoHelper::GetIsolatedCaloHits(pPfo, view, caloHits);
+        }
+        for (const CaloHit *pCaloHit : caloHits)
+        {
+            const HitType view{pCaloHit->GetHitType()};
+            if (view == HitType::TPC_VIEW_U)
+                uHits.emplace_back(pCaloHit);
+            else if (view == HitType::TPC_VIEW_V)
+                vHits.emplace_back(pCaloHit);
+            else if (view == HitType::TPC_VIEW_W)
+                wHits.emplace_back(pCaloHit);
+        }
+        std::string suffix{std::to_string(pfoIdx)};
+        suffix += isTrack ? "_T" : "_S";
+        if (!uHits.empty())
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &uHits, "u_" + suffix, colors.at(colorIdx)));
+        if (!vHits.empty())
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &vHits, "v_" + suffix, colors.at(colorIdx)));
+        if (!wHits.empty())
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &wHits, "w_" + suffix, colors.at(colorIdx)));
+        colorIdx = (colorIdx + 1) >= colors.size() ? 0 : colorIdx + 1;
+        ++pfoIdx;
+    }
+
+    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void VisualParticleMonitoringAlgorithm::VisualizePfoByParticleId(const PfoList &pfoList) const
 {
     PfoList linearisedPfo;
@@ -426,6 +481,7 @@ StatusCode VisualParticleMonitoringAlgorithm::ReadSettings(const TiXmlHandle xml
         m_pfoListName = "RecreatedPfos";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizeMC", m_visualizeMC));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizePFO", m_visualizePfo));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizeSlice", m_visualizeSlice));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GroupMCByPDG", m_groupMCByPdg));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowPFOByPID", m_showPfoByPid));
     PANDORA_RETURN_RESULT_IF_AND_IF(
