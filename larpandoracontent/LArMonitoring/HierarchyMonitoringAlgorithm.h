@@ -70,21 +70,6 @@ private:
     void VisualizeMatches(const LArHierarchyHelper::MatchInfo &matchInfo) const;
 
     /**
-     *  @brief  Visualize the reco nodes matched to a single MC node
-     *
-     *  @param  matches The MC to reco matches
-     *  @param  mcIdx The unique identifier for the MC particle
-     */
-    void VisualizeMatchedMC(const LArHierarchyHelper::MCMatches &matches, const int mcIdx) const;
-
-    /**
-     *  @brief  Visualize the unmatched reco node
-     *
-     *  @param  pNode The unmatched reco node
-     */
-    void VisualizeUnmatchedReco(const LArHierarchyHelper::RecoHierarchy::Node *pNode) const;
-
-    /**
      *  @brief  Visualize a calo hit list
      *
      *  @param  hits The hits to visualize
@@ -117,6 +102,9 @@ private:
     bool m_collectionOnly;          ///< Limit display to the collection plane only
     bool m_foldToPrimaries;         ///< Whether or not to fold everything back to primaries
     bool m_foldDynamic;             ///< Whether or not to fold based on process information
+    float m_minPurity;              ///< The minimum purity for a match to be considered good
+    float m_minCompleteness;        ///< The minimum completeness for a match to be considered good
+    float m_minMatchCompleteness;   ///< The minimum completeness at which to a PFO should be considered matching at all
     float m_transparencyThresholdE; ///< Cell energy for which transparency is saturated (0%, fully opaque)
     float m_energyScaleThresholdE;  ///< Cell energy for which color is at top end of continous color palette
     float m_scalingFactor;          ///< TEve works with [cm], Pandora usually works with [mm] (but LArContent went with cm too)

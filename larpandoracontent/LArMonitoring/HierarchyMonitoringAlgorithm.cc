@@ -24,6 +24,9 @@ HierarchyMonitoringAlgorithm::HierarchyMonitoringAlgorithm() :
     m_collectionOnly{false},
     m_foldToPrimaries{false},
     m_foldDynamic{true},
+    m_minPurity{0.8f},
+    m_minCompleteness{0.65f},
+    m_minMatchCompleteness{0.1f},
     m_transparencyThresholdE{-1.f},
     m_energyScaleThresholdE{1.f},
     m_scalingFactor{1.f}
@@ -76,7 +79,8 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
     }
     if (m_match)
     {
-        LArHierarchyHelper::MatchInfo matchInfo(mcHierarchy, recoHierarchy);
+        LArHierarchyHelper::QualityCuts quality(m_minPurity, m_minCompleteness);
+        LArHierarchyHelper::MatchInfo matchInfo(mcHierarchy, recoHierarchy, quality);
         LArHierarchyHelper::MatchHierarchies(matchInfo);
         matchInfo.Print(mcHierarchy);
         this->VisualizeMatches(matchInfo);
@@ -369,8 +373,6 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
             const LArHierarchyHelper::MCHierarchy::Node *pMC{match.GetMC()};
             for (const LArHierarchyHelper::RecoHierarchy::Node *pReco : match.GetRecoMatches())
             {
-                matchedReco[pReco] = true;
-                matchedRoots[recoNodeToRootMap[pReco]] = true;
                 CaloHitList uHits, vHits, wHits;
                 const float purity{match.GetPurity(pReco, true)};
                 const float completeness{match.GetCompleteness(pReco, true)};
@@ -386,12 +388,22 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
                     this->Visualize(uHits, "U " + suffix + "(" + purityStr + "," + completenessStr + ")", recoNodeToColorMap[pReco]);
                     this->Visualize(vHits, "V " + suffix + "(" + purityStr + "," + completenessStr + ")", recoNodeToColorMap[pReco]);
                     this->Visualize(wHits, "W " + suffix + "(" + purityStr + "," + completenessStr + ")", recoNodeToColorMap[pReco]);
+
+                    matchedReco[pReco] = true;
+                    matchedRoots[recoNodeToRootMap[pReco]] = true;
                 }
                 else
                 {
-                    this->Visualize(uHits, "U " + suffix + "(" + purityStr + "," + completenessStr + ")", 14);
-                    this->Visualize(vHits, "V " + suffix + "(" + purityStr + "," + completenessStr + ")", 14);
-                    this->Visualize(wHits, "W " + suffix + "(" + purityStr + "," + completenessStr + ")", 14);
+                    // Only note the reconstructed slice if the completeness passes a minimal threshold
+                    if (completeness >= m_minMatchCompleteness)
+                    {
+                        matchedReco[pReco] = true;
+                        matchedRoots[recoNodeToRootMap[pReco]] = true;
+
+                        this->Visualize(uHits, "U " + suffix + "(" + purityStr + "," + completenessStr + ")", 14);
+                        this->Visualize(vHits, "V " + suffix + "(" + purityStr + "," + completenessStr + ")", 14);
+                        this->Visualize(wHits, "W " + suffix + "(" + purityStr + "," + completenessStr + ")", 14);
+                    }
                 }
             }
         }
@@ -422,99 +434,6 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void HierarchyMonitoringAlgorithm::VisualizeMatchedMC(const LArHierarchyHelper::MCMatches &matches, const int mcIdx) const
-{
-    const std::map<int, const std::string> keys = {{13, "mu"}, {11, "e"}, {22, "gamma"}, {321, "kaon"}, {211, "pi"}, {2212, "p"}};
-    const int green{3}, gray{14};
-    const std::map<int, int> colors = {{0, 5}, {1, 2}, {2, 9}, {3, 1}, {4, 4}};
-
-    const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
-    const int pdg{std::abs(pMCNode->GetParticleId())};
-
-    std::string key("other");
-    if (keys.find(pdg) != keys.end())
-        key = keys.at(pdg);
-
-    CaloHitList mcUHits, mcVHits, mcWHits;
-    this->FillHitLists(pMCNode->GetCaloHits(), mcUHits, mcVHits, mcWHits);
-    std::string leading{pMCNode->IsLeadingLepton() ? "_leading" : ""};
-    if (!matches.GetRecoMatches().empty())
-    {
-        std::string suffix{std::to_string(mcIdx) + "_" + key + leading};
-        this->Visualize(mcUHits, "u_" + suffix, green);
-        this->Visualize(mcVHits, "v_" + suffix, green);
-        this->Visualize(mcWHits, "w_" + suffix, green);
-    }
-    else
-    {
-        std::string suffix{std::to_string(mcIdx) + "_" + key + "_unmatched"};
-        this->Visualize(mcUHits, "u_" + suffix, gray);
-        this->Visualize(mcVHits, "v_" + suffix, gray);
-        this->Visualize(mcWHits, "w_" + suffix, gray);
-    }
-
-    int recoIdx{0};
-    size_t colorIdx{0};
-    for (const LArHierarchyHelper::RecoHierarchy::Node *pRecoNode : matches.GetRecoMatches())
-    {
-        CaloHitList recoUHits, recoVHits, recoWHits;
-        this->FillHitLists(pRecoNode->GetCaloHits(), recoUHits, recoVHits, recoWHits);
-        const int characterisation{pRecoNode->GetParticleId()};
-        const std::string recoKey{characterisation == MU_MINUS ? "T" : characterisation == E_MINUS ? "S" : "?"};
-        const std::string recoSuffix{std::to_string(mcIdx) + "->" + std::to_string(recoIdx) + "_" + recoKey};
-        if (!recoUHits.empty())
-        {
-            const float purity{matches.GetPurity(pRecoNode, TPC_VIEW_U, true)};
-            const float completeness{matches.GetCompleteness(pRecoNode, TPC_VIEW_U, true)};
-            std::ostringstream metrics;
-            metrics.precision(2);
-            metrics << std::fixed << " p: " << purity << " c: " << completeness;
-            PANDORA_MONITORING_API(
-                VisualizeCaloHits(this->GetPandora(), &recoUHits, "u_" + recoSuffix + metrics.str(), static_cast<Color>(colors.at(colorIdx))));
-        }
-        if (!recoVHits.empty())
-        {
-            const float purity{matches.GetPurity(pRecoNode, TPC_VIEW_V, true)};
-            const float completeness{matches.GetCompleteness(pRecoNode, TPC_VIEW_V, true)};
-            std::ostringstream metrics;
-            metrics.precision(2);
-            metrics << std::fixed << " p: " << purity << " c: " << completeness;
-            PANDORA_MONITORING_API(
-                VisualizeCaloHits(this->GetPandora(), &recoVHits, "v_" + recoSuffix + metrics.str(), static_cast<Color>(colors.at(colorIdx))));
-        }
-        if (!recoWHits.empty())
-        {
-            const float purity{matches.GetPurity(pRecoNode, TPC_VIEW_W, true)};
-            const float completeness{matches.GetCompleteness(pRecoNode, TPC_VIEW_W, true)};
-            std::ostringstream metrics;
-            metrics.precision(2);
-            metrics << std::fixed << " p: " << purity << " c: " << completeness;
-            PANDORA_MONITORING_API(
-                VisualizeCaloHits(this->GetPandora(), &recoWHits, "w_" + recoSuffix + metrics.str(), static_cast<Color>(colors.at(colorIdx))));
-        }
-        colorIdx = (colorIdx + 1) >= colors.size() ? 0 : colorIdx + 1;
-        ++recoIdx;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void HierarchyMonitoringAlgorithm::VisualizeUnmatchedReco(const LArHierarchyHelper::RecoHierarchy::Node *pNode) const
-{
-    const int gray{14};
-
-    CaloHitList uHits, vHits, wHits;
-    this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
-    const int pdg{pNode->GetParticleId()};
-    const std::string key{pdg == MU_MINUS ? "T" : pdg == E_MINUS ? "S" : "?"};
-    const std::string suffix{"unmatched_reco"};
-    this->Visualize(uHits, "u_" + suffix, gray);
-    this->Visualize(vHits, "v_" + suffix, gray);
-    this->Visualize(wHits, "w_" + suffix, gray);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -579,6 +498,9 @@ StatusCode HierarchyMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FoldDynamic", m_foldDynamic));
     if (m_foldToPrimaries)
         m_foldDynamic = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinPurity", m_minPurity));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCompleteness", m_minCompleteness));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchCompleteness", m_minMatchCompleteness));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TransparencyThresholdE", m_transparencyThresholdE));
     PANDORA_RETURN_RESULT_IF_AND_IF(
