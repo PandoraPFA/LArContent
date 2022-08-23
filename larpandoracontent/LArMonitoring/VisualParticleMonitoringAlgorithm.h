@@ -71,6 +71,15 @@ private:
     void VisualizeIndependentPfo(const pandora::PfoList &pfoList, const LArMCParticleHelper::MCContributionMap &mcMap) const;
 
     /**
+     *  @brief  Visualize the PFO particles in each slice (colour-coded by slice).
+     *
+     *  This function visualises each slice.
+     *
+     *  @param  pfoList The list of PFOs to visualize
+     **/
+    void VisualizeReconstructedSlice(const pandora::PfoList &pfoList) const;
+
+    /**
      *  @brief  Visualize the PFO particles according to their PID.
      *
      *  This function visualises each PFO according to its particle ID.
@@ -94,6 +103,7 @@ private:
     std::string m_pfoListName;      ///< Name of input PFO list
     bool m_visualizeMC;             ///< Whether or not to visualize MC particles
     bool m_visualizePfo;            ///< Whether or not to visualize PFOs
+    bool m_visualizeSlice;          ///< Whether or not to visualize reconstructed slices
     bool m_groupMCByPdg;            ///< Whether or not to group MC particles by particle id
     bool m_showPfoByPid;            ///< Whether or not to colour PFOs by particle id
     bool m_showPfoMatchedMC;        ///< Whether or not to display the best matched MC particle for a PFO
