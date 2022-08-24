@@ -82,6 +82,20 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
         int interaction{0};
         MCParticleList rootMCParticles;
         matchInfo.GetRootMCParticles(rootMCParticles);
+
+        const LArHierarchyHelper::RecoHierarchy &recoHierarchy{matchInfo.GetRecoHierarchy()};
+        PfoList rootPfos;
+        recoHierarchy.GetRootPfos(rootPfos);
+        std::map<const LArHierarchyHelper::RecoHierarchy::Node *, const ParticleFlowObject *> recoNodeToRootMap;
+        for (const ParticleFlowObject *const pRoot : rootPfos)
+        {
+            LArHierarchyHelper::RecoHierarchy::NodeVector nodes;
+            recoHierarchy.GetFlattenedNodes(pRoot, nodes);
+            for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : nodes)
+                recoNodeToRootMap[pNode] = pRoot;
+        }
+
+        std::set<const pandora::ParticleFlowObject *> matchedRecoSliceRoots;
         for (const MCParticle *const pRoot : rootMCParticles)
         {
             const LArHierarchyHelper::MCMatchesVector &matches{matchInfo.GetMatches(pRoot)};
@@ -98,6 +112,10 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
                 const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
                 const MCParticle *const pMC{pNode->GetLeadingMCParticle()};
                 primaryMCSet.insert(LArMCParticleHelper::GetPrimaryMCParticle(pMC));
+
+                for (const LArHierarchyHelper::RecoHierarchy::Node *pReco : mcMatch.GetRecoMatches())
+                    matchedRecoSliceRoots.insert(recoNodeToRootMap[pReco]);
+
                 const int nReco{static_cast<int>(mcMatch.GetRecoMatches().size())};
                 const bool isQuality{mcMatch.IsQuality(matchInfo.GetQualityCuts())};
                 if (nReco == 1 && isQuality)
@@ -154,19 +172,38 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
             MCParticleList primaryMCList;
             for (const MCParticle *const pMC : primaryMCSet)
                 primaryMCList.emplace_back(pMC);
-            const int interactionType{static_cast<int>(LArInteractionTypeHelper::GetInteractionType(primaryMCList))};
+            int interactionType{-1};
+            if (!primaryMCList.empty())
+                interactionType = static_cast<int>(LArInteractionTypeHelper::GetInteractionType(primaryMCList));
             const int nNodes{static_cast<int>(matchInfo.GetNMCNodes(pRoot))};
             const int nTrackNodes{static_cast<int>(trackNodeSet.size())}, nShowerNodes{static_cast<int>(showerNodeSet.size())};
-            const CartesianVector trueVertex{pRoot->GetVertex()};
-            const CartesianVector recoVertex(0, 0, 0);//{LArPfoHelper::GetVertex(matchInfo.GetRecoNeutrino())->GetPosition()};
-            const float vtxDx{recoVertex.GetX() - trueVertex.GetX()};
-            const float vtxDy{recoVertex.GetY() - trueVertex.GetY()};
-            const float vtxDz{recoVertex.GetZ() - trueVertex.GetZ()};
-            const float vtxDr{std::sqrt(vtxDx * vtxDx + vtxDy * vtxDy + vtxDz * vtxDz)};
+            const int nRecoSlices{static_cast<int>(matchedRecoSliceRoots.size())};
+            const CartesianVector &trueVertex{pRoot->GetVertex()};
+            float vtxDx{std::numeric_limits<float>::max()};
+            float vtxDy{std::numeric_limits<float>::max()};
+            float vtxDz{std::numeric_limits<float>::max()};
+            float vtxDr{std::numeric_limits<float>::max()};
+
+            for (const ParticleFlowObject * pRootPfo : matchedRecoSliceRoots)
+            {
+                const CartesianVector &recoVertex{LArPfoHelper::GetVertex(pRootPfo)->GetPosition()};
+                const float dx{recoVertex.GetX() - trueVertex.GetX()};
+                const float dy{recoVertex.GetY() - trueVertex.GetY()};
+                const float dz{recoVertex.GetZ() - trueVertex.GetZ()};
+                const float dr{std::sqrt(dx * dx + dy * dy + dz * dz)};
+                if (dr < vtxDr)
+                {
+                    vtxDx = dx;
+                    vtxDy = dy;
+                    vtxDz = dz;
+                    vtxDr = dr;
+                }
+            }
 
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interaction", interaction));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interactionType", interactionType));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nRecoSlices", nRecoSlices));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodMatches", nGoodMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nPoorMatches", nPoorMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nUnmatched", nUnmatched));
@@ -203,6 +240,18 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
         int interaction{0};
         MCParticleList rootMCParticles;
         matchInfo.GetRootMCParticles(rootMCParticles);
+        PfoList rootPfos;
+        const LArHierarchyHelper::RecoHierarchy &recoHierarchy{matchInfo.GetRecoHierarchy()};
+        recoHierarchy.GetRootPfos(rootPfos);
+        std::map<const LArHierarchyHelper::RecoHierarchy::Node *, const ParticleFlowObject *> recoNodeToRootMap;
+        for (const ParticleFlowObject *const pRoot : rootPfos)
+        {
+            LArHierarchyHelper::RecoHierarchy::NodeVector nodes;
+            recoHierarchy.GetFlattenedNodes(pRoot, nodes);
+            for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : nodes)
+                recoNodeToRootMap[pNode] = pRoot;
+        }
+
         for (const MCParticle *const pRoot : rootMCParticles)
         {
             for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
@@ -221,10 +270,9 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const int isElectron{std::abs(pMCNode->GetLeadingMCParticle()->GetParticleId()) == E_MINUS ? 1 : 0};
                 const int hasMuonParent{parentList.size() == 1 && std::abs(parentList.front()->GetParticleId()) == MU_MINUS ? 1 : 0};
                 const int isMichel{isElectron && hasMuonParent && LArMCParticleHelper::IsDecay(pMCNode->GetLeadingMCParticle()) ? 1 : 0};
-
                 const LArHierarchyHelper::RecoHierarchy::NodeVector &nodeVector{matches.GetRecoMatches()};
                 const int nMatches{static_cast<int>(nodeVector.size())};
-                IntVector recoIdVector, nRecoHitsVector, nSharedHitsVector;
+                IntVector recoSliceIdVector, recoIdVector, nRecoHitsVector, nSharedHitsVector;
                 FloatVector purityVector, completenessVector;
                 FloatVector purityAdcVector, completenessAdcVector;
                 FloatVector purityVectorU, purityVectorV, purityVectorW, completenessVectorU, completenessVectorV, completenessVectorW;
@@ -233,6 +281,9 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 float vtxDx{0.f}, vtxDy{0.f}, vtxDz{0.f}, vtxDr{0.f};
                 for (const LArHierarchyHelper::RecoHierarchy::Node *pRecoNode : nodeVector)
                 {
+                    const int sliceId{static_cast<int>(std::distance(rootPfos.begin(), std::find(rootPfos.begin(), rootPfos.end(),
+                        recoNodeToRootMap[pRecoNode])))};
+                    recoSliceIdVector.emplace_back(sliceId);
                     recoIdVector.emplace_back(pRecoNode->GetParticleId());
                     nRecoHitsVector.emplace_back(static_cast<int>(pRecoNode->GetCaloHits().size()));
                     nSharedHitsVector.emplace_back(static_cast<int>(matches.GetSharedHits(pRecoNode)));
@@ -252,9 +303,8 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                     completenessAdcVectorU.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_U, true));
                     completenessAdcVectorV.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_V, true));
                     completenessAdcVectorW.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_W, true));
-                    if (nMatches == 1)
+                    if (nMatches > 0)
                     {
-                        // Only makes sense to calculate vertex delta if we have a one-to-one match
                         const CartesianVector recoVertex{LArPfoHelper::GetVertex(pRecoNode->GetLeadingPfo())->GetPosition()};
                         vtxDx = recoVertex.GetX() - trueVertex.GetX();
                         vtxDy = recoVertex.GetY() - trueVertex.GetY();
@@ -262,8 +312,6 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                         vtxDr = std::sqrt(vtxDx * vtxDx + vtxDy * vtxDy + vtxDz * vtxDz);
                     }
                 }
-
-                // Would like to add information on hierarchy matching. Needs some thought, it's extremely complicated
 
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interaction", interaction));
@@ -277,6 +325,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isLeadingLepton", isLeadingLepton));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isMichel", isMichel));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nMatches", nMatches));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "recoSliceIdVector", &recoSliceIdVector));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "recoIdVector", &recoIdVector));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nRecoHitsVector", &nRecoHitsVector));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nSharedHitsVector", &nSharedHitsVector));
