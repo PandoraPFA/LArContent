@@ -122,10 +122,6 @@ void LArHierarchyHelper::MCHierarchy::FillHierarchy(const MCParticleList &mcPart
         if (parentList.empty())
         {
             rootNodes.emplace_back(pMCParticle);
-            if (LArMCParticleHelper::IsNeutrino(pMCParticle))
-                std::cout << "Found root neutrino " << pMCParticle << std::endl;
-            else
-                std::cout << "Found root non-neutrino " << pMCParticle << std::endl;
         }
     }
 
@@ -835,10 +831,6 @@ void LArHierarchyHelper::RecoHierarchy::FillHierarchy(const PfoList &pfoList, co
         if (parentList.empty())
         {
             rootNodes.emplace_back(pPfo);
-            if (LArPfoHelper::IsNeutrino(pPfo))
-                std::cout << "Found root reco neutrino " << pPfo << std::endl;
-            else
-                std::cout << "Found root reco non-neutrino " << pPfo << std::endl;
         }
     }
 
