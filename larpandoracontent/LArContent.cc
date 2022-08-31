@@ -386,6 +386,7 @@
     d("LArLocalAsymmetryFeature",               LocalAsymmetryFeatureTool)                                                      \
     d("LArRPhiFeature",                         RPhiFeatureTool)                                                                \
     d("LArShowerAsymmetryFeature",              ShowerAsymmetryFeatureTool)                                                     \
+    d("LArTwoDShowerFitFeatureTool",            TwoDShowerFitFeatureTool)                                                       \
     d("LArTwoDLinearFitFeatureTool",            TwoDLinearFitFeatureTool)                                                       \
     d("LArThreeDLinearFitFeatureTool",          ThreeDLinearFitFeatureTool)                                                     \
     d("LArTwoDVertexDistanceFeatureTool",       TwoDVertexDistanceFeatureTool)                                                  \
