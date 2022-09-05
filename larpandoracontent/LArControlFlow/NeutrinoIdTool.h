@@ -154,7 +154,7 @@ private:
 
         bool m_isAvailable;                             ///< Is the feature vector available
         LArMvaHelper::MvaFeatureVector m_featureVector; ///< The MVA feature vector
-        LArMvaHelper::DoubleMap        m_featureMap;    ///< A map between MVA features and their names
+        LArMvaHelper::DoubleMap m_featureMap;           ///< A map between MVA features and their names
         const NeutrinoIdTool *const m_pTool;            ///< The tool that owns this
     };
 
