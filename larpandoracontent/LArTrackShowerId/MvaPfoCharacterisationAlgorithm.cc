@@ -99,26 +99,26 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
 
-    const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(
-	wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
+    const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
     const StringVector chosenFeatureToolOrder(wClusterList.empty() ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
     StringVector featureOrder;
-    const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(chosenFeatureToolOrder, chosenFeatureToolMap, featureOrder, this, pPfo));
+    const LArMvaHelper::MvaFeatureMap featureMap(
+        LArMvaHelper::CalculateFeatures(chosenFeatureToolOrder, chosenFeatureToolMap, featureOrder, this, pPfo));
 
-    for ( auto const &[featureKey, featureValue] : featureMap )
+    for (auto const &[featureKey, featureValue] : featureMap)
     {
         (void)featureKey;
 
         if (!featureValue.IsInitialized())
-	{
+        {
             if (m_enableProbability)
-	    {
-		object_creation::ParticleFlowObject::Metadata metadata;
+            {
+                object_creation::ParticleFlowObject::Metadata metadata;
                 metadata.m_propertiesToAdd["TrackScore"] = -1.f;
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
-	    }
+            }
             return (pPfo->GetParticleId() == MU_MINUS);
-	}
+        }
     }
 
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
@@ -272,11 +272,13 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureOrder, featureMap));
         object_creation::ParticleFlowObject::Metadata metadata;
         metadata.m_propertiesToAdd["TrackScore"] = score;
-	if ( m_persistFeatures ) {
-	    for (auto const &[name, value] : featureMap) {
-	        metadata.m_propertiesToAdd[name] = value.Get();
-	    }
-	}
+        if (m_persistFeatures)
+        {
+            for (auto const &[name, value] : featureMap)
+            {
+                metadata.m_propertiesToAdd[name] = value.Get();
+            }
+        }
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
         return (m_minProbabilityCut <= score);
     }
@@ -397,25 +399,29 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
     }
 
     LArMvaHelper::AlgorithmToolMap algorithmToolMap;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureTools", m_algorithmToolNames, algorithmToolMap));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+        LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureTools", m_algorithmToolNames, algorithmToolMap));
 
     if (m_useThreeDInformation)
     {
-	// and the map for NoChargeInfo
-	LArMvaHelper::AlgorithmToolMap algorithmToolMapNoChargeInfo;
+        // and the map for NoChargeInfo
+        LArMvaHelper::AlgorithmToolMap algorithmToolMapNoChargeInfo;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-				 LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureToolsNoChargeInfo", m_algorithmToolNamesNoChargeInfo, algorithmToolMapNoChargeInfo));
+            LArMvaHelper::ProcessAlgorithmToolListToMap(
+                *this, xmlHandle, "FeatureToolsNoChargeInfo", m_algorithmToolNamesNoChargeInfo, algorithmToolMapNoChargeInfo));
 
-	for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMap)
-	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapThreeD));
+        for (auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMap)
+            PANDORA_RETURN_RESULT_IF(
+                STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapThreeD));
 
-	for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMapNoChargeInfo)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapNoChargeInfo));
+        for (auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMapNoChargeInfo)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapNoChargeInfo));
     }
     else
     {
-        for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMap)
-	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMap));
+        for (auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMap)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMap));
     }
 
     return PfoCharacterisationBaseAlgorithm::ReadSettings(xmlHandle);
