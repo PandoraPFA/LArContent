@@ -48,8 +48,11 @@ public:
      *  @param  args arguments to pass to the tool
      */
     virtual void Run(MvaTypes::MvaFeatureVector &featureVector, Ts... args) = 0;
-    virtual void Run(MvaTypes::MvaFeatureMap &featureMap, pandora::StringVector &featureOrder, const std::string &featureToolName, Ts... args)
+    virtual void Run(MvaTypes::MvaFeatureMap &featureMap, pandora::StringVector &featureOrder, const std::string &featureToolName, Ts...)
     {
+        (void)featureMap;
+        (void)featureOrder;
+        (void)featureToolName;
         return;
     };
 };
