@@ -208,11 +208,11 @@ public:
 
     /**
      *  @brief  Add a feature tool to a map of feature tools
-     * 
+     *
      *  @param  pFeatureTool the feature tool
      *  @param  pFeatureToolName the name of the feature tool
      *  @param  featureToolMap the map to append
-     * 
+     *
      *  @return success
      */
     template <typename... Ts>
@@ -221,7 +221,7 @@ public:
 
     /**
      *  @brief  Process a list of algorithms tools in an xml file, using a map. Idea is for this to go to XmlHelper in PandoraSDK eventually as an overload to ProcessAlgorithmToolList
-     * 
+     *
      *  @param  algorithm the parent algorithm calling this function
      *  @param  xmlHandle the relevant xml handle
      *  @param  listName the name of the algorithm tool list
@@ -232,10 +232,10 @@ public:
 
     /**
      *  @brief  Recursively concatenate vectors of features
-     * 
+     *
      *  @param  featureList a list of features
      *  @param  featureLists optional further lists of features
-     * 
+     *
      *  @return the concatenated vector of features
      */
     template <typename TLIST, typename... TLISTS>
