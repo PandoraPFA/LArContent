@@ -9,6 +9,7 @@
 #define LAR_SIMPLE_NEUTRINO_ID_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/SliceIdBaseTool.h"
 
 namespace lar_content
 {

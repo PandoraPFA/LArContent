@@ -9,6 +9,7 @@
 #define LAR_COSMIC_RAY_TAGGING_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/CosmicRayTaggingBaseTool.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
