@@ -9,6 +9,7 @@
 #define LAR_CHEATING_SLICE_SELECTION_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/SliceSelectionBaseTool.h"
 
 namespace lar_content
 {
