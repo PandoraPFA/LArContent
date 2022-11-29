@@ -36,11 +36,9 @@ private:
     /**
      *  @brief  Visualize all MC particles independently.
      *
-     *  This function ensures each MC particle has its own entry in the TEve tree, though common PDG colour scheme is used.
-     *
-     *  @param  mcMap The map from MC particles to calo hits
+     *  This function ensures each MC particle has its own entry in the TEve tree.
      **/
-    void VisualizeIndependentMC(const LArMCParticleHelper::MCContributionMap &mcMap) const;
+    void VisualizeIndependentMC() const;
 
     /**
      *  @brief  Visualize the MC particles according to their PDG codes.

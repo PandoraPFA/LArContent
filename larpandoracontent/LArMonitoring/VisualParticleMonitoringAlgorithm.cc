@@ -58,7 +58,7 @@ StatusCode VisualParticleMonitoringAlgorithm::Run()
         if (m_groupMCByPdg)
             this->VisualizeMCByPdgCode(targetMCParticleToHitsMap);
         else
-            this->VisualizeIndependentMC(targetMCParticleToHitsMap);
+            this->VisualizeIndependentMC();
     }
     if (m_visualizePfo)
     {
@@ -84,59 +84,77 @@ StatusCode VisualParticleMonitoringAlgorithm::Run()
 
 #ifdef MONITORING
 
-void VisualParticleMonitoringAlgorithm::VisualizeIndependentMC(const LArMCParticleHelper::MCContributionMap &mcMap) const
+void VisualParticleMonitoringAlgorithm::VisualizeIndependentMC() const
 {
-    const std::map<int, const std::string> keys = {{13, "mu"}, {11, "e"}, {22, "gamma"}, {321, "kaon"}, {211, "pi"}, {2212, "p"}};
     const std::map<int, Color> colors = {{0, RED}, {1, BLACK}, {2, BLUE}, {3, CYAN}, {4, MAGENTA}, {5, GREEN}, {6, ORANGE}, {7, GRAY}};
-    MCParticleList linearisedMC;
-    if (mcMap.empty())
-        return;
+    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, m_transparencyThresholdE,
+        m_energyScaleThresholdE, m_scalingFactor));
 
-    PANDORA_MONITORING_API(
-        SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, m_transparencyThresholdE, m_energyScaleThresholdE, m_scalingFactor));
-    LArMCParticleHelper::GetBreadthFirstHierarchyRepresentation(mcMap.begin()->first, linearisedMC);
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+    std::map<const MCParticle *, CaloHitList> mcToHitMap;
 
-    size_t colorIdx{0};
-    int mcIdx{0};
-    for (const MCParticle *pMC : linearisedMC)
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
-        const auto iter{mcMap.find(pMC)};
-        if (iter == mcMap.end())
-            continue;
-        std::string key("other");
         try
         {
-            const int pdg{std::abs(pMC->GetParticleId())};
-            if (keys.find(pdg) != keys.end())
-                key = keys.at(pdg);
+            const MCParticle *pMC{MCParticleHelper::GetMainMCParticle(pCaloHit)};
+            mcToHitMap[pMC].emplace_back(pCaloHit);
         }
         catch (const StatusCodeException &)
         {
-            key = "unknown";
         }
+    }
 
-        CaloHitList uHits, vHits, wHits;
-        for (const CaloHit *pCaloHit : iter->second)
+    size_t colorIdx{0};
+    for (const auto &[pMC, caloHitList] : mcToHitMap)
+    {
+        CaloHitList uHits;
+        for (const CaloHit *const pCaloHit : caloHitList)
         {
             const HitType view{pCaloHit->GetHitType()};
             if (view == HitType::TPC_VIEW_U)
                 uHits.emplace_back(pCaloHit);
-            else if (view == HitType::TPC_VIEW_V)
-                vHits.emplace_back(pCaloHit);
-            else
-                wHits.emplace_back(pCaloHit);
         }
-        std::string suffix{std::to_string(mcIdx) + "_" + key};
+        std::string suffix{std::to_string(pMC->GetParticleId())};
         if (!uHits.empty())
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &uHits, "u_" + suffix, colors.at(colorIdx)));
+        colorIdx = (colorIdx + 1) >= colors.size() ? 0 : colorIdx + 1;
+    }
+    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+
+    colorIdx = 0;
+    for (const auto &[pMC, caloHitList] : mcToHitMap)
+    {
+        CaloHitList vHits;
+        for (const CaloHit *const pCaloHit : caloHitList)
+        {
+            const HitType view{pCaloHit->GetHitType()};
+            if (view == HitType::TPC_VIEW_V)
+                vHits.emplace_back(pCaloHit);
+        }
+        std::string suffix{std::to_string(pMC->GetParticleId())};
         if (!vHits.empty())
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &vHits, "v_" + suffix, colors.at(colorIdx)));
+        colorIdx = (colorIdx + 1) >= colors.size() ? 0 : colorIdx + 1;
+    }
+    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+
+    colorIdx = 0;
+    for (const auto &[pMC, caloHitList] : mcToHitMap)
+    {
+        CaloHitList wHits;
+        for (const CaloHit *const pCaloHit : caloHitList)
+        {
+            const HitType view{pCaloHit->GetHitType()};
+            if (view == HitType::TPC_VIEW_W)
+                wHits.emplace_back(pCaloHit);
+        }
+        std::string suffix{std::to_string(pMC->GetParticleId())};
         if (!wHits.empty())
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &wHits, "w_" + suffix, colors.at(colorIdx)));
         colorIdx = (colorIdx + 1) >= colors.size() ? 0 : colorIdx + 1;
-        ++mcIdx;
     }
-
     PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 }
 
