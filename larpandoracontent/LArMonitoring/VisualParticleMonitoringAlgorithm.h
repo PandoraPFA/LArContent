@@ -86,6 +86,14 @@ private:
      **/
     void MakeSelection(const pandora::MCParticleList *pMCList, const pandora::CaloHitList *pCaloHitList,
         LArMCParticleHelper::MCContributionMap &mcMap) const;
+
+    /**
+     *  @brief  Retrieve the true neutrino vertex.
+     *
+     *  @return The true neutrino interaction vertex
+     */
+    const pandora::CartesianVector &GetTrueVertex() const;
+
 #endif // MONITORING
 
     std::string m_caloHitListName;  ///< Name of input calo hit list

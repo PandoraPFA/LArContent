@@ -92,8 +92,8 @@ void VisualParticleMonitoringAlgorithm::VisualizeIndependentMC() const
 
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
-    std::map<const MCParticle *, CaloHitList> mcToHitMap;
 
+    std::map<const MCParticle *, CaloHitList> mcToHitMap;
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         try
@@ -105,6 +105,10 @@ void VisualParticleMonitoringAlgorithm::VisualizeIndependentMC() const
         {
         }
     }
+
+    const CartesianVector &trueVertex{this->GetTrueVertex()};
+    const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+    const float vtxTrueX{trueVertex.GetX()};
 
     size_t colorIdx{0};
     for (const auto &[pMC, caloHitList] : mcToHitMap)
@@ -118,7 +122,11 @@ void VisualParticleMonitoringAlgorithm::VisualizeIndependentMC() const
         }
         std::string suffix{std::to_string(pMC->GetParticleId())};
         if (!uHits.empty())
+        {
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &uHits, "u_" + suffix, colors.at(colorIdx)));
+            const CartesianVector vtxPos(vtxTrueX, 0.f, static_cast<float>(transform->YZtoU(trueVertex.GetY(), trueVertex.GetZ())));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vtxPos, "vtx (true)", BLUE, 2));
+        }
         colorIdx = (colorIdx + 1) >= colors.size() ? 0 : colorIdx + 1;
     }
     PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
@@ -135,7 +143,11 @@ void VisualParticleMonitoringAlgorithm::VisualizeIndependentMC() const
         }
         std::string suffix{std::to_string(pMC->GetParticleId())};
         if (!vHits.empty())
+        {
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &vHits, "v_" + suffix, colors.at(colorIdx)));
+            const CartesianVector vtxPos(vtxTrueX, 0.f, static_cast<float>(transform->YZtoV(trueVertex.GetY(), trueVertex.GetZ())));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vtxPos, "vtx (true)", BLUE, 2));
+        }
         colorIdx = (colorIdx + 1) >= colors.size() ? 0 : colorIdx + 1;
     }
     PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
@@ -152,7 +164,11 @@ void VisualParticleMonitoringAlgorithm::VisualizeIndependentMC() const
         }
         std::string suffix{std::to_string(pMC->GetParticleId())};
         if (!wHits.empty())
+        {
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &wHits, "w_" + suffix, colors.at(colorIdx)));
+            const CartesianVector vtxPos(vtxTrueX, 0.f, static_cast<float>(transform->YZtoW(trueVertex.GetY(), trueVertex.GetZ())));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vtxPos, "vtx (true)", BLUE, 2));
+        }
         colorIdx = (colorIdx + 1) >= colors.size() ? 0 : colorIdx + 1;
     }
     PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
@@ -431,6 +447,31 @@ void VisualParticleMonitoringAlgorithm::MakeSelection(
     }
 }
 #endif // MONITORING
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+const CartesianVector &VisualParticleMonitoringAlgorithm::GetTrueVertex() const
+{
+    const MCParticleList *pMCParticleList{nullptr};
+    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pMCParticleList) && pMCParticleList)
+    {
+        MCParticleVector primaries;
+        LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
+        if (!primaries.empty())
+        {
+            const MCParticle *primary{primaries.front()};
+            const MCParticleList &parents{primary->GetParentList()};
+            if (parents.size() == 1)
+            {
+                const MCParticle *trueNeutrino{parents.front()};
+                if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
+                    return primaries.front()->GetVertex();
+            }
+        }
+    }
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
