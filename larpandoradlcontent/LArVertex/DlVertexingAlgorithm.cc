@@ -33,7 +33,6 @@ DlVertexingAlgorithm::DlVertexingAlgorithm() :
     m_nClasses{0},
     m_height{256},
     m_width{256},
-    m_maxHitAdc{500.f},
     m_regionSize{32.f},
     m_visualise{false},
     m_writeTree{false},
@@ -134,7 +133,7 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
 
         for (const CaloHit *pCaloHit : *pCaloHitList)
         {
-            const float x{pCaloHit->GetPositionVector().GetX()}, z{pCaloHit->GetPositionVector().GetZ()}, adc{pCaloHit->GetInputEnergy()};
+            const float x{pCaloHit->GetPositionVector().GetX()}, z{pCaloHit->GetPositionVector().GetZ()}, adc{pCaloHit->GetMipEquivalentEnergy()};
             // If on a refinement pass, drop hits outside the region of interest
             if (m_pass > 1 && (x < xMin || x > xMax || z < zMin || z > zMax))
                 continue;
@@ -351,7 +350,7 @@ StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(
             if (x < xMin || x > xMax || z < zMin || z > zMax)
                 continue;
         }
-        const float adc{pCaloHit->GetInputEnergy() < m_maxHitAdc ? pCaloHit->GetInputEnergy() : m_maxHitAdc};
+        const float adc{pCaloHit->GetMipEquivalentEnergy()};
         const int pixelX{static_cast<int>(std::floor((x - xBinEdges[0]) / dx))};
         const int pixelZ{(m_height - 1) - static_cast<int>(std::floor((z - zBinEdges[0]) / dz))};
         accessor[0][0][pixelZ][pixelX] += adc;
@@ -822,7 +821,6 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameW", modelName));
         modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
         LArDLHelper::LoadModel(modelName, m_modelW);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MaxHitAdc", m_maxHitAdc));
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WriteTree", m_writeTree));
         if (m_writeTree)
         {

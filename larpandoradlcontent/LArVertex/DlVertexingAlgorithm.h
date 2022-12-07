@@ -230,7 +230,6 @@ private:
     int m_nClasses;                           ///< The number of distance classes
     int m_height;                             ///< The height of the images
     int m_width;                              ///< The width of the images
-    float m_maxHitAdc;                        ///< Maximum ADC value to allow
     float m_regionSize;                       ///< The half width/height of the event region to consider in cm
     bool m_visualise;                         ///< Whether or not to visualise the candidate vertices
     bool m_writeTree;                         ///< Whether or not to write validation details to a ROOT tree
