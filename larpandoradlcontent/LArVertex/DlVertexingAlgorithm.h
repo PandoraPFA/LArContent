@@ -67,41 +67,38 @@ private:
      *  @brief  Create input for the network from a calo hit list
      *
      *  @param  caloHits The CaloHitList from which the input should be made
+     *  @param  view The wire plane view
+     *  @param  xMin The minimum x coordinate for the hits
+     *  @param  xMax The maximum x coordinate for the hits
+     *  @param  zMin The minimum x coordinate for the hits
+     *  @param  zMax The maximum x coordinate for the hits
      *  @param  networkInput The TorchInput object to populate
      *  @param  pixelVector The output vector of populated pixels
      *
      *  @return The StatusCode resulting from the function
      **/
-    pandora::StatusCode MakeNetworkInputFromHits(
-        const pandora::CaloHitList &caloHits, LArDLHelper::TorchInput &networkInput, PixelVector &pixelVector) const;
-
-    /*
-     *  @brief  Create a list of wire plane-space coordinates from a list of Pixels
-     *
-     *  @param  caloHits The CaloHitList from which the pixel vector was originally constructed
-     *  @param  pixelVector The input vector of populated pixels
-     *  @param  positionVector The output vector of wire plane positions
-     *
-     *  @return The StatusCode resulting from the function
-     **/
-    pandora::StatusCode MakeWirePlaneCoordinatesFromPixels(
-        const pandora::CaloHitList &caloHits, const PixelVector &pixelVector, pandora::CartesianPointVector &positionVector) const;
+    pandora::StatusCode MakeNetworkInputFromHits(const pandora::CaloHitList &caloHits, const pandora::HitType view, const float xMin,
+        const float xMax, const float zMin, const float zMax, LArDLHelper::TorchInput &networkInput, PixelVector &pixelVector) const;
 
     /*
      *  @brief  Create a list of wire plane-space coordinates from a canvas
      *
-     *  @param  caloHits The CaloHitList from which the pixel vector was originally constructed
      *  @param  canvas The input canvas
      *  @param  canvasWidth The width of the canvas
      *  @param  canvasHeight The height of the canvas
      *  @param  columnOffset The column offset used when populating the canvas
      *  @param  rowOffset The row offset used when populating the canvas
+     *  @param  xMin The minimum x coordinate for the hits
+     *  @param  xMax The maximum x coordinate for the hits
+     *  @param  zMin The minimum x coordinate for the hits
+     *  @param  zMax The maximum x coordinate for the hits
      *  @param  positionVector The output vector of wire plane positions
      *
      *  @return The StatusCode resulting from the function
      **/
-    pandora::StatusCode MakeWirePlaneCoordinatesFromCanvas(const pandora::CaloHitList &caloHits, float **canvas, const int canvasWidth,
-        const int canvasHeight, const int columnOffset, const int rowOffset, pandora::CartesianPointVector &positionVector) const;
+    pandora::StatusCode MakeWirePlaneCoordinatesFromCanvas(float **canvas, const int canvasWidth, const int canvasHeight,
+        const int columnOffset, const int rowOffset, const pandora::HitType view, const float xMin, const float xMax, const float zMin,
+        const float zMax, pandora::CartesianPointVector &positionVector) const;
 
     /**
      *  @brief  Determines the parameters of the canvas for extracting the vertex location.

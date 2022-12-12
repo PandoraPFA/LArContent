@@ -171,6 +171,23 @@ StatusCode DlVertexingAlgorithm::Infer()
 {
     if (m_pass == 1)
         ++m_event;
+
+    std::map<HitType, float> wireMin, wireMax;
+    float driftMin{std::numeric_limits<float>::max()}, driftMax{-std::numeric_limits<float>::max()};
+    for (const std::string &listname : m_caloHitListNames)
+    {
+        const CaloHitList *pCaloHitList{nullptr};
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
+        if (pCaloHitList->empty())
+            continue;
+
+        HitType view{pCaloHitList->front()->GetHitType()};
+        float viewDriftMin{driftMin}, viewDriftMax{driftMax};
+        this->GetHitRegion(*pCaloHitList, viewDriftMin, viewDriftMax, wireMin[view], wireMax[view]);
+        driftMin = std::min(viewDriftMin, driftMin);
+        driftMax = std::max(viewDriftMax, driftMax);
+    }
+
     CartesianPointVector vertexCandidatesU, vertexCandidatesV, vertexCandidatesW;
     for (const std::string listName : m_caloHitListNames)
     {
@@ -184,7 +201,7 @@ StatusCode DlVertexingAlgorithm::Infer()
 
         LArDLHelper::TorchInput input;
         PixelVector pixelVector;
-        this->MakeNetworkInputFromHits(*pCaloHitList, input, pixelVector);
+        this->MakeNetworkInputFromHits(*pCaloHitList, view, driftMin, driftMax, wireMin[view], wireMax[view], input, pixelVector);
 
         // Run the input through the trained model
         LArDLHelper::TorchInputVector inputs;
@@ -222,7 +239,8 @@ StatusCode DlVertexingAlgorithm::Infer()
         }
 
         CartesianPointVector positionVector;
-        this->MakeWirePlaneCoordinatesFromCanvas(*pCaloHitList, canvas, canvasWidth, canvasHeight, colOffset, rowOffset, positionVector);
+        this->MakeWirePlaneCoordinatesFromCanvas(canvas, canvasWidth, canvasHeight, colOffset, rowOffset, view, driftMin, driftMax,
+            wireMin[view], wireMax[view], positionVector);
         if (isU)
             vertexCandidatesU.emplace_back(positionVector.front());
         else if (isV)
@@ -332,29 +350,29 @@ StatusCode DlVertexingAlgorithm::Infer()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(
-    const pandora::CaloHitList &caloHits, LArDLHelper::TorchInput &networkInput, PixelVector &pixelVector) const
+StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(const CaloHitList &caloHits, const HitType view, const float xMin, const float xMax,
+    const float zMin, const float zMax, LArDLHelper::TorchInput &networkInput, PixelVector &pixelVector) const
 {
-    // Determine the range of coordinates for the view
-    float xMin{0.f}, xMax{0.f}, zMin{0.f}, zMax{0.f};
-    GetHitRegion(caloHits, xMin, xMax, zMin, zMax);
+    // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
+    const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
+    const float pitch(view == TPC_VIEW_U ? pTPC->GetWirePitchU() : view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW());
+    const float driftStep{0.5f};
 
-    // Determine the bin edges - need double precision here for consistency with Python binning
+    // Determine the bin edges
     std::vector<double> xBinEdges(m_width + 1);
     std::vector<double> zBinEdges(m_height + 1);
-    xBinEdges[0] = xMin - PY_EPSILON;
-    const double dx = ((xMax + PY_EPSILON) - (xMin - PY_EPSILON)) / m_width;
+    xBinEdges[0] = xMin - 0.5f * driftStep;
+    const double dx = ((xMax + 0.5f * driftStep) - xBinEdges[0]) / m_width;
     for (int i = 1; i < m_width + 1; ++i)
         xBinEdges[i] = xBinEdges[i - 1] + dx;
-    zBinEdges[0] = zMin - PY_EPSILON;
-    const double dz = ((zMax + PY_EPSILON) - (zMin - PY_EPSILON)) / m_height;
+    zBinEdges[0] = zMin - 0.5f * pitch;
+    const double dz = ((zMax + 0.5f * pitch) - zBinEdges[0]) / m_height;
     for (int i = 1; i < m_height + 1; ++i)
         zBinEdges[i] = zBinEdges[i - 1] + dz;
 
     LArDLHelper::InitialiseInput({1, 1, m_height, m_width}, networkInput);
     auto accessor = networkInput.accessor<float, 4>();
 
-    float maxValue{0.f};
     for (const CaloHit *pCaloHit : caloHits)
     {
         const float x{pCaloHit->GetPositionVector().GetX()};
@@ -366,22 +384,16 @@ StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(
         }
         const float adc{pCaloHit->GetMipEquivalentEnergy()};
         const int pixelX{static_cast<int>(std::floor((x - xBinEdges[0]) / dx))};
-        const int pixelZ{(m_height - 1) - static_cast<int>(std::floor((z - zBinEdges[0]) / dz))};
+        const int pixelZ{static_cast<int>(std::floor((z - zBinEdges[0]) / dz))};
         accessor[0][0][pixelZ][pixelX] += adc;
-        if (accessor[0][0][pixelZ][pixelX] > maxValue)
-            maxValue = accessor[0][0][pixelZ][pixelX];
     }
-    if (maxValue > 0)
+    for (int row = 0; row < m_height; ++row)
     {
-        for (int row = 0; row < m_height; ++row)
+        for (int col = 0; col < m_width; ++col)
         {
-            for (int col = 0; col < m_width; ++col)
-            {
-                const float value{accessor[0][0][row][col]};
-                accessor[0][0][row][col] = value / maxValue;
-                if (value > 0)
-                    pixelVector.emplace_back(std::make_pair(row, col));
-            }
+            const float value{accessor[0][0][row][col]};
+            if (value > 0)
+                pixelVector.emplace_back(std::make_pair(row, col));
         }
     }
 
@@ -390,47 +402,18 @@ StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromPixels(
-    const CaloHitList &caloHits, const PixelVector &pixelVector, CartesianPointVector &positionVector) const
+StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromCanvas(float **canvas, const int canvasWidth, const int canvasHeight,
+    const int columnOffset, const int rowOffset, const HitType view, const float xMin, const float xMax, const float zMin, const float zMax,
+    CartesianPointVector &positionVector) const
 {
-    // Determine the range of coordinates for the view
-    float xMin{0.f}, xMax{0.f}, zMin{0.f}, zMax{0.f};
-    GetHitRegion(caloHits, xMin, xMax, zMin, zMax);
+    // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
+    const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
+    const float pitch(view == TPC_VIEW_U ? pTPC->GetWirePitchU() : view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW());
+    const float driftStep{0.5f};
 
-    // Determine the bin size - need double precision here for consistency with Python binning
-    const double dx{((xMax + PY_EPSILON) - (xMin - PY_EPSILON)) / m_width};
-    xMin -= PY_EPSILON;
-    const double dz{((zMax + PY_EPSILON) - (zMin - PY_EPSILON)) / m_height};
-    zMin -= PY_EPSILON;
-    // Original hit mapping applies a floor operation, so add half a pixel width to get pixel centre
-    const float xShift{static_cast<float>(dx * 0.5f)};
-    const float zShift{static_cast<float>(dz * 0.5f)};
+    const double dx = ((xMax + 0.5f * driftStep) - (xMin - 0.5f * driftStep)) / m_width;
+    const double dz = ((zMax + 0.5f * pitch) - (zMin - 0.5f * pitch)) / m_height;
 
-    for (const auto [row, col] : pixelVector)
-    {
-        const float x{static_cast<float>(col * dx + xMin + xShift)};
-        const float z{static_cast<float>(dz * ((m_height - 1) - row) + zMin + zShift)};
-        CartesianVector pt(x, 0.f, z);
-        positionVector.emplace_back(pt);
-    }
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromCanvas(const CaloHitList &caloHits, float **canvas, const int canvasWidth,
-    const int canvasHeight, const int columnOffset, const int rowOffset, CartesianPointVector &positionVector) const
-{
-    // Determine the range of coordinates for the view
-    float xMin{0.f}, xMax{0.f}, zMin{0.f}, zMax{0.f};
-    GetHitRegion(caloHits, xMin, xMax, zMin, zMax);
-
-    // Determine the bin size - need double precision here for consistency with Python binning
-    const double dx{((xMax + PY_EPSILON) - (xMin - PY_EPSILON)) / m_width};
-    xMin -= PY_EPSILON;
-    const double dz{((zMax + PY_EPSILON) - (zMin - PY_EPSILON)) / m_height};
-    zMin -= PY_EPSILON;
     // Original hit mapping applies a floor operation, so add half a pixel width to get pixel centre
     const float xShift{static_cast<float>(dx * 0.5f)};
     const float zShift{static_cast<float>(dz * 0.5f)};
@@ -447,7 +430,7 @@ StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromCanvas(const CaloHi
             }
 
     const float x{static_cast<float>((colBest - columnOffset) * dx + xMin + xShift)};
-    const float z{static_cast<float>(dz * ((m_height - 1) - (rowBest - rowOffset)) + zMin + zShift)};
+    const float z{static_cast<float>((rowBest - rowOffset) * dz + zMin + zShift)};
     CartesianVector pt(x, 0.f, z);
     positionVector.emplace_back(pt);
 
