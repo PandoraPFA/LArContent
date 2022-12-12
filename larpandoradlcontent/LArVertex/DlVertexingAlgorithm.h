@@ -230,14 +230,13 @@ private:
     int m_nClasses;                           ///< The number of distance classes
     int m_height;                             ///< The height of the images
     int m_width;                              ///< The width of the images
-    float m_regionSize;                       ///< The half width/height of the event region to consider in cm
+    float m_driftStep;                        ///< The size of a pixel in the drift direction in cm (most relevant in pass 2)
     bool m_visualise;                         ///< Whether or not to visualise the candidate vertices
     bool m_writeTree;                         ///< Whether or not to write validation details to a ROOT tree
     std::string m_rootTreeName;               ///< The ROOT tree name
     std::string m_rootFileName;               ///< The ROOT file name
     std::mt19937 m_rng;                       ///< The random number generator
     std::vector<double> m_thresholds;         ///< Distance class thresholds
-    const double PY_EPSILON{1.1920929e-7};    ///< The value of epsilon in Python
 };
 
 } // namespace lar_dl_content

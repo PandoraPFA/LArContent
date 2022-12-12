@@ -33,7 +33,7 @@ DlVertexingAlgorithm::DlVertexingAlgorithm() :
     m_nClasses{0},
     m_height{256},
     m_width{256},
-    m_regionSize{32.f},
+    m_driftStep{0.5f},
     m_visualise{false},
     m_writeTree{false},
     m_rng(static_cast<std::mt19937::result_type>(std::chrono::high_resolution_clock::now().time_since_epoch().count()))
@@ -73,15 +73,29 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetMCToHitsMap(mcToHitsMap));
     MCParticleList hierarchy;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CompleteMCHierarchy(mcToHitsMap, hierarchy));
-    std::normal_distribution<> gauss(0.f, 15.f);
 
+    // Get boundaries for hits and make x dimension common
+    std::map<HitType, float> wireMin, wireMax;
+    float driftMin{std::numeric_limits<float>::max()}, driftMax{-std::numeric_limits<float>::max()};
+    for (const std::string &listname : m_caloHitListNames)
+    {
+        const CaloHitList *pCaloHitList{nullptr};
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
+        if (pCaloHitList->empty())
+            continue;
+
+        HitType view{pCaloHitList->front()->GetHitType()};
+        float viewDriftMin{driftMin}, viewDriftMax{driftMax};
+        this->GetHitRegion(*pCaloHitList, viewDriftMin, viewDriftMax, wireMin[view], wireMax[view]);
+        driftMin = std::min(viewDriftMin, driftMin);
+        driftMax = std::max(viewDriftMax, driftMax);
+    }
     for (const std::string &listname : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
         if (pCaloHitList->empty())
             continue;
-        m_rng.seed(static_cast<std::mt19937::result_type>(pCaloHitList->size()));
 
         HitType view{pCaloHitList->front()->GetHitType()};
         const bool isU{view == TPC_VIEW_U}, isV{view == TPC_VIEW_V}, isW{view == TPC_VIEW_W};
@@ -114,22 +128,22 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
             zVtx = transform->YZtoU(vertex.GetY(), vertex.GetZ());
 
         // Calo hits
-        double xMin{0.f}, xMax{0.f}, zMin{0.f}, zMax{0.f};
-        // If we're on a refinement pass, constrain the region of interest
-        if (m_pass > 1)
-        {
-            const double xJitter{gauss(m_rng)}, zJitter{gauss(m_rng)};
-            xMin = (xVtx + xJitter) - m_regionSize;
-            xMax = (xVtx + xJitter) + m_regionSize;
-            zMin = (zVtx + zJitter) - m_regionSize;
-            zMax = (zVtx + zJitter) + m_regionSize;
-        }
+        double xMin{driftMin}, xMax{driftMax}, zMin{wireMin[view]}, zMax{wireMax[view]};
+
+        // Only train on events where the vertex resides within the image
+        if (!(xVtx > xMin && xVtx < xMax && zVtx > zMin && zVtx < zMax))
+            continue;
 
         LArMvaHelper::MvaFeatureVector featureVector;
         featureVector.emplace_back(static_cast<double>(nuance));
         featureVector.emplace_back(static_cast<double>(nVertices));
         featureVector.emplace_back(xVtx);
         featureVector.emplace_back(zVtx);
+        // Retain the hit region
+        featureVector.emplace_back(xMin);
+        featureVector.emplace_back(xMax);
+        featureVector.emplace_back(zMin);
+        featureVector.emplace_back(zMax);
 
         for (const CaloHit *pCaloHit : *pCaloHitList)
         {
@@ -142,8 +156,8 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
             featureVector.emplace_back(static_cast<double>(adc));
             ++nHits;
         }
-        featureVector.insert(featureVector.begin() + 2, static_cast<double>(nHits));
-        // Only write out the feature vector if there were enough hits in the (possibly perturbed) region of interest
+        featureVector.insert(featureVector.begin() + 8, static_cast<double>(nHits));
+        // Only write out the feature vector if there were enough hits in the region of interest
         if (nHits > 10)
             LArMvaHelper::ProduceTrainingExample(trainingFilename, true, featureVector);
     }
@@ -611,50 +625,97 @@ void DlVertexingAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &x
         zMax = std::max(z, zMax);
     }
 
+    if (caloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const HitType view{caloHitList.front()->GetHitType()};
+    const bool isU{view == TPC_VIEW_U}, isV{view == TPC_VIEW_V}, isW{view == TPC_VIEW_W};
+    if (!(isU || isV || isW))
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+
+    // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
+    const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
+    const float pitch(view == TPC_VIEW_U ? pTPC->GetWirePitchU() : view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW());
+
     if (m_pass > 1)
     {
-        // Constrain the hits to the allowed region if needed
         const VertexList *pVertexList(nullptr);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pVertexList));
-        if (pVertexList->empty() || caloHitList.empty())
+        if (pVertexList->empty())
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-        const CartesianVector &centroid{pVertexList->front()->GetPosition()};
-        const HitType view{caloHitList.front()->GetHitType()};
-        float xCentroid{centroid.GetX()}, zCentroid{0.f};
-        const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
-        switch (view)
-        {
-            case TPC_VIEW_U:
-                zCentroid = transform->YZtoU(centroid.GetY(), centroid.GetZ());
-                break;
-            case TPC_VIEW_V:
-                zCentroid = transform->YZtoV(centroid.GetY(), centroid.GetZ());
-                break;
-            case TPC_VIEW_W:
-                zCentroid = transform->YZtoW(centroid.GetY(), centroid.GetZ());
-                break;
-            default:
-                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-                break;
-        }
+        const CartesianVector &vertex{pVertexList->front()->GetPosition()};
 
-        xMin = std::max(xMin, xCentroid - m_regionSize);
-        xMax = std::min(xMax, xCentroid + m_regionSize);
-        zMin = std::max(zMin, zCentroid - m_regionSize);
-        zMax = std::min(zMax, zCentroid + m_regionSize);
+        // Get hit distribution left/right asymmetry
+        int nHitsLeft{0}, nHitsRight{0};
+        const double xVtx{vertex.GetX()};
+        for (const std::string &listname : m_caloHitListNames)
+        {
+            const CaloHitList *pCaloHitList(nullptr);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
+            if (pCaloHitList->empty())
+                continue;
+            for (const CaloHit *const pCaloHit : *pCaloHitList)
+            {
+                const CartesianVector &pos{pCaloHit->GetPositionVector()};
+                if (pos.GetX() <= xVtx)
+                    ++nHitsLeft;
+                else
+                    ++nHitsRight;
+            }
+        }
+        const int nHitsTotal{nHitsLeft + nHitsRight};
+        if (nHitsTotal == 0)
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        const float xAsymmetry{nHitsLeft / static_cast<float>(nHitsTotal)};
+
+        // Vertices
+        const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+        double zVtx{0.};
+        if (isW)
+            zVtx += transform->YZtoW(vertex.GetY(), vertex.GetZ());
+        else if (isV)
+            zVtx += transform->YZtoV(vertex.GetY(), vertex.GetZ());
+        else
+            zVtx = transform->YZtoU(vertex.GetY(), vertex.GetZ());
+
+        // Get hit distribution upstream/downstream asymmetry
+        int nHitsUpstream{0}, nHitsDownstream{0};
+        for (const CaloHit *const pCaloHit : caloHitList)
+        {
+            const CartesianVector &pos{pCaloHit->GetPositionVector()};
+            if (pos.GetZ() <= zVtx)
+                ++nHitsUpstream;
+            else
+                ++nHitsDownstream;
+        }
+        const int nHitsViewTotal{nHitsUpstream + nHitsDownstream};
+        if (nHitsViewTotal == 0)
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        const float zAsymmetry{nHitsUpstream / static_cast<float>(nHitsViewTotal)};
+
+        const float xSpan{m_driftStep * (m_width - 1)};
+        xMin = xVtx - xAsymmetry * xSpan;
+        xMax = xMin + (m_driftStep * (m_width - 1));
+        const float zSpan{pitch * (m_height - 1)};
+        zMin = zVtx - zAsymmetry * zSpan;
+        zMax = zMin + zSpan;
     }
 
-    // Avoid unreasonable rescaling of very small hit regions
+    // Avoid unreasonable rescaling of very small hit regions, pixels are assumed to be 0.5cm in x and wire pitch in z
+    // ATTN: Rescaling is to a size 1 pixel smaller than the intended image to ensure all hits fit within an imaged binned
+    // to be one pixel wider than this
     const float xRange{xMax - xMin}, zRange{zMax - zMin};
-    if (2.f * xRange < m_width)
+    const float minXSpan{m_driftStep * (m_width - 1)};
+    if (xRange < minXSpan)
     {
-        const float padding{0.5f * (0.5f * m_width - xRange)};
+        const float padding{0.5f * (minXSpan - xRange)};
         xMin -= padding;
         xMax += padding;
     }
-    if (2.f * zRange < m_height)
+    const float minZSpan{pitch * (m_height - 1)};
+    if (zRange < minZSpan)
     {
-        const float padding{0.5f * (0.5f * m_height - zRange)};
+        const float padding{0.5f * (minZSpan - zRange)};
         zMin -= padding;
         zMax += padding;
     }
