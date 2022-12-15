@@ -130,8 +130,8 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
         // Calo hits
         double xMin{driftMin}, xMax{driftMax}, zMin{wireMin[view]}, zMax{wireMax[view]};
 
-        // Only train on events where the vertex resides within the image
-        if (!(xVtx > xMin && xVtx < xMax && zVtx > zMin && zVtx < zMax))
+        // Only train on events where the vertex resides within the image - with a small tolerance
+        if (!(xVtx > (xMin - 1.f) && xVtx < (xMax + 1.f) && zVtx > (zMin - 1.f) && zVtx < (zMax + 1.f)))
             continue;
 
         LArMvaHelper::MvaFeatureVector featureVector;
@@ -313,7 +313,7 @@ StatusCode DlVertexingAlgorithm::Infer()
         }
         else
         { // U and V available
-            vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesU.front(), vertexCandidatesV.front(), TPC_VIEW_U, TPC_VIEW_W));
+            vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesU.front(), vertexCandidatesV.front(), TPC_VIEW_U, TPC_VIEW_V));
         }
     }
     else
@@ -414,10 +414,6 @@ StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromCanvas(float **canv
     const double dx = ((xMax + 0.5f * driftStep) - (xMin - 0.5f * driftStep)) / m_width;
     const double dz = ((zMax + 0.5f * pitch) - (zMin - 0.5f * pitch)) / m_height;
 
-    // Original hit mapping applies a floor operation, so add half a pixel width to get pixel centre
-    const float xShift{static_cast<float>(dx * 0.5f)};
-    const float zShift{static_cast<float>(dz * 0.5f)};
-
     float best{-1.f};
     int rowBest{0}, colBest{0};
     for (int row = 0; row < canvasHeight; ++row)
@@ -429,8 +425,9 @@ StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromCanvas(float **canv
                 colBest = col;
             }
 
-    const float x{static_cast<float>((colBest - columnOffset) * dx + xMin + xShift)};
-    const float z{static_cast<float>((rowBest - rowOffset) * dz + zMin + zShift)};
+    const float x{static_cast<float>((colBest - columnOffset) * dx + xMin)};
+    const float z{static_cast<float>((rowBest - rowOffset) * dz + zMin)};
+
     CartesianVector pt(x, 0.f, z);
     positionVector.emplace_back(pt);
 
@@ -848,6 +845,10 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageWidth", m_width));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DistanceThresholds", m_thresholds));
     m_nClasses = m_thresholds.size() - 1;
+    if (m_pass > 1)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_inputVertexListName));
+    }
 
     if (m_trainingMode)
     {
@@ -871,12 +872,7 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RootTreeName", m_rootTreeName));
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RootFileName", m_rootFileName));
         }
-
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
-        if (m_pass > 1)
-        {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_inputVertexListName));
-        }
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
