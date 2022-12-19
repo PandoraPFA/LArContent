@@ -33,6 +33,7 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+#ifdef MONITORING
     /**
      *  @brief  Visualize MC nodes.
      *
@@ -101,6 +102,7 @@ private:
      *  @param  wHits The output list of hits in W
      */
     void FillHitLists(const pandora::CaloHitList &hits, pandora::CaloHitList &uHits, pandora::CaloHitList &vHits, pandora::CaloHitList &wHits) const;
+#endif
 
     std::string m_caloHitListName;  ///< Name of input calo hit list
     std::string m_pfoListName;      ///< Name of input PFO list
