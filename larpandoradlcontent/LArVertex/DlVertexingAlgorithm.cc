@@ -248,6 +248,7 @@ StatusCode DlVertexingAlgorithm::Infer()
         else
             vertexCandidatesW.emplace_back(positionVector.front());
 
+#ifdef MONITORING
         if (m_visualise)
         {
             PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
@@ -282,6 +283,7 @@ StatusCode DlVertexingAlgorithm::Infer()
             }
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
+#endif
 
         for (int row = 0; row < canvasHeight; ++row)
             delete[] canvas[row];
@@ -772,6 +774,7 @@ const CartesianVector &DlVertexingAlgorithm::GetTrueVertex() const
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
+#ifdef MONITORING
 void DlVertexingAlgorithm::PopulateRootTree(const std::vector<VertexTuple> &vertexTuples, const pandora::CartesianPointVector &vertexCandidatesU,
     const pandora::CartesianPointVector &vertexCandidatesV, const pandora::CartesianPointVector &vertexCandidatesW) const
 {
@@ -833,6 +836,7 @@ void DlVertexingAlgorithm::PopulateRootTree(const std::vector<VertexTuple> &vert
         }
     }
 }
+#endif
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
