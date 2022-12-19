@@ -64,6 +64,7 @@ StatusCode VertexMonitoringAlgorithm::Run()
 
 StatusCode VertexMonitoringAlgorithm::AssessVertices() const
 {
+#ifdef MONITORING
     const MCParticleList *pMCParticleList{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
     const PfoList *pPfoList{nullptr};
@@ -213,6 +214,7 @@ StatusCode VertexMonitoringAlgorithm::AssessVertices() const
             PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
         }
     }
+#endif
 
     return STATUS_CODE_SUCCESS;
 }
