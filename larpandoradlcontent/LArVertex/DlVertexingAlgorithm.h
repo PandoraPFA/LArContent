@@ -211,11 +211,13 @@ private:
      */
     const pandora::CartesianVector &GetTrueVertex() const;
 
+#ifdef MONITORING
     /**
      *  @brief  Populate a root true with vertex information.
      */
     void PopulateRootTree(const std::vector<VertexTuple> &vertexTuples, const pandora::CartesianPointVector &vertexCandidatesU,
         const pandora::CartesianPointVector &vertexCandidatesV, const pandora::CartesianPointVector &vertexCandidatesW) const;
+#endif
 
     bool m_trainingMode;                      ///< Training mode
     std::string m_trainingOutputFile;         ///< Output file name for training examples
