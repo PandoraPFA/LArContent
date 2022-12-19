@@ -33,6 +33,7 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+#ifdef MONITORING
     /**
      *  @brief  Validate information at the level of MC nodes
      *
@@ -54,6 +55,7 @@ private:
      *  @param  matchInfo The MatchInfo object with the full event context
      */
     void Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo) const;
+#endif
 
     int m_event;                   ///< The current event
     std::string m_caloHitListName; ///< Name of input calo hit list
