@@ -257,7 +257,7 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
             object_creation::ParticleFlowObject::Metadata metadata;
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
 
-            if (m_persistFeatures)
+            if (m_persistFeatures && sliceFeaturesVector.at(sliceIndex).IsFeatureVectorAvailable())
             {
                 LArMvaHelper::DoubleMap featureMap;
                 sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
@@ -274,7 +274,7 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
             object_creation::ParticleFlowObject::Metadata metadata;
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
 
-            if (m_persistFeatures)
+            if (m_persistFeatures && sliceFeaturesVector.at(sliceIndex).IsFeatureVectorAvailable())
             {
                 LArMvaHelper::DoubleMap featureMap;
                 sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
