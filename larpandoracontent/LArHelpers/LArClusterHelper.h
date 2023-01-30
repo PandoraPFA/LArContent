@@ -196,6 +196,16 @@ public:
     static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::CaloHitList &caloHitList);
 
     /**
+     *  @brief  Get closest position of hits in a given calo hit list to a specified input position vector
+     *
+     *  @param  position the position vector
+     *  @param  caloHitList the list of calo hits
+     *
+     *  @return the closest position
+     */
+    static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::OrderedCaloHitList &caloHitList);
+
+    /**
      *  @brief  Get pair of closest positions for a pair of clusters
      *
      *  @param  pCluster1 the address of the first cluster
