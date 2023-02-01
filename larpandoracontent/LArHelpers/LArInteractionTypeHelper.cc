@@ -413,6 +413,79 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+InteractionDescriptor LArInteractionTypeHelper::GetInteractionDescriptor(const MCParticleList &mcPrimaryList)
+{
+    if (mcPrimaryList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    InteractionParameters parameters;
+    LArInteractionTypeHelper::SetInteractionParameters(mcPrimaryList, parameters);
+
+    const MCParticle *pMCNeutrino(nullptr);
+
+    for (const MCParticle *const pMCPrimary : mcPrimaryList)
+    {
+        if (!LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) ||
+            (pMCNeutrino && (pMCNeutrino != LArMCParticleHelper::GetParentMCParticle(pMCPrimary))))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        pMCNeutrino = LArMCParticleHelper::GetParentMCParticle(pMCPrimary);
+    }
+
+    if (!pMCNeutrino)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const int nuNuanceCode(LArMCParticleHelper::GetNuanceCode(pMCNeutrino));
+
+    if (1001 == nuNuanceCode)
+    {
+        return InteractionDescriptor(true, true, false, false, false, parameters.m_nMuons == 1, parameters.m_nElectrons == 1, 0, 0, 0,
+            parameters.m_nProtons);
+    }
+
+    if (1002 == nuNuanceCode)
+    {
+        return InteractionDescriptor(false, true, false, false, false, false, false, 0, 0, 0, parameters.m_nProtons);
+    }
+
+    if ((nuNuanceCode >= 1003) && (nuNuanceCode <= 1005))
+    {
+        return InteractionDescriptor(true, false, true, false, false, parameters.m_nMuons == 1, parameters.m_nElectrons == 1,
+            parameters.m_nPiPlus, parameters.m_nPiMinus, parameters.m_nPhotons, parameters.m_nProtons);
+    }
+
+    if ((nuNuanceCode >= 1006) && (nuNuanceCode <= 1009))
+    {
+        return InteractionDescriptor(false, false, true, false, false, parameters.m_nMuons == 1, parameters.m_nElectrons == 1,
+            parameters.m_nPiPlus, parameters.m_nPiMinus, parameters.m_nPhotons, parameters.m_nProtons);
+    }
+
+    if (1091 == nuNuanceCode)
+    {
+        return InteractionDescriptor(true, false, false, true, false, parameters.m_nMuons == 1, parameters.m_nElectrons == 1,
+            parameters.m_nPiPlus, parameters.m_nPiMinus, parameters.m_nPhotons, parameters.m_nProtons);
+    }
+
+    if (1092 == nuNuanceCode)
+    {
+        return InteractionDescriptor(false, false, false, true, false, parameters.m_nMuons == 1, parameters.m_nElectrons == 1,
+            parameters.m_nPiPlus, parameters.m_nPiMinus, parameters.m_nPhotons, parameters.m_nProtons);
+    }
+
+    if (1096 == nuNuanceCode)
+    {
+        return InteractionDescriptor(false, false, false, false, true, parameters.m_nMuons == 1, parameters.m_nElectrons == 1, 0, 0, 0, 0);
+    }
+    if (1097 == nuNuanceCode)
+    {
+        return InteractionDescriptor(true, false, false, false, true, parameters.m_nMuons == 1, parameters.m_nElectrons == 1, 0, 0, 0, 0);
+    }
+
+    return InteractionDescriptor(false, false, false, false, false, false, false, 0, 0, 0, 0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetTestBeamHierarchyInteractionType(const MCParticleList &mcPrimaryList)
 {
     if (mcPrimaryList.empty())
@@ -651,6 +724,93 @@ LArInteractionTypeHelper::InteractionParameters::InteractionParameters() :
     m_nKaonMinus(0),
     m_nKaon0L(0)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const int InteractionDescriptor::CC = 8192;
+const int InteractionDescriptor::NC = 4096;
+const int InteractionDescriptor::QE = 2560;
+const int InteractionDescriptor::RES  = 2048;
+const int InteractionDescriptor::DIS = 1536;
+const int InteractionDescriptor::COH = 1024;
+const int InteractionDescriptor::OTH = 512;
+const int InteractionDescriptor::MU = 256;
+const int InteractionDescriptor::E = 128;
+const int InteractionDescriptor::PIZERO = 64;
+const int InteractionDescriptor::PIPLUS = 32;
+const int InteractionDescriptor::PIMINUS = 16;
+const int InteractionDescriptor::PHOTON = 8;
+const int InteractionDescriptor::NP = 6;
+
+InteractionDescriptor::InteractionDescriptor(const bool isCC, const bool isQE, const bool isRes, const bool isDIS, const bool isCoherent,
+    const bool isNumu, const bool isNue, const unsigned int nPiPlus, const unsigned int nPiMinus, const unsigned int nPhotons,
+    const unsigned int nProtons) :
+    m_isCC{isCC},
+    m_isQE{isQE},
+    m_isResonant{isRes},
+    m_isDIS{isDIS},
+    m_isCoherent{isCoherent},
+    m_isNumu{isNumu},
+    m_isNue{isNue},
+    m_nPiZero{nPhotons / 2},
+    m_nPiPlus{nPiPlus},
+    m_nPiMinus{nPiMinus},
+    m_nPhotons{nPhotons % 2},
+    m_nProtons{nProtons},
+    m_id{0},
+    m_descriptor{}
+{
+    m_id += m_isCC ? CC : NC;
+    m_descriptor += m_isCC ? "CC" : "NC";
+    if (isQE)
+    {
+        m_id += QE;
+        m_descriptor += "QE";
+    }
+    else if (isRes)
+    {
+        m_id += RES;
+        m_descriptor += "RES";
+    }
+    else if (isDIS)
+    {
+        m_id += DIS;
+        m_descriptor += "DIS";
+    }
+    else if (isCoherent)
+    {
+        m_id += COH;
+        m_descriptor += "COH";
+    }
+    else
+    {
+        m_id += OTH;
+        m_descriptor += "OTH";
+    }
+
+    if (m_isNumu)
+    {
+        m_id += MU;
+        m_descriptor += "_MU";
+    }
+    else if (m_isNue)
+    {
+        m_id += E;
+        m_descriptor += "_E";
+    }
+
+    m_id += m_nPiZero == 1 ? PIZERO : 0;
+    m_descriptor += m_nPiZero == 1 ? "_PIZERO" : m_nPiZero > 0 ? "_NPIZERO" : "";
+    m_id += m_nPiPlus == 1 ? PIPLUS : 0;
+    m_descriptor += m_nPiPlus == 1 ? "_PIPLUS" : m_nPiPlus > 0 ? "_NPIPLUS" : "";
+    m_id += m_nPiMinus == 1 ? PIMINUS : 0;
+    m_descriptor += m_nPiMinus == 1 ? "_PIMINUS" : m_nPiMinus > 0 ? "_NPIMINUS" :  "";
+    m_id += m_nPhotons == 1 ? PHOTON : 0;
+    m_descriptor += m_nPhotons == 1 ? "_PHOTON" : "";
+    m_id += m_nProtons < NP ? m_nProtons : NP;
+    m_descriptor += m_nProtons >= NP ? "NP": m_nProtons > 0 ? "_" + std::to_string(m_nProtons) + "P" : "";
 }
 
 } // namespace lar_content
