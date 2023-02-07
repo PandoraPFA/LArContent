@@ -239,8 +239,8 @@ StatusCode DlVertexingAlgorithm::Infer()
         }
 
         CartesianPointVector positionVector;
-        this->MakeWirePlaneCoordinatesFromCanvas(canvas, canvasWidth, canvasHeight, colOffset, rowOffset, view, driftMin, driftMax,
-            wireMin[view], wireMax[view], positionVector);
+        this->MakeWirePlaneCoordinatesFromCanvas(
+            canvas, canvasWidth, canvasHeight, colOffset, rowOffset, view, driftMin, driftMax, wireMin[view], wireMax[view], positionVector);
         if (isU)
             vertexCandidatesU.emplace_back(positionVector.front());
         else if (isV)
@@ -350,8 +350,8 @@ StatusCode DlVertexingAlgorithm::Infer()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(const CaloHitList &caloHits, const HitType view, const float xMin, const float xMax,
-    const float zMin, const float zMax, LArDLHelper::TorchInput &networkInput, PixelVector &pixelVector) const
+StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(const CaloHitList &caloHits, const HitType view, const float xMin,
+    const float xMax, const float zMin, const float zMax, LArDLHelper::TorchInput &networkInput, PixelVector &pixelVector) const
 {
     // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
     const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
