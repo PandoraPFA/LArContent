@@ -29,8 +29,8 @@ namespace lar_content
 using namespace pandora;
 
 LArMCParticleHelper::PrimaryParameters::PrimaryParameters() :
-    m_minPrimaryGoodHits(15),
-    m_minHitsForGoodView(5),
+    m_minPrimaryGoodHits(1),
+    m_minHitsForGoodView(1),
     m_minPrimaryGoodViews(2),
     m_selectInputHits(true),
     m_maxPhotonPropagation(2.5f),
@@ -331,6 +331,21 @@ void LArMCParticleHelper::GetLeadingMCParticleList(const MCParticleList *const p
     }
 
     std::sort(mcLeadingVector.begin(), mcLeadingVector.end(), LArMCParticleHelper::SortByMomentum);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetFirstVisibleMCParticles(const MCParticle *const pRoot, MCParticleList &visibleParticleList)
+{
+    if (LArMCParticleHelper::IsVisible(pRoot))
+    {
+        visibleParticleList.emplace_back(pRoot);
+    }
+    else
+    {
+        for (const MCParticle *const pMCParticle : pRoot->GetDaughterList())
+            LArMCParticleHelper::GetFirstVisibleMCParticles(pMCParticle, visibleParticleList);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
