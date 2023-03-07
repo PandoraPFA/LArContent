@@ -1,0 +1,37 @@
+name: clang-format
+
+# Controls when the workflow will run
+on:
+  # Trigger the workflow on push to master, or any pull request.
+  # workflow_dispatch allows manual running through the GitHub UI.
+  # push:
+  #   branches:
+  #     - master
+  # pull_request:
+  #   branches:
+  #     - '*'
+  workflow_dispatch:
+
+# Workflow with 1 stage: Build.
+# Each of the sub-stages in the build job run in parallel.
+jobs:
+  formatting-check:
+
+    # Use the latest ubuntu image: https://github.com/actions/runner-images
+    name: LArContent - clang-format
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - 'larpandoracontent'
+          - 'larpandoradlcontent'
+
+    steps:
+
+      - uses: actions/checkout@v3
+      - name: Check clang-format
+        uses: jidicula/clang-format-action@v4.10.2
+        with:
+          clang-format-version: '13'
+          check-path: ${{ matrix.path }}
+
