@@ -20,6 +20,11 @@ jobs:
     # Use the latest ubuntu image: https://github.com/actions/runner-images
     name: LArContent - clang-format
     runs-on: ubuntu-latest
+
+    # Only run in the PandoraPFA repos.
+    if: github.repository_owner == 'PandoraPFA'
+
+    # Build matrix, test both content and DL content.
     strategy:
       matrix:
         path:
@@ -27,7 +32,6 @@ jobs:
           - 'larpandoradlcontent'
 
     steps:
-
       - uses: actions/checkout@v3
       - name: Check clang-format
         uses: jidicula/clang-format-action@v4.10.2

@@ -21,6 +21,9 @@ jobs:
     runs-on: ubuntu-20.04
     name: LArContent - ${{ matrix.compiler.c }} - Monitoring ${{ matrix.monitoring }} - DL ${{ matrix.torch }}
 
+    # Only run in the PandoraPFA repos.
+    if: github.repository_owner == 'PandoraPFA'
+
     # Defines the build matrix, so what combinatorics of compiler etc. to test.
     strategy:
       fail-fast: false # Don't quit other jobs if one job fails.
