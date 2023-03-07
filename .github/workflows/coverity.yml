@@ -1,0 +1,182 @@
+name: Coverity
+
+# Controls when the workflow will run
+on:
+  # Trigger the workflow based on cron.
+  schedule:
+    - cron: '0 0 * * 6'
+  workflow_dispatch:
+
+# Workflow with 1 stage: Build.
+# Each of the sub-stages in the build job run in parallel.
+jobs:
+  build:
+
+    # Use the latest ubuntu image: https://github.com/actions/runner-images
+    runs-on: ubuntu-latest
+    name: LArContent - Coverity
+
+    # Defines the build matrix, so what combinatorics of compiler etc. to test.
+    strategy:
+      fail-fast: false # Don't quit other jobs if one job fails.
+      matrix:
+        compiler: [ {cpp: g++-9, c: gcc-9} ]
+        monitoring: [ "ON" ]
+        torch: [ "ON" ]
+
+    # Set the compiler env vars to ensure the correct compiler is used.
+    env:
+        CC: ${{ matrix.compiler.c }}
+        CXX: ${{ matrix.compiler.cpp }}
+
+    steps:
+
+      # Install ROOT dependencies to start with
+      - name: apt Install Dependencies
+        run: sudo apt install -y xlibmesa-glu-dev
+
+      # Make a central location to build from.
+      - name: Create build folder
+        run: sudo mkdir -m 0777 -p /pandora
+
+      # Cache the build tool, to speed up subsequent runs.
+      - name: Cache Coverity Build Tool
+        id: cov-build-cache
+        uses: actions/cache@v3
+        with:
+          path: /pandora/coverity/
+          key: cov-build-2022.6
+
+      # Get Coverity build tool
+      - name: Get Coverity Build Tool
+        if: steps.cov-build-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /pandora/coverity/ && cd /pandora/coverity/
+          curl https://scan.coverity.com/download/cxx/linux64/ \
+            --no-progress-meter \
+            --output cov-analysis.tar.gz \
+            --data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=${{ secrets.COVERITY_REPO }}"
+          mkdir cov-analysis
+          tar -zxf cov-analysis.tar.gz --strip 1 -C cov-analysis
+          pwd
+          ls
+          ls *
+          rm cov-analysis.tar.gz
+          export PATH="${PWD}/cov-analysis/bin:${PATH}"
+          cov-configure -co $(which ${CXX}) -- -std=c++17 -fPIC
+
+      # Pull and Install Eigen
+      - name: Pull Eigen
+        run: wget https://gitlab.com/libeigen/eigen/-/archive/3.3.5/eigen-3.3.5.tar.gz
+      - name: Unpack Eigen
+        run: tar -xf eigen-3.3.5.tar.gz && rm eigen-3.3.5.tar.gz && mv eigen-3.3.5 Eigen3
+      - name: Build Eigen
+        run: |
+          cd Eigen3 && mkdir build && cd build
+          cmake -DCMAKE_INSTALL_PREFIX=/pandora/Eigen3 ..
+          make -j$(nproc) install
+
+      # Sort ROOT install out.
+      # TODO: Does the version need to change with compiler?
+      - name: Pull ROOT
+        if: matrix.monitoring == 'ON'
+        run: wget https://root.cern/download/root_v6.26.10.Linux-ubuntu22-x86_64-gcc11.3.tar.gz
+      - name: Unpack ROOT
+        if: matrix.monitoring == 'ON'
+        run: tar -xzvf root_v6.26.10.Linux-ubuntu22-x86_64-gcc11.3.tar.gz && mv root/ /pandora/root
+
+      # Sort LibTorch install out.
+      - name: Pull Torch
+        if: matrix.torch == 'ON'
+        run: wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip
+      - name: Unpack Torch
+        if: matrix.torch == 'ON'
+        run: unzip libtorch-cxx11-abi-shared-with-deps-1.13.0+cpu.zip && mv libtorch/ /pandora/libtorch
+
+      # Pull the various dependencies and LArContent.
+      - name: Pull PandoraPFA
+        uses: actions/checkout@v3
+        with:
+          repository: 'PandoraPFA/PandoraPFA'
+          path: PandoraPFA
+
+      - name: Pull PandoraSDK
+        uses: actions/checkout@v3
+        with:
+          repository: 'PandoraPFA/PandoraSDK'
+          path: PandoraSDK
+
+      - name: Pull PandoraMonitoring
+        if: matrix.monitoring == 'ON'
+        uses: actions/checkout@v3
+        with:
+          repository: 'PandoraPFA/PandoraMonitoring'
+          path: PandoraMonitoring
+
+      - name: Pull LArContent
+        uses: actions/checkout@v3
+        with:
+          repository: 'PandoraPFA/LArContent'
+          path: LArContent
+
+      - name: Pull LArReco
+        uses: actions/checkout@v3
+        with:
+          repository: 'PandoraPFA/LArReco'
+          path: LArReco
+
+      # Lets move all the repos to a central /pandora/ path, for easier pathing.
+      - name: Update Repo Locations
+        run: |
+          mv Pandora* /pandora/
+          mv LAr* /pandora/
+
+      # Build the SDK then monitoring (if required).
+      - name: Build PandoraSDK
+        run: |
+          mkdir -p /pandora/PandoraSDK/build && cd /pandora/PandoraSDK/build
+          cmake -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules /pandora/PandoraSDK/
+          make -j$(nproc) install
+
+      - name: Build PandoraMonitoring
+        if: matrix.monitoring == 'ON'
+        run: |
+          mkdir -p /pandora/PandoraMonitoring/build && cd /pandora/PandoraMonitoring/build
+          cmake \
+            -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules \
+            -DROOT_DIR=/pandora/root/cmake \
+            -DPandoraSDK_DIR=/pandora/PandoraSDK \
+            /pandora/PandoraMonitoring/
+          make -j$(nproc) install
+
+      # Now build LArContent.
+      - name: Build LArContent
+        run: |
+          mkdir -p /pandora/LArContent/build && cd /pandora/LArContent/build
+          cmake \
+            -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules \
+            -DPandoraSDK_DIR=/pandora/PandoraSDK \
+            -DEigen3_DIR=/pandora/Eigen3/share/eigen3/cmake \
+            -DROOT_DIR=/pandora/root/cmake \
+            -DPANDORA_MONITORING=${{ matrix.monitoring }} \
+            -DPandoraMonitoring_DIR=/pandora/PandoraMonitoring \
+            -DPANDORA_LIBTORCH=${{ matrix.torch }} \
+            -DCMAKE_PREFIX_PATH=/pandora/libtorch/ \
+            /pandora/LArContent/
+          export PATH="/pandora/coverity/cov-analysis/bin:${PATH}"
+          cov-build --dir cov-int make -j$(nproc)
+          tar -czvf coverity_build.tar.gz cov-int
+
+      - name: Upload to Coverity
+        run: |
+          cd /pandora/LArContent/build
+          curl \
+            --form token="${{ secrets.COVERITY_SCAN_TOKEN }}" \
+            --form email="${{ secrets.COVERITY_EMAIL }}" \
+            --form file=@coverity_build.tar.gz \
+            --form version="${{ github.sha }}" \
+            --form description="$(date)" \
+            "https://scan.coverity.com/builds?project=${{ secrets.COVERITY_REPO }}"
+
+
+
