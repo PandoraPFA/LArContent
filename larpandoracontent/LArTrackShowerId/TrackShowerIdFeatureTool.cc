@@ -395,11 +395,7 @@ StatusCode PfoHierarchyFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ConeChargeFeatureTool::ConeChargeFeatureTool() :
-    m_conMinHits(3),
-    m_minCharge(0.1f),
-    m_conFracRange(0.2f),
-    m_MoliereRadius(10.1f),
-    m_MoliereRadiusFrac(0.2f)
+    m_conMinHits(3), m_minCharge(0.1f), m_conFracRange(0.2f), m_MoliereRadius(10.1f), m_MoliereRadiusFrac(0.2f)
 {
 }
 
