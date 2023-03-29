@@ -26,7 +26,7 @@ else() # Configure for standalone build.
 endif()
 
 # Single project() call with/without Cetmodules (CMake >=3.0, CMP0048).
-project(${LAR_PROJECT_NAME} VERSION 04.03.03)
+project(${LAR_PROJECT_NAME})
 
 # Build options.
 option(PANDORA_LIBTORCH "Flag for building against LibTorch" ${PANDORA_LIBTORCH_DEF})
@@ -36,6 +36,7 @@ endif()
 
 if (cetmodules_FOUND)
   include(CetCMakeEnv)
+  set(${PROJECT_NAME}_CMAKE_PROJECT_VERSION_STRING 09.80.00-rc0)
   cet_cmake_env()
 
   cet_set_compiler_flags(DIAGS CAUTIOUS
