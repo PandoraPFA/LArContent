@@ -33,6 +33,7 @@ NeutrinoIdTool<T>::NeutrinoIdTool() :
     m_minPurity(0.9f),
     m_minCompleteness(0.9f),
     m_minProbability(0.0f),
+    m_defaultProbability(0.0f),
     m_maxNeutrinos(1),
     m_persistFeatures(false),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH")
@@ -250,7 +251,7 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
     std::vector<UintFloatPair> sliceIndexProbabilityPairs;
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
-        const float nuProbability(sliceFeaturesVector.at(sliceIndex).GetNeutrinoProbability(m_mva));
+        const float nuProbability(sliceFeaturesVector.at(sliceIndex).GetNeutrinoProbability(m_mva, m_defaultProbability));
 
         for (const ParticleFlowObject *const pPfo : crSliceHypotheses.at(sliceIndex))
         {
@@ -477,11 +478,11 @@ void NeutrinoIdTool<T>::SliceFeatures::GetFeatureMap(LArMvaHelper::DoubleMap &fe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-float NeutrinoIdTool<T>::SliceFeatures::GetNeutrinoProbability(const T &t) const
+float NeutrinoIdTool<T>::SliceFeatures::GetNeutrinoProbability(const T &t, const float defaultProbability) const
 {
-    // ATTN if one or more of the features can not be calculated, then default to calling the slice a cosmic ray
+    // ATTN if one or more of the features can not be calculated, then give the slice a default score
     if (!this->IsFeatureVectorAvailable())
-        return 0.f;
+        return defaultProbability;
 
     LArMvaHelper::MvaFeatureVector featureVector;
     this->GetFeatureVector(featureVector);
@@ -614,6 +615,9 @@ StatusCode NeutrinoIdTool<T>::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinimumNeutrinoProbability", m_minProbability));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DefaultProbability", m_defaultProbability));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaximumNeutrinos", m_maxNeutrinos));
 
