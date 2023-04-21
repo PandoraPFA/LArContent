@@ -11,6 +11,7 @@
 #include "larpandoracontent/LArMonitoring/HierarchyValidationAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
+#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
 using namespace pandora;
 
@@ -19,12 +20,15 @@ namespace lar_content
 
 HierarchyValidationAlgorithm::HierarchyValidationAlgorithm() :
     m_event{-1},
+    m_detector{"dune_fd_hd"},
     m_writeTree{false},
     m_foldToPrimaries{false},
     m_foldDynamic{false},
     m_foldToLeadingShowers{false},
     m_validateEvent{false},
-    m_validateMC{false}
+    m_validateMC{false},
+    m_minPurity{0.8f},
+    m_minCompleteness{0.65f}
 {
 }
 
@@ -61,9 +65,10 @@ StatusCode HierarchyValidationAlgorithm::Run()
     LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
     LArHierarchyHelper::RecoHierarchy recoHierarchy;
     LArHierarchyHelper::FillRecoHierarchy(*pPfoList, foldParameters, recoHierarchy);
-    LArHierarchyHelper::MatchInfo matchInfo(mcHierarchy, recoHierarchy);
+    LArHierarchyHelper::QualityCuts quality(m_minPurity, m_minCompleteness);
+    LArHierarchyHelper::MatchInfo matchInfo(mcHierarchy, recoHierarchy, quality);
     LArHierarchyHelper::MatchHierarchies(matchInfo);
-    //matchInfo.Print(mcHierarchy);
+    matchInfo.Print(mcHierarchy);
 
 #ifdef MONITORING
     if (m_validateEvent)
@@ -102,7 +107,33 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
         for (const MCParticle *const pRoot : rootMCParticles)
         {
             const LArHierarchyHelper::MCMatchesVector &matches{matchInfo.GetMatches(pRoot)};
-            MCParticleSet primaryMCSet;
+
+            MCParticleList primaries;
+            for (const LArHierarchyHelper::MCMatches &match : matches)
+            {
+                const LArHierarchyHelper::MCHierarchy::Node *pMCNode{match.GetMC()};
+                if (pMCNode->GetHierarchyTier() == 1)
+                {
+                    const MCParticle *const pLeadingMC{pMCNode->GetLeadingMCParticle()};
+                    primaries.emplace_back(pLeadingMC);
+                }
+            }
+            primaries.sort(LArMCParticleHelper::SortByMomentum);
+            const InteractionDescriptor descriptor{LArInteractionTypeHelper::GetInteractionDescriptor(primaries)};
+
+            const int isCC{descriptor.IsCC()};
+            const int isQE{descriptor.IsQE()};
+            const int isResonant{descriptor.IsResonant()};
+            const int isDIS{descriptor.IsDIS()};
+            const int isCoherent{descriptor.IsCoherent()};
+            const int isNuMu{descriptor.IsMuonNeutrino()};
+            const int isNuE{descriptor.IsElectronNeutrino()};
+            const int nPiZero{static_cast<int>(descriptor.GetNumPiZero())};
+            const int nPiPlus{static_cast<int>(descriptor.GetNumPiPlus())};
+            const int nPiMinus{static_cast<int>(descriptor.GetNumPiMinus())};
+            const int nPhotons{static_cast<int>(descriptor.GetNumPhotons())};
+            const int nProtons{static_cast<int>(descriptor.GetNumProtons())};
+
             std::set<const LArHierarchyHelper::MCHierarchy::Node *> trackNodeSet, showerNodeSet;
             int nGoodTrackMatches{0}, nGoodShowerMatches{0};
             int nGoodMatches{0}, nPoorMatches{0}, nUnmatched{0};
@@ -113,8 +144,6 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
             for (const LArHierarchyHelper::MCMatches &mcMatch : matches)
             {
                 const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
-                const MCParticle *const pMC{pNode->GetLeadingMCParticle()};
-                primaryMCSet.insert(LArMCParticleHelper::GetPrimaryMCParticle(pMC));
 
                 for (const LArHierarchyHelper::RecoHierarchy::Node *pReco : mcMatch.GetRecoMatches())
                     matchedRecoSliceRoots.insert(recoNodeToRootMap[pReco]);
@@ -123,9 +152,7 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
                 const bool isQuality{mcMatch.IsQuality(matchInfo.GetQualityCuts())};
                 if (nReco == 1 && isQuality)
                     ++nGoodMatches;
-                else if (nReco == 1)
-                    ++nPoorMatches;
-                else if (nReco > 1)
+                else if (nReco >= 1)
                     ++nPoorMatches;
                 else
                     ++nUnmatched;
@@ -172,12 +199,6 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
                 }
             }
 
-            MCParticleList primaryMCList;
-            for (const MCParticle *const pMC : primaryMCSet)
-                primaryMCList.emplace_back(pMC);
-            int interactionType{-1};
-            if (!primaryMCList.empty())
-                interactionType = static_cast<int>(LArInteractionTypeHelper::GetInteractionType(primaryMCList));
             const int nNodes{static_cast<int>(matchInfo.GetNMCNodes(pRoot))};
             const int nTrackNodes{static_cast<int>(trackNodeSet.size())}, nShowerNodes{static_cast<int>(showerNodeSet.size())};
             const int nRecoSlices{static_cast<int>(matchedRecoSliceRoots.size())};
@@ -186,6 +207,7 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
             float vtxDy{std::numeric_limits<float>::max()};
             float vtxDz{std::numeric_limits<float>::max()};
             float vtxDr{std::numeric_limits<float>::max()};
+            const int isFiducial{LArVertexHelper::IsInFiducialVolume(this->GetPandora(), trueVertex, m_detector)};
 
             for (const ParticleFlowObject * pRootPfo : matchedRecoSliceRoots)
             {
@@ -205,8 +227,24 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
 
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interaction", interaction));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interactionType", interactionType));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nRecoSlices", nRecoSlices));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCC", isCC));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isQE", isQE));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isResonant", isResonant));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isDIS", isDIS));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCoherent", isCoherent));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuMu", isNuMu));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuE", isNuE));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nPiZero", nPiZero));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nPiPlus", nPiPlus));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nPiMinus", nPiMinus));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nPhotons", nPhotons));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nProtons", nProtons));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isFiducial", isFiducial));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDz", vtxDz));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodMatches", nGoodMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nPoorMatches", nPoorMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nUnmatched", nUnmatched));
@@ -224,10 +262,6 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "hasLeadingMuon", hasLeadingMuon));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "hasLeadingElectron", hasLeadingElectron));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isLeadingLeptonCorrect", isLeadingLeptonCorrect));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDz", vtxDz));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
             PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
             ++interaction;
         }
@@ -257,6 +291,19 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
 
         for (const MCParticle *const pRoot : rootMCParticles)
         {
+            MCParticleList primaries;
+            for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
+            {
+                const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
+                if (pMCNode->GetHierarchyTier() == 1)
+                {
+                    const MCParticle *const pLeadingMC{pMCNode->GetLeadingMCParticle()};
+                    primaries.emplace_back(pLeadingMC);
+                }
+            }
+            primaries.sort(LArMCParticleHelper::SortByMomentum);
+            const InteractionDescriptor descriptor{LArInteractionTypeHelper::GetInteractionDescriptor(primaries)};
+
             for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
             {
                 const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
@@ -269,10 +316,13 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const int mcHits{static_cast<int>(pMCNode->GetCaloHits().size())};
                 const int isLeadingLepton{pMCNode->IsLeadingLepton() ? 1 : 0};
 
-                const MCParticleList &parentList{pMCNode->GetLeadingMCParticle()->GetParentList()};
-                const int isElectron{std::abs(pMCNode->GetLeadingMCParticle()->GetParticleId()) == E_MINUS ? 1 : 0};
+                const MCParticle *const pLeadingMC{pMCNode->GetLeadingMCParticle()};
+                const MCParticleList &parentList{pLeadingMC->GetParentList()};
+                const int isElectron{std::abs(pLeadingMC->GetParticleId()) == E_MINUS ? 1 : 0};
                 const int hasMuonParent{parentList.size() == 1 && std::abs(parentList.front()->GetParticleId()) == MU_MINUS ? 1 : 0};
-                const int isMichel{isElectron && hasMuonParent && LArMCParticleHelper::IsDecay(pMCNode->GetLeadingMCParticle()) ? 1 : 0};
+                const int isMichel{isElectron && hasMuonParent && LArMCParticleHelper::IsDecay(pLeadingMC) ? 1 : 0};
+                const float mcMomentum{pLeadingMC->GetMomentum().GetMagnitude()};
+
                 const LArHierarchyHelper::RecoHierarchy::NodeVector &nodeVector{matches.GetRecoMatches()};
                 const int nMatches{static_cast<int>(nodeVector.size())};
                 IntVector recoSliceIdVector, recoIdVector, nRecoHitsVector, nSharedHitsVector;
@@ -280,8 +330,22 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 FloatVector purityAdcVector, completenessAdcVector;
                 FloatVector purityVectorU, purityVectorV, purityVectorW, completenessVectorU, completenessVectorV, completenessVectorW;
                 FloatVector purityAdcVectorU, purityAdcVectorV, purityAdcVectorW, completenessAdcVectorU, completenessAdcVectorV, completenessAdcVectorW;
-                const CartesianVector &trueVertex{pMCNode->GetLeadingMCParticle()->GetVertex()};
+                const CartesianVector &trueVertex{pLeadingMC->GetVertex()};
                 float vtxDx{0.f}, vtxDy{0.f}, vtxDz{0.f}, vtxDr{0.f};
+
+                const int isCC{descriptor.IsCC()};
+                const int isQE{descriptor.IsQE()};
+                const int isResonant{descriptor.IsResonant()};
+                const int isDIS{descriptor.IsDIS()};
+                const int isCoherent{descriptor.IsCoherent()};
+                const int isNuMu{descriptor.IsMuonNeutrino()};
+                const int isNuE{descriptor.IsElectronNeutrino()};
+                const int nPiZero{static_cast<int>(descriptor.GetNumPiZero())};
+                const int nPiPlus{static_cast<int>(descriptor.GetNumPiPlus())};
+                const int nPiMinus{static_cast<int>(descriptor.GetNumPiMinus())};
+                const int nPhotons{static_cast<int>(descriptor.GetNumPhotons())};
+                const int nProtons{static_cast<int>(descriptor.GetNumProtons())};
+
                 for (const LArHierarchyHelper::RecoHierarchy::Node *pRecoNode : nodeVector)
                 {
                     const int sliceId{static_cast<int>(std::distance(rootPfos.begin(), std::find(rootPfos.begin(), rootPfos.end(),
@@ -322,6 +386,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcPDG", pdg));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcTier", tier));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcNHits", mcHits));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcMomentum", mcMomentum));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuInteration", isNeutrinoInt));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCosmicRay", isCosmicRay));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isTestBeam", isTestBeam));
@@ -352,6 +417,18 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDz", vtxDz));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCC", isCC));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isQE", isQE));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isResonant", isResonant));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isDIS", isDIS));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCoherent", isCoherent));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuMu", isNuMu));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuE", isNuE));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nPiZero", nPiZero));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nPiPlus", nPiPlus));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nPiMinus", nPiMinus));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nPhotons", nPhotons));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nProtons", nProtons));
                 PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
             }
             ++interaction;
@@ -370,6 +447,8 @@ StatusCode HierarchyValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
     if (m_pfoListName.empty())
         m_pfoListName = "RecreatedPfos";
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Detector", m_detector));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ValidateEvent", m_validateEvent));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ValidateMC", m_validateMC));
@@ -395,6 +474,9 @@ StatusCode HierarchyValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FoldDynamic", m_foldDynamic));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FoldToLeadingShowers", m_foldToLeadingShowers));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinPurity", m_minPurity));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCompleteness", m_minCompleteness));
 
     return STATUS_CODE_SUCCESS;
 }

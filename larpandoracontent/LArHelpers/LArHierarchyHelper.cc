@@ -1244,8 +1244,18 @@ float LArHierarchyHelper::MCMatches::GetCompleteness(const CaloHitVector &inters
 
 bool LArHierarchyHelper::MCMatches::IsQuality(const LArHierarchyHelper::QualityCuts &qualityCuts) const
 {
-    if (m_recoNodes.size() != 1)
+    if (m_recoNodes.empty())
         return false;
+
+    int nAboveThreshold{0};
+    if (m_recoNodes.size() != 1)
+    {
+        for (const LArHierarchyHelper::RecoHierarchy::Node *const pNode : m_recoNodes)
+            if (this->GetCompleteness(pNode) > 0.1f)
+                ++nAboveThreshold;
+        if (nAboveThreshold != 1)
+            return false;
+    }
 
     if (this->GetPurity(m_recoNodes.front()) < qualityCuts.m_minPurity)
         return false;
@@ -1463,9 +1473,10 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
                 std::to_string(pRootMC->GetEnergy()) << std::endl;;
 
         unsigned int nNeutrinoMCParticles{this->GetNNeutrinoMCNodes(pRootMC)}, nNeutrinoRecoParticles{0};
-        unsigned int nCosmicMCParticles{this->GetNCosmicRayMCNodes(pRootMC)}, nCosmicRecoParticles{0}, nCosmicRecoBTParticles{0};
-        unsigned int nTestBeamMCParticles{this->GetNTestBeamMCNodes(pRootMC)}, nTestBeamRecoParticles{0}, nTestBeamRecoBTParticles{0};
+        unsigned int nCosmicMCParticles{this->GetNCosmicRayMCNodes(pRootMC)}, nCosmicRecoParticles{0};
+        unsigned int nTestBeamMCParticles{this->GetNTestBeamMCNodes(pRootMC)}, nTestBeamRecoParticles{0};
         std::cout << "   === Matches ===" << std::endl;
+        std::cout << std::fixed << std::setprecision(2);
         for (const MCMatches &match : m_matches.at(pRootMC))
         {
             const MCHierarchy::Node *pMCNode{match.GetMC()};
@@ -1481,27 +1492,34 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
                 const unsigned int sharedHits{match.GetSharedHits(pRecoNode)};
                 const float purity{match.GetPurity(pRecoNode)};
                 const float completeness{match.GetCompleteness(pRecoNode)};
-                std::cout << "      Matched " << sharedHits << " out of " << recoHits << " with purity " << purity << " and completeness "
-                          << completeness << std::endl;
+                if (completeness > 0.1f)
+                    std::cout << "   Matched " << sharedHits << " out of " << recoHits << " with purity " << purity << " and completeness "
+                        << completeness << std::endl;
+                else
+                    std::cout << "   (Below threshold) " << sharedHits << " out of " << recoHits << " with purity " << purity << " and completeness "
+                        << completeness << std::endl;
             }
             if (nodeVector.empty())
+            {
                 std::cout << "      Unmatched" << std::endl;
-
-            if (pMCNode->IsTestBeamParticle())
-                ++nTestBeamRecoParticles;
-            else if (pMCNode->IsCosmicRay())
-                ++nCosmicRecoParticles;
-            else
-                ++nNeutrinoRecoParticles;
+            }
+            else if (match.IsQuality(this->GetQualityCuts()))
+            {
+                if (pMCNode->IsTestBeamParticle())
+                    ++nTestBeamRecoParticles;
+                else if (pMCNode->IsCosmicRay())
+                    ++nCosmicRecoParticles;
+                else
+                    ++nNeutrinoRecoParticles;
+            }
         }
 
         if (LArMCParticleHelper::IsNeutrino(pRootMC))
         {
             std::cout << "   Neutrino Interaction Summary:" << std::endl;
-            std::cout << std::fixed << std::setprecision(1);
             if (nNeutrinoMCParticles)
             {
-                std::cout << "   Matched final state particles: " << nNeutrinoRecoParticles << " of " << nNeutrinoMCParticles << " : "
+                std::cout << "   Good final state particles: " << nNeutrinoRecoParticles << " of " << nNeutrinoMCParticles << " : "
                           << (100 * nNeutrinoRecoParticles / static_cast<float>(nNeutrinoMCParticles)) << "%" << std::endl;
             }
         }
@@ -1511,7 +1529,7 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
             std::cout << std::fixed << std::setprecision(1);
             if (nCosmicMCParticles)
             {
-                std::cout << "   Matched cosmics: " << nCosmicRecoParticles << " of " << nCosmicMCParticles << " : "
+                std::cout << "   Good cosmics: " << nCosmicRecoParticles << " of " << nCosmicMCParticles << " : "
                           << (100 * nCosmicRecoParticles / static_cast<float>(nCosmicMCParticles)) << "%" << std::endl;
             }
         }
@@ -1521,18 +1539,13 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
             std::cout << std::fixed << std::setprecision(1);
             if (nTestBeamMCParticles)
             {
-                std::cout << "   Matched test beam particles: " << nTestBeamRecoParticles << " of " << nTestBeamMCParticles << " : "
+                std::cout << "   Good test beam particles: " << nTestBeamRecoParticles << " of " << nTestBeamMCParticles << " : "
                           << (100 * nTestBeamRecoParticles / static_cast<float>(nTestBeamMCParticles)) << "%" << std::endl;
-                std::cout << "Loosely matched test beam particles: " << (nTestBeamRecoParticles + nTestBeamRecoBTParticles) << " of " << nTestBeamMCParticles
-                          << " : " << (100 * (nTestBeamRecoParticles + nTestBeamRecoBTParticles) / static_cast<float>(nTestBeamMCParticles))
-                          << "%" << std::endl;
             }
             if (nCosmicMCParticles)
             {
                 std::cout << "   Matched cosmics: " << nCosmicRecoParticles << " of " << nCosmicMCParticles << " : "
                           << (100 * nCosmicRecoParticles / static_cast<float>(nCosmicMCParticles)) << "%" << std::endl;
-                std::cout << "Loosely matched cosmics: " << (nCosmicRecoParticles + nCosmicRecoBTParticles) << " of " << nCosmicMCParticles << " : "
-                          << (100 * (nCosmicRecoParticles + nCosmicRecoBTParticles) / static_cast<float>(nCosmicMCParticles)) << "%" << std::endl;
             }
         }
         if (!this->GetUnmatchedReco().empty())
