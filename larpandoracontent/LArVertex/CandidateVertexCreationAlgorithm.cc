@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
@@ -46,22 +45,6 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
 
 StatusCode CandidateVertexCreationAlgorithm::Run()
 {
-    bool cheatVertex(false);
-    if (!m_nuToCheatList.empty())
-    {
-        const MCParticleList *pMCParticleList(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
-
-        for (const int nuPdg : m_nuToCheatList)
-        {
-            if (LArMCParticleHelper::IsCCNuEvent(pMCParticleList, nuPdg))
-                cheatVertex = true;
-        }
-    }
-
-    if (cheatVertex)
-        return STATUS_CODE_SUCCESS;
-
     try
     {
         ClusterVector clusterVectorU, clusterVectorV, clusterVectorW;
@@ -128,11 +111,8 @@ void CandidateVertexCreationAlgorithm::SelectClusters(ClusterVector &clusterVect
 
         ClusterVector &selectedClusterVector((TPC_VIEW_U == hitType) ? clusterVectorU : (TPC_VIEW_V == hitType) ? clusterVectorV : clusterVectorW);
 
-	// throws exception when trying to add in the cheated clusters - WELP
-	/*
         if (!selectedClusterVector.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
-	*/
 
         ClusterVector sortedClusters(pClusterList->begin(), pClusterList->end());
         std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
@@ -469,9 +449,6 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_inputVertexListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "NuToCheatList", m_nuToCheatList));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ReplaceCurrentVertexList", m_replaceCurrentVertexList));

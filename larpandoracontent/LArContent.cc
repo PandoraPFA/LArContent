@@ -71,7 +71,6 @@
 #include "larpandoracontent/LArShowerRefinement/ElectronStartRefinementTool.h"
 #include "larpandoracontent/LArShowerRefinement/HybridElectronStartRefinementTool.h"
 #include "larpandoracontent/LArShowerRefinement/GammaStartRefinementTool.h"
-#include "larpandoracontent/LArShowerRefinement/ShowerCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
 #include "larpandoracontent/LArShowerRefinement/HybridShowerStartRefinementAlgorithm.h"
 
@@ -249,7 +248,6 @@
     d("LArMaster",                              MasterAlgorithm)                                                                \
     d("LArPostProcessing",                      PostProcessingAlgorithm)                                                        \
     d("LArPreProcessing",                       PreProcessingAlgorithm)                                                         \
-    d("LArShowerCharacterisation",              ShowerCharacterisationAlgorithm)                                                \
     d("LArShowerStartRefinement",               ShowerStartRefinementAlgorithm)                                                 \
     d("LArHybridShowerStartRefinement",         HybridShowerStartRefinementAlgorithm)                                           \
     d("LArSlicing",                             SlicingAlgorithm)                                                               \

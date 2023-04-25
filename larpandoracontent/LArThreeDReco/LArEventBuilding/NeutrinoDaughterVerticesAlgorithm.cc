@@ -19,7 +19,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-NeutrinoDaughterVerticesAlgorithm::NeutrinoDaughterVerticesAlgorithm() : m_useParentShowerVertex(false), m_halfWindowLayers(20), m_cheatedPfoListName("")
+NeutrinoDaughterVerticesAlgorithm::NeutrinoDaughterVerticesAlgorithm() : m_useParentShowerVertex(false), m_halfWindowLayers(20)
 {
 }
 
@@ -38,15 +38,12 @@ StatusCode NeutrinoDaughterVerticesAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
-    const VertexList *pGammaVertexList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, "GammaVertices", pGammaVertexList));
-
     PfoVector pfoVector;
     LArPointingClusterMap pointingClusterMap;
 
     this->GetDaughterPfos(pPfoList, pfoVector);
     this->BuildPointingClusterMap(pfoVector, pointingClusterMap);
-    this->BuildDaughterParticles(pointingClusterMap, pfoVector, pGammaVertexList);
+    this->BuildDaughterParticles(pointingClusterMap, pfoVector);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -65,11 +62,6 @@ void NeutrinoDaughterVerticesAlgorithm::GetDaughterPfos(const PfoList *const pPf
         LArPfoHelper::GetAllDownstreamPfos(*pIter, outputList);
     }
 
-    const PfoList *pCheatedPfoList(nullptr);
-
-    if (!m_cheatedPfoListName.empty())
-      PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_cheatedPfoListName, pCheatedPfoList));
-
     for (PfoList::const_iterator pIter = outputList.begin(), pIterEnd = outputList.end(); pIter != pIterEnd; ++pIter)
     {
         ClusterList clusterList;
@@ -77,9 +69,6 @@ void NeutrinoDaughterVerticesAlgorithm::GetDaughterPfos(const PfoList *const pPf
 
         if (clusterList.empty())
             continue;
-
-	if (pCheatedPfoList && (std::find(pCheatedPfoList->begin(), pCheatedPfoList->end(), *pIter) != pCheatedPfoList->end()))
-	  continue;
 
         pfoVector.push_back(*pIter);
     }
@@ -123,8 +112,7 @@ void NeutrinoDaughterVerticesAlgorithm::BuildPointingClusterMap(const PfoVector 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoDaughterVerticesAlgorithm::BuildDaughterParticles(const LArPointingClusterMap &pointingClusterMap, const PfoVector &pfoVector, 
-    const VertexList *const pGammaVertexList) const
+void NeutrinoDaughterVerticesAlgorithm::BuildDaughterParticles(const LArPointingClusterMap &pointingClusterMap, const PfoVector &pfoVector) const
 {
     for (PfoVector::const_iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
     {
@@ -132,19 +120,18 @@ void NeutrinoDaughterVerticesAlgorithm::BuildDaughterParticles(const LArPointing
 
         if (LArPfoHelper::IsTrack(pPfo))
         {
-            this->BuildDaughterTrack(pointingClusterMap, pPfo, pGammaVertexList);
+            this->BuildDaughterTrack(pointingClusterMap, pPfo);
         }
         else
         {
-            this->BuildDaughterShower(pPfo, pGammaVertexList);
+            this->BuildDaughterShower(pPfo);
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoDaughterVerticesAlgorithm::BuildDaughterTrack(const LArPointingClusterMap &pointingClusterMap, const ParticleFlowObject *const pDaughterPfo, 
-    const VertexList *const pGammaVertexList) const
+void NeutrinoDaughterVerticesAlgorithm::BuildDaughterTrack(const LArPointingClusterMap &pointingClusterMap, const ParticleFlowObject *const pDaughterPfo) const
 {
     if (pDaughterPfo->GetParentPfoList().size() != 1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -234,12 +221,12 @@ void NeutrinoDaughterVerticesAlgorithm::BuildDaughterTrack(const LArPointingClus
     if (!foundVtx)
         return;
 
-    this->SetParticleParameters(vtxPosition, vtxDirection, pDaughterPfo, pGammaVertexList);
+    this->SetParticleParameters(vtxPosition, vtxDirection, pDaughterPfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoDaughterVerticesAlgorithm::BuildDaughterShower(const ParticleFlowObject *const pDaughterPfo, const VertexList *const pGammaVertexList) const
+void NeutrinoDaughterVerticesAlgorithm::BuildDaughterShower(const ParticleFlowObject *const pDaughterPfo) const
 {
     if (pDaughterPfo->GetParentPfoList().size() != 1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -262,7 +249,7 @@ void NeutrinoDaughterVerticesAlgorithm::BuildDaughterShower(const ParticleFlowOb
         const CartesianVector vtxPosition(
             m_useParentShowerVertex ? pVertex->GetPosition() : LArClusterHelper::GetClosestPosition(pVertex->GetPosition(), daughterList));
 
-        return this->SetParticleParameters(vtxPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo, pGammaVertexList);
+        return this->SetParticleParameters(vtxPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
     }
 
     if (parentList.empty())
@@ -297,25 +284,17 @@ void NeutrinoDaughterVerticesAlgorithm::BuildDaughterShower(const ParticleFlowOb
     if (!foundVtx)
         return;
 
-    this->SetParticleParameters(vtxPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo, pGammaVertexList);
+    this->SetParticleParameters(vtxPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void NeutrinoDaughterVerticesAlgorithm::SetParticleParameters(const CartesianVector &vtxPosition, const CartesianVector &vtxDirection, 
-    const ParticleFlowObject *const pPfo, const VertexList *const pGammaVertexList) const
+    const ParticleFlowObject *const pPfo) const
 {
     PandoraContentApi::ParticleFlowObject::Metadata metadata;
     metadata.m_momentum = vtxDirection;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
-
-    if (!pPfo->GetVertexList().empty())
-    {
-        if (std::find(pGammaVertexList->begin(), pGammaVertexList->end(), pPfo->GetVertexList().front()) != pGammaVertexList->end())
-            return;
-
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
 
     const VertexList *pVertexList = NULL;
     std::string vertexListName;
@@ -341,8 +320,6 @@ void NeutrinoDaughterVerticesAlgorithm::SetParticleParameters(const CartesianVec
 StatusCode NeutrinoDaughterVerticesAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoListName));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CheatedPfoListName", m_cheatedPfoListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_vertexListName));
 
