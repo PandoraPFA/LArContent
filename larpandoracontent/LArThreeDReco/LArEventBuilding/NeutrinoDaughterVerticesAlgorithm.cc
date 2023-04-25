@@ -292,6 +292,9 @@ void NeutrinoDaughterVerticesAlgorithm::BuildDaughterShower(const ParticleFlowOb
 void NeutrinoDaughterVerticesAlgorithm::SetParticleParameters(
     const CartesianVector &vtxPosition, const CartesianVector &vtxDirection, const ParticleFlowObject *const pPfo) const
 {
+    if (!pPfo->GetVertexList().empty())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
     PandoraContentApi::ParticleFlowObject::Metadata metadata;
     metadata.m_momentum = vtxDirection;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
