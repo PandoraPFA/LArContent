@@ -289,8 +289,8 @@ void NeutrinoDaughterVerticesAlgorithm::BuildDaughterShower(const ParticleFlowOb
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoDaughterVerticesAlgorithm::SetParticleParameters(const CartesianVector &vtxPosition, const CartesianVector &vtxDirection, 
-    const ParticleFlowObject *const pPfo) const
+void NeutrinoDaughterVerticesAlgorithm::SetParticleParameters(
+    const CartesianVector &vtxPosition, const CartesianVector &vtxDirection, const ParticleFlowObject *const pPfo) const
 {
     PandoraContentApi::ParticleFlowObject::Metadata metadata;
     metadata.m_momentum = vtxDirection;
