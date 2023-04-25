@@ -69,10 +69,11 @@
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 
 #include "larpandoracontent/LArShowerRefinement/ElectronStartRefinementTool.h"
-#include "larpandoracontent/LArShowerRefinement/HybridElectronStartRefinementTool.h"
 #include "larpandoracontent/LArShowerRefinement/GammaStartRefinementTool.h"
-#include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
+#include "larpandoracontent/LArShowerRefinement/HybridElectronStartRefinementTool.h"
 #include "larpandoracontent/LArShowerRefinement/HybridShowerStartRefinementAlgorithm.h"
+#include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
+#include "larpandoracontent/LArShowerRefinement/ThreeDHitRemovalAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/AmbiguousDeltaRayTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayRemovalTool.h"
@@ -250,6 +251,7 @@
     d("LArPreProcessing",                       PreProcessingAlgorithm)                                                         \
     d("LArShowerStartRefinement",               ShowerStartRefinementAlgorithm)                                                 \
     d("LArHybridShowerStartRefinement",         HybridShowerStartRefinementAlgorithm)                                           \
+    d("LArThreeDHitRemoval",                    ThreeDHitRemovalAlgorithm)                                                      \
     d("LArSlicing",                             SlicingAlgorithm)                                                               \
     d("LArStreaming",                           StreamingAlgorithm)                                                             \
     d("LArTrackParticleBuilding",               TrackParticleBuildingAlgorithm)                                                 \
