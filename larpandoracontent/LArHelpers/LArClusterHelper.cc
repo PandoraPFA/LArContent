@@ -253,6 +253,31 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &position, const CaloHitList &caloHitList)
+{
+    const CaloHit *pClosestCaloHit(nullptr);
+    float closestDistanceSquared(std::numeric_limits<float>::max());
+
+    for (const CaloHit *pCaloHit : caloHitList)
+    {
+        const float distanceSquared((pCaloHit->GetPositionVector() - position).GetMagnitudeSquared());
+
+        if (distanceSquared < closestDistanceSquared)
+        {
+            closestDistanceSquared = distanceSquared;
+            pClosestCaloHit = pCaloHit;
+        }
+    }
+
+    if (pClosestCaloHit)
+        return pClosestCaloHit->GetPositionVector();
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &position, const OrderedCaloHitList &caloHitList)
 {
     const CaloHit *pClosestCaloHit(nullptr);
@@ -269,30 +294,6 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
                 closestDistanceSquared = distanceSquared;
                 pClosestCaloHit = pCaloHit;
             }
-        }
-    }
-
-    if (pClosestCaloHit)
-        return pClosestCaloHit->GetPositionVector();
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &position, const CaloHitList &caloHitList)
-{
-    const CaloHit *pClosestCaloHit(nullptr);
-    float closestDistanceSquared(std::numeric_limits<float>::max());
-
-    for (const CaloHit *const pCaloHit : caloHitList)
-    {
-        const float distanceSquared((pCaloHit->GetPositionVector() - position).GetMagnitudeSquared());
-
-        if (distanceSquared < closestDistanceSquared)
-        {
-            closestDistanceSquared = distanceSquared;
-            pClosestCaloHit = pCaloHit;
         }
     }
 

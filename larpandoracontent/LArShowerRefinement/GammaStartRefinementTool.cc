@@ -94,6 +94,7 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pShowerPfo, metadata));
     }
 
+    /*
     // IS THIS A PHOTON?? 
     CartesianVector showerVertex(0.f, 0.f, 0.f);
     if (this->TMVAIsGamma(pAlgorithm, pCaloHitListU, pCaloHitListV, pCaloHitListW, positionMatchedConnectionPathways, directionMatchedConnectionPathways, 
@@ -130,12 +131,13 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
 
         return true;
     }
-
+    */
     return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+/*
 bool GammaStartRefinementTool::TMVAIsGamma(ShowerStartRefinementAlgorithm *const pAlgorithm, const CaloHitList *const pCaloHitListU, const CaloHitList *const pCaloHitListV, 
     const CaloHitList *const pCaloHitListW, const MatchedConnectionPathwayMap &positionMatchedConnectionPathways, const MatchedConnectionPathwayMap &directionMatchedConnectionPathways, 
     const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertexPosition, CartesianVector &showerVertex)
@@ -250,7 +252,7 @@ bool GammaStartRefinementTool::TMVAIsGamma(ShowerStartRefinementAlgorithm *const
 
     return found;
 }
-
+*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void GammaStartRefinementTool::RemoveOneViewConnectionPathways(ShowerStartRefinementAlgorithm *const pAlgorithm, 

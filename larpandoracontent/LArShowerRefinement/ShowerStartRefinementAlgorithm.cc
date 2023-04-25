@@ -21,8 +21,6 @@
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementBaseTool.h"
 
-#include "TMVA/Reader.h"
-
 using namespace pandora;
 
 namespace lar_content
@@ -33,14 +31,32 @@ ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm() :
     m_electronFraction(0.3f),
     m_createTrainingTrees(false),
     m_hybridMode(true),
-    m_electronTMVACut(-0.1),
-    m_gammaTMVACut(-0.1),
+    //m_electronTMVACut(-0.1),
+    //m_gammaTMVACut(-0.1),
     m_minElectronCompleteness(0.33f),
     m_minElectronPurity(0.5f),
     m_minGammaCompleteness(0.33f),
-    m_thresholdSignalGammaDisplacement(-3.f),
-    m_TMVAReader("")
+    m_thresholdSignalGammaDisplacement(-3.f)
+    //m_TMVAReader("")
 {
+    /*
+    m_TMVAReader.AddVariable("PathwayLengthMin", &m_TMVAElectronTreeVariables.m_pathwayLengthMin);
+    m_TMVAReader.AddVariable("MaxShowerStartPathwayScatteringAngle2D", &m_TMVAElectronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D);
+    m_TMVAReader.AddVariable("MaxNPostShowerStartHits", &m_TMVAElectronTreeVariables.m_maxNPostShowerStartHits);
+    m_TMVAReader.AddVariable("MaxPostShowerStartScatterAngle", &m_TMVAElectronTreeVariables.m_maxPostShowerStartScatterAngle);
+    m_TMVAReader.AddVariable("MaxPostShowerStartNuVertexEnergyAsymmetry", &m_TMVAElectronTreeVariables.m_maxPostShowerStartNuVertexEnergyAsymmetry);
+    m_TMVAReader.AddVariable("MaxPostShowerStartShowerStartEnergyAsymmetry", &m_TMVAElectronTreeVariables.m_maxPostShowerStartShowerStartEnergyAsymmetry);
+    m_TMVAReader.AddVariable("MaxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance", &m_TMVAElectronTreeVariables.m_maxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance);
+    m_TMVAReader.AddVariable("MinPostShowerStartShowerStartMoliereRadius", &m_TMVAElectronTreeVariables.m_minPostShowerStartShowerStartMoliereRadius);
+    m_TMVAReader.AddVariable("MaxPostShowerStartOpeningAngle", &m_TMVAElectronTreeVariables.m_maxPostShowerStartOpeningAngle);
+    m_TMVAReader.AddVariable("MaxFoundHitRatio", &m_TMVAElectronTreeVariables.m_maxFoundHitRatio);
+    m_TMVAReader.AddVariable("MaxInitialGapSize", &m_TMVAElectronTreeVariables.m_maxInitialGapSize);
+    m_TMVAReader.AddVariable("MinLargestProjectedGapSize", &m_TMVAElectronTreeVariables.m_minLargestProjectedGapSize);
+    m_TMVAReader.AddVariable("NViewsWithAmbiguousHits", &m_TMVAElectronTreeVariables.m_nViewsWithAmbiguousHits);
+    m_TMVAReader.AddVariable("AmbiguousHitMaxUnaccountedEnergy", &m_TMVAElectronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy);
+    */
+  ///////
+  /*
     m_TMVAReader.AddVariable("PathwayLengthMin", &m_TMVAElectronTreeVariables.m_pathwayLengthMin);
     m_TMVAReader.AddVariable("MaxShowerStartPathwayScatteringAngle2D", &m_TMVAElectronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D);
     m_TMVAReader.AddVariable("MaxNPostShowerStartHits", &m_TMVAElectronTreeVariables.m_maxNPostShowerStartHits);
@@ -56,8 +72,11 @@ ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm() :
     m_TMVAReader.AddVariable("NViewsWithAmbiguousHits", &m_TMVAElectronTreeVariables.m_nViewsWithAmbiguousHits);
     m_TMVAReader.AddVariable("AmbiguousHitMaxUnaccountedEnergy", &m_TMVAElectronTreeVariables.m_ambiguousHitMaxUnaccountedEnergy);
 
+
     std::string weightFilePath = "TMVAClassification_BDTG_StandardVertex.weights.xml";
+    //std::string weightFilePath = "TMVAClassification_BDTG_FINAL.weights.xml";
     m_TMVAReader.BookMVA("BDTG", weightFilePath);
+  */
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -651,7 +670,7 @@ bool ShowerStartRefinementAlgorithm::IsElectron(const ParticleFlowObject *const 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
+/*
 bool ShowerStartRefinementAlgorithm::TMVAIsElectron(LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables, const ParticleFlowObject *const pShowerPfo, const bool alterMetadata)
 {
     m_TMVAElectronTreeVariables.m_pathwayLengthMin = electronTreeVariables.m_pathwayLengthMin;
@@ -706,7 +725,7 @@ bool ShowerStartRefinementAlgorithm::TMVAIsGamma(LArConnectionPathwayHelper::Ele
 
     return bdtScore < m_gammaTMVACut;
 }
-
+*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 // our signal here is actually gammas that have made a mistake by getting back to the nu vertex. i.e. their reco vertex is closer to the nu vertex than the truth says
@@ -1110,13 +1129,13 @@ StatusCode ShowerStartRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ThresholdSignalGammaDisplacement", m_thresholdSignalGammaDisplacement));
 
+    /*
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ElectronTMVACut", m_electronTMVACut));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "GammaTMVACut", m_gammaTMVACut));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionBDTWeightsPath", m_connectionBDTWeightsPath));
+    */
 
     PfoMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 

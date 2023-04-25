@@ -26,6 +26,10 @@
 
 using namespace pandora;
 
+int colourCount = 0;
+std::vector<Color> colours = {BLUE, GREEN, VIOLET, DARKGREEN, DARKYELLOW, DARKVIOLET, DARKCYAN, DARKRED};
+
+
 namespace lar_content
 {
 
@@ -53,6 +57,10 @@ ElectronStartRefinementTool::~ElectronStartRefinementTool()
 bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
     const CartesianVector &nuVertexPosition, const CaloHitList *const pCaloHitListU, const CaloHitList *const pCaloHitListV, const CaloHitList *const pCaloHitListW)
 {
+
+    PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
+
+
     // Only apply electron refinement algorithm to showers
     if (!LArPfoHelper::IsShower(pShowerPfo))
         return false;
@@ -70,10 +78,10 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
     this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_V, protoShowerVectorV, usedHitListV);
     this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_W, protoShowerVectorW, usedHitListW);
 
-    bool isGamma(false);
-    float highestNHits(0.f);
-    float highestOpeningAngle(-std::numeric_limits<float>::max()); // tie-breaker
-    float showerVertexX(0.f),showerVertexY(0.f), showerVertexZ(0.f);
+    //bool isGamma(false);
+    //float highestNHits(0.f);
+    //float highestOpeningAngle(-std::numeric_limits<float>::max()); // tie-breaker
+    //float showerVertexX(0.f),showerVertexY(0.f), showerVertexZ(0.f);
 
     int count(0);
 
@@ -118,6 +126,7 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
                     PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPositionV, "Nu vertex position", GREEN, 2);
                     PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPositionW, "Nu vertex position", GREEN, 2);
                     */
+                    //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
                     /////////////////////////////
 
                     LArConnectionPathwayHelper::ElectronTreeVariables electronTreeVariables;
@@ -147,6 +156,14 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
                     if (count == 1)
                         pAlgorithm->SetElectronTreeMetadata(pShowerPfo, electronTreeVariables);
 
+
+                    return true;
+                }
+            }
+        }
+    }
+
+                    /*
                     if (pAlgorithm->m_hybridMode)
                     {
                         std::cout << "IN HYBRID MODE SECTION" << std::endl;
@@ -221,6 +238,7 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
         if (newSeparation > currentSeparation)
             pAlgorithm->SetGammaVertex(newVertex, pShowerPfo);
     }
+                    */
 
     return false;
 }
@@ -254,7 +272,7 @@ void ElectronStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorit
     const CartesianVector &nuVertexPosition, const HitType hitType, ElectronProtoShowerVector &protoShowerVector, CaloHitList &usedHitList)
 {
     /////////////////////////////////
-    //std::cout << "Investigating " << (hitType == TPC_VIEW_U ? "U" : hitType == TPC_VIEW_V ? "V" : "W") << " view..." << std::endl;
+    std::cout << "Investigating " << (hitType == TPC_VIEW_U ? "U" : hitType == TPC_VIEW_V ? "V" : "W") << " view..." << std::endl;
     /////////////////////////////////
 
     CaloHitList viewShowerHitList;
@@ -293,6 +311,34 @@ void ElectronStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorit
     {
         return;
     }
+
+    //////////////////////////////////////////
+    // Draw neutrino vertex
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &projectedNuVertexPosition, "Nu Vertex", BLACK, 2);
+
+    // Draw shower and shower vertex
+    PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &viewShowerHitList, "Shower Hits", RED);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &showerVertexPosition, "Shower Vertex", RED, 2);
+
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    // Draw peak vector directions
+    for (unsigned int i : angularPeakVector)
+    {
+        const float theta0XZ(static_cast<float>(i) * m_theta0XZBinSize);
+        const CartesianVector peakDirection(std::cos(theta0XZ), 0.f, std::sin(theta0XZ));
+        CartesianVector end(projectedNuVertexPosition + (peakDirection * 10.f));
+        PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &projectedNuVertexPosition, &end, "PEAK DIRECTION", BLACK, 2, 1);
+    }
+
+    // Draw spine 'ambiguous' region
+    //const CartesianVector searchLength(projectedNuVertexPosition + CartesianVector(m_growingFitInitialLength, 0.0, 0.0));
+    //PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &projectedNuVertexPosition, &searchLength, "Search Length", RED, 2, 1);
+
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    //////////////////////////////////////////
+
+
 
     // Investigate peaks
     IntVector investigatedPeaks;
@@ -339,6 +385,14 @@ void ElectronStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorit
             ///////////////////////////////////////////  
             continue;
         }
+
+
+        /////////////////////////////////////////////
+        // Draw shower spine
+        PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &showerSpineHitList, "shower spine", colours[colourCount]);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        /////////////////////////////////////////////
+
 
         // Does spine coincide with shower pfo
         if (!this->IsSpineCoincident(pAlgorithm, projectedNuVertexPosition, peakDirection, viewShowerHitList, showerVertexPosition, showerSpineHitList))
@@ -434,7 +488,7 @@ void ElectronStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorit
         /////////////////////////////////
     }
 
-    //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -627,8 +681,22 @@ void ElectronStartRefinementTool::RefineHitsToAdd(ShowerStartRefinementAlgorithm
         const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
         PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "after hit refinement", GREEN, 2);
     }
-    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
     */
+    for (const CaloHit *const pCaloHit :  protoShower.m_ambiguousHitList)
+    {
+        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "after hit refinement", VIOLET, 2);
+    }
+
+    for (const CartesianVector &ambiguousDirection : protoShower.m_ambiguousDirectionVector)
+    {
+        CartesianVector jamEnd(projectedNuVertexPosition + (ambiguousDirection* 10.f));
+        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPosition, &jamEnd, "ambiguous particle", VIOLET, 2, 1);
+    }
+
+
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+   
     //////////////////////////////
 }
 
@@ -833,28 +901,36 @@ bool ElectronStartRefinementTool::IsSpineCoincident(ShowerStartRefinementAlgorit
     CaloHitList postShowerVertexSpineHits;
     const float showerDistanceFromNuSquared((showerVertex - projectedNuVertexPosition).GetMagnitudeSquared());
 
+
     for (const CaloHit * const pSpineHit : showerSpineHitList)
     {
         const CartesianVector &hitPosition(pSpineHit->GetPositionVector());
         const float separationSquared((hitPosition - projectedNuVertexPosition).GetMagnitudeSquared());
 
         if (separationSquared > showerDistanceFromNuSquared)
+        {
             postShowerVertexSpineHits.push_back(pSpineHit);
+            //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "purity hit", colours[colourCount], 2);
+        }
     }
 
+
     /////////////////////////////////
-    /*
-    CartesianVector end(projectedNuVertexPosition + (peakDirection * 100.0));
-    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPosition, &end, "DIRECTION", PINK, 2, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerVertex, "SPINE VERTEX POSITION", GREEN, 2);
-    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-    */
+    
+    //CartesianVector end(projectedNuVertexPosition + (peakDirection * 100.0));
+    //PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPosition, &end, "DIRECTION", PINK, 2, 2);
+    //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerVertex, "SPINE VERTEX POSITION", RED, 2);
+    //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
     /////////////////////////////////
 
 
     // Check whether shower spine is pure
     const CaloHitList sharedHitList(LArMCParticleHelper::GetSharedHits(postShowerVertexSpineHits, viewShowerHitList));
     const float spinePurity(postShowerVertexSpineHits.size() == 0 ? 1.f : static_cast<float>(sharedHitList.size()) / static_cast<float>(postShowerVertexSpineHits.size()));
+
+    //std::cout << "spinePurity: " << spinePurity << std::endl;
+
+    ++colourCount;
 
     if (spinePurity < m_minSpinePurity)
     {
@@ -921,6 +997,18 @@ bool ElectronStartRefinementTool::IsShowerExtendable(ShowerStartRefinementAlgori
 bool ElectronStartRefinementTool::ArePathwaysConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const CartesianVector &nuVertexPosition,
     const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, LArConnectionPathwayHelper::Consistency &consistency)
 {
+    std::cout << "CHECKING IF SHOWERS ARE CONSISTENT" << std::endl;
+    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerU.m_connectionPathway.m_pathwayHitList, "Shower Pathway U", BLACK);
+    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerU.m_spineHitList, "Shower Spine U", BLUE);
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &protoShowerU.m_showerCore.m_startPosition, "Shower start position U", BLUE, 2);
+    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerV.m_connectionPathway.m_pathwayHitList, "Shower Pathway V", BLACK);
+    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerV.m_spineHitList, "Shower Spine V", BLUE);
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &protoShowerV.m_showerCore.m_startPosition, "Shower start position V", BLUE, 2);
+    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerW.m_connectionPathway.m_pathwayHitList, "Shower Pathway W", BLACK);
+    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &protoShowerW.m_spineHitList, "Shower Spine W", BLUE);
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &protoShowerW.m_showerCore.m_startPosition, "Shower start position W", BLUE, 2);
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+
     if (LArConnectionPathwayHelper::AreShowerStartsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxXSeparation, m_maxSeparation))
     {
         consistency = LArConnectionPathwayHelper::Consistency::POSITION;

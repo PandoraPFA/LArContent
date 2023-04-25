@@ -110,6 +110,13 @@ public:
     int GetNuanceCode() const;
 
     /**
+     *  @brief  Get the process
+     *
+     *  @return the process
+     */
+    MCProcess GetProcess() const;
+
+    /**
      *  @brief  Get whether the neutrino interaction is NC
      *
      *  @return whether the neutrino interaction is NC
@@ -123,16 +130,9 @@ public:
      */
     void FillParameters(LArMCParticleParameters &parameters) const;
 
-    /**
-     *  @brief  Get the process
-     *
-     *  @return the process
-     */
-    MCProcess GetProcess() const;
-
     int m_nuanceCode; ///< The nuance code
-    int m_process;    ///< The process that created the particle
     bool m_isNC;      ///< Whether the neutrino interaction is NC
+    int m_process;    ///< The process that created the particle
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -229,7 +229,7 @@ inline MCProcess LArMCParticle::GetProcess() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int LArMCParticle::GetIsNC() const
+inline bool LArMCParticle::GetIsNC() const
 {
     return m_isNC;
 }

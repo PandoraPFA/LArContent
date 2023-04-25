@@ -685,6 +685,8 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const MCParticle
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
+    LArMCParticleParameters parameters;
+    pLArMCParticle->FillParameters(parameters);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*pPandora, parameters, *pMCParticleFactory));
 
     for (const MCParticle *const pDaughterMCParticle : pMCParticle->GetDaughterList())

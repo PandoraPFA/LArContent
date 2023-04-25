@@ -109,11 +109,12 @@ public:
     bool FindShowerVertexFromPosition(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShowerVector &protoShowerVector, 
         const pandora::CartesianVector &nuVertexPosition, pandora::CartesianVector &showerStart3D);
    
+    /*
     bool TMVAIsGamma(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList *const pCaloHitListU, const pandora::CaloHitList *const pCaloHitListV, 
         const pandora::CaloHitList *const pCaloHitListW, const MatchedConnectionPathwayMap &positionMatchedConnectionPathways, 
         const MatchedConnectionPathwayMap &directionMatchedConnectionPathways, const pandora::ParticleFlowObject *const pShowerPfo, 
         const pandora::CartesianVector &nuVertexPosition, pandora::CartesianVector &showerVertex);
-
+    */
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
