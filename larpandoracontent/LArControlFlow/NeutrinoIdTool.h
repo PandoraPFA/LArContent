@@ -84,7 +84,7 @@ private:
          *
          *  @return the probability that the slice contains a neutrino interaction
          */
-        float GetNeutrinoProbability(const T &t) const;
+        float GetNeutrinoProbability(const T &t, const float defaultProbability) const;
 
     private:
         /**
@@ -265,6 +265,7 @@ private:
 
     // Classification
     float m_minProbability;      ///< Minimum probability required to classify a slice as the neutrino
+    float m_defaultProbability;  ///< Default probability set if score could not be calculated
     unsigned int m_maxNeutrinos; ///< The maximum number of neutrinos to select in any one event
 
     bool m_persistFeatures; ///< If true, the mva features will be persisted in the metadata
