@@ -31,9 +31,6 @@ public:
     ~ShowerStartRefinementAlgorithm();
 
     typedef std::map<int, int> DeviationAngleMap;
-    DeviationAngleMap m_thetaMapU;
-    DeviationAngleMap m_thetaMapV;
-    DeviationAngleMap m_thetaMapW;
 
     typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
     typedef std::unordered_map<const pandora::Cluster*, const pandora::ParticleFlowObject*> ClusterToPfoMap;
@@ -46,7 +43,6 @@ public:
 
     pandora::PfoList m_deletedPfos;
     float m_binSize;
-    float m_electronFraction;
 
     pandora::CaloHitList GetAllHitsOfType(const pandora::HitType hitType);
     pandora::CaloHitList GetXIntervalHitsOfType(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType);
@@ -58,20 +54,15 @@ public:
 
     void SetElectronTreeMetadata(const pandora::ParticleFlowObject *const pShowerPfo, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
     void SetElectronMetadata(const pandora::CartesianVector &nuVertexPosition, const pandora::ParticleFlowObject *const pShowerPfo);
-    void SetGammaVertex(const pandora::CartesianVector &showerVertex, const pandora::ParticleFlowObject *const pShowerPfo);
     bool IsTrack(const ProtoShower &protoShower);
     //bool TMVAIsElectron(LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables, const pandora::ParticleFlowObject *const pShowerPfo, const bool alterMetadata);
     //bool TMVAIsGamma(LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables, const pandora::ParticleFlowObject *const pShowerPfo);
-    void RemoveConnectionPathway(const pandora::ParticleFlowObject *const pShowerPfo, const ProtoShower &protoShower);
 
-    void FillGammaHitMap();
     void FillElectronHitMap();
     bool IsElectron(const pandora::ParticleFlowObject *const pPfo) const;
-    bool IsGamma(const pandora::ParticleFlowObject *const pPfo, const pandora::CartesianVector &nuVertexPosition) const;
     void FillTree(const std::string &treeName, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
 
     bool m_createTrainingTrees;
-    bool m_hybridMode;
     //float m_electronTMVACut;
     //float m_gammaTMVACut;
     LArConnectionPathwayHelper::ElectronTreeVariables m_electronTreeVariables;
@@ -90,15 +81,12 @@ private:
     typedef std::vector<ShowerStartRefinementBaseTool *> ShowerStartRefinementToolVector;
     ShowerStartRefinementToolVector m_algorithmToolVector;
 
-    float m_minElectronCompleteness;
-    float m_minElectronPurity;
-    float m_minGammaCompleteness;
-    float m_thresholdSignalGammaDisplacement;
-
     //TMVA::Reader m_TMVAReader;
     LArConnectionPathwayHelper::ElectronTreeVariables m_TMVAElectronTreeVariables;
 
-    std::map<const pandora::MCParticle*, pandora::CaloHitList> m_gammaHitMap;
+    float m_minElectronCompleteness;
+    float m_minElectronPurity;
+
     std::map<const pandora::MCParticle*, pandora::CaloHitList> m_electronHitMap;
 };
 

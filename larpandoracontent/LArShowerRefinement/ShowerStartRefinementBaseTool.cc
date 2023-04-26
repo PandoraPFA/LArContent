@@ -29,7 +29,7 @@ ShowerStartRefinementBaseTool::ShowerStartRefinementBaseTool() :
     m_maxDistanceForConnection(3.f),
     m_pathwaySearchRegion(14.f),
     m_theta0XZBinSize(0.005f),
-    m_smoothingWindow(3),
+    m_smoothingWindow(1),
     m_growingFitInitialLength(10.f),
     m_macroSlidingFitWindow(1000),
     m_growingFitSegmentLength(5.0f),
@@ -40,6 +40,7 @@ ShowerStartRefinementBaseTool::ShowerStartRefinementBaseTool() :
     m_hitConnectionDistance(1.f),
     m_minInitialHitsFound(10),
     m_microSlidingFitWindow(20),
+    m_veryFineSlidingFitWindow(5),
     m_nInitialEnergyBins(5),
     m_minSigmaDeviation(5.f),
     m_molliereRadius(9.f),
@@ -47,82 +48,6 @@ ShowerStartRefinementBaseTool::ShowerStartRefinementBaseTool() :
     m_minShowerOpeningAngle(3.f)
 {
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ShowerStartRefinementBaseTool::HasPathToNuVertex(const ParticleFlowObject *const pShowerPfo, const CartesianVector &neutrinoVertex) const
-{
-    if (this->HasPathToNuVertex(pShowerPfo, neutrinoVertex, TPC_VIEW_U))
-        return true;
-
-    if (this->HasPathToNuVertex(pShowerPfo, neutrinoVertex, TPC_VIEW_V))
-        return true;
-
-    if (this->HasPathToNuVertex(pShowerPfo, neutrinoVertex, TPC_VIEW_W))
-        return true;
-
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ShowerStartRefinementBaseTool::HasPathToNuVertex(const ParticleFlowObject *const pShowerPfo, const CartesianVector &neutrinoVertex, const HitType &hitType) const
-{
-    // this algorithm has to run after we have 3D hits but not after shower vertex creation
-    // therefore, find the closest space point to the neutrino vertex
-
-    ClusterList clusterList;
-    LArPfoHelper::GetClusters(pShowerPfo, hitType, clusterList);
-
-    const CartesianVector projectedNuVertexPosition(LArGeometryHelper::ProjectPosition(this->GetPandora(), neutrinoVertex, hitType));
-
-    for (const Cluster *const pCluster : clusterList)
-    {
-        CaloHitList caloHitList;
-        pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-
-        for (const CaloHit *const caloHit : caloHitList)
-        {
-            const CartesianVector &hitPosition(caloHit->GetPositionVector());
-            const float separationSquared((projectedNuVertexPosition - hitPosition).GetMagnitudeSquared());
-
-            if (separationSquared < (m_maxDistanceForConnection * m_maxDistanceForConnection))
-                return true;
-        }
-    }
-
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/*
-bool ShowerStartRefinementBaseTool::HasPathToNuVertex(const ParticleFlowObject *const pShowerPfo, const CartesianVector &neutrinoVertex) const
-{
-    // this algorithm has to run after we have 3D hits but not after shower vertex creation
-    // therefore, find the closest space point to the neutrino vertex
-
-    ClusterList clusterList3D;
-    LArPfoHelper::GetClusters(pShowerPfo, TPC_3D, clusterList3D);
-
-    for (const Cluster *const pCluster3D : clusterList3D)
-    {
-        CaloHitList caloHitList3D;
-        pCluster3D->GetOrderedCaloHitList().FillCaloHitList(caloHitList3D);
-
-        for (const CaloHit *const caloHit3D : caloHitList3D)
-        {
-            const CartesianVector &hitPosition(caloHit3D->GetPositionVector());
-            const float separationSquared((neutrinoVertex - hitPosition).GetMagnitudeSquared());
-
-            if (separationSquared < (m_maxDistanceForConnection * m_maxDistanceForConnection))
-                return true;
-        }
-    }
-
-    return false;
-}
-*/
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -157,8 +82,8 @@ void ShowerStartRefinementBaseTool::FillAngularDecompositionMap(const CaloHitLis
 
 void ShowerStartRefinementBaseTool::SmoothAngularDecompositionMap(AngularDecompositionMap &angularDecompositionMap)
 {
-    const int loopMin = (-1) * (m_smoothingWindow - 1) / 2;
-    const int loopMax = (m_smoothingWindow - 1) / 2;
+    const int loopMin = (-1) * m_smoothingWindow;
+    const int loopMax = m_smoothingWindow;
 
     const AngularDecompositionMap angularDecompositionMapTemp(angularDecompositionMap);
 
@@ -166,19 +91,16 @@ void ShowerStartRefinementBaseTool::SmoothAngularDecompositionMap(AngularDecompo
 
     for (const auto &entry : angularDecompositionMapTemp)
     {
-        const int currentBin(entry.first);
         float total(0.f);
-        int binCount(0);
+        const int currentBin(entry.first);
 
         for (int binOffset = loopMin; binOffset <= loopMax; ++binOffset)
         {
-            ++binCount;
-
             const int contributingBin = currentBin + binOffset;
             total += (angularDecompositionMapTemp.find(contributingBin) == angularDecompositionMapTemp.end()) ? 0.f : angularDecompositionMapTemp.at(contributingBin);
         }
 
-        angularDecompositionMap[currentBin] = total / static_cast<float>(binCount);
+        angularDecompositionMap[currentBin] = total / static_cast<float>((2.0 * m_smoothingWindow) + 1);
     }
 }
 
@@ -206,13 +128,6 @@ void ShowerStartRefinementBaseTool::ObtainPeakVector(AngularDecompositionMap &an
             --precedingBin;
         }
 
-        // ISOBEL SHOULD ALWAYS FIND ONE!?
-        if (!foundPreceeding)
-        {
-            std::cout << "ISOBEL DID NOT FIND PRECEEDING BIN" << std::endl;
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-        }
-
         int followingBin(bin + 1);
         bool foundFollowing(false);
 
@@ -226,13 +141,6 @@ void ShowerStartRefinementBaseTool::ObtainPeakVector(AngularDecompositionMap &an
             }
 
             ++followingBin;
-        }
-
-        // ISOBEL SHOULD ALWAYS FIND ONE!?
-        if (!foundFollowing)
-        {
-            std::cout << "SIOBEL DID NOT FIND FOLLOWING BIN" << std::endl;
-            throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
         const float precedingBinWeight(angularDecompositionMap.find(precedingBin) == angularDecompositionMap.end() ? 0.f : angularDecompositionMap.at(precedingBin));
@@ -250,8 +158,10 @@ void ShowerStartRefinementBaseTool::ObtainPeakVector(AngularDecompositionMap &an
 bool ShowerStartRefinementBaseTool::FindBestAngularPeak(AngularDecompositionMap &angularDecompositionMap, IntVector &viewPeakVector, 
     IntVector &investigatedPeaks, int &bestTheta0XZBin)
 {
-    bool found(false);
-    float bestWeight(0.f);
+    bool found = false;
+
+    float bestWeight(-std::numeric_limits<float>::max());
+    bestTheta0XZBin = -std::numeric_limits<int>::max();
 
     for (const int theta0XZBin : viewPeakVector)
     {
@@ -259,18 +169,27 @@ bool ShowerStartRefinementBaseTool::FindBestAngularPeak(AngularDecompositionMap 
             continue;
 
         if (angularDecompositionMap.find(theta0XZBin) == angularDecompositionMap.end())
-        {
-            std::cout << "ISOBEL SHOULD NEVER HAPPEN" << std::endl;
             throw StatusCodeException(STATUS_CODE_FAILURE);
-        }
 
         const float binWeight(angularDecompositionMap.at(theta0XZBin));
 
-        if (binWeight > bestWeight)
+        if (std::fabs(binWeight - bestWeight) < std::numeric_limits<float>::epsilon())
         {
-            found = true;
-            bestWeight = binWeight;
-            bestTheta0XZBin = theta0XZBin;
+            if (theta0XZBin > bestTheta0XZBin)
+            {
+                found = true;
+                bestWeight = binWeight;
+                bestTheta0XZBin = theta0XZBin;
+            }
+        }
+        else
+        {
+            if (binWeight > bestWeight)
+            {
+                found = true;
+                bestWeight = binWeight;
+                bestTheta0XZBin = theta0XZBin;
+            }
         }
     }
 
@@ -282,7 +201,7 @@ bool ShowerStartRefinementBaseTool::FindBestAngularPeak(AngularDecompositionMap 
 void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementAlgorithm *pAlgorithm, const CaloHitList &viewShowerHitList, 
     const CartesianVector &projectedNuVertexPosition, const CartesianVector &initialDirection, CaloHitList &unavailableHitList, CaloHitList &showerSpineHitList)
 {
-    // Construct initial fit
+    // Use initial direction to find hits for a starting fit
     float highestL(0.f);
     CartesianPointVector runningFitPositionVector;
 
@@ -303,9 +222,6 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
                 showerSpineHitList.push_back(pCaloHit);
             }
 
-            ////////////////////////////
-            //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "INITIAL HIT", VIOLET, 2);
-            ////////////////////////////
             runningFitPositionVector.push_back(hitPosition);
         }
     }
@@ -313,29 +229,18 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
     // Require significant number of initial hits
     if (runningFitPositionVector.size() < m_minInitialHitsFound)
     {
-        ////////////////////////////////////
-        //std::cout << "Not enough initial hits to form fit" << std::endl;
-        //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-        ////////////////////////////////////
-
         showerSpineHitList.clear();
         return;
     }
 
-    ///////////////////
-    //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-    ////////////////////
-
-    // Perform a running fit to follow pathway
+    // Perform a running fit to collect a pathway of hits
+    unsigned int count(0);
+    bool hitsCollected(true);
     const bool isEndDownstream(initialDirection.GetZ() > 0.f);
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     CartesianVector extrapolatedStartPosition(projectedNuVertexPosition), extrapolatedDirection(initialDirection);
     CartesianVector extrapolatedEndPosition(extrapolatedStartPosition + (extrapolatedDirection * highestL));
 
-    unsigned int count(0);
-    bool hitsCollected(true);
-
-    // make this a boolean
     while (hitsCollected)
     {
         ++count;
@@ -362,33 +267,25 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
             hitsCollected = this->CollectSubsectionHits(pAlgorithm, extrapolatedFit, extrapolatedStartPosition, extrapolatedEndPosition, extrapolatedDirection,
                 isEndDownstream, viewShowerHitList, runningFitPositionVector, unavailableHitList, showerSpineHitList);
 
-            // As a final effort, reduce the sliding fit window
+            // If no hits found, as a final effort, reduce the sliding fit window
             if (!hitsCollected)
             {
-                const TwoDSlidingFitResult microExtrapolatedFit(&runningFitPositionVector, 5.f, slidingFitPitch);
+                const TwoDSlidingFitResult microExtrapolatedFit(&runningFitPositionVector, m_veryFineSlidingFitWindow, slidingFitPitch);
             
                 extrapolatedStartPosition = count == 1 ? extrapolatedStartPosition : isEndDownstream ? microExtrapolatedFit.GetGlobalMaxLayerPosition() : 
                     microExtrapolatedFit.GetGlobalMinLayerPosition();
                 extrapolatedDirection = isEndDownstream ? microExtrapolatedFit.GetGlobalMaxLayerDirection() : microExtrapolatedFit.GetGlobalMinLayerDirection() * (-1.f);
                 extrapolatedEndPosition = extrapolatedStartPosition + (extrapolatedDirection * m_growingFitSegmentLength);
 
-                hitsCollected = this->CollectSubsectionHits(pAlgorithm, extrapolatedFit, extrapolatedStartPosition, extrapolatedEndPosition, extrapolatedDirection,
+                hitsCollected = this->CollectSubsectionHits(pAlgorithm, microExtrapolatedFit, extrapolatedStartPosition, extrapolatedEndPosition, extrapolatedDirection,
                     isEndDownstream, viewShowerHitList, runningFitPositionVector, unavailableHitList, showerSpineHitList);
             }
         }
         catch (const StatusCodeException &)
         {
-            ////////////////////////////////////
-            //std::cout << "couldn't fit runningFitPositionVector" << std::endl;
-            ////////////////////////////////////
-
             return;
         }
     }
-
-    ////////////////////////////////////
-    //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-    ////////////////////////////////////
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -398,11 +295,6 @@ bool ShowerStartRefinementBaseTool::CollectSubsectionHits(const ShowerStartRefin
     const bool isEndDownstream, const CaloHitList &viewShowerHitList, CartesianPointVector &runningFitPositionVector, CaloHitList &unavailableHitList, 
     CaloHitList &showerSpineHitList)
 { 
-    ////////////////////////////
-    //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedStartPosition, "start", GREEN, 2);
-    //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedEndPosition, "end", GREEN, 2);
-    ////////////////////////////
-
     float extrapolatedStartL(0.f), extrapolatedStartT(0.f);
     extrapolatedFit.GetLocalPosition(extrapolatedStartPosition, extrapolatedStartL, extrapolatedStartT);
 
@@ -446,12 +338,11 @@ bool ShowerStartRefinementBaseTool::CollectSubsectionHits(const ShowerStartRefin
     }
 
     const int nInitialHits(showerSpineHitList.size());
-    this->CollectConnectedHits(pAlgorithm, collectedHits, extrapolatedStartPosition, extrapolatedDirection, runningFitPositionVector, unavailableHitList, showerSpineHitList);
-    const int nFinalHits(showerSpineHitList.size());
 
-    ////////////////////////////////////
-    //PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    ////////////////////////////////////
+    // Now find a continuous path of collected hits
+    this->CollectConnectedHits(pAlgorithm, collectedHits, extrapolatedStartPosition, extrapolatedDirection, runningFitPositionVector, showerSpineHitList);
+
+    const int nFinalHits(showerSpineHitList.size());
 
     return (nFinalHits != nInitialHits);
 }
@@ -460,9 +351,8 @@ bool ShowerStartRefinementBaseTool::CollectSubsectionHits(const ShowerStartRefin
 
 void ShowerStartRefinementBaseTool::CollectConnectedHits(const ShowerStartRefinementAlgorithm *pAlgorithm, const CaloHitList &collectedHits, 
     const CartesianVector &extrapolatedStartPosition, const CartesianVector &extrapolatedDirection, CartesianPointVector &runningFitPositionVector, 
-    CaloHitList &/*unavailableHitList*/, CaloHitList &showerSpineHitList)
+    CaloHitList &showerSpineHitList)
 {
-    // Now add connected hits - taking into account hit width if necessary
     bool found = true;
 
     while (found)
@@ -478,21 +368,17 @@ void ShowerStartRefinementBaseTool::CollectConnectedHits(const ShowerStartRefine
 
             if (this->GetClosestDistance(hitPosition, runningFitPositionVector) > m_hitConnectionDistance)
             {
-                hitPosition = LArHitWidthHelper::GetClosestPointToLine2D(extrapolatedStartPosition, extrapolatedDirection, pCaloHit);
-                        
                 if (LArHitWidthHelper::GetClosestDistance(pCaloHit, showerSpineHitList) > m_hitConnectionDistance)
                     continue;
+
+                hitPosition = LArHitWidthHelper::GetClosestPointToLine2D(extrapolatedStartPosition, extrapolatedDirection, pCaloHit);
             }
 
             found = true;
 
             runningFitPositionVector.push_back(hitPosition);
             showerSpineHitList.push_back(pCaloHit);
- 
-            ////////////////////////////////
-            //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "added hit", BLUE, 2);
-            ////////////////////////////////
-        }
+         }
     }
 }
 
@@ -556,14 +442,6 @@ void ShowerStartRefinementBaseTool::ObtainLongitudinalDecomposition(ShowerStartR
     for (auto iter = layerToHitMap.begin(); iter != layerToHitMap.end(); ++iter)
     {
         const int layer(iter->first);
-
-        /////////////////////////////////
-        /*
-        CartesianVector blob(0.f, 0.f, 0.f);
-        twoDSlidingFit.GetGlobalPosition(layerFitResultMap.at(layer).GetL(), layerFitResultMap.at(layer).GetFitT(), blob);
-        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &blob, std::to_string(layer), BLUE, 2);
-        */
-        /////////////////////////////////
 
         const float layerL(layerFitResultMap.at(layer).GetL());
 
@@ -1304,6 +1182,9 @@ StatusCode ShowerStartRefinementBaseTool::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MacroSlidingFitWindow", m_macroSlidingFitWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "VeryFineSlidingFitWindow", m_veryFineSlidingFitWindow));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "GrowingFitSegmentLength", m_growingFitSegmentLength));

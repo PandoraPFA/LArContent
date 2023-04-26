@@ -84,8 +84,7 @@ protected:
        pandora::CartesianPointVector &runningFitPositionVector, pandora::CaloHitList &unavailableHitList, pandora::CaloHitList &showerSpineHitList);
 
     void CollectConnectedHits(const ShowerStartRefinementAlgorithm *pAlgorithm, const pandora::CaloHitList &collectedHits, const pandora::CartesianVector &extrapolatedStartPosition, 
-        const pandora::CartesianVector &extrapolatedDirection, pandora::CartesianPointVector &runningFitPositionVector, pandora::CaloHitList &unavailableHitList, 
-        pandora::CaloHitList &showerSpineHitList);
+        const pandora::CartesianVector &extrapolatedDirection, pandora::CartesianPointVector &runningFitPositionVector, pandora::CaloHitList &showerSpineHitList);
 
     bool IsCloseToLine(const pandora::CartesianVector &hitPosition, const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection, 
         const float distanceToLine) const;
@@ -136,6 +135,7 @@ protected:
     float m_hitConnectionDistance;
     unsigned int m_minInitialHitsFound;
     int m_microSlidingFitWindow;
+    float m_veryFineSlidingFitWindow;
     unsigned int m_nInitialEnergyBins;
     float m_minSigmaDeviation;
     float m_molliereRadius;

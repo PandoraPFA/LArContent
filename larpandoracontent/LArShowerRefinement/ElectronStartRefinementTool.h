@@ -33,8 +33,6 @@ public:
         const pandora::CartesianVector &nuVertexPosition, const pandora::CaloHitList *const pCaloHitListU, const pandora::CaloHitList *const pCaloHitListV, 
         const pandora::CaloHitList *const pCaloHitListW);
 
-    bool IsSensibleShower(const LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
-
     void BuildProtoShowers(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo,
         const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType, ElectronProtoShowerVector &protoShowerVector,
         pandora::CaloHitList &usedCaloHitList);
@@ -52,13 +50,12 @@ public:
         const pandora::CartesianVector &projectedNuVertexPosition, const float lowestTheta, const float highestTheta, pandora::CaloHitList &collectedHits);
 
     pandora::CartesianVector GetShowerVertex(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType, 
-        const pandora::CartesianVector &projectedNuVertexPosition);
+        const pandora::CartesianVector &peakDirection, const pandora::CartesianVector &projectedNuVertexPosition);
 
     TwoDSlidingShowerFitResult FitShower(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType);
 
     bool IsSpineCoincident(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector &projectedNuVertexPosition, 
-        const pandora::CartesianVector &peakDirection, const pandora::CaloHitList &viewShowerHitList, const pandora::CartesianVector &showerVertexPosition, 
-        const pandora::CaloHitList &showerSpineHitList);
+        const pandora::CaloHitList &viewShowerHitList, const pandora::CartesianVector &showerVertexPosition, const pandora::CaloHitList &showerSpineHitList);
 
     bool IsShowerExtendable(ShowerStartRefinementAlgorithm *const pAlgorithm, const ElectronProtoShower &protoShowerU, 
         const ElectronProtoShower &protoShowerV, const ElectronProtoShower &protoShowerW);
@@ -101,8 +98,6 @@ private:
     float m_maxXSeparation;
     float m_maxSeparation;
     bool m_extendMode;
-    bool m_moveVertexMode;
-    bool m_truncateGammaMode;
 };
 
 } // namespace lar_content

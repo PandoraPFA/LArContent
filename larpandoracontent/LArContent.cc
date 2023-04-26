@@ -68,8 +68,9 @@
 
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 
+#include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
+#include "larpandoracontent/LArShowerRefinement/PeakDirectionFinderTool.h"
 #include "larpandoracontent/LArShowerRefinement/ElectronStartRefinementTool.h"
-#include "larpandoracontent/LArShowerRefinement/GammaStartRefinementTool.h"
 #include "larpandoracontent/LArShowerRefinement/HybridElectronStartRefinementTool.h"
 #include "larpandoracontent/LArShowerRefinement/HybridShowerStartRefinementAlgorithm.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
@@ -222,6 +223,7 @@
 // clang-format off
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
     d("LArMuonLeadingEventValidation",          MuonLeadingEventValidationAlgorithm)                                            \
+    d("LArElectronInitialRegionRefinement",     ElectronInitialRegionRefinementAlgorithm)                                       \
     d("LArNeutrinoEventValidation",             NeutrinoEventValidationAlgorithm)                                               \
     d("LArTestBeamEventValidation",             TestBeamEventValidationAlgorithm)                                               \
     d("LArTestBeamHierarchyEventValidation",    TestBeamHierarchyEventValidationAlgorithm)                                      \
@@ -335,8 +337,8 @@
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArElectronStartRefinement",             ElectronStartRefinementTool)                                                    \
+    d("LArPeakDirectionFinder",                 PeakDirectionFinderTool)                                                        \
     d("LArHybridElectronStartRefinement",       HybridElectronStartRefinementTool)                                              \
-    d("LArGammaStartRefinement",                GammaStartRefinementTool)                                                       \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
     d("LArBeamParticleId",                      BeamParticleIdTool)                                                             \
     d("LArCosmicRayTagging",                    CosmicRayTaggingTool)                                                           \
