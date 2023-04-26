@@ -10,6 +10,7 @@
 #include "Pandora/StatusCodes.h"
 
 #include "larpandoracontent/LArHelpers/LArHierarchyHelper.h"
+#include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 
 #include <numeric>
 
@@ -1464,13 +1465,28 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
 
     for (const MCParticle *const pRootMC : rootMCParticles)
     {
+        const LArHierarchyHelper::MCMatchesVector &matches{this->GetMatches(pRootMC)};
+
+        MCParticleList primaries;
+        for (const LArHierarchyHelper::MCMatches &match : matches)
+        {
+            const LArHierarchyHelper::MCHierarchy::Node *pMCNode{match.GetMC()};
+            if (pMCNode->GetHierarchyTier() == 1)
+            {
+                const MCParticle *const pLeadingMC{pMCNode->GetLeadingMCParticle()};
+                primaries.emplace_back(pLeadingMC);
+            }
+        }
+        primaries.sort(LArMCParticleHelper::SortByMomentum);
+        const InteractionDescriptor descriptor{LArInteractionTypeHelper::GetInteractionDescriptor(primaries)};
+
         const LArMCParticle *const pLArRoot{dynamic_cast<const LArMCParticle *const>(pRootMC)};
         if (pLArRoot)
             std::cout << "=== MC Interaction : PDG " << std::to_string(pLArRoot->GetParticleId()) << " Energy: " <<
-                std::to_string(pLArRoot->GetEnergy()) << " Nuance: " << std::to_string(pLArRoot->GetNuanceCode()) << std::endl;
+                std::to_string(pLArRoot->GetEnergy()) << " Type: " << descriptor.ToString() << std::endl;
         else
             std::cout << "=== MC Interaction : PDG " << std::to_string(pRootMC->GetParticleId()) << " Energy: " <<
-                std::to_string(pRootMC->GetEnergy()) << std::endl;;
+                std::to_string(pRootMC->GetEnergy()) << " Type: " << descriptor.ToString() << std::endl;
 
         unsigned int nNeutrinoMCParticles{this->GetNNeutrinoMCNodes(pRootMC)}, nNeutrinoRecoParticles{0};
         unsigned int nCosmicMCParticles{this->GetNCosmicRayMCNodes(pRootMC)}, nCosmicRecoParticles{0};
