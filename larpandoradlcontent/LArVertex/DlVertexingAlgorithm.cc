@@ -189,7 +189,7 @@ StatusCode DlVertexingAlgorithm::Infer()
     }
 
     CartesianPointVector vertexCandidatesU, vertexCandidatesV, vertexCandidatesW;
-    for (const std::string listName : m_caloHitListNames)
+    for (const std::string &listName : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
@@ -227,7 +227,7 @@ StatusCode DlVertexingAlgorithm::Infer()
         auto classesAccessor{classes.accessor<long, 3>()};
         const double scaleFactor{std::sqrt(m_height * m_height + m_width * m_width)};
         std::map<int, bool> haveSeenMap;
-        for (const auto [row, col] : pixelVector)
+        for (const auto &[row, col] : pixelVector)
         {
             const auto cls{classesAccessor[0][row][col]};
             if (cls > 0 && cls < m_nClasses)
@@ -276,7 +276,7 @@ StatusCode DlVertexingAlgorithm::Infer()
             {
                 std::cerr << "DlVertexingAlgorithm: Warning. Couldn't find true vertex." << std::endl;
             }
-            for (const auto pos : positionVector)
+            for (const auto &pos : positionVector)
             {
                 std::string label{isU ? "U" : isV ? "V" : "W"};
                 PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, label, RED, 3));
@@ -448,7 +448,7 @@ void DlVertexingAlgorithm::GetCanvasParameters(const LArDLHelper::TorchOutput &n
     // the argmax result is a 1 x height x width tensor where each element is a class id
     auto classesAccessor{classes.accessor<long, 3>()};
     int colOffsetMin{0}, colOffsetMax{0}, rowOffsetMin{0}, rowOffsetMax{0};
-    for (const auto [row, col] : pixelVector)
+    for (const auto &[row, col] : pixelVector)
     {
         const auto cls{classesAccessor[0][row][col]};
         const double threshold{m_thresholds[cls]};
@@ -564,7 +564,7 @@ StatusCode DlVertexingAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::
 {
     try
     {
-        for (const auto [mc, hits] : mcToHitsMap)
+        for (const auto &[mc, hits] : mcToHitsMap)
         {
             (void)hits;
             mcHierarchy.push_back(mc);
@@ -711,7 +711,7 @@ StatusCode DlVertexingAlgorithm::MakeCandidateVertexList(const CartesianPointVec
     std::string temporaryListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
 
-    for (const CartesianVector position : positions)
+    for (const CartesianVector &position : positions)
     {
         PandoraContentApi::Vertex::Parameters parameters;
         parameters.m_position = position;
