@@ -21,7 +21,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-TestBeamHierarchyEventValidationAlgorithm::TestBeamHierarchyEventValidationAlgorithm() : m_eventNumber(0)
+TestBeamHierarchyEventValidationAlgorithm::TestBeamHierarchyEventValidationAlgorithm()
 {
 }
 
@@ -101,6 +101,8 @@ void TestBeamHierarchyEventValidationAlgorithm::FillValidationInfo(const MCParti
 void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(
     const ValidationInfo &validationInfo, const bool useInterpretedMatching, const bool printToScreen, const bool fillTree) const
 {
+    static int eventNumber{-1};
+    ++eventNumber;
     if (printToScreen && useInterpretedMatching)
         std::cout << "---INTERPRETED-MATCHING-OUTPUT------------------------------------------------------------------" << std::endl;
     else if (printToScreen)
@@ -393,7 +395,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(
         if (fillTree)
         {
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "fileIdentifier", m_fileIdentifier));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", m_eventNumber - 1));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", eventNumber));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNuanceCode", mcNuanceCode));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isBeamParticle", isBeamParticle));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCosmicRay", isCosmicRay));

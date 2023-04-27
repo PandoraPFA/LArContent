@@ -65,16 +65,19 @@ StatusCode HierarchyValidationAlgorithm::Run()
     LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
     //matchInfo.Print(mcHierarchy);
 
+#ifdef MONITORING
     if (m_validateEvent)
         this->EventValidation(matchInfo);
     else if (m_validateMC)
         this->MCValidation(matchInfo);
+#endif
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+#ifdef MONITORING
 void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const
 {
     if (m_writeTree)
@@ -297,6 +300,7 @@ void HierarchyValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &mat
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
 }
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

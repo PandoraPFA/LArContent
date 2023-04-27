@@ -60,7 +60,7 @@ StatusCode DlHitTrackShowerIdAlgorithm::Run()
 StatusCode DlHitTrackShowerIdAlgorithm::Train()
 {
     const int SHOWER{1}, TRACK{2};
-    for (const std::string listName : m_caloHitListNames)
+    for (const std::string &listName : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
@@ -145,7 +145,7 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
         PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
     }
 
-    for (const std::string listName : m_caloHitListNames)
+    for (const std::string &listName : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
