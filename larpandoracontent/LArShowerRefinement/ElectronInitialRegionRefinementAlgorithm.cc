@@ -10,8 +10,10 @@
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
+
 #include "larpandoracontent/LArShowerRefinement/PeakDirectionFinderTool.h"
+#include "larpandoracontent/LArShowerRefinement/ShowerSpineFinderTool.h"
+#include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
 
 using namespace pandora;
 
@@ -107,9 +109,27 @@ void ElectronInitialRegionRefinementAlgorithm::BuildViewProtoShowers(const Parti
     if (this->GetHitListOfType(hitType, pViewHitList) != STATUS_CODE_SUCCESS)
         return;
 
+    /*
+    // Only consider significant showers
+    CaloHitList caloHits3D;
+    LArPfoHelper::GetCaloHits(pShowerPfo, TPC_3D, caloHits3D);
+
+    if (caloHits3D.size() < 50)
+        return false;
+    */
+
     CartesianPointVector peakDirectionVector;
     if (m_pPeakDirectionFinderTool->Run(pShowerPfo, nuVertex3D, pViewHitList, hitType, peakDirectionVector) != STATUS_CODE_SUCCESS)
         return;
+
+    CaloHitList unavailableHitList;
+    for (CartesianVector &peakDirection : peakDirectionVector)
+    {
+        CaloHitList showerSpineHitList;
+        m_pShowerSpineFinderTool->Run(nuVertex3D, pViewHitList, hitType, peakDirection, unavailableHitList, showerSpineHitList);
+
+        unavailableHitList.insert(unavailableHitList.begin(), showerSpineHitList.begin(), showerSpineHitList.end());
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -143,11 +163,18 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::ReadSettings(const TiXmlHan
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListNameV", m_caloHitListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListNameW", m_caloHitListNameW));
 
-    AlgorithmTool *pAlgorithmTool(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "PeakDirectionFinder", pAlgorithmTool));
-    m_pPeakDirectionFinderTool = dynamic_cast<PeakDirectionFinderTool *>(pAlgorithmTool);
+    AlgorithmTool *pAlgorithmTool1(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "PeakDirectionFinder", pAlgorithmTool1));
+    m_pPeakDirectionFinderTool = dynamic_cast<PeakDirectionFinderTool *>(pAlgorithmTool1);
 
     if (!m_pPeakDirectionFinderTool)
+        return STATUS_CODE_INVALID_PARAMETER;
+
+    AlgorithmTool *pAlgorithmTool2(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "ShowerSpineFinder", pAlgorithmTool2));
+    m_pShowerSpineFinderTool = dynamic_cast<ShowerSpineFinderTool *>(pAlgorithmTool2);
+
+    if (!m_pShowerSpineFinderTool)
         return STATUS_CODE_INVALID_PARAMETER;
 
     return STATUS_CODE_SUCCESS;

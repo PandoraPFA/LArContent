@@ -62,10 +62,23 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
     if (caloHits3D.size() < 50)
         return false;
 
+
     CaloHitList usedHitListU, usedHitListV, usedHitListW;
     ElectronProtoShowerVector protoShowerVectorU, protoShowerVectorV, protoShowerVectorW;
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
     this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_U, protoShowerVectorU, usedHitListU);
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
     this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_V, protoShowerVectorV, usedHitListV);
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
     this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_W, protoShowerVectorW, usedHitListW);
 
     int count(0);
@@ -158,6 +171,8 @@ void ElectronStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorit
     if (angularPeakVector.empty())
         return;
 
+    std::cout << "angularPeakVector.size(): " << angularPeakVector.size() << std::endl;
+
     // Investigate peak directions
     IntVector investigatedPeaks;
 
@@ -174,8 +189,6 @@ void ElectronStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorit
         const CartesianVector peakDirection(std::cos(theta0XZ), 0.f, std::sin(theta0XZ));
         const bool isEndDownstream(peakDirection.GetZ() > 0.f);
 
-        std::cout << "ElectronStartRefinementTool: " << peakDirection << std::endl;
-
         CartesianVector showerVertexPosition(0.f, 0.f, 0.f);
         try
         {
@@ -190,6 +203,7 @@ void ElectronStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorit
         CaloHitList showerSpineHitList;
         try
         {
+        std::cout << "peakDirection: " << peakDirection << std::endl;
             this->FindShowerSpine(pAlgorithm, viewAllHitList, projectedNuVertexPosition, peakDirection, usedHitList, showerSpineHitList);
         }
         catch (...)
@@ -263,7 +277,7 @@ void ElectronStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorit
         // now identify the ambiguous hits in protoshower
         CartesianPointVector peakDirections;
         CaloHitList usedHitListForHelper(showerSpineHitList);
-        this->BuildHelperProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, hitType, peakDirections, usedHitListForHelper);
+        //this->BuildHelperProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, hitType, peakDirections, usedHitListForHelper);
 
         this->RefineHitsToAdd(pAlgorithm, protoShowerVector.back(), nuVertexPosition, hitType, peakDirections);
 

@@ -26,20 +26,20 @@ private:
     typedef std::map<int, float> AngularDecompositionMap;
 
     void CollectHitsWithinROI(const pandora::CaloHitList &showerHitList, const pandora::CaloHitList *const pViewHitList, 
-        const pandora::CartesianVector &nuVertex2D, pandora::CaloHitList &viewROIHits);
+        const pandora::CartesianVector &nuVertex2D, pandora::CaloHitList &viewROIHits) const;
 
     void GetAngularExtrema(const pandora::CaloHitList &showerHitList, const pandora::CartesianVector &nuVertex2D, 
-        float &lowestTheta, float &highestTheta);
+        float &lowestTheta, float &highestTheta) const;
 
     void CollectHitsWithinExtrema(const pandora::CaloHitList *const pViewHitList, const pandora::CartesianVector &nuVertex2D, 
-        const float lowestTheta, const float highestTheta, pandora::CaloHitList &viewROIHits);
+        const float lowestTheta, const float highestTheta, pandora::CaloHitList &viewROIHits) const;
 
     void FillAngularDecompositionMap(const pandora::CaloHitList &viewShowerHitList, const pandora::CartesianVector &nuVertex2D, 
-        AngularDecompositionMap &angularDecompositionMap);
+        AngularDecompositionMap &angularDecompositionMap) const;
 
-    void SmoothAngularDecompositionMap(AngularDecompositionMap &angularDecompositionMap);
+    void SmoothAngularDecompositionMap(AngularDecompositionMap &angularDecompositionMap) const;
 
-    void RetrievePeakDirections(const AngularDecompositionMap &angularDecompositionMap, pandora::CartesianPointVector &peakDirectionVector);
+    void RetrievePeakDirections(const AngularDecompositionMap &angularDecompositionMap, pandora::CartesianPointVector &peakDirectionVector) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

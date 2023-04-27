@@ -70,6 +70,7 @@
 
 #include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
 #include "larpandoracontent/LArShowerRefinement/PeakDirectionFinderTool.h"
+#include "larpandoracontent/LArShowerRefinement/ShowerSpineFinderTool.h"
 #include "larpandoracontent/LArShowerRefinement/ElectronStartRefinementTool.h"
 #include "larpandoracontent/LArShowerRefinement/HybridElectronStartRefinementTool.h"
 #include "larpandoracontent/LArShowerRefinement/HybridShowerStartRefinementAlgorithm.h"
@@ -338,6 +339,7 @@
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArElectronStartRefinement",             ElectronStartRefinementTool)                                                    \
     d("LArPeakDirectionFinder",                 PeakDirectionFinderTool)                                                        \
+    d("LArShowerSpineFinder",                   ShowerSpineFinderTool)                                                          \
     d("LArHybridElectronStartRefinement",       HybridElectronStartRefinementTool)                                              \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
     d("LArBeamParticleId",                      BeamParticleIdTool)                                                             \

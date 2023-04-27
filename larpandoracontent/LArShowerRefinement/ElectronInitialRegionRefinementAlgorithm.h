@@ -10,6 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "larpandoracontent/LArShowerRefinement/ShowerSpineFinderTool.h"
 #include "larpandoracontent/LArShowerRefinement/PeakDirectionFinderTool.h"
 
 namespace lar_content
@@ -37,6 +38,7 @@ private:
     pandora::StatusCode GetHitListOfType(const pandora::HitType hitType, const pandora::CaloHitList *&pCaloHitList);
 
     PeakDirectionFinderTool* m_pPeakDirectionFinderTool;
+    ShowerSpineFinderTool* m_pShowerSpineFinderTool;
 
     std::string m_showerPfoListName;
     std::string m_neutrinoVertexListName;

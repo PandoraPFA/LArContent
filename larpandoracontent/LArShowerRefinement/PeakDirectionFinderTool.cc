@@ -65,7 +65,7 @@ StatusCode PeakDirectionFinderTool::Run(const ParticleFlowObject *const pShowerP
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void PeakDirectionFinderTool::CollectHitsWithinROI(const CaloHitList &showerHitList, const CaloHitList *const pViewHitList, 
-    const CartesianVector &nuVertex2D, CaloHitList &viewROIHits)
+    const CartesianVector &nuVertex2D, CaloHitList &viewROIHits) const
 {
     float lowestTheta(std::numeric_limits<float>::max()), highestTheta((-1.f) * std::numeric_limits<float>::max());
 
@@ -76,7 +76,7 @@ void PeakDirectionFinderTool::CollectHitsWithinROI(const CaloHitList &showerHitL
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void PeakDirectionFinderTool::GetAngularExtrema(const CaloHitList &showerHitList, const CartesianVector &nuVertex2D, 
-    float &lowestTheta, float &highestTheta)
+    float &lowestTheta, float &highestTheta) const
 {
     lowestTheta = std::numeric_limits<float>::max();
     highestTheta = (-1.f) * std::numeric_limits<float>::max();
@@ -104,7 +104,7 @@ void PeakDirectionFinderTool::GetAngularExtrema(const CaloHitList &showerHitList
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void PeakDirectionFinderTool::CollectHitsWithinExtrema(const CaloHitList *const pViewHitList, const CartesianVector &nuVertex2D, 
-    const float lowestTheta, const float highestTheta, CaloHitList &viewROIHits)
+    const float lowestTheta, const float highestTheta, CaloHitList &viewROIHits) const
 {
     const CartesianVector xAxis(1.f, 0.f, 0.f);
 
@@ -128,7 +128,7 @@ void PeakDirectionFinderTool::CollectHitsWithinExtrema(const CaloHitList *const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void PeakDirectionFinderTool::FillAngularDecompositionMap(const CaloHitList &viewShowerHitList, const CartesianVector &nuVertex2D, 
-    AngularDecompositionMap &angularDecompositionMap)
+    AngularDecompositionMap &angularDecompositionMap) const
 {
     const CartesianVector xAxis(1.f, 0.f, 0.f);
 
@@ -156,7 +156,7 @@ void PeakDirectionFinderTool::FillAngularDecompositionMap(const CaloHitList &vie
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PeakDirectionFinderTool::SmoothAngularDecompositionMap(AngularDecompositionMap &angularDecompositionMap)
+void PeakDirectionFinderTool::SmoothAngularDecompositionMap(AngularDecompositionMap &angularDecompositionMap) const
 {
     const int loopMin = (-1) * m_smoothingWindow;
     const int loopMax = m_smoothingWindow;
@@ -182,7 +182,7 @@ void PeakDirectionFinderTool::SmoothAngularDecompositionMap(AngularDecomposition
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PeakDirectionFinderTool::RetrievePeakDirections(const AngularDecompositionMap &angularDecompositionMap, CartesianPointVector &peakDirectionVector)
+void PeakDirectionFinderTool::RetrievePeakDirections(const AngularDecompositionMap &angularDecompositionMap, CartesianPointVector &peakDirectionVector) const
 {
     IntVector orderedBinIndexVector;
 
