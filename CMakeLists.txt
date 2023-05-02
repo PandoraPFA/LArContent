@@ -70,8 +70,11 @@ file(GLOB_RECURSE ${PROJECT_NAME}_SRCS RELATIVE "${PROJECT_SOURCE_DIR}/${LAR_CON
   "${LAR_CONTENT_SOURCE_DIRNAME}/*.cc")
 
 if (PANDORA_LIBTORCH)
-#  find_package(Torch REQUIRED ${CET_EXPORT})
-  find_package(TBB REQUIRED EXPORT)
+  if (NOT cetmodules_FOUND)
+    find_package(Torch REQUIRED ${CET_EXPORT})
+  else()
+    find_package(TBB REQUIRED EXPORT)
+  endif()
   string(REGEX REPLACE "^(LAr(Pandora)?)(Content)$" "\\1DL\\3"
     LAR_DL_CONTENT_LIBRARY_NAME "${LAR_CONTENT_LIBRARY_NAME}")
   set(DL_PROJECT_NAME "${LAR_DL_CONTENT_LIBRARY_NAME}")
