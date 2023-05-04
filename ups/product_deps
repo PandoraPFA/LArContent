@@ -306,10 +306,12 @@ end_product_list
 #
 ####################################
 qualifier	pandora		eigen	libtorch	notes
+c14:debug	c14:debug	-nq-	c14
+c14:prof	c14:prof	-nq-	c14
 c7:debug	c7:debug	-nq-	c7
 c7:prof		c7:prof		-nq-	c7
-e19:debug	e19:debug	-nq-	e19
-e19:prof	e19:prof	-nq-	e19
+e26:debug	e26:debug	-nq-	e26
+e26:prof	e26:prof	-nq-	e26
 e20:debug	e20:debug	-nq-	e20
 e20:prof	e20:prof	-nq-	e20
 end_qualifier_list
