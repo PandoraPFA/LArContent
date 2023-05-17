@@ -8,14 +8,15 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
+#include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
 #include "larpandoracontent/LArShowerRefinement/PeakDirectionFinderTool.h"
+#include "larpandoracontent/LArShowerRefinement/ProtoShowerMatchingTool.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerSpineFinderTool.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartFinderTool.h"
 #include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
@@ -44,6 +45,13 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::Run()
 
     for (const ParticleFlowObject *const pShowerPfo : showerPfoVector)
     {
+        // Only consider significant showers
+        CaloHitList caloHits3D;
+        LArPfoHelper::GetCaloHits(pShowerPfo, TPC_3D, caloHits3D);
+
+        if (caloHits3D.size() < 50)
+            continue;
+
         this->RefineShower(pShowerPfo);
     }
 
@@ -79,12 +87,29 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowOb
     if (this->GetNeutrinoVertex(nuVertex3D) != STATUS_CODE_SUCCESS)
         return;
 
+    ElectronProtoShowerVector protoShowerVectorU, protoShowerVectorV, protoShowerVectorW;
+
     std::cout << "Building U protoShowers" << std::endl;
-    this->BuildViewProtoShowers(pShowerPfo, nuVertex3D, TPC_VIEW_U);
+    this->BuildViewProtoShowers(pShowerPfo, nuVertex3D, TPC_VIEW_U, protoShowerVectorU);
     std::cout << "Building V protoShowers" << std::endl;
-    this->BuildViewProtoShowers(pShowerPfo, nuVertex3D, TPC_VIEW_V);
+    this->BuildViewProtoShowers(pShowerPfo, nuVertex3D, TPC_VIEW_V, protoShowerVectorV);
     std::cout << "Building W protoShowers" << std::endl;
-    this->BuildViewProtoShowers(pShowerPfo, nuVertex3D, TPC_VIEW_W);
+    this->BuildViewProtoShowers(pShowerPfo, nuVertex3D, TPC_VIEW_W, protoShowerVectorW);
+
+    ProtoShowerMatchVector protoShowerMatchVector;
+    m_pProtoShowerMatchingTool->Run(this, protoShowerVectorU, protoShowerVectorV, protoShowerVectorW, protoShowerMatchVector);
+
+    for (const ProtoShowerMatch &protoShowerMatch : protoShowerMatchVector)
+    {
+    // Add in ambiguous hits
+
+
+
+    }
+
+
+
+    // Work out if it an electron
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -113,7 +138,7 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::GetNeutrinoVertex(Cartesian
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ElectronInitialRegionRefinementAlgorithm::BuildViewProtoShowers(const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertex3D, 
-    HitType hitType)
+   HitType hitType, ElectronProtoShowerVector &protoShowerVector)
 {
     const CaloHitList *pViewHitList(nullptr);
 
@@ -129,7 +154,6 @@ void ElectronInitialRegionRefinementAlgorithm::BuildViewProtoShowers(const Parti
         return false;
     */
 
-    //std::cout << "trying to find the shower vertex.. " << std::endl;
     CartesianVector showerVertexPosition(0.f, 0.f, 0.f);
     try
     {
@@ -139,22 +163,17 @@ void ElectronInitialRegionRefinementAlgorithm::BuildViewProtoShowers(const Parti
     {
         return;
     }
-    //std::cout << "found shower vertex" << std::endl;
 
-    //std::cout << "started running m_pPeakDirectionFinderTool: " << std::endl;
     CartesianPointVector peakDirectionVector;
     if (m_pPeakDirectionFinderTool->Run(pShowerPfo, nuVertex3D, pViewHitList, hitType, peakDirectionVector) != STATUS_CODE_SUCCESS)
         return;
-    //std::cout << "finished running m_pPeakDirectionFinderTool: " << std::endl;
 
     CaloHitList unavailableHitList;
     for (CartesianVector &peakDirection : peakDirectionVector)
     {
-        //std::cout << "started running m_pShowerSpineFinderTool: " << std::endl;
         CaloHitList showerSpineHitList;
         if (m_pShowerSpineFinderTool->Run(nuVertex3D, pViewHitList, hitType, peakDirection, unavailableHitList, showerSpineHitList) != STATUS_CODE_SUCCESS)
             continue;
-        //std::cout << "finished running m_pShowerSpineFinderTool: " << std::endl;
 
         this->RefineShowerVertex(pShowerPfo, hitType, nuVertex3D, peakDirection, showerVertexPosition);
 
@@ -165,13 +184,22 @@ void ElectronInitialRegionRefinementAlgorithm::BuildViewProtoShowers(const Parti
         CartesianVector showerStartPosition(0.f, 0.f, 0.f);
         CartesianVector showerStartDirection(0.f, 0.f, 0.f);
 
-        //std::cout << "started running m_pShowerStartFinderTool.... " << std::endl;
         if (m_pShowerStartFinderTool->Run(pShowerPfo, peakDirection, hitType, showerSpineHitList, showerStartPosition, showerStartDirection) != STATUS_CODE_SUCCESS)
             continue;
-        //std::cout << "finished running m_pShowerStartFinderTool.... " << std::endl;
+        
+        std::cout << "ISOBEL - you need to get clean up the protoShower class (and add everything else to it...)" << std::endl;
+        // hits to add are at the bottom of the code
 
-        std::cout << "showerStartPosition (new): " << showerStartPosition << std::endl;
-        std::cout << "showerStartDirection (new): " << showerStartDirection << std::endl;
+        CaloHitList viewShowerHitList;
+        LArPfoHelper::GetCaloHits(pShowerPfo, hitType, viewShowerHitList);
+
+        const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), nuVertex3D, hitType));
+
+        ElectronProtoShower protoShower(ShowerCore(showerStartPosition, showerStartDirection), 
+            ConnectionPathway(nuVertex2D, peakDirection), 
+            showerSpineHitList, false, CaloHitList(), CartesianPointVector(), CaloHitList());
+
+        protoShowerVector.push_back(protoShower);
 
         unavailableHitList.insert(unavailableHitList.begin(), showerSpineHitList.begin(), showerSpineHitList.end());
     }
@@ -341,6 +369,13 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::ReadSettings(const TiXmlHan
     if (!m_pShowerSpineFinderTool)
         return STATUS_CODE_INVALID_PARAMETER;
 
+    AlgorithmTool *pAlgorithmTool4(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "ProtoShowerMatching", pAlgorithmTool4));
+    m_pProtoShowerMatchingTool = dynamic_cast<ProtoShowerMatchingTool *>(pAlgorithmTool4);
+
+    if (!m_pProtoShowerMatchingTool)
+        return STATUS_CODE_INVALID_PARAMETER;
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ShowerSlidingFitWindow", m_showerSlidingFitWindow));
 
@@ -354,3 +389,33 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::ReadSettings(const TiXmlHan
 }
 
 } // namespace lar_content
+
+
+
+        /////////////////////////
+        // doesnt have to be here
+        /*
+        const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), nuVertex3D, hitType));
+        CaloHitList viewShowerHitList;
+        LArPfoHelper::GetCaloHits(pShowerPfo, hitType, viewShowerHitList);
+
+        ElectronProtoShower protoShower(ShowerCore(showerStartPosition, showerStartDirection), 
+            ConnectionPathway(nuVertex2D, peakDirection), 
+            showerSpineHitList, false, CaloHitList(), CartesianPointVector(), CaloHitList());
+
+        const float showerVertexL(std::max(peakDirection.GetDotProduct(showerStartPosition - nuVertex2D), 
+            peakDirection.GetDotProduct(showerVertexPosition - nuVertex2D)));
+
+        for (const CaloHit *const pCaloHit : showerSpineHitList)
+        {
+            if (std::find(viewShowerHitList.begin(), viewShowerHitList.end(), pCaloHit) != viewShowerHitList.end())
+                continue;
+
+            const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+            const float showerL(peakDirection.GetDotProduct(hitPosition - nuVertex2D));
+
+            if ((showerL > 0.f) && (showerL < showerVertexL))
+                protoShower.m_hitsToAdd.push_back(pCaloHit);
+        }
+        */
+        //////////////////////////////

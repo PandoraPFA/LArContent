@@ -1,3 +1,4 @@
+
 /**
  *  @file   larpandoracontent/LArShowerRefinement/ShowerStartRefinementBaseTool.cc
  *
@@ -613,9 +614,11 @@ bool ShowerStartRefinementBaseTool::FindShowerStart(ShowerStartRefinementAlgorit
     */
     /////////////////////////////////
 
-    protoShowerVector.push_back(ProtoShower(ShowerCore(showerStartPosition, showerStartDirection, showerHitList), 
-        ConnectionPathway(projectedNuVertexPosition, startDirection, pathwayHitList), showerSpineHitList, isHelper, CaloHitList(), CartesianPointVector()));
+    protoShowerVector.push_back(ProtoShower(ShowerCore(showerStartPosition, showerStartDirection), 
+        ConnectionPathway(projectedNuVertexPosition, startDirection), showerSpineHitList, isHelper, CaloHitList(), CartesianPointVector()));
 
+    std::cout << "showerStartPosition (old): " << showerStartPosition << std::endl;
+    std::cout << "showerStartDirection (old): " << showerStartDirection << std::endl;
     return showerStartFound;
 }
 

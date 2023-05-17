@@ -38,6 +38,7 @@ public:
         X_PROJECTION
     };
 
+
     class SortByDistanceToPoint
     {
     public:

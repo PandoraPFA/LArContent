@@ -737,6 +737,9 @@ void HybridShowerStartRefinementAlgorithm::RemoveConnectionPathway(const Particl
 {
     CaloHitList hitsToRemove;
 
+
+    // i had to remove this
+    /*
     for (const ElectronProtoShower &protoShowerU : protoShowerVectorU)
     {
         if (!protoShowerU.m_connectionPathway.m_pathwayHitList.empty())
@@ -754,6 +757,11 @@ void HybridShowerStartRefinementAlgorithm::RemoveConnectionPathway(const Particl
         if (!protoShowerW.m_connectionPathway.m_pathwayHitList.empty())
             hitsToRemove.insert(hitsToRemove.end(), protoShowerW.m_connectionPathway.m_pathwayHitList.begin(), protoShowerW.m_connectionPathway.m_pathwayHitList.end());
     }
+    */
+
+    std::cout << "ISOBEL THIS NO LONGER WORKS BUDDY" << std::endl;
+    return;
+
 
     ClusterList twoDClusterList;
     LArPfoHelper::GetClusters(pGammaPfo, TPC_VIEW_U, twoDClusterList);

@@ -10,9 +10,11 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartFinderTool.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerSpineFinderTool.h"
 #include "larpandoracontent/LArShowerRefinement/PeakDirectionFinderTool.h"
+#include "larpandoracontent/LArShowerRefinement/ProtoShowerMatchingTool.h"
 
 namespace lar_content
 {
@@ -38,7 +40,8 @@ private:
 
     pandora::StatusCode GetNeutrinoVertex(pandora::CartesianVector &nuVertex3D);
 
-    void BuildViewProtoShowers(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertex3D, pandora::HitType hitType);
+    void BuildViewProtoShowers(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertex3D, 
+        pandora::HitType hitType, ElectronProtoShowerVector &protoShowerVector);
 
     pandora::StatusCode GetHitListOfType(const pandora::HitType hitType, const pandora::CaloHitList *&pCaloHitList);
     
@@ -57,6 +60,7 @@ private:
     PeakDirectionFinderTool* m_pPeakDirectionFinderTool;
     ShowerSpineFinderTool* m_pShowerSpineFinderTool;
     ShowerStartFinderTool* m_pShowerStartFinderTool;
+    ProtoShowerMatchingTool* m_pProtoShowerMatchingTool;
 
     std::string m_showerPfoListName;
     std::string m_neutrinoVertexListName;
