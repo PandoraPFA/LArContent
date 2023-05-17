@@ -44,6 +44,10 @@ StatusCode ShowerSpineFinderTool::Run(const CartesianVector &nuVertex3D, const C
 
     this->FindShowerSpine(pViewHitList, nuVertex2D, peakDirection, unavailableHitList, showerSpineHitList);
 
+     // Demand that spine is significant, be lenient here as some have small stubs and a gap
+    if (showerSpineHitList.size() < 7) 
+        return STATUS_CODE_NOT_FOUND;
+
     return STATUS_CODE_SUCCESS;
 }
 
