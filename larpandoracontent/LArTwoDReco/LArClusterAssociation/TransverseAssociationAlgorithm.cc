@@ -784,7 +784,7 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(const
     m_outerVertex(0.f, 0.f, 0.f),
     m_direction(0.f, 0.f, 0.f)
 {
-    double Swzz(0.), Swxx(0.), Swzx(0.), Swz(0.), Swx(0.), Sw(0.);
+    double Swxx(0.), Swzx(0.), Swz(0.), Swx(0.), Sw(0.);
     double minX(std::numeric_limits<double>::max());
     double maxX(-std::numeric_limits<double>::max());
 
@@ -807,7 +807,6 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(const
                 if (pCaloHit->GetPositionVector().GetX() > maxX)
                     maxX = pCaloHit->GetPositionVector().GetX();
 
-                Swzz += pCaloHit->GetPositionVector().GetZ() * pCaloHit->GetPositionVector().GetZ();
                 Swxx += pCaloHit->GetPositionVector().GetX() * pCaloHit->GetPositionVector().GetX();
                 Swzx += pCaloHit->GetPositionVector().GetZ() * pCaloHit->GetPositionVector().GetX();
                 Swz += pCaloHit->GetPositionVector().GetZ();
