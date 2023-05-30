@@ -23,6 +23,7 @@ namespace lar_content
 {
 
 ShowerSpineFinderTool::ShowerSpineFinderTool() :
+    m_hitThresholdForSpine(7),
     m_growingFitInitialLength(10.f),
     m_initialFitDistanceToLine(0.5f),
     m_minInitialHitsFound(7),
@@ -45,7 +46,7 @@ StatusCode ShowerSpineFinderTool::Run(const CartesianVector &nuVertex3D, const C
     this->FindShowerSpine(pViewHitList, nuVertex2D, peakDirection, unavailableHitList, showerSpineHitList);
 
      // Demand that spine is significant, be lenient here as some have small stubs and a gap
-    if (showerSpineHitList.size() < 7) 
+    if (showerSpineHitList.size() < m_hitThresholdForSpine) 
         return STATUS_CODE_NOT_FOUND;
 
     return STATUS_CODE_SUCCESS;
@@ -270,6 +271,9 @@ float ShowerSpineFinderTool::GetClosestDistance(const CartesianVector &position,
 
 StatusCode ShowerSpineFinderTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "HitThresholdForSpine", m_hitThresholdForSpine));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "GrowingFitInitialLength", m_growingFitInitialLength));
 

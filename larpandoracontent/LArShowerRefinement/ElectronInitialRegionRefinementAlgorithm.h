@@ -43,7 +43,7 @@ private:
     void BuildViewProtoShowers(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertex3D, 
         pandora::HitType hitType, ElectronProtoShowerVector &protoShowerVector);
 
-    pandora::StatusCode GetHitListOfType(const pandora::HitType hitType, const pandora::CaloHitList *&pCaloHitList);
+    pandora::StatusCode GetHitListOfType(const pandora::HitType hitType, const pandora::CaloHitList *&pCaloHitList) const;
     
     pandora::CartesianVector GetShowerVertex(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType, 
         const pandora::CartesianVector &nuVertex3D) const;
@@ -57,8 +57,18 @@ private:
     bool IsShowerConnected(const pandora::CartesianVector &showerVertexPosition, const pandora::CartesianVector &nuVertex2D, 
         const pandora::CartesianVector &peakDirection) const;
 
-    PeakDirectionFinderTool* m_pPeakDirectionFinderTool;
+    void BuildViewPathways(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CaloHitList &protectedHits, const pandora::CartesianVector &nuVertex3D,
+        pandora::HitType hitType, ConnectionPathwayVector &viewPathways) const;
+
+    void RefineHitsToAdd(const pandora::CartesianVector &nuVertex3D, const pandora::HitType hitType, const ConnectionPathwayVector &viewPathways, 
+        ElectronProtoShower &protoShower) const;
+
+    pandora::CaloHitList FindContinuousPath(const pandora::CaloHitList &refinedHitList, const pandora::CartesianVector &nuVertex2D) const;
+
+    PeakDirectionFinderTool* m_pShowerPeakDirectionFinderTool;
+    PeakDirectionFinderTool* m_pEventPeakDirectionFinderTool;
     ShowerSpineFinderTool* m_pShowerSpineFinderTool;
+    ShowerSpineFinderTool* m_pEventPathwayFinderTool;
     ShowerStartFinderTool* m_pShowerStartFinderTool;
     ProtoShowerMatchingTool* m_pProtoShowerMatchingTool;
 

@@ -46,6 +46,7 @@ private:
     float m_pathwaySearchRegion;
     float m_theta0XZBinSize;
     int m_smoothingWindow;
+    bool m_eventMode;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

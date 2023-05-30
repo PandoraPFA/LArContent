@@ -72,6 +72,8 @@ public:
     pandora::CartesianVector m_startDirection;
 };
 
+typedef std::vector<ConnectionPathway> ConnectionPathwayVector;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ConnectionPathway::ConnectionPathway(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection) : 
@@ -156,7 +158,7 @@ inline ElectronProtoShower::ElectronProtoShower(const ElectronProtoShower &elect
     m_isHelper = electronProtoShower.m_isHelper;
     m_ambiguousHitList = electronProtoShower.m_ambiguousHitList;
     m_ambiguousDirectionVector = electronProtoShower.m_ambiguousDirectionVector;
-
+    m_hitsToAdd = electronProtoShower.m_hitsToAdd;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

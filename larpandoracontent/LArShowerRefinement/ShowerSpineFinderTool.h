@@ -45,6 +45,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    unsigned int m_hitThresholdForSpine;
     float m_growingFitInitialLength;
     float m_initialFitDistanceToLine;
     unsigned int m_minInitialHitsFound;

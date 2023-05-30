@@ -22,7 +22,8 @@ namespace lar_content
 PeakDirectionFinderTool::PeakDirectionFinderTool() :
     m_pathwaySearchRegion(10.f),
     m_theta0XZBinSize(0.005f),
-    m_smoothingWindow(1)
+    m_smoothingWindow(1),
+    m_eventMode(false)
 {
 }
 
@@ -67,10 +68,23 @@ StatusCode PeakDirectionFinderTool::Run(const ParticleFlowObject *const pShowerP
 void PeakDirectionFinderTool::CollectHitsWithinROI(const CaloHitList &showerHitList, const CaloHitList *const pViewHitList, 
     const CartesianVector &nuVertex2D, CaloHitList &viewROIHits) const
 {
-    float lowestTheta(std::numeric_limits<float>::max()), highestTheta((-1.f) * std::numeric_limits<float>::max());
+    if (m_eventMode)
+    {
+        for (const CaloHit *const pCaloHit : *pViewHitList)
+        {
+            if (std::find(showerHitList.begin(), showerHitList.end(), pCaloHit) != showerHitList.end())
+                continue;
 
-    this->GetAngularExtrema(showerHitList, nuVertex2D, lowestTheta, highestTheta);
-    this->CollectHitsWithinExtrema(pViewHitList, nuVertex2D, lowestTheta, highestTheta, viewROIHits);
+            viewROIHits.push_back(pCaloHit);
+        }
+    }
+    else
+    {
+        float lowestTheta(std::numeric_limits<float>::max()), highestTheta((-1.f) * std::numeric_limits<float>::max());
+
+        this->GetAngularExtrema(showerHitList, nuVertex2D, lowestTheta, highestTheta);
+        this->CollectHitsWithinExtrema(pViewHitList, nuVertex2D, lowestTheta, highestTheta, viewROIHits);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -265,6 +279,9 @@ StatusCode PeakDirectionFinderTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "SmoothingWindow", m_smoothingWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "EventMode", m_eventMode));
 
     return STATUS_CODE_SUCCESS;
 }
