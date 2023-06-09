@@ -74,10 +74,6 @@
 #include "larpandoracontent/LArShowerRefinement/ProtoShowerMatchingTool.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerSpineFinderTool.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartFinderTool.h"
-#include "larpandoracontent/LArShowerRefinement/ElectronStartRefinementTool.h"
-#include "larpandoracontent/LArShowerRefinement/HybridElectronStartRefinementTool.h"
-#include "larpandoracontent/LArShowerRefinement/HybridShowerStartRefinementAlgorithm.h"
-#include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
 #include "larpandoracontent/LArShowerRefinement/ThreeDHitRemovalAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/AmbiguousDeltaRayTool.h"
@@ -255,8 +251,6 @@
     d("LArMaster",                              MasterAlgorithm)                                                                \
     d("LArPostProcessing",                      PostProcessingAlgorithm)                                                        \
     d("LArPreProcessing",                       PreProcessingAlgorithm)                                                         \
-    d("LArShowerStartRefinement",               ShowerStartRefinementAlgorithm)                                                 \
-    d("LArHybridShowerStartRefinement",         HybridShowerStartRefinementAlgorithm)                                           \
     d("LArThreeDHitRemoval",                    ThreeDHitRemovalAlgorithm)                                                      \
     d("LArSlicing",                             SlicingAlgorithm)                                                               \
     d("LArStreaming",                           StreamingAlgorithm)                                                             \
@@ -344,12 +338,10 @@
     d("LArShowerRegionFeatureTool",             ShowerRegionFeatureTool)                                                        \
     d("LArAmbiguousRegionFeatureTool",          AmbiguousRegionFeatureTool)                                                     \
     d("LArInitialRegionFeatureTool",            InitialRegionFeatureTool)                                                       \
-    d("LArElectronStartRefinement",             ElectronStartRefinementTool)                                                    \
     d("LArPeakDirectionFinder",                 PeakDirectionFinderTool)                                                        \
     d("LArProtoShowerMatching",                 ProtoShowerMatchingTool)                                                        \
     d("LArShowerSpineFinder",                   ShowerSpineFinderTool)                                                          \
     d("LArShowerStartFinder",                   ShowerStartFinderTool)                                                          \
-    d("LArHybridElectronStartRefinement",       HybridElectronStartRefinementTool)                                              \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
     d("LArBeamParticleId",                      BeamParticleIdTool)                                                             \
     d("LArCosmicRayTagging",                    CosmicRayTaggingTool)                                                           \
