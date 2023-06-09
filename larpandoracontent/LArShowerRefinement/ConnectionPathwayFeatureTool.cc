@@ -10,6 +10,7 @@
 #include "Pandora/StatusCodes.h"
 
 #include "larpandoracontent/LArHelpers/LArConnectionPathwayHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -798,7 +799,9 @@ AmbiguousRegionFeatureTool::AmbiguousRegionFeatureTool() :
     m_caloHitListNameV("CaloHitListV"),
     m_caloHitListNameW("CaloHitListW"),
     m_maxTransverseDistance(0.75f),
-    m_maxSampleHits(3)
+    m_maxSampleHits(3),
+    m_maxHitSeparation(1.f),
+    m_maxTrackFraction(0.8f)
 {
 }
 
@@ -999,7 +1002,7 @@ void AmbiguousRegionFeatureTool::BuildAmbiguousSpines(const Algorithm *const pAl
      // Make sure the pathways are continuous
      for (const auto &entry : ambiguousHitSpinesTemp)
      {
-         CaloHitList continuousSpine(LArConnectionPathwayHelper::FindAmbiguousContinuousSpine(entry.second, protoShower.m_ambiguousHitList, nuVertex2D));
+         CaloHitList continuousSpine(this->FindAmbiguousContinuousSpine(entry.second, protoShower.m_ambiguousHitList, nuVertex2D));
 
          if (continuousSpine.size() > 0)
              ambiguousHitSpines[entry.first] = continuousSpine;
@@ -1022,6 +1025,62 @@ StatusCode AmbiguousRegionFeatureTool::GetHitListOfType(const Algorithm *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+CaloHitList AmbiguousRegionFeatureTool::FindAmbiguousContinuousSpine(const CaloHitList &caloHitList, const CaloHitList &ambiguousHitList, 
+    const CartesianVector &nuVertex2D)
+{
+    CaloHitList continuousHitList;
+
+    CaloHitVector caloHitVector(caloHitList.begin(), caloHitList.end());
+    std::sort(caloHitVector.begin(), caloHitVector.end(), LArConnectionPathwayHelper::SortByDistanceToPoint(nuVertex2D));
+
+    for (unsigned int i = 0; i < caloHitVector.size(); ++i)
+    {
+        CaloHitList connectedHitList;
+        connectedHitList.push_back(caloHitVector[i]);
+
+        if (LArClusterHelper::GetClosestDistance(connectedHitList.front()->GetPositionVector(), ambiguousHitList) > m_maxHitSeparation)
+            continue;
+
+        bool found(true);
+
+        while(found)
+        {
+            found = false;
+
+            for (unsigned int j = (i + 1); j < caloHitVector.size(); ++j)
+            {
+                const CaloHit *const pCaloHit(caloHitVector[j]);
+
+                if (std::find(connectedHitList.begin(), connectedHitList.end(), pCaloHit) != connectedHitList.end())
+                    continue;
+
+                if (LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), connectedHitList) < m_maxHitSeparation)
+                {
+                    // to avoid ends of tracks
+                    if (static_cast<float>(connectedHitList.size()) < static_cast<float>(caloHitVector.size() * m_maxTrackFraction))
+                    {
+                        found = true;
+                        connectedHitList.push_back(pCaloHit);
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        if (connectedHitList.size() >= 2)
+        {
+            continuousHitList.insert(continuousHitList.begin(), connectedHitList.begin(), connectedHitList.end());
+            break;
+        }
+    }
+
+    return continuousHitList;
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode AmbiguousRegionFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListNameU", m_caloHitListNameU));
@@ -1033,6 +1092,10 @@ StatusCode AmbiguousRegionFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxTransverseDistance", m_maxTransverseDistance));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSampleHits", m_maxSampleHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxHitSeparation", m_maxHitSeparation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxTrackFraction", m_maxTrackFraction));
 
     return STATUS_CODE_SUCCESS;
 }

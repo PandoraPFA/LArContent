@@ -92,6 +92,8 @@ private:
     bool m_trainingMode;
     float m_minElectronCompleteness;
     float m_minElectronPurity;
+    float m_maxSeparationFromHit;
+    float m_maxProjectionSeparation;
 
     //ConnectionPathwayFeatureTool::FeatureToolVector m_featureToolVector;
     ConnectionPathwayFeatureTool::FeatureToolMap m_featureToolMap; ///< The feature tool map

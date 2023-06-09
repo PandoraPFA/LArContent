@@ -166,12 +166,16 @@ private:
 
     pandora::StatusCode GetHitListOfType(const pandora::Algorithm *const pAlgorithm, const pandora::HitType hitType, const pandora::CaloHitList *&pCaloHitList) const;
 
+    pandora::CaloHitList FindAmbiguousContinuousSpine(const pandora::CaloHitList &caloHitList, const pandora::CaloHitList &ambiguousHitList, 
+        const pandora::CartesianVector &nuVertex2D);
+
     std::string m_caloHitListNameU;
     std::string m_caloHitListNameV;
     std::string m_caloHitListNameW;
     float m_maxTransverseDistance;
     unsigned int m_maxSampleHits;
-
+    float m_maxHitSeparation;
+    float m_maxTrackFraction;
 };
 
 } // namespace lar_content

@@ -35,7 +35,9 @@ ElectronInitialRegionRefinementAlgorithm::ElectronInitialRegionRefinementAlgorit
     m_minSpinePurity(0.7f),
     m_trainingMode(false),
     m_minElectronCompleteness(0.33f),
-    m_minElectronPurity(0.5f)
+    m_minElectronPurity(0.5f),
+    m_maxSeparationFromHit(3.f),
+    m_maxProjectionSeparation(5.f)
 {
 }
 
@@ -123,8 +125,11 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowOb
         this->RefineHitsToAdd(nuVertex3D, TPC_VIEW_W, viewPathwaysW, protoShowerMatch.m_protoShowerW);
 
         CartesianPointVector showerStarts3D;
-        if (!LArConnectionPathwayHelper::FindShowerStarts3D(this, pShowerPfo, protoShowerMatch, nuVertex3D, showerStarts3D))
+        if (!LArConnectionPathwayHelper::FindShowerStarts3D(this, pShowerPfo, protoShowerMatch, nuVertex3D, m_maxSeparationFromHit, 
+            m_maxProjectionSeparation, showerStarts3D))
+        {
             return;
+        }
 
         StringVector featureOrder;
         const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(m_algorithmToolNames, m_featureToolMap, featureOrder, 
@@ -662,6 +667,12 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::ReadSettings(const TiXmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinElectronPurity", m_minElectronPurity));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxSeparationFromHit", m_maxSeparationFromHit));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxProjectionSeparation", m_maxProjectionSeparation));
 
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));
