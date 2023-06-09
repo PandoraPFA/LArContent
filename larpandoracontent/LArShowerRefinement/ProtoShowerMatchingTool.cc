@@ -68,7 +68,6 @@ StatusCode ProtoShowerMatchingTool::Run(pandora::Algorithm *const pAlgorithm, co
                 std::cout << "wIndex: " << wIndex << std::endl;
                 std::cout << "consistency: " << consistency << std::endl;
 
-
                 protoShowerMatchVector.push_back(ProtoShowerMatch(protoShowerU, protoShowerV, protoShowerW, consistency));
             }
         }

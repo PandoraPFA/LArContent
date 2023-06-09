@@ -81,7 +81,7 @@ bool HybridElectronStartRefinementTool::Run(HybridShowerStartRefinementAlgorithm
         {
             for (ElectronProtoShower &protoShowerW : protoShowerVectorW)
             {
-                LArConnectionPathwayHelper::Consistency consistency(LArConnectionPathwayHelper::Consistency::POSITION);
+                Consistency consistency(Consistency::POSITION);
 
                 if (!this->ArePathwaysConsistent(pAlgorithm, nuVertexPosition, protoShowerU, protoShowerV, protoShowerW, consistency))
                 {
@@ -747,21 +747,21 @@ bool HybridElectronStartRefinementTool::IsShowerExtendable(HybridShowerStartRefi
 // could then even pick up two view issues? if that turns out to be a problem?
 
 bool HybridElectronStartRefinementTool::ArePathwaysConsistent(HybridShowerStartRefinementAlgorithm *const pAlgorithm, const CartesianVector &nuVertexPosition,
-    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, LArConnectionPathwayHelper::Consistency &consistency)
+    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, Consistency &consistency)
 {
     if (LArConnectionPathwayHelper::AreShowerStartsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxXSeparation, m_maxSeparation))
     {
-        consistency = LArConnectionPathwayHelper::Consistency::POSITION;
+        consistency = Consistency::POSITION;
     }
     else if (LArConnectionPathwayHelper::AreDirectionsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxAngularDeviation))
     {
-        consistency = LArConnectionPathwayHelper::Consistency::DIRECTION;
+        consistency = Consistency::DIRECTION;
     }
     else
         return false;
 
     //std::cout << "isobel do not forget to take this out" << std::endl;
-    //consistency = LArConnectionPathwayHelper::Consistency::X_PROJECTION;
+    //consistency = Consistency::X_PROJECTION;
 
     return true;
 }

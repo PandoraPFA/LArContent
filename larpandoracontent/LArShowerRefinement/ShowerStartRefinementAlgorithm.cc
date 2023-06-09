@@ -781,7 +781,7 @@ bool ShowerStartRefinementAlgorithm::IsElectron(const ParticleFlowObject *const 
 void ShowerStartRefinementAlgorithm::FillTree(const std::string &treeName, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
 {
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MinLargestProjectedGapSize", electronTreeVariables.m_minLargestProjectedGapSize));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxInitialGapSize", electronTreeVariables.m_maxInitialGapSize));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxInitialGapSize", electronTreeVariables.m_maxInitialGapSize));]
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "PathwayLengthMin", electronTreeVariables.m_pathwayLengthMin));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxShowerStartPathwayScatteringAngle2D", electronTreeVariables.m_maxShowerStartPathwayScatteringAngle2D));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "MaxNPostShowerStartHits", electronTreeVariables.m_maxNPostShowerStartHits));

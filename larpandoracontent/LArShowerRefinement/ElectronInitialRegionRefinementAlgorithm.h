@@ -10,6 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
 #include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartFinderTool.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerSpineFinderTool.h"
@@ -31,6 +32,8 @@ public:
     ElectronInitialRegionRefinementAlgorithm();
 
 private:
+    typedef std::map<const pandora::MCParticle*, pandora::CaloHitList> HitOwnershipMap;
+
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -65,6 +68,10 @@ private:
 
     pandora::CaloHitList FindContinuousPath(const pandora::CaloHitList &refinedHitList, const pandora::CartesianVector &nuVertex2D) const;
 
+    void FillElectronHitMap(HitOwnershipMap &electronHitMap) const;
+
+    bool IsElectron(const pandora::ParticleFlowObject *const pPfo, const HitOwnershipMap &electronHitMap) const;
+
     PeakDirectionFinderTool* m_pShowerPeakDirectionFinderTool;
     PeakDirectionFinderTool* m_pEventPeakDirectionFinderTool;
     ShowerSpineFinderTool* m_pShowerSpineFinderTool;
@@ -81,6 +88,14 @@ private:
     unsigned int m_showerSlidingFitWindow;
     float m_maxCoincideneTransverseSeparation;
     float m_minSpinePurity;
+
+    bool m_trainingMode;
+    float m_minElectronCompleteness;
+    float m_minElectronPurity;
+
+    //ConnectionPathwayFeatureTool::FeatureToolVector m_featureToolVector;
+    ConnectionPathwayFeatureTool::FeatureToolMap m_featureToolMap; ///< The feature tool map
+    pandora::StringVector m_algorithmToolNames;
 };
 
 } // namespace lar_content

@@ -31,14 +31,6 @@ class LArConnectionPathwayHelper
 {
 public:
 
-    enum Consistency
-    {
-        POSITION,
-        DIRECTION,
-        X_PROJECTION
-    };
-
-
     class SortByDistanceToPoint
     {
     public:
@@ -232,9 +224,9 @@ public:
     };
 
     static void FillElectronTreeVariables(pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
-        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const pandora::CartesianVector &nuVertexPosition, 
+        const ElectronProtoShower &protoShowerU, const ElectronProtoShower &protoShowerV, const ElectronProtoShower &protoShowerW, const pandora::CartesianVector &nuVertexPosition, 
         const pandora::CaloHitList *const pCaloHitListU, const pandora::CaloHitList *const pCaloHitListV, const pandora::CaloHitList *const pCaloHitListW,
-        const LArConnectionPathwayHelper::Consistency &consistency, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
+        const Consistency &consistency, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
 
     static bool FillAmbiguousHitVariables(pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
         const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const pandora::CartesianVector &nuVertexPosition,
@@ -267,10 +259,8 @@ public:
         float &showerStartEnergyWeightedRadialDistance, float &nuVertexMoliereRadius, float &showerStartMoliereRadius, float &positiveOpeningAngle, 
         float &negativeOpeningAngle, float &showerApexL, float &showerApexT, float &fitShowerStartL, float &fitShowerStartT, float &foundHitRatio);
 
-    static bool FindShowerStarts3D(pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const ProtoShower &protoShowerU, 
-        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const LArConnectionPathwayHelper::Consistency &consistency, 
-        const pandora::CartesianVector &nuVertexPosition, pandora::CartesianVector &minShowerStart3D, pandora::CartesianVector &middleShowerStart3D, 
-        pandora::CartesianVector &maxShowerStart3D);
+    static bool FindShowerStarts3D(pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
+        const ProtoShowerMatch &protoShowerMatch, const pandora::CartesianVector &nuVertexPosition, pandora::CartesianPointVector &showerStarts3D);
 
     static bool FillConnectionPathwayVariables(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
         const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const pandora::ParticleFlowObject *const pShowerPfo, 
@@ -344,6 +334,9 @@ public:
 
     static void GetMinMiddleMax(const float value1, const float value2, const float value3, float &minValue, float &middleValue,
         float &maxValue);
+
+    static void GetMinMiddleMax(const double value1, const double value2, const double value3, double &minValue, double &middleValue,
+        double &maxValue);
 };
 
 } // namespace lar_content

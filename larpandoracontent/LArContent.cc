@@ -68,6 +68,7 @@
 
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 
+#include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
 #include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
 #include "larpandoracontent/LArShowerRefinement/PeakDirectionFinderTool.h"
 #include "larpandoracontent/LArShowerRefinement/ProtoShowerMatchingTool.h"
@@ -339,6 +340,10 @@
     d("LArVertexRefinement",                    VertexRefinementAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
+    d("LArConnectionRegionFeatureTool",         ConnectionRegionFeatureTool)                                                    \
+    d("LArShowerRegionFeatureTool",             ShowerRegionFeatureTool)                                                        \
+    d("LArAmbiguousRegionFeatureTool",          AmbiguousRegionFeatureTool)                                                     \
+    d("LArInitialRegionFeatureTool",            InitialRegionFeatureTool)                                                       \
     d("LArElectronStartRefinement",             ElectronStartRefinementTool)                                                    \
     d("LArPeakDirectionFinder",                 PeakDirectionFinderTool)                                                        \
     d("LArProtoShowerMatching",                 ProtoShowerMatchingTool)                                                        \

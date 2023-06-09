@@ -80,38 +80,56 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
     std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
     this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_W, protoShowerVectorW, usedHitListW);
 
-    int count(0);
+    IntVector usedProtoShowersU, usedProtoShowersV, usedProtoShowersW; 
 
-    for (ElectronProtoShower &protoShowerU : protoShowerVectorU)
+    for (unsigned int uIndex = 0; uIndex < protoShowerVectorU.size(); ++uIndex)
     {
-        for (ElectronProtoShower &protoShowerV : protoShowerVectorV)
+        const ElectronProtoShower &protoShowerU(protoShowerVectorU.at(uIndex));
+
+        for (unsigned int vIndex = 0; vIndex < protoShowerVectorV.size(); ++vIndex)
         {
-            for (ElectronProtoShower &protoShowerW : protoShowerVectorW)
+            const ElectronProtoShower &protoShowerV(protoShowerVectorV.at(vIndex));
+
+            for (unsigned int wIndex = 0; wIndex < protoShowerVectorW.size(); ++wIndex)
             {
-                LArConnectionPathwayHelper::Consistency consistency(LArConnectionPathwayHelper::Consistency::POSITION);
+                const ElectronProtoShower &protoShowerW(protoShowerVectorW.at(wIndex));
+
+                if (std::find(usedProtoShowersU.begin(), usedProtoShowersU.end(), uIndex) != usedProtoShowersU.end())
+                    continue;
+
+                if (std::find(usedProtoShowersV.begin(), usedProtoShowersV.end(), vIndex) != usedProtoShowersV.end())
+                    continue;             
+
+                if (std::find(usedProtoShowersW.begin(), usedProtoShowersW.end(), wIndex) != usedProtoShowersW.end())
+                    continue;
+
+                Consistency consistency(Consistency::POSITION);
 
                 if (!this->ArePathwaysConsistent(pAlgorithm, nuVertexPosition, protoShowerU, protoShowerV, protoShowerW, consistency))
                     continue;
 
-                ++count;
+                usedProtoShowersU.push_back(uIndex);
+                usedProtoShowersV.push_back(vIndex);
+                usedProtoShowersW.push_back(wIndex);
 
                 LArConnectionPathwayHelper::ElectronTreeVariables electronTreeVariables;
 
                 LArConnectionPathwayHelper::FillElectronTreeVariables(pAlgorithm, pShowerPfo, protoShowerU, protoShowerV, protoShowerW, nuVertexPosition,
                    pCaloHitListU, pCaloHitListV, pCaloHitListW, consistency, electronTreeVariables);
 
-                if (pAlgorithm->m_createTrainingTrees)
+                if (true)//pAlgorithm->m_createTrainingTrees)
                 {
                     std::cout << "IN m_createTrainingTrees SECTION" << std::endl;
                     std::string treeString(pAlgorithm->IsElectron(pShowerPfo) ? "ElectronSignalTree" : "ElectronBackgroundTree");
                     pAlgorithm->FillTree(treeString, electronTreeVariables);
                     return false;
                 }
-
+                /*
                 // Save the metadata
                 if (count == 1)
                     pAlgorithm->SetElectronTreeMetadata(pShowerPfo, electronTreeVariables);
-
+*/
+                ////////
                 /*
                 if (!pAlgorithm->TMVAIsElectron(electronTreeVariables, pShowerPfo, true))
                     continue;
@@ -126,7 +144,7 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
                         this->ExtendShower(pAlgorithm, pShowerPfo, protoShowerU, protoShowerV, protoShowerW);
                 }
                 */
-                return true;
+                //return true;
             }
         }
     }
@@ -273,8 +291,8 @@ void ElectronStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorit
         // now identify the ambiguous hits in protoshower
         CartesianPointVector peakDirections;
         CaloHitList usedHitListForHelper(showerSpineHitList);
-        //this->BuildHelperProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, hitType, peakDirections, usedHitListForHelper);
 
+        this->BuildHelperProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, hitType, peakDirections, usedHitListForHelper);
         this->RefineHitsToAdd(pAlgorithm, protoShowerVector.back(), nuVertexPosition, hitType, peakDirections);
 
         /////////////////////////////////
@@ -557,7 +575,7 @@ void ElectronStartRefinementTool::BuildHelperProtoShowers(ShowerStartRefinementA
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
+/*
 void ElectronStartRefinementTool::AssignShowerHits(ShowerStartRefinementAlgorithm *const pAlgorithm, const HitType &hitType, ElectronProtoShowerVector &protoShowerVector)
 {
     CaloHitList viewHitList;
@@ -596,7 +614,7 @@ void ElectronStartRefinementTool::AssignShowerHits(ShowerStartRefinementAlgorith
             protoShowerVector[bestProtoShower].m_showerCore.m_coreHitList.push_back(pCaloHit);
     }
 }
-
+*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ElectronStartRefinementTool::RefineHitsToAdd(ShowerStartRefinementAlgorithm *const pAlgorithm, ElectronProtoShower &protoShower,
@@ -725,21 +743,21 @@ bool ElectronStartRefinementTool::IsShowerExtendable(ShowerStartRefinementAlgori
 // could then even pick up two view issues? if that turns out to be a problem?
 
 bool ElectronStartRefinementTool::ArePathwaysConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const CartesianVector &nuVertexPosition,
-    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, LArConnectionPathwayHelper::Consistency &consistency)
+    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, Consistency &consistency)
 {
     if (LArConnectionPathwayHelper::AreShowerStartsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxXSeparation, m_maxSeparation))
     {
-        consistency = LArConnectionPathwayHelper::Consistency::POSITION;
+        consistency = Consistency::POSITION;
     }
     else if (LArConnectionPathwayHelper::AreDirectionsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxAngularDeviation))
     {
-        consistency = LArConnectionPathwayHelper::Consistency::DIRECTION;
+        consistency = Consistency::DIRECTION;
     }
     else
         return false;
 
     //std::cout << "isobel do not forget to take this out" << std::endl;
-    //consistency = LArConnectionPathwayHelper::Consistency::X_PROJECTION;
+    //consistency = Consistency::X_PROJECTION;
 
     return true;
 }

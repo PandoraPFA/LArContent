@@ -347,20 +347,27 @@ LArConnectionPathwayHelper::ElectronTreeVariables &LArConnectionPathwayHelper::E
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArConnectionPathwayHelper::FillElectronTreeVariables(pandora::Algorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
-    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const CartesianVector &nuVertexPosition, 
+    const ElectronProtoShower &protoShowerU, const ElectronProtoShower &protoShowerV, const ElectronProtoShower &protoShowerW, const CartesianVector &nuVertexPosition, 
     const CaloHitList *const pCaloHitListU, const CaloHitList *const pCaloHitListV, const CaloHitList *const pCaloHitListW,
-    const LArConnectionPathwayHelper::Consistency &consistency, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
+    const Consistency &consistency, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
 {
     CartesianVector minShowerStart3D(0.f, 0.f, 0.f), middleShowerStart3D(0.f, 0.f, 0.f), maxShowerStart3D(0.f, 0.f, 0.f);
 
-    if (!LArConnectionPathwayHelper::FindShowerStarts3D(pAlgorithm, pShowerPfo, protoShowerU, protoShowerV, protoShowerW, consistency, nuVertexPosition, 
-        minShowerStart3D, middleShowerStart3D, maxShowerStart3D))
+    ProtoShowerMatch protoShowerMatch(protoShowerU, protoShowerV, protoShowerW, consistency);
+    CartesianPointVector showerStarts3D;
+
+    if (!LArConnectionPathwayHelper::FindShowerStarts3D(pAlgorithm, pShowerPfo, protoShowerMatch, nuVertexPosition, 
+        showerStarts3D))
     {
         /////////////////////////////////
         std::cout << "COULD NOT FIND ANY SHOWER VERTICES!" << std::endl;
         /////////////////////////////////
         return;
     }
+
+    minShowerStart3D = showerStarts3D.at(0);
+    middleShowerStart3D = showerStarts3D.at(1);
+    maxShowerStart3D = showerStarts3D.at(2);
 
     electronTreeVariables.m_showerStartX = minShowerStart3D.GetX();
     electronTreeVariables.m_showerStartY = minShowerStart3D.GetY();
@@ -1942,6 +1949,8 @@ bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorit
 
     foundHitRatio = static_cast<float>(foundHits) / static_cast<float>(caloHitList.size());
 
+    std::cout << "postShowerPositions.size(): " << postShowerPositions.size() << std::endl;
+
     try
     {
         TwoDSlidingFitResult slidingFitResult(&postShowerPositions, 1000, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
@@ -1963,6 +1972,8 @@ bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorit
                 postShowerPositions.push_back(pCaloHit->GetPositionVector());
             }
         }
+
+        std::cout << "postShowerPositions.sizE(): " << postShowerPositions.size() << std::endl;
 
         nHits = postShowerHitList.size();
 
@@ -2009,7 +2020,12 @@ bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorit
             CartesianVector directionAxis1 = slidingFitResult.GetGlobalMinLayerDirection();
             CartesianVector orthoAxis1 = directionAxis1.GetCrossProduct(CartesianVector(0.f, 1.f, 0.f));
 
+            std::cout << "directionAxis1: " << directionAxis1 << std::endl;
+            std::cout << "orthoAxis1: " << orthoAxis1 << std::endl;
+
             std::map<int, float> positiveEdges, negativeEdges;
+
+            std::cout << "projectedShowerStart: " << projectedShowerStart << std::endl;
 
             for (const CaloHit *const pCaloHit : postShowerHitList)
             {
@@ -2033,8 +2049,16 @@ bool LArConnectionPathwayHelper::FindPostShowerStart2DVariables(pandora::Algorit
             for (auto &entry : negativeEdges)
                 negativeEdgePositions.push_back(CartesianVector(entry.second, 0.f, entry.first));
 
+
             const TwoDSlidingFitResult positiveEdgeFit(&positiveEdgePositions, 1000, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
             const TwoDSlidingFitResult negativeEdgeFit(&negativeEdgePositions, 1000, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
+
+
+        std::cout << "positiveEdgePositions.size() " << positiveEdgePositions.size() << std::endl;
+        std::cout << "negativeEdgePositions.size() " << negativeEdgePositions.size() << std::endl;
+            std::cout << "positiveEdges.size() " << positiveEdges.size() << std::endl;
+            std::cout << "negativeEdges.size() " << negativeEdges.size() << std::endl;
+
 
             const CartesianVector positiveMinLayer(positiveEdgeFit.GetGlobalMinLayerPosition());
             const CartesianVector positiveMaxLayer(positiveEdgeFit.GetGlobalMaxLayerPosition());
@@ -2268,6 +2292,11 @@ bool LArConnectionPathwayHelper::FillConnectionPathwayVariables(pandora::Algorit
     const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertexPosition, CartesianVector &minShowerStart3D,
     CartesianVector &middleShowerStart3D, CartesianVector &maxShowerStart3D, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables)
 {
+    std::cout << "minShowerStart3D: " << minShowerStart3D << std::endl;
+    std::cout << "middleShowerStart3D: " << middleShowerStart3D << std::endl;
+    std::cout << "maxShowerStart3D: " << maxShowerStart3D << std::endl;
+
+
     electronTreeVariables.m_pathwayLengthMin = std::min((nuVertexPosition - minShowerStart3D).GetMagnitude(), 30.f);
     electronTreeVariables.m_pathwayLengthMiddle = (nuVertexPosition - middleShowerStart3D).GetMagnitude();
     electronTreeVariables.m_pathwayLengthMax = (nuVertexPosition - maxShowerStart3D).GetMagnitude();
@@ -3040,9 +3069,13 @@ float LArConnectionPathwayHelper::CharacteriseEnergySigma(const CaloHitList &cal
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArConnectionPathwayHelper::FindShowerStarts3D(pandora::Algorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
-    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const LArConnectionPathwayHelper::Consistency &consistency,
-    const CartesianVector &nuVertexPosition, CartesianVector &minShowerStart3D, CartesianVector &middleShowerStart3D, CartesianVector &maxShowerStart3D)
+    const ProtoShowerMatch &protoShowerMatch, const CartesianVector &nuVertexPosition, CartesianPointVector &showerStarts3D)
 {
+    const ElectronProtoShower &protoShowerU(protoShowerMatch.m_protoShowerU);
+    const ElectronProtoShower &protoShowerV(protoShowerMatch.m_protoShowerV);
+    const ElectronProtoShower &protoShowerW(protoShowerMatch.m_protoShowerW);
+    const Consistency consistency(protoShowerMatch.m_consistencyType);
+
     // ISOBEL YOU ARE SO LAZY
     float maxSeparation(5.f);
 
@@ -3054,7 +3087,7 @@ bool LArConnectionPathwayHelper::FindShowerStarts3D(pandora::Algorithm *const pA
     CaloHitList caloHitList3D;
     LArPfoHelper::GetCaloHits(pShowerPfo, TPC_3D, caloHitList3D);
 
-    if (consistency == LArConnectionPathwayHelper::Consistency::POSITION)
+    if (consistency == Consistency::POSITION)
     {
         LArConnectionPathwayHelper::FindShowerVertexFromPosition(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, uShowerStart3D);
         vShowerStart3D = uShowerStart3D;
@@ -3066,7 +3099,7 @@ bool LArConnectionPathwayHelper::FindShowerStarts3D(pandora::Algorithm *const pA
             uFound = true; vFound = true; wFound = true;
         }
     }
-    else if (consistency == LArConnectionPathwayHelper::Consistency::DIRECTION)
+    else if (consistency == Consistency::DIRECTION)
     {
         if (LArConnectionPathwayHelper::FindShowerVertexFromDirection(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, uShowerStart3D, vShowerStart3D, wShowerStart3D))
         {
@@ -3090,7 +3123,7 @@ bool LArConnectionPathwayHelper::FindShowerStarts3D(pandora::Algorithm *const pA
         }
     }
 
-    if (!uFound || (consistency == LArConnectionPathwayHelper::Consistency::X_PROJECTION))
+    if (!uFound || (consistency == Consistency::X_PROJECTION))
     {
         if (LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, maxSeparation, uShowerStart3D) || 
             LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, protoShowerU, protoShowerV, protoShowerW, maxSeparation, uShowerStart3D) ||
@@ -3135,25 +3168,25 @@ bool LArConnectionPathwayHelper::FindShowerStarts3D(pandora::Algorithm *const pA
         }
     }
 
-    CartesianPointVector showerStarts3D;
+    CartesianPointVector tempShowerStarts3D;
 
     if (uFound)
-        showerStarts3D.push_back(uShowerStart3D);
+        tempShowerStarts3D.push_back(uShowerStart3D);
 
     if (vFound)
-        showerStarts3D.push_back(vShowerStart3D);
+        tempShowerStarts3D.push_back(vShowerStart3D);
 
     if (wFound)
-        showerStarts3D.push_back(wShowerStart3D);
+        tempShowerStarts3D.push_back(wShowerStart3D);
 
-    std::sort(showerStarts3D.begin(), showerStarts3D.end(), LArConnectionPathwayHelper::SortByDistanceToPoint(nuVertexPosition));
+    std::sort(tempShowerStarts3D.begin(), tempShowerStarts3D.end(), LArConnectionPathwayHelper::SortByDistanceToPoint(nuVertexPosition));
 
-    if (showerStarts3D.empty())
+    if (tempShowerStarts3D.empty())
         return false;
 
-    minShowerStart3D = showerStarts3D.front();
-    middleShowerStart3D = (showerStarts3D.size() == 3) ? showerStarts3D[1] : showerStarts3D[0];
-    maxShowerStart3D = showerStarts3D.back();
+    showerStarts3D.push_back(tempShowerStarts3D.front());
+    showerStarts3D.push_back((tempShowerStarts3D.size() == 3) ? tempShowerStarts3D[1] : tempShowerStarts3D[0]);
+    showerStarts3D.push_back(tempShowerStarts3D.back());
 
     return true;
 }
@@ -3749,6 +3782,27 @@ void LArConnectionPathwayHelper::GetMinMiddleMax(const float value1, const float
     {
         if ((std::fabs(value - minValue) < std::numeric_limits<float>::epsilon()) || 
             (std::fabs(value - maxValue) < std::numeric_limits<float>::epsilon()))
+        {
+            continue;
+        }
+
+        middleValue = value;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArConnectionPathwayHelper::GetMinMiddleMax(const double value1, const double value2, const double value3, double &minValue, double &middleValue, 
+    double &maxValue)
+{
+    minValue = std::min(std::min(value1, value2), value3);
+    maxValue = std::max(std::max(value1, value2), value3);
+    middleValue = minValue;
+
+    for (const double value : {value1, value2, value3})
+    {
+        if ((std::fabs(value - minValue) < std::numeric_limits<double>::epsilon()) || 
+            (std::fabs(value - maxValue) < std::numeric_limits<double>::epsilon()))
         {
             continue;
         }

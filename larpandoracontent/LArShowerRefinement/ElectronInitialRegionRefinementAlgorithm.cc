@@ -14,6 +14,7 @@
 #include "larpandoracontent/LArHelpers/LArConnectionPathwayHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
@@ -31,7 +32,10 @@ namespace lar_content
 ElectronInitialRegionRefinementAlgorithm::ElectronInitialRegionRefinementAlgorithm() :
     m_showerSlidingFitWindow(1000),
     m_maxCoincideneTransverseSeparation(5.f),
-    m_minSpinePurity(0.7f)
+    m_minSpinePurity(0.7f),
+    m_trainingMode(false),
+    m_minElectronCompleteness(0.33f),
+    m_minElectronPurity(0.5f)
 {
 }
 
@@ -117,6 +121,33 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowOb
         this->RefineHitsToAdd(nuVertex3D, TPC_VIEW_U, viewPathwaysU, protoShowerMatch.m_protoShowerU);
         this->RefineHitsToAdd(nuVertex3D, TPC_VIEW_V, viewPathwaysV, protoShowerMatch.m_protoShowerV);
         this->RefineHitsToAdd(nuVertex3D, TPC_VIEW_W, viewPathwaysW, protoShowerMatch.m_protoShowerW);
+
+        CartesianPointVector showerStarts3D;
+        if (!LArConnectionPathwayHelper::FindShowerStarts3D(this, pShowerPfo, protoShowerMatch, nuVertex3D, showerStarts3D))
+            return;
+
+        StringVector featureOrder;
+        const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(m_algorithmToolNames, m_featureToolMap, featureOrder, 
+            this, pShowerPfo, nuVertex3D, protoShowerMatch, showerStarts3D));
+
+        if (m_trainingMode)
+        {
+            HitOwnershipMap electronHitMap;
+            this->FillElectronHitMap(electronHitMap);
+
+            if (this->IsElectron(pShowerPfo, electronHitMap))
+            {
+                LArMvaHelper::ProduceTrainingExample("jam.txt", true, featureOrder, featureMap);
+                break;
+            }
+
+            LArMvaHelper::ProduceTrainingExample("jam.txt", false, featureOrder, featureMap);
+
+            break;
+        }
+
+        //const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(m_featureToolVector, this, nuVertex3D, protoShowerMatch, showerStarts3D));
+        //LArMvaHelper::ProduceTrainingExample("jam.txt", true, featureVector);
     }
     
     // work out if electron
@@ -484,6 +515,85 @@ CaloHitList ElectronInitialRegionRefinementAlgorithm::FindContinuousPath(const C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ElectronInitialRegionRefinementAlgorithm::FillElectronHitMap(HitOwnershipMap &electronHitMap) const
+{
+    for (HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    {
+        const CaloHitList *pViewHitList(nullptr);
+
+        if (this->GetHitListOfType(hitType, pViewHitList) != STATUS_CODE_SUCCESS)
+            continue;
+
+        for (const CaloHit *const pCaloHit : *pViewHitList)
+        {
+            MCParticleVector contributingMCParticleVector;
+            const MCParticleWeightMap &weightMap(pCaloHit->GetMCParticleWeightMap());
+
+            for (const auto &mapEntry : weightMap)
+                contributingMCParticleVector.push_back(mapEntry.first);
+
+            std::sort(contributingMCParticleVector.begin(), contributingMCParticleVector.end(), PointerLessThan<MCParticle>());
+
+            float highestWeight(0.f);
+            const MCParticle *highestElectronContributor(nullptr);
+
+            for (const MCParticle *const pMCParticle : contributingMCParticleVector)
+            {
+                const bool isLeadingElectron((std::abs(pMCParticle->GetParticleId()) == 11) && (LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle) == pMCParticle));
+
+                if (isLeadingElectron)
+                {
+                    const float weight(weightMap.at(pMCParticle));
+
+                    if (weight > highestWeight)
+                    {
+                        highestWeight = weight;
+                        highestElectronContributor = pMCParticle;
+                    }
+                }
+            }
+
+            if (highestElectronContributor)
+                electronHitMap[highestElectronContributor].push_back(pCaloHit);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ElectronInitialRegionRefinementAlgorithm::IsElectron(const ParticleFlowObject *const pPfo, const HitOwnershipMap &electronHitMap) const
+{
+    MCParticleVector mcElectronVector;
+
+    for (auto &entry : electronHitMap)
+        mcElectronVector.push_back(entry.first);
+
+    CaloHitList pfoHitList;
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, pfoHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, pfoHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, pfoHitList);
+
+    for (const MCParticle *const pMCElectron : mcElectronVector)
+    {
+        const CaloHitList &mcElectronHitList(electronHitMap.at(pMCElectron));
+        const CaloHitList sharedHitList(LArMCParticleHelper::GetSharedHits(pfoHitList, mcElectronHitList));
+
+        const float completeness(static_cast<float>(sharedHitList.size()) / static_cast<float>(mcElectronHitList.size()));
+        const float purity(static_cast<float>(sharedHitList.size()) / static_cast<float>(pfoHitList.size()));
+
+        if (completeness < m_minElectronCompleteness)
+            continue;
+
+        if (purity < m_minElectronPurity)
+            continue;
+
+        return true;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ElectronInitialRegionRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
@@ -543,6 +653,25 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::ReadSettings(const TiXmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinSpinePurity", m_minSpinePurity));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinElectronCompleteness", m_minElectronCompleteness));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinElectronPurity", m_minElectronPurity));
+
+    AlgorithmToolVector algorithmToolVector;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));
+
+    LArMvaHelper::AlgorithmToolMap algorithmToolMap;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+        LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureTools", m_algorithmToolNames, algorithmToolMap));
+
+    for (auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMap)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMap));
 
     return STATUS_CODE_SUCCESS;
 }
