@@ -448,13 +448,13 @@ bool LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(pandora::
     if (!LArConnectionPathwayHelper::FindClosestSpinePosition(protoShower1, showerStart, showerStart1))
         return false;
 
-    // Now make sure that they agree...
-    const CaloHitList &caloHitList2(protoShower2.m_spineHitList);
-
     float chi2(0.f);
     CartesianVector projection2(0.f, 0.f, 0.f);
 
     LArGeometryHelper::MergeTwoPositions(pAlgorithm->GetPandora(), hitType, hitType1, showerStart, showerStart1, projection2, chi2);
+
+    // Now make sure that they agree...
+    const CaloHitList &caloHitList2(protoShower2.m_spineHitList);
     const float separation(LArClusterHelper::GetClosestDistance(projection2, caloHitList2));
 
     if (separation > maxSeparation)
@@ -465,6 +465,8 @@ bool LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(pandora::
     return true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Ordeing Functions
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArConnectionPathwayHelper::GetMinMiddleMax(const float value1, const float value2, const float value3, float &minValue, float &middleValue, 
@@ -486,11 +488,6 @@ void LArConnectionPathwayHelper::GetMinMiddleMax(const float value1, const float
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Sorting Functions
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArConnectionPathwayHelper::SortByDistanceToPoint::operator()(const CartesianVector &lhs, const CartesianVector &rhs)
