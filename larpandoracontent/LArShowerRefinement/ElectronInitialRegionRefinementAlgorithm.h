@@ -68,6 +68,8 @@ private:
 
     pandora::CaloHitList FindContinuousPath(const pandora::CaloHitList &refinedHitList, const pandora::CartesianVector &nuVertex2D) const;
 
+    void SetMetadata(const pandora::ParticleFlowObject *const pShowerPfo, const LArMvaHelper::MvaFeatureMap &featureMap);
+
     void FillElectronHitMap(HitOwnershipMap &electronHitMap) const;
 
     bool IsElectron(const pandora::ParticleFlowObject *const pPfo, const HitOwnershipMap &electronHitMap) const;

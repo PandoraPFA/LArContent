@@ -135,6 +135,8 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowOb
         const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(m_algorithmToolNames, m_featureToolMap, featureOrder, 
             this, pShowerPfo, nuVertex3D, protoShowerMatch, showerStarts3D));
 
+        this->SetMetadata(pShowerPfo, featureMap);
+
         if (m_trainingMode)
         {
             HitOwnershipMap electronHitMap;
@@ -150,9 +152,6 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowOb
 
             break;
         }
-
-        //const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(m_featureToolVector, this, nuVertex3D, protoShowerMatch, showerStarts3D));
-        //LArMvaHelper::ProduceTrainingExample("jam.txt", true, featureVector);
     }
     
     // work out if electron
@@ -516,6 +515,57 @@ CaloHitList ElectronInitialRegionRefinementAlgorithm::FindContinuousPath(const C
         continuousHitList.push_back(refinedHitVector[i]);
 
     return continuousHitList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ElectronInitialRegionRefinementAlgorithm::SetMetadata(const ParticleFlowObject *const pShowerPfo, const LArMvaHelper::MvaFeatureMap &featureMap)
+{
+    object_creation::ParticleFlowObject::Metadata metadata;
+
+    if (featureMap.find("LArInitialRegionFeatureTool_initialGapSize") != featureMap.end())
+        metadata.m_propertiesToAdd["MaxInitialGapSize"] = featureMap.at("LArInitialRegionFeatureTool_initialGapSize").Get();
+
+    if (featureMap.find("LArInitialRegionFeatureTool_largestGapSize") != featureMap.end())
+        metadata.m_propertiesToAdd["MinLargestProjectedGapSize"] = featureMap.at("LArInitialRegionFeatureTool_largestGapSize").Get();
+
+    if (featureMap.find("LArConnectionRegionFeatureTool_pathwayLength") != featureMap.end())
+        metadata.m_propertiesToAdd["PathwayLengthMin"] = featureMap.at("LArConnectionRegionFeatureTool_pathwayLength").Get();
+
+    if (featureMap.find("LArConnectionRegionFeatureTool_pathwayScatteringAngle2D") != featureMap.end())
+        metadata.m_propertiesToAdd["MaxShowerStartPathwayScatteringAngle2D"] = featureMap.at("LArConnectionRegionFeatureTool_pathwayScatteringAngle2D").Get();
+
+    if (featureMap.find("LArShowerRegionFeatureTool_nShowerHits") != featureMap.end())
+        metadata.m_propertiesToAdd["MaxNPostShowerStartHits"] = featureMap.at("LArShowerRegionFeatureTool_nShowerHits").Get();
+
+    if (featureMap.find("LArShowerRegionFeatureTool_foundHitRatio") != featureMap.end())
+        metadata.m_propertiesToAdd["MaxFoundHitRatio"] = featureMap.at("LArShowerRegionFeatureTool_foundHitRatio").Get();
+
+    if (featureMap.find("LArShowerRegionFeatureTool_scatterAngle") != featureMap.end())
+        metadata.m_propertiesToAdd["MaxPostShowerStartScatterAngle"] = featureMap.at("LArShowerRegionFeatureTool_scatterAngle").Get();
+
+    if (featureMap.find("LArShowerRegionFeatureTool_openingAngle") != featureMap.end())
+        metadata.m_propertiesToAdd["MaxPostShowerStartOpeningAngle"] = featureMap.at("LArShowerRegionFeatureTool_openingAngle").Get();
+
+    if (featureMap.find("LArShowerRegionFeatureTool_nuVertexEnergyAsymmetry") != featureMap.end())
+        metadata.m_propertiesToAdd["MaxPostShowerStartNuVertexEnergyAsymmetry"] = featureMap.at("LArShowerRegionFeatureTool_nuVertexEnergyAsymmetry").Get();
+
+    if (featureMap.find("LArShowerRegionFeatureTool_nuVertexEnergyWeightedMeanRadialDistance") != featureMap.end())
+        metadata.m_propertiesToAdd["MaxPostShowerStartNuVertexEnergyWeightedMeanRadialDistance"] = featureMap.at("LArShowerRegionFeatureTool_nuVertexEnergyWeightedMeanRadialDistance").Get();
+
+    if (featureMap.find("LArShowerRegionFeatureTool_showerStartEnergyAsymmetry") != featureMap.end())
+        metadata.m_propertiesToAdd["MaxPostShowerStartShowerStartEnergyAsymmetry"] = featureMap.at("LArShowerRegionFeatureTool_showerStartEnergyAsymmetry").Get();
+
+    if (featureMap.find("LArShowerRegionFeatureTool_showerStartMoliereRadius") != featureMap.end())
+        metadata.m_propertiesToAdd["MinPostShowerStartShowerStartMoliereRadius"] = featureMap.at("LArShowerRegionFeatureTool_showerStartMoliereRadius").Get();
+
+    if (featureMap.find("LArAmbiguousRegionFeatureTool_nAmbiguousViews") != featureMap.end())
+        metadata.m_propertiesToAdd["NViewsWithAmbiguousHits"] = featureMap.at("LArAmbiguousRegionFeatureTool_nAmbiguousViews").Get();
+
+    if (featureMap.find("LArAmbiguousRegionFeatureTool_maxUnaccountedEnergy") != featureMap.end())
+        metadata.m_propertiesToAdd["AmbiguousHitMaxUnaccountedEnergy"] = featureMap.at("LArAmbiguousRegionFeatureTool_maxUnaccountedEnergy").Get();
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pShowerPfo, metadata));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
