@@ -531,6 +531,8 @@ void ElectronInitialRegionRefinementAlgorithm::SetMetadata(const ParticleFlowObj
 {
     object_creation::ParticleFlowObject::Metadata metadata;
 
+    metadata.m_propertiesToAdd["FoundConnectionPathway"] = true;
+
     if (featureMap.find("LArInitialRegionFeatureTool_initialGapSize") != featureMap.end())
         metadata.m_propertiesToAdd["MaxInitialGapSize"] = featureMap.at("LArInitialRegionFeatureTool_initialGapSize").Get();
 
@@ -717,7 +719,7 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::ReadSettings(const TiXmlHan
         XmlHelper::ReadValue(xmlHandle, "ShowerSlidingFitWindow", m_showerSlidingFitWindow));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MaxCoincidenceTransverseSeparation", m_maxCoincidecneTransverseSeparation));
+        XmlHelper::ReadValue(xmlHandle, "MaxCoincidenceTransverseSeparation", m_maxCoincidenceTransverseSeparation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinSpinePurity", m_minSpinePurity));
