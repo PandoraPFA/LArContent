@@ -30,10 +30,14 @@ namespace lar_content
 {
 
 ElectronInitialRegionRefinementAlgorithm::ElectronInitialRegionRefinementAlgorithm() :
+    m_minShowerHits3D(50),
     m_showerSlidingFitWindow(1000),
-    m_maxCoincideneTransverseSeparation(5.f),
+    m_maxCoincidenceTransverseSeparation(5.f),
     m_minSpinePurity(0.7f),
     m_trainingMode(false),
+    m_unambiguousThreshold(0.5f),
+    m_maxConnectionDistance(1.f),
+    m_minNConnectedHits(2),
     m_minElectronCompleteness(0.33f),
     m_minElectronPurity(0.5f),
     m_maxSeparationFromHit(3.f),
@@ -57,7 +61,7 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::Run()
         CaloHitList caloHits3D;
         LArPfoHelper::GetCaloHits(pShowerPfo, TPC_3D, caloHits3D);
 
-        if (caloHits3D.size() < 50)
+        if (caloHits3D.size() < m_minShowerHits3D)
             continue;
 
         this->RefineShower(pShowerPfo);
@@ -68,7 +72,7 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ElectronInitialRegionRefinementAlgorithm::FillShowerPfoVector(PfoVector &showerPfoVector)
+void ElectronInitialRegionRefinementAlgorithm::FillShowerPfoVector(PfoVector &showerPfoVector) const
 {
     const PfoList *pPfoList(nullptr);
 
@@ -88,32 +92,30 @@ void ElectronInitialRegionRefinementAlgorithm::FillShowerPfoVector(PfoVector &sh
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowObject *const pShowerPfo)
+void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowObject *const pShowerPfo) const
 {
     CartesianVector nuVertex3D(0.f, 0.f, 0.f);
 
     if (this->GetNeutrinoVertex(nuVertex3D) != STATUS_CODE_SUCCESS)
         return;
 
-    ElectronProtoShowerVector protoShowerVectorU, protoShowerVectorV, protoShowerVectorW;
+    // Create the 2D connetion pathways
+    ProtoShowerVector protoShowerVectorU, protoShowerVectorV, protoShowerVectorW;
 
-    std::cout << "Building U protoShowers" << std::endl;
     this->BuildViewProtoShowers(pShowerPfo, nuVertex3D, TPC_VIEW_U, protoShowerVectorU);
-    std::cout << "Building V protoShowers" << std::endl;
     this->BuildViewProtoShowers(pShowerPfo, nuVertex3D, TPC_VIEW_V, protoShowerVectorV);
-    std::cout << "Building W protoShowers" << std::endl;
     this->BuildViewProtoShowers(pShowerPfo, nuVertex3D, TPC_VIEW_W, protoShowerVectorW);
 
+    // 2D->3D connection pathway matching
     ProtoShowerMatchVector protoShowerMatchVector;
     m_pProtoShowerMatchingTool->Run(this, protoShowerVectorU, protoShowerVectorV, protoShowerVectorW, protoShowerMatchVector);
 
     if (protoShowerMatchVector.empty())
         return;
     
-    // Remove ambiguous hits from hits to add list
     for (ProtoShowerMatch &protoShowerMatch : protoShowerMatchVector)
     {
-        // Find other event pathways
+        // Remove ambiguous hits from hits to add list
         ConnectionPathwayVector viewPathwaysU, viewPathwaysV, viewPathwaysW;
 
         this->BuildViewPathways(pShowerPfo, protoShowerMatch.m_protoShowerU.m_spineHitList, nuVertex3D, TPC_VIEW_U, viewPathwaysU);
@@ -124,6 +126,7 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowOb
         this->RefineHitsToAdd(nuVertex3D, TPC_VIEW_V, viewPathwaysV, protoShowerMatch.m_protoShowerV);
         this->RefineHitsToAdd(nuVertex3D, TPC_VIEW_W, viewPathwaysW, protoShowerMatch.m_protoShowerW);
 
+        // Determine the 3D shower vertex
         CartesianPointVector showerStarts3D;
         if (!LArConnectionPathwayHelper::FindShowerStarts3D(this, pShowerPfo, protoShowerMatch, nuVertex3D, m_maxSeparationFromHit, 
             m_maxProjectionSeparation, showerStarts3D))
@@ -131,6 +134,7 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowOb
             return;
         }
 
+        // Fill BDT information
         StringVector featureOrder;
         const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(m_algorithmToolNames, m_featureToolMap, featureOrder, 
             this, pShowerPfo, nuVertex3D, protoShowerMatch, showerStarts3D));
@@ -139,6 +143,7 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowOb
 
         if (m_trainingMode)
         {
+            // To truth match electrons
             HitOwnershipMap electronHitMap;
             this->FillElectronHitMap(electronHitMap);
 
@@ -152,16 +157,16 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowOb
 
             break;
         }
-    }
-    
-    // work out if electron
 
-    // add in hits...
+        // TODO - is electron?
+
+        // TODO - add in hits
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ElectronInitialRegionRefinementAlgorithm::GetNeutrinoVertex(CartesianVector &nuVertex3D)
+StatusCode ElectronInitialRegionRefinementAlgorithm::GetNeutrinoVertex(CartesianVector &nuVertex3D) const
 {
     const VertexList *pNuVertexList(nullptr);
     const StatusCode statusCode(PandoraContentApi::GetList(*this, m_neutrinoVertexListName, pNuVertexList));
@@ -184,8 +189,8 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::GetNeutrinoVertex(Cartesian
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-    void ElectronInitialRegionRefinementAlgorithm::BuildViewProtoShowers(const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertex3D, 
-   HitType hitType, ElectronProtoShowerVector &protoShowerVector)
+void ElectronInitialRegionRefinementAlgorithm::BuildViewProtoShowers(const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertex3D, 
+   HitType hitType, ProtoShowerVector &protoShowerVector) const
 {
     const CaloHitList *pViewHitList(nullptr);
 
@@ -202,38 +207,41 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::GetNeutrinoVertex(Cartesian
         return;
     }
 
+    // Determine directions of pathways out of neutrino vertex
     CartesianPointVector peakDirectionVector;
     if (m_pShowerPeakDirectionFinderTool->Run(pShowerPfo, nuVertex3D, pViewHitList, hitType, peakDirectionVector) != STATUS_CODE_SUCCESS)
         return;
 
+    // Investigate each direction
     CaloHitList unavailableHitList;
     for (CartesianVector &peakDirection : peakDirectionVector)
     {
+        // Collect the hits associated with the pathway (the shower spine)
         CaloHitList showerSpineHitList;
         if (m_pShowerSpineFinderTool->Run(nuVertex3D, pViewHitList, hitType, peakDirection, unavailableHitList, showerSpineHitList) != STATUS_CODE_SUCCESS)
             continue;
 
         this->RefineShowerVertex(pShowerPfo, hitType, nuVertex3D, peakDirection, showerVertexPosition);
 
-        // If the spine passes the shower vertex, does it live inside the shower?
+        // Quality check: If the spine passes the shower vertex, does it live inside the shower?
         if (!this->IsSpineCoincident(pShowerPfo, nuVertex3D, hitType, showerVertexPosition, showerSpineHitList))
             continue;
 
+        // Find the 2D shower start position
         CartesianVector showerStartPosition(0.f, 0.f, 0.f);
         CartesianVector showerStartDirection(0.f, 0.f, 0.f);
 
         if (m_pShowerStartFinderTool->Run(pShowerPfo, peakDirection, hitType, showerSpineHitList, showerStartPosition, showerStartDirection) != STATUS_CODE_SUCCESS)
             continue;
 
+        // Create the ProtoShower object
         const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), nuVertex3D, hitType));
 
-        ElectronProtoShower protoShower(ShowerCore(showerStartPosition, showerStartDirection), 
+        ProtoShower protoShower(ShowerCore(showerStartPosition, showerStartDirection), 
             ConnectionPathway(nuVertex2D, peakDirection), 
-            showerSpineHitList, false, CaloHitList(), CartesianPointVector(), CaloHitList());
+            showerSpineHitList, CaloHitList(), CartesianPointVector(), CaloHitList());
 
-        std::cout << "ISOBEL - you need to get clean up the protoShower class (and add everything else to it...)" << std::endl;        
-
-        // Now determine the hits to be added
+        // Now determine the hits to be added to the shower from the found spine
         CaloHitList viewShowerHitList;
         LArPfoHelper::GetCaloHits(pShowerPfo, hitType, viewShowerHitList);
 
@@ -326,13 +334,33 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShowerVertex(const Particle
 
             const float transverseSeparation((peakDirection.GetCrossProduct(displacement)).GetMagnitude());
 
-            if (transverseSeparation < m_maxCoincideneTransverseSeparation)
+            if (transverseSeparation < m_maxCoincidenceTransverseSeparation)
             {
                 showerVertexPosition = pCaloHit->GetPositionVector();
                 minL = longitudinalSeparation;
             }
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ElectronInitialRegionRefinementAlgorithm::IsShowerConnected(const CartesianVector &showerVertexPosition, const CartesianVector &nuVertex2D, 
+    const CartesianVector &peakDirection) const
+{
+    CartesianVector displacement(showerVertexPosition - nuVertex2D);
+
+    const float longitudinalSeparation(peakDirection.GetDotProduct(displacement));
+
+    if (longitudinalSeparation < (-1.f))
+        return false;
+
+    const float transverseSeparation((peakDirection.GetCrossProduct(displacement)).GetMagnitude());
+
+    if (transverseSeparation > m_maxCoincidenceTransverseSeparation)
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -372,26 +400,6 @@ bool ElectronInitialRegionRefinementAlgorithm::IsSpineCoincident(const ParticleF
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ElectronInitialRegionRefinementAlgorithm::IsShowerConnected(const CartesianVector &showerVertexPosition, const CartesianVector &nuVertex2D, 
-    const CartesianVector &peakDirection) const
-{
-    CartesianVector displacement(showerVertexPosition - nuVertex2D);
-
-    const float longitudinalSeparation(peakDirection.GetDotProduct(displacement));
-
-    if (longitudinalSeparation < (-1.f))
-        return false;
-
-    const float transverseSeparation((peakDirection.GetCrossProduct(displacement)).GetMagnitude());
-
-    if (transverseSeparation > m_maxCoincideneTransverseSeparation)
-        return false;
-
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ElectronInitialRegionRefinementAlgorithm::BuildViewPathways(const ParticleFlowObject *const pShowerPfo, const CaloHitList &protectedHits, 
    const CartesianVector &nuVertex3D, HitType hitType, ConnectionPathwayVector &viewPathways) const
 {
@@ -424,7 +432,7 @@ void ElectronInitialRegionRefinementAlgorithm::BuildViewPathways(const ParticleF
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ElectronInitialRegionRefinementAlgorithm::RefineHitsToAdd(const CartesianVector &nuVertex3D, const HitType hitType, 
-    const ConnectionPathwayVector &viewPathways, ElectronProtoShower &protoShower) const
+    const ConnectionPathwayVector &viewPathways, ProtoShower &protoShower) const
 {
     const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), nuVertex3D, hitType));
     const CartesianVector &peakDirection(protoShower.m_connectionPathway.m_startDirection);
@@ -448,7 +456,7 @@ void ElectronInitialRegionRefinementAlgorithm::RefineHitsToAdd(const CartesianVe
 
             const float otherT((eventPeakDirection.GetCrossProduct(displacement)).GetMagnitudeSquared());
 
-            if ((otherT < thisT) || (otherT < 0.5f))
+            if ((otherT < thisT) || (otherT < m_unambiguousThreshold))
             {
                 found = true;
 
@@ -495,7 +503,7 @@ CaloHitList ElectronInitialRegionRefinementAlgorithm::FindContinuousPath(const C
                 if (std::find(connectedHitList.begin(), connectedHitList.end(), pCaloHit) != connectedHitList.end())
                     continue;
 
-                if (LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), connectedHitList) < 1.f)
+                if (LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), connectedHitList) < m_maxConnectionDistance)
                 {
                     found = true;
                     connectedHitList.push_back(pCaloHit);
@@ -504,7 +512,7 @@ CaloHitList ElectronInitialRegionRefinementAlgorithm::FindContinuousPath(const C
             }
         }
 
-        if ((connectedHitList.size() >= 2) || (connectedHitList.size() == refinedHitVector.size()))
+        if ((connectedHitList.size() >= m_minNConnectedHits) || (connectedHitList.size() == refinedHitVector.size()))
         {
             startIndex = i;
             break;
@@ -519,7 +527,7 @@ CaloHitList ElectronInitialRegionRefinementAlgorithm::FindContinuousPath(const C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ElectronInitialRegionRefinementAlgorithm::SetMetadata(const ParticleFlowObject *const pShowerPfo, const LArMvaHelper::MvaFeatureMap &featureMap)
+void ElectronInitialRegionRefinementAlgorithm::SetMetadata(const ParticleFlowObject *const pShowerPfo, const LArMvaHelper::MvaFeatureMap &featureMap) const
 {
     object_creation::ParticleFlowObject::Metadata metadata;
 
@@ -572,6 +580,8 @@ void ElectronInitialRegionRefinementAlgorithm::SetMetadata(const ParticleFlowObj
 
 void ElectronInitialRegionRefinementAlgorithm::FillElectronHitMap(HitOwnershipMap &electronHitMap) const
 {
+    electronHitMap.clear();
+
     for (HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
         const CaloHitList *pViewHitList(nullptr);
@@ -701,16 +711,28 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::ReadSettings(const TiXmlHan
         return STATUS_CODE_INVALID_PARAMETER;
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinShowerHits3D", m_minShowerHits3D));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ShowerSlidingFitWindow", m_showerSlidingFitWindow));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MaxCoincideneTransverseSeparation", m_maxCoincideneTransverseSeparation));
+        XmlHelper::ReadValue(xmlHandle, "MaxCoincidenceTransverseSeparation", m_maxCoincidecneTransverseSeparation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinSpinePurity", m_minSpinePurity));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "UnambiguousThreshold", m_unambiguousThreshold));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxConnectionDistance", m_maxConnectionDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinNConnectedHits", m_minNConnectedHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinElectronCompleteness", m_minElectronCompleteness));
