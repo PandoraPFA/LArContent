@@ -59,37 +59,37 @@ public:
     };
 
 
-    static bool FindShowerStarts3D(pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
+    static bool FindShowerStarts3D(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
         const ProtoShowerMatch &protoShowerMatch, const pandora::CartesianVector &nuVertexPosition, const float maxSeparationFromHit, 
         const float maxProjectionSeparation, pandora::CartesianPointVector &showerStarts3D);
 
-   static bool AreShowerStartsConsistent(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
+   static bool AreShowerStartsConsistent(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float maxXSeparation, const float maxSeparation);
 
-   static bool AreDirectionsConsistent(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
+   static bool AreDirectionsConsistent(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float maxOpeningAngle);
 
-   static bool AreDirectionsConsistent(pandora::Algorithm *const pAlgorithm, pandora::CartesianVector directionU,
+   static bool AreDirectionsConsistent(const pandora::Algorithm *const pAlgorithm, pandora::CartesianVector directionU,
        pandora::CartesianVector directionV, pandora::CartesianVector directionW, const float maxOpeningAngle);
 
-   static bool FindShowerStartFromPosition(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
+   static bool FindShowerStartFromPosition(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
 
-    static bool FindShowerStartFromDirection(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
+    static bool FindShowerStartFromDirection(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
         const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &uShowerStart3D, 
         pandora::CartesianVector &vShowerStart3D, pandora::CartesianVector &wShowerStart3D);
 
-   static bool FindShowerStartFromDirection(pandora::Algorithm *const pAlgorithm, const pandora::CartesianVector nuVertexPosition, 
+   static bool FindShowerStartFromDirection(const pandora::Algorithm *const pAlgorithm, const pandora::CartesianVector nuVertexPosition, 
        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
 
-    static bool FindShowerStartFromXProjection(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
+    static bool FindShowerStartFromXProjection(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
         const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float maxSeparation, 
         pandora::CartesianVector &showerStart3D);
 
     static bool FindClosestSpinePosition(const ProtoShower &protoShower, const pandora::CartesianVector &showerStart3D, 
         pandora::CartesianVector &foundShowerStart);
 
-    static bool FindShowerStartFromXProjectionRelaxed(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
+    static bool FindShowerStartFromXProjectionRelaxed(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
        const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation, pandora::CartesianVector &showerStart3D);
 
     static void GetMinMiddleMax(const float value1, const float value2, const float value3, float &minValue, float &middleValue,

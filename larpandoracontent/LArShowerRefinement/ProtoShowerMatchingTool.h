@@ -21,14 +21,14 @@ class ProtoShowerMatchingTool : public pandora::AlgorithmTool
 public:
     ProtoShowerMatchingTool();
 
-    pandora::StatusCode Run(pandora::Algorithm *const pAlgorithm, const ElectronProtoShowerVector &protoShowerVectorU, 
-        const ElectronProtoShowerVector &protoShowerVectorV, const ElectronProtoShowerVector &protoShowerVectorW, 
+    pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const ProtoShowerVector &protoShowerVectorU, 
+        const ProtoShowerVector &protoShowerVectorV, const ProtoShowerVector &protoShowerVectorW, 
         ProtoShowerMatchVector &protoShowerMatchVector);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    bool ArePathwaysConsistent(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, 
+    bool ArePathwaysConsistent(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, 
         const ProtoShower &protoShowerW, Consistency &consistency);
 
     float m_maxXSeparation;

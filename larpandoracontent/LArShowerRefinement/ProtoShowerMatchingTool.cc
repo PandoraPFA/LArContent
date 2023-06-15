@@ -28,22 +28,22 @@ ProtoShowerMatchingTool::ProtoShowerMatchingTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ProtoShowerMatchingTool::Run(pandora::Algorithm *const pAlgorithm, const ElectronProtoShowerVector &protoShowerVectorU, 
-    const ElectronProtoShowerVector &protoShowerVectorV, const ElectronProtoShowerVector &protoShowerVectorW, ProtoShowerMatchVector &protoShowerMatchVector)
+StatusCode ProtoShowerMatchingTool::Run(const pandora::Algorithm *const pAlgorithm, const ProtoShowerVector &protoShowerVectorU, 
+    const ProtoShowerVector &protoShowerVectorV, const ProtoShowerVector &protoShowerVectorW, ProtoShowerMatchVector &protoShowerMatchVector)
 {
     IntVector usedProtoShowersU, usedProtoShowersV, usedProtoShowersW; 
 
     for (unsigned int uIndex = 0; uIndex < protoShowerVectorU.size(); ++uIndex)
     {
-        const ElectronProtoShower &protoShowerU(protoShowerVectorU.at(uIndex));
+        const ProtoShower &protoShowerU(protoShowerVectorU.at(uIndex));
 
         for (unsigned int vIndex = 0; vIndex < protoShowerVectorV.size(); ++vIndex)
         {
-            const ElectronProtoShower &protoShowerV(protoShowerVectorV.at(vIndex));
+            const ProtoShower &protoShowerV(protoShowerVectorV.at(vIndex));
 
             for (unsigned int wIndex = 0; wIndex < protoShowerVectorW.size(); ++wIndex)
             {
-                const ElectronProtoShower &protoShowerW(protoShowerVectorW.at(wIndex));
+                const ProtoShower &protoShowerW(protoShowerVectorW.at(wIndex));
 
                 if (std::find(usedProtoShowersU.begin(), usedProtoShowersU.end(), uIndex) != usedProtoShowersU.end())
                     continue;
@@ -63,11 +63,6 @@ StatusCode ProtoShowerMatchingTool::Run(pandora::Algorithm *const pAlgorithm, co
                 usedProtoShowersV.push_back(vIndex);
                 usedProtoShowersW.push_back(wIndex);
 
-                std::cout << "uIndex: " << uIndex << std::endl;
-                std::cout << "vIndex: " << vIndex << std::endl;
-                std::cout << "wIndex: " << wIndex << std::endl;
-                std::cout << "consistency: " << consistency << std::endl;
-
                 protoShowerMatchVector.push_back(ProtoShowerMatch(protoShowerU, protoShowerV, protoShowerW, consistency));
             }
         }
@@ -78,7 +73,7 @@ StatusCode ProtoShowerMatchingTool::Run(pandora::Algorithm *const pAlgorithm, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ProtoShowerMatchingTool::ArePathwaysConsistent(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, 
+bool ProtoShowerMatchingTool::ArePathwaysConsistent(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, 
     Consistency &consistency)
 {
     if (LArConnectionPathwayHelper::AreShowerStartsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxXSeparation, m_maxSeparation))

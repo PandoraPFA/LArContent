@@ -38,7 +38,7 @@ namespace lar_content
 // Consistency checks
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::AreShowerStartsConsistent(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
+bool LArConnectionPathwayHelper::AreShowerStartsConsistent(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
     const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float maxXSeparation, const float maxSeparation)
 {
     float metric(0.0);
@@ -72,7 +72,7 @@ bool LArConnectionPathwayHelper::AreShowerStartsConsistent(pandora::Algorithm *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::AreDirectionsConsistent(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
+bool LArConnectionPathwayHelper::AreDirectionsConsistent(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
     const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float maxOpeningAngle)
 {
     const CartesianVector &directionU1(protoShowerU.m_connectionPathway.m_startDirection);
@@ -114,7 +114,7 @@ bool LArConnectionPathwayHelper::AreDirectionsConsistent(pandora::Algorithm *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::AreDirectionsConsistent(pandora::Algorithm *const pAlgorithm, CartesianVector directionU, 
+bool LArConnectionPathwayHelper::AreDirectionsConsistent(const pandora::Algorithm *const pAlgorithm, CartesianVector directionU, 
     CartesianVector directionV, CartesianVector directionW, const float maxOpeningAngle)
 {
     const CartesianVector wireAxis(0.f, 0.f, 1.f);
@@ -179,14 +179,14 @@ bool LArConnectionPathwayHelper::AreDirectionsConsistent(pandora::Algorithm *con
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Finding 3D Shower Start Position
 //------------------------------------------------------------------------------------------------------------------------------------------
-// maxSeparationFromHit = 3.f, maxProjectionSeparation = 5.f
-bool LArConnectionPathwayHelper::FindShowerStarts3D(pandora::Algorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
+
+bool LArConnectionPathwayHelper::FindShowerStarts3D(const pandora::Algorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
     const ProtoShowerMatch &protoShowerMatch, const CartesianVector &nuVertexPosition, const float maxSeparationFromHit, 
     const float maxProjectionSeparation, CartesianPointVector &showerStarts3D)
 {
-    const ElectronProtoShower &protoShowerU(protoShowerMatch.m_protoShowerU);
-    const ElectronProtoShower &protoShowerV(protoShowerMatch.m_protoShowerV);
-    const ElectronProtoShower &protoShowerW(protoShowerMatch.m_protoShowerW);
+    const ProtoShower &protoShowerU(protoShowerMatch.m_protoShowerU);
+    const ProtoShower &protoShowerV(protoShowerMatch.m_protoShowerV);
+    const ProtoShower &protoShowerW(protoShowerMatch.m_protoShowerW);
     const Consistency consistency(protoShowerMatch.m_consistencyType);
 
     bool uFound(false), vFound(false), wFound(false);
@@ -270,7 +270,7 @@ bool LArConnectionPathwayHelper::FindShowerStarts3D(pandora::Algorithm *const pA
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindShowerStartFromPosition(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
+bool LArConnectionPathwayHelper::FindShowerStartFromPosition(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
     const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, CartesianVector &showerStart3D)
 {
     const CartesianVector showerStartU(protoShowerU.m_showerCore.m_startPosition);
@@ -285,7 +285,7 @@ bool LArConnectionPathwayHelper::FindShowerStartFromPosition(pandora::Algorithm 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindShowerStartFromDirection(pandora::Algorithm *const pAlgorithm, const CartesianVector nuVertexPosition, 
+bool LArConnectionPathwayHelper::FindShowerStartFromDirection(const pandora::Algorithm *const pAlgorithm, const CartesianVector nuVertexPosition, 
     const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, CartesianVector &showerStart3D)
 {
     CartesianVector uShowerStart3D(0.f, 0.f, 0.f), vShowerStart3D(0.f, 0.f, 0.f), wShowerStart3D(0.f, 0.f, 0.f);
@@ -314,7 +314,7 @@ bool LArConnectionPathwayHelper::FindShowerStartFromDirection(pandora::Algorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindShowerStartFromDirection(pandora::Algorithm *const pAlgorithm,
+bool LArConnectionPathwayHelper::FindShowerStartFromDirection(const pandora::Algorithm *const pAlgorithm,
     const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, CartesianVector &uShowerStart3D, 
     CartesianVector &vShowerStart3D, CartesianVector &wShowerStart3D)
 {
@@ -369,7 +369,7 @@ bool LArConnectionPathwayHelper::FindShowerStartFromDirection(pandora::Algorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindShowerStartFromXProjection(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
+bool LArConnectionPathwayHelper::FindShowerStartFromXProjection(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
     const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation, CartesianVector &showerStart3D)
 {
     const CartesianVector showerStart(protoShower.m_showerCore.m_startPosition);
@@ -436,7 +436,7 @@ bool LArConnectionPathwayHelper::FindClosestSpinePosition(const ProtoShower &pro
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
+bool LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
     const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation, CartesianVector &showerStart3D)
 {
     const CartesianVector showerStart(protoShower.m_showerCore.m_startPosition);
