@@ -63,15 +63,6 @@ public:
         const ProtoShowerMatch &protoShowerMatch, const pandora::CartesianVector &nuVertexPosition, const float maxSeparationFromHit, 
         const float maxProjectionSeparation, pandora::CartesianPointVector &showerStarts3D);
 
-   static bool AreShowerStartsConsistent(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
-       const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float maxXSeparation, const float maxSeparation);
-
-   static bool AreDirectionsConsistent(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
-       const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float maxOpeningAngle);
-
-   static bool AreDirectionsConsistent(const pandora::Algorithm *const pAlgorithm, pandora::CartesianVector directionU,
-       pandora::CartesianVector directionV, pandora::CartesianVector directionW, const float maxOpeningAngle);
-
    static bool FindShowerStartFromPosition(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
 

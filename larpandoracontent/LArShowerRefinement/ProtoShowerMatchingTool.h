@@ -19,6 +19,9 @@ namespace lar_content
 class ProtoShowerMatchingTool : public pandora::AlgorithmTool
 {
 public:
+    /**
+     *  @brief  Default constructor
+     */
     ProtoShowerMatchingTool();
 
     pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const ProtoShowerVector &protoShowerVectorU, 
@@ -28,12 +31,56 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    bool ArePathwaysConsistent(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, 
-        const ProtoShower &protoShowerW, Consistency &consistency);
+    /**
+     *  @brief  Determine whether three 2D connection pathways form a consistent 3D connection pathway 
+     *
+     *  @param  protoShowerU the U view ProtoShower
+     *  @param  protoShowerV the V view ProtoShower
+     *  @param  protoShowerW the W view ProtoShower
+     *  @param  consistency the basis of the match
+     * 
+     *  @return whether three 2D connection pathways form a consistent 3D connection pathway
+     */
+    bool ArePathwaysConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, 
+        Consistency &consistency) const;
 
-    float m_maxXSeparation;
-    float m_maxSeparation;
-    float m_maxAngularDeviation;
+    /**
+     *  @brief  Determine whether three 2D shower start positions correspond to the same 3D shower start position
+     *
+     *  @param  protoShowerU the U view ProtoShower
+     *  @param  protoShowerV the V view ProtoShower
+     *  @param  protoShowerW the W view ProtoShower
+     * 
+     *  @return whether three 2D shower start positions correspond to the same 3D shower start position
+     */
+    bool AreShowerStartsConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW) const;
+
+    /**
+     *  @brief  Determine whether three 2D initial spine directions correspond to the same 3D initial spine direction
+     *
+     *  @param  protoShowerU the U view ProtoShower
+     *  @param  protoShowerV the V view ProtoShower
+     *  @param  protoShowerW the W view ProtoShower
+     * 
+     *  @return whether three 2D initial spine directions correspond to the same 3D initial spine direction
+     */
+    bool AreDirectionsConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW) const;
+
+    /**
+     *  @brief  Determine whether three 2D initial spine directions correspond to the same 3D initial spine direction
+     *
+     *  @param  directionU the U view initial spine direction
+     *  @param  directionU the V view initial spine direction
+     *  @param  directionU the W view initial spine direction
+     * 
+     *  @return whether three 2D initial spine directions correspond to the same 3D initial spine direction
+     */
+    bool AreDirectionsConsistent(pandora::CartesianVector directionU, pandora::CartesianVector directionV, pandora::CartesianVector directionW) const;
+
+    unsigned int m_spineSlidingFitWindow;  ///< The shower spine sliding fit window
+    float m_maxXSeparation;                ///< The max. drift-coordinate separation between matched 2D shower start positions
+    float m_maxSeparation;                 ///< The max. average separation between true and projected 2D shower start positions for a match
+    float m_maxAngularDeviation;           ///< The max. opening angle between true and projected 2D initial directions for a match 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
