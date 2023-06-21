@@ -28,9 +28,12 @@ ShowerStartFinderTool::ShowerStartFinderTool() :
     m_longitudinalCoordinateBinSize(1.f),
     m_nInitialEnergyBins(5),
     m_minSigmaDeviation(1.f),
+    m_maxEdgeGap(3.f),
+    m_longitudinalShowerFraction(0.85f),
     m_minShowerOpeningAngle(2.f),
     m_molliereRadius(4.5f),
-    m_showerSlidingFitWindow(1000)
+    m_showerSlidingFitWindow(1000),
+    m_maxLayerSeparation(5)
 {
 }
 
@@ -59,11 +62,8 @@ StatusCode ShowerStartFinderTool::Run(const ParticleFlowObject *const pShowerPfo
         // Now find the shower start position/direction
         const bool isEndDownstream(peakDirection.GetZ() > 0.f);
 
-        if (this->FindShowerStartAndDirection(pShowerPfo, hitType, spineTwoDSlidingFit, energySpectrumMap, showerSpineHitList, isEndDownstream, showerStartPosition, 
-            showerStartDirection) != STATUS_CODE_SUCCESS)
-        {
-            return STATUS_CODE_FAILURE;
-        }
+        this->FindShowerStartAndDirection(pShowerPfo, hitType, spineTwoDSlidingFit, energySpectrumMap, showerSpineHitList, isEndDownstream, showerStartPosition, 
+            showerStartDirection);
     }
     catch(...)
     {
@@ -169,7 +169,7 @@ void ShowerStartFinderTool::GetEnergyDistribution(const CaloHitList &showerSpine
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ShowerStartFinderTool::FindShowerStartAndDirection(const ParticleFlowObject *const pShowerPfo, const HitType hitType, const TwoDSlidingFitResult &spineTwoDSlidingFit, 
+void ShowerStartFinderTool::FindShowerStartAndDirection(const ParticleFlowObject *const pShowerPfo, const HitType hitType, const TwoDSlidingFitResult &spineTwoDSlidingFit, 
     const EnergySpectrumMap &energySpectrumMap, const CaloHitList &showerSpineHitList, const bool isEndDownstream, CartesianVector &showerStartPosition, 
     CartesianVector &showerStartDirection) const
 {
@@ -211,8 +211,6 @@ StatusCode ShowerStartFinderTool::FindShowerStartAndDirection(const ParticleFlow
     this->ConvertLongitudinalProjectionToGlobal(spineTwoDSlidingFit, longitudinalStartCoordinate, showerStartPosition, showerStartDirection);
 
     showerStartDirection = isEndDownstream ? showerStartDirection : showerStartDirection * (-1.f);
-
-    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -257,20 +255,17 @@ bool ShowerStartFinderTool::IsShowerTopology(const ParticleFlowObject *const pSh
     }
 
     // Characterise the shower
-    bool isBetween(false), doesStraddle(false);
+    bool isBetween(false);
     CartesianVector positiveEdgeStart(0.f, 0.f, 0.f), positiveEdgeEnd(0.f, 0.f, 0.f), positiveEdgeDirection(0.f, 0.f, 0.f);
     CartesianVector negativeEdgeStart(0.f, 0.f, 0.f), negativeEdgeEnd(0.f, 0.f, 0.f), negativeEdgeDirection(0.f, 0.f, 0.f);
 
     if (this->CharacteriseShowerTopology(showerRegionPositionVector, showerStartPosition, isEndDownstream, showerStartDirection,
-        positiveEdgeStart, positiveEdgeEnd, negativeEdgeStart, negativeEdgeEnd, isBetween, doesStraddle) != STATUS_CODE_SUCCESS)
+        positiveEdgeStart, positiveEdgeEnd, negativeEdgeStart, negativeEdgeEnd, isBetween) != STATUS_CODE_SUCCESS)
     {
         return false;
     }
 
     if (!isBetween)
-        return false;
-
-    if (!doesStraddle)
         return false;
 
     positiveEdgeStart = showerStartPosition;
@@ -410,7 +405,7 @@ StatusCode ShowerStartFinderTool::BuildShowerRegion(const ParticleFlowObject *co
             const CartesianVector &coordinateP(*iterP);
             const float separationSquared((coordinateP - previousCoordinateP).GetMagnitudeSquared());
 
-            if (separationSquared > (3.f * 3.f))
+            if (separationSquared > (m_maxEdgeGap * m_maxEdgeGap))
                 break;
 
             float thisT(0.f);
@@ -427,7 +422,7 @@ StatusCode ShowerStartFinderTool::BuildShowerRegion(const ParticleFlowObject *co
             const CartesianVector &coordinateN(*iterN);
             const float separationSquared((coordinateN - previousCoordinateN).GetMagnitudeSquared());
 
-            if (separationSquared > (3.f * 3.f))
+            if (separationSquared > (m_maxEdgeGap * m_maxEdgeGap))
                 break;
 
             float thisT(0.f);
@@ -446,11 +441,11 @@ StatusCode ShowerStartFinderTool::BuildShowerRegion(const ParticleFlowObject *co
 
             twoDShowerSlidingFit.GetShowerFitResult().GetLocalPosition(hitPosition, thisL, thisT);
 
-            // 0.85f because the end of showers can get really narrow and thus fail the opening angle check
-            if (isEndDownstream && (thisL > (0.85 * std::max(pMaximumL, nMaximumL))))
+            // because the end of showers can get really narrow and thus fail the opening angle check
+            if (isEndDownstream && (thisL > (m_longitudinalShowerFraction * std::max(pMaximumL, nMaximumL))))
                 continue;
 
-            if (!isEndDownstream && (thisL < (0.85 * std::min(pMaximumL, nMaximumL))))
+            if (!isEndDownstream && (thisL < (m_longitudinalShowerFraction * std::min(pMaximumL, nMaximumL))))
                 continue;
 
             showerRegionPositionVector.push_back(pCaloHit->GetPositionVector());
@@ -468,7 +463,7 @@ StatusCode ShowerStartFinderTool::BuildShowerRegion(const ParticleFlowObject *co
 
 StatusCode ShowerStartFinderTool::CharacteriseShowerTopology(const CartesianPointVector &showerRegionPositionVector, const CartesianVector &showerStartPosition,
     const bool isEndDownstream, const CartesianVector &showerStartDirection, CartesianVector &positiveEdgeStart, CartesianVector &positiveEdgeEnd, 
-    CartesianVector &negativeEdgeStart, CartesianVector &negativeEdgeEnd, bool &isBetween, bool &doesStraddle) const 
+    CartesianVector &negativeEdgeStart, CartesianVector &negativeEdgeEnd, bool &isBetween) const 
 {
     try
     {
@@ -529,9 +524,6 @@ StatusCode ShowerStartFinderTool::CharacteriseShowerTopology(const CartesianPoin
                     isFirstBetween = (isPositiveClockwise != isNegativeClockwise);
 
                 isLastBetween = (isPositiveClockwise != isNegativeClockwise);
-
-                if (!doesStraddle)
-                    doesStraddle = (isPositiveClockwise != isNegativeClockwise);
             }
         }
 
@@ -585,8 +577,8 @@ bool ShowerStartFinderTool::IsClockwiseRotation(const CartesianVector &showerSta
 StatusCode ShowerStartFinderTool::GetBoundaryExtremalPoints(const TwoDSlidingShowerFitResult &showerTwoDSlidingFit, const LayerFitResultMap &layerFitResultMap, 
     const CartesianVector &showerStartPosition, const int showerStartLayer, const int showerEndLayer, CartesianVector &boundaryEdgeStart, CartesianVector &boundaryEdgeEnd) const 
 {
-    int boundaryStartLayer(10000);
-    int boundaryEndLayer(10000);
+    int boundaryStartLayer(std::numeric_limits<int>::max());
+    int boundaryEndLayer(std::numeric_limits<int>::max());
 
     for (auto &entry : layerFitResultMap)
     {
@@ -603,7 +595,7 @@ StatusCode ShowerStartFinderTool::GetBoundaryExtremalPoints(const TwoDSlidingSho
             boundaryEndLayer = entry.first;
     }
         
-    if (std::abs(showerStartLayer - boundaryStartLayer) > 5)
+    if (std::abs(showerStartLayer - boundaryStartLayer) > m_maxLayerSeparation)
         return STATUS_CODE_FAILURE;
 
     const float showerStartBoundaryLocalL(layerFitResultMap.at(boundaryStartLayer).GetL()), showerStartBoundaryLocalT(layerFitResultMap.at(boundaryStartLayer).GetFitT());
@@ -641,6 +633,12 @@ StatusCode ShowerStartFinderTool::ReadSettings(const TiXmlHandle xmlHandle)
         XmlHelper::ReadValue(xmlHandle, "MinSigmaDeviation", m_minSigmaDeviation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxEdgeGap", m_maxEdgeGap));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "LongitudinalShowerFraction", m_longitudinalShowerFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinShowerOpeningAngle", m_minShowerOpeningAngle));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
@@ -648,6 +646,9 @@ StatusCode ShowerStartFinderTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ShowerSlidingFitWindow", m_showerSlidingFitWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxLayerSeparation", m_maxLayerSeparation));
 
     return STATUS_CODE_SUCCESS;
 }
