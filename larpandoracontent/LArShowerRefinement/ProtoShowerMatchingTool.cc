@@ -30,8 +30,8 @@ ProtoShowerMatchingTool::ProtoShowerMatchingTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ProtoShowerMatchingTool::Run(const pandora::Algorithm *const /*pAlgorithm*/, const ProtoShowerVector &protoShowerVectorU, 
-    const ProtoShowerVector &protoShowerVectorV, const ProtoShowerVector &protoShowerVectorW, ProtoShowerMatchVector &protoShowerMatchVector)
+StatusCode ProtoShowerMatchingTool::Run(const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV, 
+    const ProtoShowerVector &protoShowerVectorW, ProtoShowerMatchVector &protoShowerMatchVector)
 {
     IntVector usedProtoShowersU, usedProtoShowersV, usedProtoShowersW; 
 

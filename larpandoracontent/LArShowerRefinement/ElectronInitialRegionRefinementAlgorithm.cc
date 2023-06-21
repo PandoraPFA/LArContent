@@ -108,7 +108,7 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowOb
 
     // 2D->3D connection pathway matching
     ProtoShowerMatchVector protoShowerMatchVector;
-    m_pProtoShowerMatchingTool->Run(this, protoShowerVectorU, protoShowerVectorV, protoShowerVectorW, protoShowerMatchVector);
+    m_pProtoShowerMatchingTool->Run(protoShowerVectorU, protoShowerVectorV, protoShowerVectorW, protoShowerMatchVector);
 
     if (protoShowerMatchVector.empty())
         return;

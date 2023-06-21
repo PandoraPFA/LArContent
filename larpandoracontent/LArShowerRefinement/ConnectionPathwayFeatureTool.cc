@@ -23,7 +23,10 @@ namespace lar_content
 {
 
 InitialRegionFeatureTool::InitialRegionFeatureTool() :
-    m_nHitsToConsider(10)
+    m_defaultFloat(-10.f),
+    m_nHitsToConsider(10),
+    m_maxInitialGapSizeLimit(4.f),
+    m_minLargestGapSizeLimit(2.f)
 {
 }
 
@@ -33,19 +36,19 @@ void InitialRegionFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector
     const ParticleFlowObject *const /*pShowerPfo*/, const CartesianVector &nuVertex3D, const ProtoShowerMatch &protoShowerMatch, 
     const CartesianPointVector &/*showerStarts3D*/)
 {
-    float initialGapSizeU(-10.f), initialGapSizeV(-10.f), initialGapSizeW(-10.f);
-    float largestGapSizeU(-10.f), largestGapSizeV(-10.f), largestGapSizeW(-10.f);
+    float initialGapSizeU(m_defaultFloat), initialGapSizeV(m_defaultFloat), initialGapSizeW(m_defaultFloat);
+    float largestGapSizeU(m_defaultFloat), largestGapSizeV(m_defaultFloat), largestGapSizeW(m_defaultFloat);
     this->GetViewInitialRegionVariables(pAlgorithm, nuVertex3D, protoShowerMatch, TPC_VIEW_U, initialGapSizeU, largestGapSizeU);
     this->GetViewInitialRegionVariables(pAlgorithm, nuVertex3D, protoShowerMatch, TPC_VIEW_V, initialGapSizeV, largestGapSizeV);
     this->GetViewInitialRegionVariables(pAlgorithm, nuVertex3D, protoShowerMatch, TPC_VIEW_W, initialGapSizeW, largestGapSizeW);
 
-    float minInitialGapSize(-10.f), middleInitialGapSize(-10.f), maxInitialGapSize(-10.f);
-    float minLargestGapSize(-10.f), middleLargestGapSize(-10.f), maxLargestGapSize(-10.f);
+    float minInitialGapSize(m_defaultFloat), middleInitialGapSize(m_defaultFloat), maxInitialGapSize(m_defaultFloat);
+    float minLargestGapSize(m_defaultFloat), middleLargestGapSize(m_defaultFloat), maxLargestGapSize(m_defaultFloat);
     LArConnectionPathwayHelper::GetMinMiddleMax(initialGapSizeU, initialGapSizeV, initialGapSizeW, minInitialGapSize, middleInitialGapSize, maxInitialGapSize);
     LArConnectionPathwayHelper::GetMinMiddleMax(largestGapSizeU, largestGapSizeV, largestGapSizeW, minLargestGapSize, middleLargestGapSize, maxLargestGapSize);
 
-    featureVector.push_back(std::min(maxInitialGapSize, 4.f));
-    featureVector.push_back(std::min(minLargestGapSize, 2.f));
+    featureVector.push_back(std::min(maxInitialGapSize, m_maxInitialGapSizeLimit));
+    featureVector.push_back(std::min(minLargestGapSize, m_minLargestGapSizeLimit));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -78,8 +81,8 @@ void InitialRegionFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, Stri
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void InitialRegionFeatureTool::GetViewInitialRegionVariables(const Algorithm *const pAlgorithm, const CartesianVector &nuVertex3D, const ProtoShowerMatch &protoShowerMatch, 
-    const HitType hitType, float &initialGapSize, float &largestGapSize)
+void InitialRegionFeatureTool::GetViewInitialRegionVariables(const Algorithm *const pAlgorithm, const CartesianVector &nuVertex3D, 
+    const ProtoShowerMatch &protoShowerMatch, const HitType hitType, float &initialGapSize, float &largestGapSize) const 
 {
     const ProtoShower &protoShower(hitType == TPC_VIEW_U ? protoShowerMatch.m_protoShowerU : (hitType == TPC_VIEW_V ? protoShowerMatch.m_protoShowerV : protoShowerMatch.m_protoShowerW));
     const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertex3D, hitType));
@@ -92,7 +95,7 @@ void InitialRegionFeatureTool::GetViewInitialRegionVariables(const Algorithm *co
     initialGapSize = (nuVertex2D - spineHitVector.front()->GetPositionVector()).GetMagnitude();
 
     // Largest Gap Size
-    largestGapSize = -10.f; // default value
+    largestGapSize = m_defaultFloat;
 
     std::vector<float> longitudinalProjections;
 
@@ -101,9 +104,7 @@ void InitialRegionFeatureTool::GetViewInitialRegionVariables(const Algorithm *co
 
     std::sort(longitudinalProjections.begin(), longitudinalProjections.end());
 
-    // How many hits to consider
-    const long unsigned int nSampleHits(m_nHitsToConsider);
-    const unsigned int nIterations(std::min(longitudinalProjections.size(), nSampleHits) - 1);
+    const unsigned int nIterations(std::min(longitudinalProjections.size(), static_cast<long unsigned int>(m_nHitsToConsider)) - 1);
 
     for (unsigned int i = 0; i < nIterations; ++i)
         largestGapSize = std::max(std::fabs(longitudinalProjections[i] - longitudinalProjections[i + 1]), largestGapSize);
@@ -113,7 +114,17 @@ void InitialRegionFeatureTool::GetViewInitialRegionVariables(const Algorithm *co
 
 StatusCode InitialRegionFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "nHitsToConsider", m_nHitsToConsider));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "nHitsToConsider", m_nHitsToConsider));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "DefaultFloat", m_defaultFloat));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxInitialGapSizeLimit", m_maxInitialGapSizeLimit));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinLargestGapSizeLimit", m_minLargestGapSizeLimit));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -122,7 +133,11 @@ StatusCode InitialRegionFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ConnectionRegionFeatureTool::ConnectionRegionFeatureTool() :
-    m_spineFitWindow(10)
+    m_defaultFloat(-10.f),
+    m_spineFitWindow(10),
+    m_nLayersHalfWindow(5),
+    m_pathwayLengthLimit(30.f),
+    m_pathwayScatteringAngle2DLimit(10.f)
 {
 }
 
@@ -135,8 +150,8 @@ void ConnectionRegionFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVec
     const float pathwayLength = (nuVertex3D - showerStarts3D.front()).GetMagnitude();
     const float pathwayScatteringAngle2D = this->Get2DKink(pAlgorithm, protoShowerMatch, showerStarts3D.back());
 
-    featureVector.push_back(std::min(pathwayLength, 30.f));
-    featureVector.push_back(std::min(pathwayScatteringAngle2D, 10.f));
+    featureVector.push_back(std::min(pathwayLength, m_pathwayLengthLimit));
+    featureVector.push_back(std::min(pathwayScatteringAngle2D, m_pathwayScatteringAngle2DLimit));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -192,7 +207,7 @@ float ConnectionRegionFeatureTool::Get2DKink(const Algorithm *const pAlgorithm, 
         const float scatterAngleV(this->GetLargest2DKinkFromView(pAlgorithm, spineFitV, TPC_VIEW_V, showerStart3D));
         const float scatterAngleW(this->GetLargest2DKinkFromView(pAlgorithm, spineFitW, TPC_VIEW_W, showerStart3D));
 
-        float minScatterAngle(-10.f), middleScatterAngle(-10.f), maxScatterAngle(-10.f);
+        float minScatterAngle(m_defaultFloat), middleScatterAngle(m_defaultFloat), maxScatterAngle(m_defaultFloat);
         LArConnectionPathwayHelper::GetMinMiddleMax(scatterAngleU, scatterAngleV, scatterAngleW, minScatterAngle, middleScatterAngle, maxScatterAngle);
 
         return middleScatterAngle;
@@ -201,7 +216,7 @@ float ConnectionRegionFeatureTool::Get2DKink(const Algorithm *const pAlgorithm, 
     {
     }
 
-    return -10.f;
+    return m_defaultFloat;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -211,22 +226,20 @@ float ConnectionRegionFeatureTool::GetLargest2DKinkFromView(const Algorithm *con
 {
     const LayerFitResultMap &layerFitResultMap(spineFit.GetLayerFitResultMap());
     const int minLayer(layerFitResultMap.begin()->first), maxLayer(layerFitResultMap.rbegin()->first);
-
-    const int nLayersHalfWindow(5);
     const int nLayersSpanned(1 + maxLayer - minLayer);
 
-    if (nLayersSpanned <= 2 * nLayersHalfWindow)
-        return -10.f;
+    if (nLayersSpanned <= 2 * m_nLayersHalfWindow)
+        return m_defaultFloat;
 
     const CartesianVector projectedShowerStart(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), showerStart3D, hitType));
 
     float showerStartL(0.f), showerStartT(0.f);
     spineFit.GetLocalPosition(projectedShowerStart, showerStartL, showerStartT);
 
-    float maxCentralLayer(spineFit.GetLayer(showerStartL) - nLayersHalfWindow);
-    float minCentralLayer(layerFitResultMap.begin()->first + nLayersHalfWindow + 1);
+    float maxCentralLayer(spineFit.GetLayer(showerStartL) - m_nLayersHalfWindow);
+    float minCentralLayer(layerFitResultMap.begin()->first + m_nLayersHalfWindow + 1);
 
-    float highestOpeningAngle(-10.f);
+    float highestOpeningAngle(m_defaultFloat);
     CartesianVector kinkPosition(0.f, 0.f, 0.f);
     CartesianVector highestKinkPosition(0.f, 0.f, 0.f);
 
@@ -243,15 +256,15 @@ float ConnectionRegionFeatureTool::GetLargest2DKinkFromView(const Algorithm *con
         bool found(false);
         float openingAngle2D(std::numeric_limits<float>::max());
 
-        float thisHighestOpeningAngle(-10.f);
+        float thisHighestOpeningAngle(m_defaultFloat);
         CartesianVector thisHighestKinkPosition(0.f, 0.f, 0.f);
 
-        for (int i = 0; i < nLayersHalfWindow; ++i)
+        for (int i = 0; i < m_nLayersHalfWindow; ++i)
         {
             const int testLayer(layer + i);
             const float rL(spineFit.GetL(testLayer));
-            const float rL1(spineFit.GetL(testLayer - nLayersHalfWindow));
-            const float rL2(spineFit.GetL(testLayer + nLayersHalfWindow));
+            const float rL1(spineFit.GetL(testLayer - m_nLayersHalfWindow));
+            const float rL2(spineFit.GetL(testLayer + m_nLayersHalfWindow));
 
             CartesianVector firstPosition(0.f, 0.f, 0.f), centralPosition(0.f, 0.f, 0.f), secondPosition(0.f, 0.f, 0.f);
 
@@ -297,7 +310,20 @@ float ConnectionRegionFeatureTool::GetLargest2DKinkFromView(const Algorithm *con
 
 StatusCode ConnectionRegionFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SpineFitWindow", m_spineFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "DefaultFloat", m_defaultFloat));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "SpineFitWindow", m_spineFitWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "NLayersHalfWindow", m_nLayersHalfWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "PathwayLengthLimit", m_pathwayLengthLimit));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "PathwayScatteringAngle2DLimit", m_pathwayScatteringAngle2DLimit));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -306,11 +332,19 @@ StatusCode ConnectionRegionFeatureTool::ReadSettings(const TiXmlHandle xmlHandle
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ShowerRegionFeatureTool::ShowerRegionFeatureTool() : 
+    m_defaultFloat(-10.f),
+    m_defaultRatio(-0.5f),
     m_spineFitWindow(20),
     m_showerRadius(14.f),
     m_showerFitWindow(1000),
     m_edgeStep(2.f),
-    m_moliereFraction(0.9f)
+    m_moliereFraction(0.9f),
+    m_maxNHitsLimit(2000.f),
+    m_maxFoundHitRatioLimit(1.5f),
+    m_maxScatterAngleLimit(40.f),
+    m_maxOpeningAngleLimit(20.f),
+    m_maxNuVertexEnergyWeightedMeanRadialDistanceLimit(20.f),
+    m_minShowerStartMoliereRadiusLimit(10.f)
 {
 }
 
@@ -320,35 +354,35 @@ void ShowerRegionFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
     const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertex3D, const ProtoShowerMatch &protoShowerMatch, 
     const CartesianPointVector &showerStarts3D)
 {
-    float nHitsU(-10.f), foundHitRatioU(-0.5f), scatterAngleU(-10.f), openingAngleU(-10.f), nuVertexEnergyAsymmetryU(-10.f), 
-        nuVertexEnergyWeightedMeanRadialDistanceU(-10.f), showerStartEnergyAsymmetryU(-10.f), showerStartMoliereRadiusU(-10.f);
+    float nHitsU(m_defaultFloat), foundHitRatioU(m_defaultRatio), scatterAngleU(m_defaultFloat), openingAngleU(m_defaultFloat), nuVertexEnergyAsymmetryU(m_defaultRatio), 
+        nuVertexEnergyWeightedMeanRadialDistanceU(m_defaultFloat), showerStartEnergyAsymmetryU(m_defaultRatio), showerStartMoliereRadiusU(m_defaultFloat);
 
     this->GetViewShowerRegionVariables(pAlgorithm, pShowerPfo, nuVertex3D, protoShowerMatch, TPC_VIEW_U, showerStarts3D.at(0), nHitsU, 
         foundHitRatioU, scatterAngleU, openingAngleU, nuVertexEnergyAsymmetryU, nuVertexEnergyWeightedMeanRadialDistanceU, showerStartEnergyAsymmetryU, 
         showerStartMoliereRadiusU);
 
-    float nHitsV(-10.f), foundHitRatioV(-0.5f), scatterAngleV(-10.f), openingAngleV(-10.f), nuVertexEnergyAsymmetryV(-10.f), 
-        nuVertexEnergyWeightedMeanRadialDistanceV(-10.f), showerStartEnergyAsymmetryV(-10.f), showerStartMoliereRadiusV(-10.f);
+    float nHitsV(m_defaultFloat), foundHitRatioV(m_defaultRatio), scatterAngleV(m_defaultFloat), openingAngleV(m_defaultFloat), nuVertexEnergyAsymmetryV(m_defaultRatio), 
+        nuVertexEnergyWeightedMeanRadialDistanceV(m_defaultFloat), showerStartEnergyAsymmetryV(m_defaultRatio), showerStartMoliereRadiusV(m_defaultFloat);
 
     this->GetViewShowerRegionVariables(pAlgorithm, pShowerPfo, nuVertex3D, protoShowerMatch, TPC_VIEW_V, showerStarts3D.at(0), nHitsV, 
         foundHitRatioV, scatterAngleV, openingAngleV, nuVertexEnergyAsymmetryV, nuVertexEnergyWeightedMeanRadialDistanceV, showerStartEnergyAsymmetryV, 
         showerStartMoliereRadiusV);
 
-    float nHitsW(-10.f), foundHitRatioW(-0.5f), scatterAngleW(-10.f), openingAngleW(-10.f), nuVertexEnergyAsymmetryW(-10.f), 
-        nuVertexEnergyWeightedMeanRadialDistanceW(-10.f), showerStartEnergyAsymmetryW(-10.f), showerStartMoliereRadiusW(-10.f);
+    float nHitsW(m_defaultFloat), foundHitRatioW(m_defaultRatio), scatterAngleW(m_defaultFloat), openingAngleW(m_defaultFloat), nuVertexEnergyAsymmetryW(m_defaultRatio), 
+        nuVertexEnergyWeightedMeanRadialDistanceW(m_defaultFloat), showerStartEnergyAsymmetryW(m_defaultRatio), showerStartMoliereRadiusW(m_defaultFloat);
 
     this->GetViewShowerRegionVariables(pAlgorithm, pShowerPfo, nuVertex3D, protoShowerMatch, TPC_VIEW_W, showerStarts3D.at(0), nHitsW, 
         foundHitRatioW, scatterAngleW, openingAngleW, nuVertexEnergyAsymmetryW, nuVertexEnergyWeightedMeanRadialDistanceW, showerStartEnergyAsymmetryW, 
         showerStartMoliereRadiusW);
 
-    float minNHits(-10.f), minFoundHitRatio(-10.f), minScatterAngle(-10.f), minOpeningAngle(-10.f), minNuVertexEnergyAsymmetry(-10.f),
-        minNuVertexEnergyWeightedMeanRadialDistance(-10.f), minShowerStartEnergyAsymmetry(-10.f), minShowerStartMoliereRadius(-10.f); 
+    float minNHits(m_defaultFloat), minFoundHitRatio(m_defaultRatio), minScatterAngle(m_defaultFloat), minOpeningAngle(m_defaultFloat), minNuVertexEnergyAsymmetry(m_defaultRatio),
+        minNuVertexEnergyWeightedMeanRadialDistance(m_defaultFloat), minShowerStartEnergyAsymmetry(m_defaultRatio), minShowerStartMoliereRadius(m_defaultFloat); 
 
-    float middleNHits(-10.f), middleFoundHitRatio(-10.f), middleScatterAngle(-10.f), middleOpeningAngle(-10.f), middleNuVertexEnergyAsymmetry(-10.f),
-        middleNuVertexEnergyWeightedMeanRadialDistance(-10.f), middleShowerStartEnergyAsymmetry(-10.f), middleShowerStartMoliereRadius(-10.f);
+    float middleNHits(m_defaultFloat), middleFoundHitRatio(m_defaultRatio), middleScatterAngle(m_defaultFloat), middleOpeningAngle(m_defaultFloat), middleNuVertexEnergyAsymmetry(m_defaultRatio),
+        middleNuVertexEnergyWeightedMeanRadialDistance(m_defaultFloat), middleShowerStartEnergyAsymmetry(m_defaultRatio), middleShowerStartMoliereRadius(m_defaultFloat);
 
-    float maxNHits(-10.f), maxFoundHitRatio(-10.f), maxScatterAngle(-10.f), maxOpeningAngle(-10.f), maxNuVertexEnergyAsymmetry(-10.f),
-        maxNuVertexEnergyWeightedMeanRadialDistance(-10.f), maxShowerStartEnergyAsymmetry(-10.f), maxShowerStartMoliereRadius(-10.f);
+    float maxNHits(m_defaultFloat), maxFoundHitRatio(m_defaultRatio), maxScatterAngle(m_defaultFloat), maxOpeningAngle(m_defaultFloat), maxNuVertexEnergyAsymmetry(m_defaultRatio),
+        maxNuVertexEnergyWeightedMeanRadialDistance(m_defaultFloat), maxShowerStartEnergyAsymmetry(m_defaultRatio), maxShowerStartMoliereRadius(m_defaultFloat);
 
     LArConnectionPathwayHelper::GetMinMiddleMax(nHitsU, nHitsV, nHitsW, minNHits, middleNHits, maxNHits);
     LArConnectionPathwayHelper::GetMinMiddleMax(foundHitRatioU, foundHitRatioV, foundHitRatioW, minFoundHitRatio, middleFoundHitRatio, maxFoundHitRatio);
@@ -363,14 +397,14 @@ void ShowerRegionFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
     LArConnectionPathwayHelper::GetMinMiddleMax(showerStartMoliereRadiusU, showerStartMoliereRadiusV, showerStartMoliereRadiusW, 
         minShowerStartMoliereRadius, middleShowerStartMoliereRadius, maxShowerStartMoliereRadius);
 
-    featureVector.push_back(std::min(maxNHits, 2000.f));
-    featureVector.push_back(std::min(maxFoundHitRatio, 1.5f));
-    featureVector.push_back(std::min(maxScatterAngle, 40.f));
-    featureVector.push_back(std::min(maxOpeningAngle, 20.f));
+    featureVector.push_back(std::min(maxNHits, m_maxNHitsLimit));
+    featureVector.push_back(std::min(maxFoundHitRatio, m_maxFoundHitRatioLimit));
+    featureVector.push_back(std::min(maxScatterAngle, m_maxScatterAngleLimit));
+    featureVector.push_back(std::min(maxOpeningAngle, m_maxOpeningAngleLimit));
     featureVector.push_back(maxNuVertexEnergyAsymmetry);
-    featureVector.push_back(std::min(maxNuVertexEnergyWeightedMeanRadialDistance, 20.f));
+    featureVector.push_back(std::min(maxNuVertexEnergyWeightedMeanRadialDistance, m_maxNuVertexEnergyWeightedMeanRadialDistanceLimit));
     featureVector.push_back(maxShowerStartEnergyAsymmetry);
-    featureVector.push_back(std::min(minShowerStartMoliereRadius, 10.f));
+    featureVector.push_back(std::min(minShowerStartMoliereRadius, m_minShowerStartMoliereRadiusLimit));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -695,7 +729,7 @@ void ShowerRegionFeatureTool::CalculateViewNuVertexConsistencyVariables(const Tw
         nuVertexEnergyAsymmetry += (thisL < 0.f) ? (-1.f * hitEnergy) : hitEnergy;
     }
 
-    nuVertexEnergyAsymmetry = (totalEnergy < std::numeric_limits<float>::epsilon()) ? -0.5f : (nuVertexEnergyAsymmetry / totalEnergy);
+    nuVertexEnergyAsymmetry = (totalEnergy < std::numeric_limits<float>::epsilon()) ? m_defaultRatio : (nuVertexEnergyAsymmetry / totalEnergy);
     nuVertexEnergyAsymmetry = std::fabs(nuVertexEnergyAsymmetry);
 
     // nuVertexEnergyWeightedMeanRadialDistance
@@ -709,7 +743,7 @@ void ShowerRegionFeatureTool::CalculateViewNuVertexConsistencyVariables(const Tw
             nuVertexEnergyWeightedMeanRadialDistance += (directionAxis.GetCrossProduct(position).GetMagnitude() * hitEnergy);
         }
 
-    nuVertexEnergyWeightedMeanRadialDistance = (totalEnergy < std::numeric_limits<float>::epsilon()) ? -10.f : nuVertexEnergyWeightedMeanRadialDistance / totalEnergy;
+    nuVertexEnergyWeightedMeanRadialDistance = (totalEnergy < std::numeric_limits<float>::epsilon()) ? m_defaultFloat : nuVertexEnergyWeightedMeanRadialDistance / totalEnergy;
 }
 
 
@@ -743,7 +777,7 @@ void ShowerRegionFeatureTool::CalculateViewShowerStartConsistencyVariables(const
     showerStartEnergyAsymmetry = std::fabs(showerStartEnergyAsymmetry);
 
     // showerStartMoliereRadius
-    showerStartMoliereRadius = -10.f;
+    showerStartMoliereRadius = m_defaultFloat;
 
     CaloHitVector showerStartPostShowerHitVector(postShowerHitList.begin(), postShowerHitList.end());
 
@@ -778,15 +812,46 @@ void ShowerRegionFeatureTool::CalculateViewShowerStartConsistencyVariables(const
 
 StatusCode ShowerRegionFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SpineFitWindow", m_spineFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "DefaultFloat", m_defaultFloat));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowerRadius", m_showerRadius));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "DefaultRatio", m_defaultRatio));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowerFitWindow", m_showerFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "SpineFitWindow", m_spineFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EdgeStep", m_edgeStep));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ShowerRadius", m_showerRadius));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MoliereFraction", m_moliereFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ShowerFitWindow", m_showerFitWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "EdgeStep", m_edgeStep));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "MoliereFraction", m_moliereFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "MaxNHitsLimit", m_maxNHitsLimit));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "MaxFoundHitRatioLimit", m_maxFoundHitRatioLimit));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "MaxScatterAngleLimit", m_maxScatterAngleLimit));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "MaxOpeningAngleLimit", m_maxOpeningAngleLimit));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "MaxNuVertexEnergyWeightedMeanRadialDistanceLimit", 
+        m_maxNuVertexEnergyWeightedMeanRadialDistanceLimit));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "MinShowerStartMoliereRadiusLimit", 
+        m_minShowerStartMoliereRadiusLimit));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -795,6 +860,7 @@ StatusCode ShowerRegionFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 AmbiguousRegionFeatureTool::AmbiguousRegionFeatureTool() : 
+    m_defaultFloat(-10.f),
     m_caloHitListNameU("CaloHitListU"),
     m_caloHitListNameV("CaloHitListV"),
     m_caloHitListNameW("CaloHitListW"),
@@ -814,8 +880,8 @@ void AmbiguousRegionFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVect
     float nAmbiguousViews(0.f);
     this->CalculateNAmbiguousViews(protoShowerMatch, nAmbiguousViews);
 
-    float maxUnaccountedEnergy(-10.f);
-    float unaccountedHitEnergyU(-10.f), unaccountedHitEnergyV(-10.f), unaccountedHitEnergyW(-10.f);
+    float maxUnaccountedEnergy(m_defaultFloat);
+    float unaccountedHitEnergyU(m_defaultFloat), unaccountedHitEnergyV(m_defaultFloat), unaccountedHitEnergyW(m_defaultFloat);
     
     if (this->GetViewAmbiguousHitVariables(pAlgorithm, protoShowerMatch, TPC_VIEW_U, nuVertex3D, unaccountedHitEnergyU))
         maxUnaccountedEnergy = std::max(maxUnaccountedEnergy, unaccountedHitEnergyU);
@@ -880,7 +946,7 @@ bool AmbiguousRegionFeatureTool::GetViewAmbiguousHitVariables(const Algorithm *c
     const HitType hitType, const CartesianVector &nuVertex3D, float &unaccountedHitEnergy)
 {
     std::map<int, CaloHitList> ambiguousHitSpines;
-    CaloHitList hitsToExcludeInEnergyCalcs; // to avoid float counting
+    CaloHitList hitsToExcludeInEnergyCalcs; // to avoid double  counting
     const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertex3D, hitType));
     const ProtoShower &protoShower(hitType == TPC_VIEW_U ? protoShowerMatch.m_protoShowerU : (hitType == TPC_VIEW_V ? protoShowerMatch.m_protoShowerV : protoShowerMatch.m_protoShowerW));
 
@@ -1083,19 +1149,29 @@ CaloHitList AmbiguousRegionFeatureTool::FindAmbiguousContinuousSpine(const CaloH
 
 StatusCode AmbiguousRegionFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListNameU", m_caloHitListNameU));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "DefaultFloat", m_defaultFloat));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListNameV", m_caloHitListNameV));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "CaloHitListNameU", m_caloHitListNameU));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListNameW", m_caloHitListNameW));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "CaloHitListNameV", m_caloHitListNameV));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxTransverseDistance", m_maxTransverseDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "CaloHitListNameW", m_caloHitListNameW));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSampleHits", m_maxSampleHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "MaxTransverseDistance", m_maxTransverseDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxHitSeparation", m_maxHitSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "MaxSampleHits", m_maxSampleHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxTrackFraction", m_maxTrackFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+       XmlHelper::ReadValue(xmlHandle, "MaxHitSeparation", m_maxHitSeparation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+       XmlHelper::ReadValue(xmlHandle, "MaxTrackFraction", m_maxTrackFraction));
 
     return STATUS_CODE_SUCCESS;
 }

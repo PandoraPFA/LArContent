@@ -24,9 +24,8 @@ public:
      */
     ProtoShowerMatchingTool();
 
-    pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const ProtoShowerVector &protoShowerVectorU, 
-        const ProtoShowerVector &protoShowerVectorV, const ProtoShowerVector &protoShowerVectorW, 
-        ProtoShowerMatchVector &protoShowerMatchVector);
+    pandora::StatusCode Run(const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV, 
+        const ProtoShowerVector &protoShowerVectorW, ProtoShowerMatchVector &protoShowerMatchVector);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
