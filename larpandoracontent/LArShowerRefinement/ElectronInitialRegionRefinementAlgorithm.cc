@@ -41,7 +41,8 @@ ElectronInitialRegionRefinementAlgorithm::ElectronInitialRegionRefinementAlgorit
     m_minElectronCompleteness(0.33f),
     m_minElectronPurity(0.5f),
     m_maxSeparationFromHit(3.f),
-    m_maxProjectionSeparation(5.f)
+    m_maxProjectionSeparation(5.f),
+    m_maxXSeparation(0.5f)
 {
 }
 
@@ -129,7 +130,7 @@ void ElectronInitialRegionRefinementAlgorithm::RefineShower(const ParticleFlowOb
         // Determine the 3D shower vertex
         CartesianPointVector showerStarts3D;
         if (!LArConnectionPathwayHelper::FindShowerStarts3D(this, pShowerPfo, protoShowerMatch, nuVertex3D, m_maxSeparationFromHit, 
-            m_maxProjectionSeparation, showerStarts3D))
+            m_maxProjectionSeparation, m_maxXSeparation, showerStarts3D))
         {
             return;
         }
@@ -747,6 +748,9 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::ReadSettings(const TiXmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MaxProjectionSeparation", m_maxProjectionSeparation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxXSeparation", m_maxXSeparation));
 
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));

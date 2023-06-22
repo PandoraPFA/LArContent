@@ -210,6 +210,7 @@ private:
     float m_minElectronPurity;                                      ///< The min. purity of an electron-like pfo
     float m_maxSeparationFromHit;                                   ///< The max. separation between the projected 3D shower start and the closest 2D shower hit
     float m_maxProjectionSeparation;                                ///< The max. separation between the projected 3D shower start and the shower start of that view
+    float m_maxXSeparation;                                         ///< The max. drift-coordinate separation between a 3D shower start and a matched 2D shower hit 
     ConnectionPathwayFeatureTool::FeatureToolMap m_featureToolMap;  ///< The feature tool map
     pandora::StringVector m_algorithmToolNames;                     ///< The algorithm tool names
 };

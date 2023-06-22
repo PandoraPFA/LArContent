@@ -15,12 +15,6 @@
 #include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
-namespace pandora
-{
-    class CartesianVector;
-    class Pandora;
-} // namespace pandora
-
 namespace lar_content
 {
 
@@ -30,7 +24,9 @@ namespace lar_content
 class LArConnectionPathwayHelper
 {
 public:
-
+    /**
+     *  @brief  SortByDistanceToPoint class
+     */
     class SortByDistanceToPoint
     {
     public:
@@ -58,31 +54,110 @@ public:
         const pandora::CartesianVector m_referencePoint; ///< The point relative to which constituent hits are ordered
     };
 
-
+    /**
+     *  @brief  Create 3D shower start position(s) from three input 2D positions
+     *
+     *  @param  pAlgorithm the calling algorithm
+     *  @param  pShowerPfo the shower pfo
+     *  @param  protoShowerMatch the ProtoShowerMatch object
+     *  @param  nuVertexPosition the 3D neutrino vertex
+     *  @param  maxSeparationFromHit the max. separation between a projected 3D shower start and the closest 2D shower hit
+     *  @param  maxProjectionSeparation the max. separation between the projected 3D shower start and the shower start of that view
+     *  @param  maxXSeparation the max. drift-coordinate separation between a 3D shower start and a matched 2D shower hit
+     *  @param  showerStarts3D the output vector of 3D shower starts (ordered closest -> furthest from the neutrino vertex)
+     *
+     *  @return whether a consistent 3D shower start position could be created
+     */
     static bool FindShowerStarts3D(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
         const ProtoShowerMatch &protoShowerMatch, const pandora::CartesianVector &nuVertexPosition, const float maxSeparationFromHit, 
-        const float maxProjectionSeparation, pandora::CartesianPointVector &showerStarts3D);
+        const float maxProjectionSeparation, const float maxXSeparation, pandora::CartesianPointVector &showerStarts3D);
 
-   static bool FindShowerStartFromPosition(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
+    /**
+     *  @brief  Create 3D shower start position from three input 2D positions, assuming consistency of position
+     *
+     *  @param  pAlgorithm the calling algorithm
+     *  @param  protoShowerU the U view ProtoShower
+     *  @param  protoShowerV the V view ProtoShower
+     *  @param  protoShowerW the W view ProtoShower
+     *  @param  showerStart3D the output 3D shower start position
+     */
+   static void FindShowerStartFromPosition(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
 
+    /**
+     *  @brief  Create a 3D shower start position from each input 2D position, assuming consistency of initial direction
+     *
+     *  @param  pAlgorithm the calling algorithm
+     *  @param  protoShowerU the U view ProtoShower
+     *  @param  protoShowerV the V view ProtoShower
+     *  @param  protoShowerW the W view ProtoShower
+     *  @param  uShowerStart3D the output 3D shower start created from the U view shower start position
+     *  @param  vShowerStart3D the output 3D shower start created from the V view shower start position
+     *  @param  wShowerStart3D the output 3D shower start created from the W view shower start position
+     *
+     *  @return whether the 3D shower start positions could be created
+     */
     static bool FindShowerStartFromDirection(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
         const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &uShowerStart3D, 
         pandora::CartesianVector &vShowerStart3D, pandora::CartesianVector &wShowerStart3D);
 
-   static bool FindShowerStartFromDirection(const pandora::Algorithm *const pAlgorithm, const pandora::CartesianVector nuVertexPosition, 
-       const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
-
-    static bool FindShowerStartFromXProjection(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
-        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float maxSeparation, 
+    /**
+     *  @brief  Create a 3D shower start position from an input 2D position, assuming consistency of the drift coordinate
+     *
+     *  @param  pAlgorithm the calling algorithm
+     *  @param  protoShower the ProtoShower from which the input 2D shower start is obtained
+     *  @param  protoShower1 a matched ProtoShower from another view
+     *  @param  protoShower2 the matched ProtoShower from the final view
+     *  @param  maxSeparation the max. separation between the projected 3D shower start and the shower start of that view     
+     *  @param  maxXSeparation the max. drift-coordinate separation between a 3D shower start and a matched 2D shower hit
+     *  @param  showerStart3D the output 3D shower start
+     *
+     *  @return whether the 3D shower start positions could be created
+     */
+    static bool FindShowerStartFromXProjection(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
+        const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation, const float maxXSeparation,
         pandora::CartesianVector &showerStart3D);
 
+    /**
+     *  @brief  Find the 2D spine hit that is closest to the neutrino vertex and shares a drift coordinate with an input 3D position
+     *
+     *  @param  protoShower the input ProtoShower in which to search
+     *  @param  showerStart3D the input 3D shower start position
+     *  @param  maxXSeparation the max. drift-coordinate separation between a 3D shower start and a matched 2D shower hit 
+     *  @param  foundShowerStart the output matched 2D hit position
+     *
+     *  @return whether a 2D spine hit could be found
+     */
     static bool FindClosestSpinePosition(const ProtoShower &protoShower, const pandora::CartesianVector &showerStart3D, 
-        pandora::CartesianVector &foundShowerStart);
+        const float maxXSeparation, pandora::CartesianVector &foundShowerStart);
 
+    /**
+     *  @brief  A relaxed approach to create a 3D shower start position from an input 2D position, assuming consistency of the drift coordinate
+     *
+     *  @param  pAlgorithm the calling algorithm
+     *  @param  protoShower the ProtoShower from which the input 2D shower start is obtained
+     *  @param  protoShower1 a matched ProtoShower from another view
+     *  @param  protoShower2 the matched ProtoShower from the final view
+     *  @param  maxSeparation the max. separation between the projected 3D shower start and the shower start of that view     
+     *  @param  maxXSeparation the max. drift-coordinate separation between a 3D shower start and a matched 2D shower hit
+     *  @param  ShowerStart3D the output 3D shower start
+     *
+     *  @return whether the 3D shower start position could be created
+     */
     static bool FindShowerStartFromXProjectionRelaxed(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
-       const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation, pandora::CartesianVector &showerStart3D);
+        const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation, const float maxXSeparation, 
+        pandora::CartesianVector &showerStart3D);
 
+    /**
+     *  @brief  Determine the lowest, median and highest value from an input of three numbers
+     *
+     *  @param  value1 the first value
+     *  @param  value2 the second value
+     *  @param  value3 the third value
+     *  @param  minValue the minimum value
+     *  @param  middleValue the median value
+     *  @param  maxValue the maximum value
+     */
     static void GetMinMiddleMax(const float value1, const float value2, const float value3, float &minValue, float &middleValue,
         float &maxValue);
 };
