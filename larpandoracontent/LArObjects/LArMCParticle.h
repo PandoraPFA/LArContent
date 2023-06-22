@@ -122,6 +122,7 @@ public:
      */
     MCProcess GetProcess() const;
 
+private:
     int m_nuanceCode; ///< The nuance code
     int m_process;    ///< The process that created the particle
 };
@@ -216,6 +217,7 @@ inline MCProcess LArMCParticle::GetProcess() const
     return MCProcess(m_process);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LArMCParticleFactory::LArMCParticleFactory(const unsigned int version) : m_version(version)
