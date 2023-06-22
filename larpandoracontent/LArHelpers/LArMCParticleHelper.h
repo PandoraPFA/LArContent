@@ -12,7 +12,6 @@
 
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
 
-
 #include <functional>
 #include <unordered_map>
 
@@ -69,8 +68,6 @@ public:
         float m_minHitSharingFraction;      ///< the minimum Hit sharing fraction
         bool m_foldBackHierarchy; ///< whether to fold the hierarchy back to the primary (neutrino) or leading particles (test beam)
     };
-
-    static bool IsCCNuEvent(const pandora::MCParticleList *const pMCParticleList, const int nuPdg);
 
     /**
      *  @brief  Returns true if passed particle whose primary meets the passed criteria

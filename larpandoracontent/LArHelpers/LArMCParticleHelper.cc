@@ -39,33 +39,6 @@ LArMCParticleHelper::PrimaryParameters::PrimaryParameters() :
 {
 }
 
-bool LArMCParticleHelper::IsCCNuEvent(const MCParticleList *const pMCParticleList, const int nuPdg)
-{
-    bool found(false);
-    unsigned int absNuPdg(std::abs(nuPdg)), nuCount(0);
-
-    for (const MCParticle *const pMCParticle : *pMCParticleList)
-    {
-        unsigned int absPdg(std::abs(pMCParticle->GetParticleId()));
-
-        if (LArMCParticleHelper::IsNeutrino(pMCParticle))
-        {
-            ++nuCount;
-
-            const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle *>(pMCParticle));
-
-            if ((absPdg == absNuPdg) && (!pLArMCParticle->GetIsNC()))
-                found = true;
-        }
-    }
-
-    // If more than one neutrino in event
-    if (nuCount > 1)
-        return false;
-
-    return found;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
