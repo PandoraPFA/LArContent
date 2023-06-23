@@ -74,7 +74,6 @@
 #include "larpandoracontent/LArShowerRefinement/ProtoShowerMatchingTool.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerSpineFinderTool.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartFinderTool.h"
-#include "larpandoracontent/LArShowerRefinement/ThreeDHitRemovalAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/AmbiguousDeltaRayTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayRemovalTool.h"
@@ -251,7 +250,6 @@
     d("LArMaster",                              MasterAlgorithm)                                                                \
     d("LArPostProcessing",                      PostProcessingAlgorithm)                                                        \
     d("LArPreProcessing",                       PreProcessingAlgorithm)                                                         \
-    d("LArThreeDHitRemoval",                    ThreeDHitRemovalAlgorithm)                                                      \
     d("LArSlicing",                             SlicingAlgorithm)                                                               \
     d("LArStreaming",                           StreamingAlgorithm)                                                             \
     d("LArTrackParticleBuilding",               TrackParticleBuildingAlgorithm)                                                 \
