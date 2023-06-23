@@ -6,25 +6,16 @@
  *  $Log: $
  */
 
-#include "Objects/CaloHit.h"
-#include "Objects/CartesianVector.h"
-
 #include "Pandora/Algorithm.h"
 #include "Pandora/Pandora.h"
 #include "Pandora/PandoraInternal.h"
-
-#include "PandoraMonitoringApi.h"
 
 #include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArConnectionPathwayHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-
-#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
-#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 #include <limits>
 

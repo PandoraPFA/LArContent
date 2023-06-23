@@ -10,9 +10,6 @@
 
 #include "Pandora/PandoraInternal.h"
 
-#include "Objects/CartesianVector.h"
-
-#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 #include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
 
 namespace lar_content

@@ -12,6 +12,8 @@
 #include "larpandoracontent/LArHelpers/LArConnectionPathwayHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
+
 #include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
 #include "larpandoracontent/LArShowerRefinement/ProtoShowerMatchingTool.h"
 

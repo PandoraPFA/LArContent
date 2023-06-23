@@ -182,7 +182,7 @@ private:
     float m_minShowerOpeningAngle;         ///< The min. opening angle of a sensible shower
     float m_molliereRadius;                ///< The max. distance from the shower core of a collected shower region hit
     unsigned int m_showerSlidingFitWindow; ///< The sliding window used to fit the shower region
-    unsigned int m_maxLayerSeparation;     ///< The max. allowed separation between the shower start and boundary start layers
+    int m_maxLayerSeparation;     ///< The max. allowed separation between the shower start and boundary start layers
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
