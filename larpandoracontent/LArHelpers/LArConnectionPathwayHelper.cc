@@ -6,26 +6,25 @@
  *  $Log: $
  */
 
-#include "Objects/CartesianVector.h"
 #include "Objects/CaloHit.h"
+#include "Objects/CartesianVector.h"
 
-#include "Pandora/PandoraInternal.h"
-#include "Pandora/Pandora.h"
 #include "Pandora/Algorithm.h"
+#include "Pandora/Pandora.h"
+#include "Pandora/PandoraInternal.h"
 
 #include "PandoraMonitoringApi.h"
 
 #include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
 
-#include "larpandoracontent/LArHelpers/LArConnectionPathwayHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArConnectionPathwayHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
-
 
 #include <limits>
 
@@ -52,8 +51,8 @@ bool LArConnectionPathwayHelper::SortByDistanceToPoint::operator()(const CaloHit
 // Finding 3D Shower Start Position
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindShowerStarts3D(const pandora::Algorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
-    const ProtoShowerMatch &protoShowerMatch, const CartesianVector &nuVertexPosition, const float maxSeparationFromHit, 
+bool LArConnectionPathwayHelper::FindShowerStarts3D(const pandora::Algorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo,
+    const ProtoShowerMatch &protoShowerMatch, const CartesianVector &nuVertexPosition, const float maxSeparationFromHit,
     const float maxProjectionSeparation, const float maxXSeparation, CartesianPointVector &showerStarts3D)
 {
     const ProtoShower &protoShowerU(protoShowerMatch.m_protoShowerU);
@@ -75,12 +74,15 @@ bool LArConnectionPathwayHelper::FindShowerStarts3D(const pandora::Algorithm *co
 
         if (LArClusterHelper::GetClosestDistance(uShowerStart3D, caloHitList3D) < maxSeparationFromHit)
         {
-            uFound = true; vFound = true; wFound = true;
+            uFound = true;
+            vFound = true;
+            wFound = true;
         }
     }
     else if (consistency == Consistency::DIRECTION)
     {
-        if (LArConnectionPathwayHelper::FindShowerStartFromDirection(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, uShowerStart3D, vShowerStart3D, wShowerStart3D))
+        if (LArConnectionPathwayHelper::FindShowerStartFromDirection(
+                pAlgorithm, protoShowerU, protoShowerV, protoShowerW, uShowerStart3D, vShowerStart3D, wShowerStart3D))
         {
             if (LArClusterHelper::GetClosestDistance(uShowerStart3D, caloHitList3D) < maxSeparationFromHit)
                 uFound = true;
@@ -95,25 +97,34 @@ bool LArConnectionPathwayHelper::FindShowerStarts3D(const pandora::Algorithm *co
 
     if (!uFound || (consistency == Consistency::X_PROJECTION))
     {
-        if (LArConnectionPathwayHelper::FindShowerStartFromXProjection(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, maxProjectionSeparation, maxXSeparation, uShowerStart3D) || 
-            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, maxProjectionSeparation, maxXSeparation, uShowerStart3D) ||
-            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(pAlgorithm, protoShowerU, protoShowerW, protoShowerV, maxProjectionSeparation, maxXSeparation, uShowerStart3D))
+        if (LArConnectionPathwayHelper::FindShowerStartFromXProjection(
+                pAlgorithm, protoShowerU, protoShowerV, protoShowerW, maxProjectionSeparation, maxXSeparation, uShowerStart3D) ||
+            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(
+                pAlgorithm, protoShowerU, protoShowerV, protoShowerW, maxProjectionSeparation, maxXSeparation, uShowerStart3D) ||
+            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(
+                pAlgorithm, protoShowerU, protoShowerW, protoShowerV, maxProjectionSeparation, maxXSeparation, uShowerStart3D))
         {
-                uFound = true;
+            uFound = true;
         }
 
-        if (LArConnectionPathwayHelper::FindShowerStartFromXProjection(pAlgorithm, protoShowerV, protoShowerW, protoShowerU, maxProjectionSeparation, maxXSeparation, vShowerStart3D) || 
-            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(pAlgorithm, protoShowerV, protoShowerW, protoShowerU, maxProjectionSeparation, maxXSeparation, vShowerStart3D) ||
-            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(pAlgorithm, protoShowerV, protoShowerU, protoShowerW, maxProjectionSeparation, maxXSeparation, vShowerStart3D))
+        if (LArConnectionPathwayHelper::FindShowerStartFromXProjection(
+                pAlgorithm, protoShowerV, protoShowerW, protoShowerU, maxProjectionSeparation, maxXSeparation, vShowerStart3D) ||
+            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(
+                pAlgorithm, protoShowerV, protoShowerW, protoShowerU, maxProjectionSeparation, maxXSeparation, vShowerStart3D) ||
+            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(
+                pAlgorithm, protoShowerV, protoShowerU, protoShowerW, maxProjectionSeparation, maxXSeparation, vShowerStart3D))
         {
-                vFound = true;
+            vFound = true;
         }
 
-        if (LArConnectionPathwayHelper::FindShowerStartFromXProjection(pAlgorithm, protoShowerW, protoShowerU, protoShowerV, maxProjectionSeparation, maxXSeparation, wShowerStart3D) ||
-            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(pAlgorithm, protoShowerW, protoShowerU, protoShowerV, maxProjectionSeparation, maxXSeparation, wShowerStart3D) ||
-            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(pAlgorithm, protoShowerW, protoShowerV, protoShowerU, maxProjectionSeparation, maxXSeparation, wShowerStart3D))
+        if (LArConnectionPathwayHelper::FindShowerStartFromXProjection(
+                pAlgorithm, protoShowerW, protoShowerU, protoShowerV, maxProjectionSeparation, maxXSeparation, wShowerStart3D) ||
+            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(
+                pAlgorithm, protoShowerW, protoShowerU, protoShowerV, maxProjectionSeparation, maxXSeparation, wShowerStart3D) ||
+            LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(
+                pAlgorithm, protoShowerW, protoShowerV, protoShowerU, maxProjectionSeparation, maxXSeparation, wShowerStart3D))
         {
-                wFound = true;
+            wFound = true;
         }
     }
 
@@ -151,14 +162,15 @@ void LArConnectionPathwayHelper::FindShowerStartFromPosition(const pandora::Algo
     const CartesianVector showerStartW(protoShowerW.m_showerCore.m_startPosition);
 
     float chi2(0.0);
-    LArGeometryHelper::MergeThreePositions3D(pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, showerStartU, showerStartV, showerStartW, showerStart3D, chi2);
+    LArGeometryHelper::MergeThreePositions3D(
+        pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, showerStartU, showerStartV, showerStartW, showerStart3D, chi2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindShowerStartFromDirection(const pandora::Algorithm *const pAlgorithm,
-    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, CartesianVector &uShowerStart3D, 
-    CartesianVector &vShowerStart3D, CartesianVector &wShowerStart3D)
+bool LArConnectionPathwayHelper::FindShowerStartFromDirection(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
+    const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, CartesianVector &uShowerStart3D, CartesianVector &vShowerStart3D,
+    CartesianVector &wShowerStart3D)
 {
     const CartesianVector &showerStartU(protoShowerU.m_showerCore.m_startPosition);
     const CartesianVector &showerStartV(protoShowerV.m_showerCore.m_startPosition);
@@ -202,16 +214,19 @@ bool LArConnectionPathwayHelper::FindShowerStartFromDirection(const pandora::Alg
 
     float chi2(0.0);
 
-    LArGeometryHelper::MergeThreePositions3D(pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, showerStartU, showerStartV1, showerStartW1, uShowerStart3D, chi2);
-    LArGeometryHelper::MergeThreePositions3D(pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, showerStartU2, showerStartV, showerStartW2, vShowerStart3D, chi2);
-    LArGeometryHelper::MergeThreePositions3D(pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, showerStartU3, showerStartV3, showerStartW, wShowerStart3D, chi2);
+    LArGeometryHelper::MergeThreePositions3D(
+        pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, showerStartU, showerStartV1, showerStartW1, uShowerStart3D, chi2);
+    LArGeometryHelper::MergeThreePositions3D(
+        pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, showerStartU2, showerStartV, showerStartW2, vShowerStart3D, chi2);
+    LArGeometryHelper::MergeThreePositions3D(
+        pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, showerStartU3, showerStartV3, showerStartW, wShowerStart3D, chi2);
 
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindShowerStartFromXProjection(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
+bool LArConnectionPathwayHelper::FindShowerStartFromXProjection(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower,
     const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation, const float maxXSeparation, CartesianVector &showerStart3D)
 {
     const CartesianVector showerStart(protoShower.m_showerCore.m_startPosition);
@@ -239,21 +254,22 @@ bool LArConnectionPathwayHelper::FindShowerStartFromXProjection(const pandora::A
     LArGeometryHelper::MergeTwoPositions(pAlgorithm->GetPandora(), hitType, hitType1, showerStart, showerStart1, projection2, chi2);
     const float separationSquared2((projection2 - showerStart2).GetMagnitudeSquared());
 
-    if ((separationSquared > maxSeparation * maxSeparation) || (separationSquared1 > maxSeparation * maxSeparation) || 
+    if ((separationSquared > maxSeparation * maxSeparation) || (separationSquared1 > maxSeparation * maxSeparation) ||
         (separationSquared2 > maxSeparation * maxSeparation))
     {
         return false;
     }
 
-    LArGeometryHelper::MergeThreePositions3D(pAlgorithm->GetPandora(), hitType, hitType1, hitType2, showerStart, showerStart1, showerStart2, showerStart3D, chi2);
+    LArGeometryHelper::MergeThreePositions3D(
+        pAlgorithm->GetPandora(), hitType, hitType1, hitType2, showerStart, showerStart1, showerStart2, showerStart3D, chi2);
 
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindClosestSpinePosition(const ProtoShower &protoShower, const CartesianVector &showerStart3D, const float maxXSeparation,
-    CartesianVector &foundShowerStart)
+bool LArConnectionPathwayHelper::FindClosestSpinePosition(
+    const ProtoShower &protoShower, const CartesianVector &showerStart3D, const float maxXSeparation, CartesianVector &foundShowerStart)
 {
     bool found(false);
     float lowestL(std::numeric_limits<float>::max());
@@ -263,7 +279,8 @@ bool LArConnectionPathwayHelper::FindClosestSpinePosition(const ProtoShower &pro
         if (std::fabs(pCaloHit->GetPositionVector().GetX() - showerStart3D.GetX()) > maxXSeparation)
             continue;
 
-        float lVertex(protoShower.m_connectionPathway.m_startDirection.GetDotProduct(pCaloHit->GetPositionVector() - protoShower.m_connectionPathway.m_startPosition));
+        float lVertex(protoShower.m_connectionPathway.m_startDirection.GetDotProduct(
+            pCaloHit->GetPositionVector() - protoShower.m_connectionPathway.m_startPosition));
 
         if ((lVertex > 0.f) && (lVertex < lowestL))
         {
@@ -278,8 +295,9 @@ bool LArConnectionPathwayHelper::FindClosestSpinePosition(const ProtoShower &pro
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower, 
-    const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation, const float maxXSeparation, CartesianVector &showerStart3D)
+bool LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(const pandora::Algorithm *const pAlgorithm,
+    const ProtoShower &protoShower, const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation,
+    const float maxXSeparation, CartesianVector &showerStart3D)
 {
     const CartesianVector showerStart(protoShower.m_showerCore.m_startPosition);
     CartesianVector showerStart1(0.f, 0.f, 0.f);
@@ -311,8 +329,8 @@ bool LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(const pan
 // Ordeing Functions
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArConnectionPathwayHelper::GetMinMiddleMax(const float value1, const float value2, const float value3, float &minValue, float &middleValue, 
-    float &maxValue)
+void LArConnectionPathwayHelper::GetMinMiddleMax(
+    const float value1, const float value2, const float value3, float &minValue, float &middleValue, float &maxValue)
 {
     minValue = std::min(std::min(value1, value2), value3);
     maxValue = std::max(std::max(value1, value2), value3);
@@ -320,7 +338,7 @@ void LArConnectionPathwayHelper::GetMinMiddleMax(const float value1, const float
 
     for (const float value : {value1, value2, value3})
     {
-        if ((std::fabs(value - minValue) < std::numeric_limits<float>::epsilon()) || 
+        if ((std::fabs(value - minValue) < std::numeric_limits<float>::epsilon()) ||
             (std::fabs(value - maxValue) < std::numeric_limits<float>::epsilon()))
         {
             continue;

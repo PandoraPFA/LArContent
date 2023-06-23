@@ -33,8 +33,8 @@ StatusCode ListMergingAlgorithm::Run()
             if (STATUS_CODE_NOT_FOUND == statusCode)
             {
                 if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
-                    std::cout << "ListMergingAlgorithm: vertex list not found, source: " << sourceListName
-                              << ", target: " << targetListName << std::endl;
+                    std::cout << "ListMergingAlgorithm: vertex list not found, source: " << sourceListName << ", target: " << targetListName
+                              << std::endl;
             }
             else if (STATUS_CODE_NOT_INITIALIZED == statusCode)
             {
@@ -43,8 +43,7 @@ StatusCode ListMergingAlgorithm::Run()
             }
             else
             {
-                std::cout << "ListMergingAlgorithm: error in vertex merging, source: " << sourceListName << ", target: " << targetListName
-                          << std::endl;
+                std::cout << "ListMergingAlgorithm: error in vertex merging, source: " << sourceListName << ", target: " << targetListName << std::endl;
                 return statusCode;
             }
         }

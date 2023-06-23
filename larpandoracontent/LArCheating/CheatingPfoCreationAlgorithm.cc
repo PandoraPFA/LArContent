@@ -200,18 +200,18 @@ unsigned int CheatingPfoCreationAlgorithm::GetNHitTypesAboveThreshold(const Clus
 
 bool CheatingPfoCreationAlgorithm::IsTrack(const MCParticle *const pMCParticle) const
 {
-  const int pdg(pMCParticle->GetParticleId());
+    const int pdg(pMCParticle->GetParticleId());
 
-  return ((MU_MINUS == std::abs(pdg)) || (PI_PLUS == std::abs(pdg)) || (PROTON == std::abs(pdg)) || (K_PLUS == std::abs(pdg)));
+    return ((MU_MINUS == std::abs(pdg)) || (PI_PLUS == std::abs(pdg)) || (PROTON == std::abs(pdg)) || (K_PLUS == std::abs(pdg)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool CheatingPfoCreationAlgorithm::IsShower(const MCParticle *const pMCParticle) const
 {
-  const int pdg(pMCParticle->GetParticleId());
+    const int pdg(pMCParticle->GetParticleId());
 
-  return ((E_MINUS == std::abs(pdg)) || (PHOTON == std::abs(pdg)));
+    return ((E_MINUS == std::abs(pdg)) || (PHOTON == std::abs(pdg)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
