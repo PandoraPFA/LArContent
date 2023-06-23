@@ -312,10 +312,24 @@ public:
      */
     static float GetClosestDistanceToPoint2D(const pandora::CaloHit *const pCaloHit, const pandora::CartesianVector &point2D);
 
-    static float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &positionVector);
-
+    /**
+     *  @brief  Find the smallest separation between a hit and a list of hits, with the consideration of their hit widths
+     *
+     *  @param  pThisCaloHit the input calo hit
+     *  @param  caloHitList the input calo hit list
+     *
+     *  @return the smallest separation
+     */
     static float GetClosestDistance(const pandora::CaloHit *const pThisCaloHit, const pandora::CaloHitList &caloHitList);
 
+    /**
+     *  @brief  Find the smallest separation between two hits, with the consideration of their hit widths
+     *
+     *  @param  pCaloHit1 the first calo hit
+     *  @param  pCaloHit2 the second calo hit
+     *
+     *  @return the smallest separation
+     */
     static float GetClosestDistance(const pandora::CaloHit *const pCaloHit1, const pandora::CaloHit *const pCaloHit2);
 };
 

@@ -321,6 +321,23 @@ float LArHitWidthHelper::GetClosestDistanceToPoint2D(const CaloHit *const pCaloH
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float LArHitWidthHelper::GetClosestDistance(const CaloHit *const pThisCaloHit, const CaloHitList &caloHitList)
+{
+    float closestDistance(std::numeric_limits<float>::max());
+
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        const float separation(LArHitWidthHelper::GetClosestDistance(pThisCaloHit, pCaloHit));
+
+        if (separation < closestDistance)
+            closestDistance = separation;
+    }
+
+    return closestDistance;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float LArHitWidthHelper::GetClosestDistance(const CaloHit *const pCaloHit1, const CaloHit *const pCaloHit2)
 {
     const CartesianVector &hitPosition1(pCaloHit1->GetPositionVector());
@@ -344,40 +361,6 @@ float LArHitWidthHelper::GetClosestDistance(const CaloHit *const pCaloHit1, cons
     const float deltaX = hitLowXEdge1 < hitLowXEdge2 ? (hitLowXEdge2 - hitHighXEdge1) : (hitLowXEdge1 - hitHighXEdge2);
 
     return std::sqrt((deltaX * deltaX) + (modDeltaZ * modDeltaZ));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float LArHitWidthHelper::GetClosestDistance(const CaloHit *const pCaloHit, const CartesianPointVector &positionVector)
-{
-    float closestDistance(std::numeric_limits<float>::max());
-
-    for (const CartesianVector &position : positionVector)
-    {
-        const float separation(LArHitWidthHelper::GetClosestDistanceToPoint2D(pCaloHit, position));
-
-        if (separation < closestDistance)
-            closestDistance = separation;
-    }
-
-    return closestDistance;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float LArHitWidthHelper::GetClosestDistance(const CaloHit *const pThisCaloHit, const CaloHitList &caloHitList)
-{
-    float closestDistance(std::numeric_limits<float>::max());
-
-    for (const CaloHit *const pCaloHit : caloHitList)
-    {
-        const float separation(LArHitWidthHelper::GetClosestDistance(pThisCaloHit, pCaloHit));
-
-        if (separation < closestDistance)
-            closestDistance = separation;
-    }
-
-    return closestDistance;
 }
 
 } // namespace lar_content
