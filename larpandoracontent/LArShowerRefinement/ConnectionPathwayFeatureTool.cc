@@ -518,7 +518,7 @@ void ShowerRegionFeatureTool::GetViewShowerRegionVariables(const Algorithm *cons
         CaloHitList postShowerHitList;
         CartesianPointVector postShowerPositions;
 
-        this->BuildViewShower(pAlgorithm, pShowerPfo, spineFitResult, hitType, showerStart2D, nuVertex2D, postShowerHitList, postShowerPositions);
+        this->BuildViewShower(pShowerPfo, spineFitResult, hitType, showerStart2D, nuVertex2D, postShowerHitList, postShowerPositions);
 
         this->GetShowerHitVariables(spineHitList, postShowerHitList, pShowerPfo, hitType, nHits, foundHitRatio);
 
@@ -564,8 +564,8 @@ void ShowerRegionFeatureTool::GetViewShowerRegionVariables(const Algorithm *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerRegionFeatureTool::BuildViewShower(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, const TwoDSlidingFitResult &spineFit, 
-    const HitType hitType, const CartesianVector &showerStart2D, const CartesianVector &nuVertex2D, CaloHitList &postShowerHitList, CartesianPointVector &postShowerPositions)
+void ShowerRegionFeatureTool::BuildViewShower(const ParticleFlowObject *const pShowerPfo, const TwoDSlidingFitResult &spineFit, const HitType hitType, 
+    const CartesianVector &showerStart2D, const CartesianVector &nuVertex2D, CaloHitList &postShowerHitList, CartesianPointVector &postShowerPositions)
 {
     // Find initial shower direction from spine fit
     float lShowerStart(0.f), tShowerStart(0.f);

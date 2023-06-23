@@ -165,7 +165,6 @@ private:
     /**
      *  @brief  Collect the shower region hits in a given view
      *
-     *  @param  pAlgorithm the algorithm
      *  @param  pShowerPfo the shower pfo
      *  @param  spineFit the shower spine fit
      *  @param  hitType the 2D view
@@ -174,8 +173,8 @@ private:
      *  @param  postShowerHitList the collected shower region hit list
      *  @param  postShowerPositions the collected shower region hit position vector
      */
-    void BuildViewShower(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const TwoDSlidingFitResult &spineFit,
-        const pandora::HitType hitType, const pandora::CartesianVector &showerStart2D, const pandora::CartesianVector &nuVertex2D, pandora::CaloHitList &postShowerHitList, 
+    void BuildViewShower(const pandora::ParticleFlowObject *const pShowerPfo, const TwoDSlidingFitResult &spineFit, const pandora::HitType hitType, 
+        const pandora::CartesianVector &showerStart2D, const pandora::CartesianVector &nuVertex2D, pandora::CaloHitList &postShowerHitList, 
         pandora::CartesianPointVector &postShowerPositions);
 
     /**
