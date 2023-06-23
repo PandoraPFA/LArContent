@@ -22,8 +22,8 @@ public:
      */
     PeakDirectionFinderTool();
 
-    pandora::StatusCode Run(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertex3D, const pandora::CaloHitList *const pViewHitList, 
-        const pandora::HitType hitType, pandora::CartesianPointVector &peakDirectionVector);
+    pandora::StatusCode Run(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertex3D,
+        const pandora::CaloHitList *const pViewHitList, const pandora::HitType hitType, pandora::CartesianPointVector &peakDirectionVector);
 
 private:
     typedef std::map<int, float> AngularDecompositionMap;
@@ -39,7 +39,7 @@ private:
      *  @param  nuVertex2D the 2D neutrino vertex
      *  @param  viewROIHits the region of interest 2D hit list
      */
-    void CollectHitsWithinROI(const pandora::CaloHitList &showerHitList, const pandora::CaloHitList *const pViewHitList, 
+    void CollectHitsWithinROI(const pandora::CaloHitList &showerHitList, const pandora::CaloHitList *const pViewHitList,
         const pandora::CartesianVector &nuVertex2D, pandora::CaloHitList &viewROIHits) const;
 
     /**
@@ -50,8 +50,8 @@ private:
      *  @param  lowestTheta the lower angle boundary
      *  @param  highestTheta the higher angle boundary
      */
-    void GetAngularExtrema(const pandora::CaloHitList &showerHitList, const pandora::CartesianVector &nuVertex2D, 
-        float &lowestTheta, float &highestTheta) const;
+    void GetAngularExtrema(const pandora::CaloHitList &showerHitList, const pandora::CartesianVector &nuVertex2D, float &lowestTheta,
+        float &highestTheta) const;
 
     /**
      *  @brief  Collect the hits that lie within the initial shower cone (originating from the nu vertex)
@@ -62,7 +62,7 @@ private:
      *  @param  highestTheta the higher angle (from the +ve drift-axis) boundary
      *  @param  viewROIHits the region of interest 2D hit list  
      */
-    void CollectHitsWithinExtrema(const pandora::CaloHitList *const pViewHitList, const pandora::CartesianVector &nuVertex2D, 
+    void CollectHitsWithinExtrema(const pandora::CaloHitList *const pViewHitList, const pandora::CartesianVector &nuVertex2D,
         const float lowestTheta, const float highestTheta, pandora::CaloHitList &viewROIHits) const;
 
     /**
@@ -72,7 +72,7 @@ private:
      *  @param  nuVertex2D the 2D neutrino vertex
      *  @param  angularDecompositionMap the output [angle from drift-axis -> weight] map
      */
-    void FillAngularDecompositionMap(const pandora::CaloHitList &viewShowerHitList, const pandora::CartesianVector &nuVertex2D, 
+    void FillAngularDecompositionMap(const pandora::CaloHitList &viewShowerHitList, const pandora::CartesianVector &nuVertex2D,
         AngularDecompositionMap &angularDecompositionMap) const;
 
     /**
@@ -90,10 +90,10 @@ private:
      */
     void RetrievePeakDirections(const AngularDecompositionMap &angularDecompositionMap, pandora::CartesianPointVector &peakDirectionVector) const;
 
-    float m_pathwaySearchRegion;  ///< The initial shower cone distance
-    float m_theta0XZBinSize;      ///< The angular distribution bin size
-    int m_smoothingWindow;        ///< On each side, the number of neighbouring bins with which each bin is averaged
-    bool m_eventMode;             ///< Whether to find the initial pathway direction of the shower or of the other event particles
+    float m_pathwaySearchRegion; ///< The initial shower cone distance
+    float m_theta0XZBinSize;     ///< The angular distribution bin size
+    int m_smoothingWindow;       ///< On each side, the number of neighbouring bins with which each bin is averaged
+    bool m_eventMode;            ///< Whether to find the initial pathway direction of the shower or of the other event particles
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

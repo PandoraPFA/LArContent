@@ -9,9 +9,9 @@
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/AlgorithmTool.h"
 
-#include "larpandoracontent/LArHelpers/LArHitWidthHelper.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArConnectionPathwayHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArHitWidthHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -38,15 +38,15 @@ ShowerSpineFinderTool::ShowerSpineFinderTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ShowerSpineFinderTool::Run(const CartesianVector &nuVertex3D, const CaloHitList *const pViewHitList, const HitType hitType, 
+StatusCode ShowerSpineFinderTool::Run(const CartesianVector &nuVertex3D, const CaloHitList *const pViewHitList, const HitType hitType,
     const CartesianVector &peakDirection, CaloHitList &unavailableHitList, CaloHitList &showerSpineHitList)
 {
     const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), nuVertex3D, hitType));
 
     this->FindShowerSpine(pViewHitList, nuVertex2D, peakDirection, unavailableHitList, showerSpineHitList);
 
-     // Demand that spine is significant, be lenient here as some have small stubs and a gap
-    if (showerSpineHitList.size() < m_hitThresholdForSpine) 
+    // Demand that spine is significant, be lenient here as some have small stubs and a gap
+    if (showerSpineHitList.size() < m_hitThresholdForSpine)
         return STATUS_CODE_NOT_FOUND;
 
     return STATUS_CODE_SUCCESS;
@@ -54,7 +54,7 @@ StatusCode ShowerSpineFinderTool::Run(const CartesianVector &nuVertex3D, const C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerSpineFinderTool::FindShowerSpine(const CaloHitList *const pViewHitList, const CartesianVector &nuVertex2D, 
+void ShowerSpineFinderTool::FindShowerSpine(const CaloHitList *const pViewHitList, const CartesianVector &nuVertex2D,
     const CartesianVector &initialDirection, CaloHitList &unavailableHitList, CaloHitList &showerSpineHitList) const
 {
     // Use initial direction to find seed hits for a starting fit
@@ -108,34 +108,39 @@ void ShowerSpineFinderTool::FindShowerSpine(const CaloHitList *const pViewHitLis
             if (excessHitsInFit > 0)
             {
                 // Remove furthest away hits
-                std::sort(runningFitPositionVector.begin(), runningFitPositionVector.end(), LArConnectionPathwayHelper::SortByDistanceToPoint(extrapolatedEndPosition));
+                std::sort(runningFitPositionVector.begin(), runningFitPositionVector.end(),
+                    LArConnectionPathwayHelper::SortByDistanceToPoint(extrapolatedEndPosition));
 
                 for (int i = 0; i < excessHitsInFit; ++i)
                     runningFitPositionVector.erase(std::prev(runningFitPositionVector.end()));
             }
 
-            const TwoDSlidingFitResult extrapolatedFit(&runningFitPositionVector, m_localSlidingFitWindow, slidingFitPitch);            
+            const TwoDSlidingFitResult extrapolatedFit(&runningFitPositionVector, m_localSlidingFitWindow, slidingFitPitch);
 
-            extrapolatedStartPosition = count == 1 ? extrapolatedEndPosition : isEndDownstream ? extrapolatedFit.GetGlobalMaxLayerPosition() : extrapolatedFit.GetGlobalMinLayerPosition();
-            extrapolatedDirection = isEndDownstream ? extrapolatedFit.GetGlobalMaxLayerDirection() : extrapolatedFit.GetGlobalMinLayerDirection() * (-1.f);
+            extrapolatedStartPosition =
+                count == 1 ? extrapolatedEndPosition
+                           : isEndDownstream ? extrapolatedFit.GetGlobalMaxLayerPosition() : extrapolatedFit.GetGlobalMinLayerPosition();
+            extrapolatedDirection =
+                isEndDownstream ? extrapolatedFit.GetGlobalMaxLayerDirection() : extrapolatedFit.GetGlobalMinLayerDirection() * (-1.f);
             extrapolatedEndPosition = extrapolatedStartPosition + (extrapolatedDirection * m_growingFitSegmentLength);
 
-
-            hitsCollected = this->CollectSubsectionHits(extrapolatedFit, extrapolatedStartPosition, extrapolatedEndPosition, extrapolatedDirection,
-                isEndDownstream, pViewHitList, runningFitPositionVector, unavailableHitList, showerSpineHitList);
+            hitsCollected = this->CollectSubsectionHits(extrapolatedFit, extrapolatedStartPosition, extrapolatedEndPosition,
+                extrapolatedDirection, isEndDownstream, pViewHitList, runningFitPositionVector, unavailableHitList, showerSpineHitList);
 
             // If no hits found, as a final effort, reduce the sliding fit window
             if (!hitsCollected)
             {
                 const TwoDSlidingFitResult microExtrapolatedFit(&runningFitPositionVector, m_highResolutionSlidingFitWindow, slidingFitPitch);
-            
-                extrapolatedStartPosition = count == 1 ? extrapolatedStartPosition : isEndDownstream ? microExtrapolatedFit.GetGlobalMaxLayerPosition() : 
-                    microExtrapolatedFit.GetGlobalMinLayerPosition();
-                extrapolatedDirection = isEndDownstream ? microExtrapolatedFit.GetGlobalMaxLayerDirection() : microExtrapolatedFit.GetGlobalMinLayerDirection() * (-1.f);
+
+                extrapolatedStartPosition = count == 1 ? extrapolatedStartPosition
+                                                       : isEndDownstream ? microExtrapolatedFit.GetGlobalMaxLayerPosition()
+                                                                         : microExtrapolatedFit.GetGlobalMinLayerPosition();
+                extrapolatedDirection = isEndDownstream ? microExtrapolatedFit.GetGlobalMaxLayerDirection()
+                                                        : microExtrapolatedFit.GetGlobalMinLayerDirection() * (-1.f);
                 extrapolatedEndPosition = extrapolatedStartPosition + (extrapolatedDirection * m_growingFitSegmentLength);
 
-                hitsCollected = this->CollectSubsectionHits(microExtrapolatedFit, extrapolatedStartPosition, extrapolatedEndPosition, extrapolatedDirection,
-                    isEndDownstream, pViewHitList, runningFitPositionVector, unavailableHitList, showerSpineHitList);
+                hitsCollected = this->CollectSubsectionHits(microExtrapolatedFit, extrapolatedStartPosition, extrapolatedEndPosition,
+                    extrapolatedDirection, isEndDownstream, pViewHitList, runningFitPositionVector, unavailableHitList, showerSpineHitList);
             }
         }
         catch (const StatusCodeException &)
@@ -147,10 +152,11 @@ void ShowerSpineFinderTool::FindShowerSpine(const CaloHitList *const pViewHitLis
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ShowerSpineFinderTool::CollectSubsectionHits(const TwoDSlidingFitResult &extrapolatedFit, const CartesianVector &extrapolatedStartPosition, 
-    const CartesianVector &extrapolatedEndPosition, const CartesianVector &extrapolatedDirection, const bool isEndDownstream, 
-    const CaloHitList *const pViewHitList, CartesianPointVector &runningFitPositionVector, CaloHitList &unavailableHitList, CaloHitList &showerSpineHitList) const
-{ 
+bool ShowerSpineFinderTool::CollectSubsectionHits(const TwoDSlidingFitResult &extrapolatedFit,
+    const CartesianVector &extrapolatedStartPosition, const CartesianVector &extrapolatedEndPosition,
+    const CartesianVector &extrapolatedDirection, const bool isEndDownstream, const CaloHitList *const pViewHitList,
+    CartesianPointVector &runningFitPositionVector, CaloHitList &unavailableHitList, CaloHitList &showerSpineHitList) const
+{
     float extrapolatedStartL(0.f), extrapolatedStartT(0.f);
     extrapolatedFit.GetLocalPosition(extrapolatedStartPosition, extrapolatedStartL, extrapolatedStartT);
 
@@ -186,7 +192,8 @@ bool ShowerSpineFinderTool::CollectSubsectionHits(const TwoDSlidingFitResult &ex
         }
         else
         {
-            const CartesianVector closestPointInHit(LArHitWidthHelper::GetClosestPointToLine2D(extrapolatedStartPosition, extrapolatedDirection, pCaloHit));
+            const CartesianVector closestPointInHit(
+                LArHitWidthHelper::GetClosestPointToLine2D(extrapolatedStartPosition, extrapolatedDirection, pCaloHit));
 
             if (this->IsCloseToLine(closestPointInHit, extrapolatedStartPosition, extrapolatedDirection, m_distanceToLine))
                 collectedHits.push_back(pCaloHit);
@@ -205,11 +212,11 @@ bool ShowerSpineFinderTool::CollectSubsectionHits(const TwoDSlidingFitResult &ex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ShowerSpineFinderTool::IsCloseToLine(const CartesianVector &hitPosition, const CartesianVector &lineStart, 
+bool ShowerSpineFinderTool::IsCloseToLine(const CartesianVector &hitPosition, const CartesianVector &lineStart,
     const CartesianVector &lineDirection, const float distanceToLine) const
 {
     const float transverseDistanceFromLine(lineDirection.GetCrossProduct(hitPosition - lineStart).GetMagnitude());
-    
+
     if (transverseDistanceFromLine > distanceToLine)
         return false;
 
@@ -218,7 +225,7 @@ bool ShowerSpineFinderTool::IsCloseToLine(const CartesianVector &hitPosition, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerSpineFinderTool::CollectConnectedHits(const CaloHitList &collectedHits, const CartesianVector &extrapolatedStartPosition, 
+void ShowerSpineFinderTool::CollectConnectedHits(const CaloHitList &collectedHits, const CartesianVector &extrapolatedStartPosition,
     const CartesianVector &extrapolatedDirection, CartesianPointVector &runningFitPositionVector, CaloHitList &showerSpineHitList) const
 {
     bool found = true;
@@ -246,7 +253,7 @@ void ShowerSpineFinderTool::CollectConnectedHits(const CaloHitList &collectedHit
 
             runningFitPositionVector.push_back(hitPosition);
             showerSpineHitList.push_back(pCaloHit);
-         }
+        }
     }
 }
 
@@ -271,8 +278,8 @@ float ShowerSpineFinderTool::GetClosestDistance(const CartesianVector &position,
 
 StatusCode ShowerSpineFinderTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "HitThresholdForSpine", m_hitThresholdForSpine));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "HitThresholdForSpine", m_hitThresholdForSpine));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "GrowingFitInitialLength", m_growingFitInitialLength));
@@ -280,14 +287,13 @@ StatusCode ShowerSpineFinderTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "InitialFitDistanceToLine", m_initialFitDistanceToLine));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MinInitialHitsFound", m_minInitialHitsFound));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinInitialHitsFound", m_minInitialHitsFound));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MaxFittingHits", m_maxFittingHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxFittingHits", m_maxFittingHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "LocalSlidingFitWindow", m_localSlidingFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LocalSlidingFitWindow", m_localSlidingFitWindow));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "GrowingFitSegmentLength", m_growingFitSegmentLength));
@@ -295,14 +301,12 @@ StatusCode ShowerSpineFinderTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "HighResolutionSlidingFitWindow", m_highResolutionSlidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "DistanceToLine", m_distanceToLine));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DistanceToLine", m_distanceToLine));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "HitConnectionDistance", m_hitConnectionDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "HitConnectionDistance", m_hitConnectionDistance));
 
     return STATUS_CODE_SUCCESS;
 }
-
 
 } // namespace lar_content

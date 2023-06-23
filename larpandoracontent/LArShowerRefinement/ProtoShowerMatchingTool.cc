@@ -30,10 +30,10 @@ ProtoShowerMatchingTool::ProtoShowerMatchingTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ProtoShowerMatchingTool::Run(const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV, 
+StatusCode ProtoShowerMatchingTool::Run(const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV,
     const ProtoShowerVector &protoShowerVectorW, ProtoShowerMatchVector &protoShowerMatchVector)
 {
-    IntVector usedProtoShowersU, usedProtoShowersV, usedProtoShowersW; 
+    IntVector usedProtoShowersU, usedProtoShowersV, usedProtoShowersW;
 
     for (unsigned int uIndex = 0; uIndex < protoShowerVectorU.size(); ++uIndex)
     {
@@ -51,7 +51,7 @@ StatusCode ProtoShowerMatchingTool::Run(const ProtoShowerVector &protoShowerVect
                     continue;
 
                 if (std::find(usedProtoShowersV.begin(), usedProtoShowersV.end(), vIndex) != usedProtoShowersV.end())
-                    continue;             
+                    continue;
 
                 if (std::find(usedProtoShowersW.begin(), usedProtoShowersW.end(), wIndex) != usedProtoShowersW.end())
                     continue;
@@ -75,8 +75,8 @@ StatusCode ProtoShowerMatchingTool::Run(const ProtoShowerVector &protoShowerVect
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ProtoShowerMatchingTool::ArePathwaysConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, 
-    Consistency &consistency) const
+bool ProtoShowerMatchingTool::ArePathwaysConsistent(
+    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, Consistency &consistency) const
 {
     if (this->AreShowerStartsConsistent(protoShowerU, protoShowerV, protoShowerW))
     {
@@ -96,8 +96,7 @@ bool ProtoShowerMatchingTool::ArePathwaysConsistent(const ProtoShower &protoShow
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ProtoShowerMatchingTool::AreShowerStartsConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, 
-    const ProtoShower &protoShowerW) const
+bool ProtoShowerMatchingTool::AreShowerStartsConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW) const
 {
     const CartesianVector &showerStartU(protoShowerU.m_showerCore.m_startPosition);
     const CartesianVector &showerStartV(protoShowerV.m_showerCore.m_startPosition);
@@ -128,8 +127,7 @@ bool ProtoShowerMatchingTool::AreShowerStartsConsistent(const ProtoShower &proto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ProtoShowerMatchingTool::AreDirectionsConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, 
-    const ProtoShower &protoShowerW) const
+bool ProtoShowerMatchingTool::AreDirectionsConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW) const
 {
     const CartesianVector &directionU1(protoShowerU.m_connectionPathway.m_startDirection);
     const CartesianVector &directionV1(protoShowerV.m_connectionPathway.m_startDirection);
@@ -209,7 +207,7 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(CartesianVector directionU
 
     if (directionV.GetX() * directionW.GetX() < 0.f)
         return false;
-    
+
     const CartesianVector projectionU(LArGeometryHelper::MergeTwoDirections(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, directionV, directionW));
     const CartesianVector projectionV(LArGeometryHelper::MergeTwoDirections(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, directionW, directionU));
     const CartesianVector projectionW(LArGeometryHelper::MergeTwoDirections(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, directionU, directionV));
@@ -235,17 +233,15 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(CartesianVector directionU
 
 StatusCode ProtoShowerMatchingTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "SpineSlidingFitWindow", m_spineSlidingFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SpineSlidingFitWindow", m_spineSlidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MaxXSeparation", m_maxXSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxXSeparation", m_maxXSeparation));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MaxSeparation", m_maxSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSeparation", m_maxSeparation));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MaxAngularDeviation", m_maxAngularDeviation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxAngularDeviation", m_maxAngularDeviation));
 
     return STATUS_CODE_SUCCESS;
 }

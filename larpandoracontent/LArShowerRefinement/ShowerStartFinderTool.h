@@ -25,11 +25,12 @@ public:
      */
     ShowerStartFinderTool();
 
-    pandora::StatusCode Run(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &peakDirection, const pandora::HitType hitType, 
-        const pandora::CaloHitList &showerSpineHitList, pandora::CartesianVector &showerStartPosition, pandora::CartesianVector &showerStartDirection);
+    pandora::StatusCode Run(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &peakDirection,
+        const pandora::HitType hitType, const pandora::CaloHitList &showerSpineHitList, pandora::CartesianVector &showerStartPosition,
+        pandora::CartesianVector &showerStartDirection);
 
 private:
-    typedef std::map<const pandora::CaloHit*, float> LongitudinalPositionMap;
+    typedef std::map<const pandora::CaloHit *, float> LongitudinalPositionMap;
     typedef std::map<int, float> EnergySpectrumMap;
     typedef std::map<int, pandora::CaloHitList> LayerToHitMap;
 
@@ -42,7 +43,7 @@ private:
      *  @param  showerSpineHitList the shower spine hit list
      *  @param  longitudinalPositionMap the output shower spine longitudinal projection map
      */
-    void ObtainLongitudinalDecomposition(const TwoDSlidingFitResult &spineTwoDSlidingFit, const pandora::CaloHitList &showerSpineHitList, 
+    void ObtainLongitudinalDecomposition(const TwoDSlidingFitResult &spineTwoDSlidingFit, const pandora::CaloHitList &showerSpineHitList,
         LongitudinalPositionMap &longitudinalPositionMap) const;
 
     /**
@@ -52,7 +53,7 @@ private:
      *  @param  longitudinalPositionMap the shower spine longitudinal projection map 
      *  @param  energySpectrumMap the output [longitudial projection bin -> contained energy] map
      */
-    void GetEnergyDistribution(const pandora::CaloHitList &showerSpineHitList, const LongitudinalPositionMap &longitudinalPositionMap, 
+    void GetEnergyDistribution(const pandora::CaloHitList &showerSpineHitList, const LongitudinalPositionMap &longitudinalPositionMap,
         EnergySpectrumMap &energySpectrumMap) const;
 
     /**
@@ -67,8 +68,8 @@ private:
      *  @param  showerStartPosition the position at which the shower cascade looks to originate
      *  @param  showerStartDirection the initial direction of the shower cascade
      */
-    void FindShowerStartAndDirection(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType, 
-        const TwoDSlidingFitResult &spineTwoDSlidingFit, const EnergySpectrumMap &energySpectrumMap, const pandora::CaloHitList &showerSpineHitList, 
+    void FindShowerStartAndDirection(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType,
+        const TwoDSlidingFitResult &spineTwoDSlidingFit, const EnergySpectrumMap &energySpectrumMap, const pandora::CaloHitList &showerSpineHitList,
         const bool isEndDownstream, pandora::CartesianVector &showerStartPosition, pandora::CartesianVector &showerStartDirection) const;
 
     /**
@@ -79,8 +80,7 @@ private:
      *  @param  meanEnergy the output mean energy
      *  @param  energySigma the output standard deviation
      */
-    void CharacteriseInitialEnergy(const EnergySpectrumMap &energySpectrumMap, const bool isEndDownstream, float &meanEnergy, 
-        float &energySigma) const;
+    void CharacteriseInitialEnergy(const EnergySpectrumMap &energySpectrumMap, const bool isEndDownstream, float &meanEnergy, float &energySigma) const;
 
     /**
      *  @brief  Whether a sensible shower cascade looks to originate at a given position
@@ -94,7 +94,7 @@ private:
      *
      *  @return whether a sensible shower cascade looks to originate at the given position
      */
-    bool IsShowerTopology(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType, const TwoDSlidingFitResult &spineTwoDSlidingFit, 
+    bool IsShowerTopology(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType, const TwoDSlidingFitResult &spineTwoDSlidingFit,
         const float longitudinalDistance, const pandora::CaloHitList &showerSpineHitList, const bool isEndDownstream) const;
 
     /**
@@ -105,7 +105,7 @@ private:
      *  @param  globalPosition the output (X,Y,Z) position
      *  @param  globalDirection the output (X,Y,Z) direction
      */
-    void ConvertLongitudinalProjectionToGlobal(const TwoDSlidingFitResult &spineTwoDSlidingFit, const float longitudinalDistance, 
+    void ConvertLongitudinalProjectionToGlobal(const TwoDSlidingFitResult &spineTwoDSlidingFit, const float longitudinalDistance,
         pandora::CartesianVector &globalPosition, pandora::CartesianVector &globalDirection) const;
 
     /**
@@ -121,8 +121,9 @@ private:
      *
      *  @return whether the 'shower region finder' mechanics could proceed
      */
-    pandora::StatusCode BuildShowerRegion(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType, const pandora::CaloHitList &showerSpineHitList, 
-        const pandora::CartesianVector &showerStartPosition, const pandora::CartesianVector &showerStartDirection, const bool isEndDownstream, 
+    pandora::StatusCode BuildShowerRegion(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType,
+        const pandora::CaloHitList &showerSpineHitList, const pandora::CartesianVector &showerStartPosition,
+        const pandora::CartesianVector &showerStartDirection, const bool isEndDownstream,
         pandora::CartesianPointVector &showerRegionPositionVector) const;
 
     /**
@@ -140,9 +141,10 @@ private:
      *
      *  @return whether the 'shower characterisation' mechanics could proceed
      */
-    pandora::StatusCode CharacteriseShowerTopology(const pandora::CartesianPointVector &showerRegionPositionVector, const pandora::CartesianVector &showerStartPosition,
-        const bool isEndDownstream, const pandora::CartesianVector &showerStartDirection, pandora::CartesianVector &positiveEdgeStart, pandora::CartesianVector &positiveEdgeEnd, 
-        pandora::CartesianVector &negativeEdgeStart, pandora::CartesianVector &negativeEdgeEnd, bool &isBetween) const;
+    pandora::StatusCode CharacteriseShowerTopology(const pandora::CartesianPointVector &showerRegionPositionVector,
+        const pandora::CartesianVector &showerStartPosition, const bool isEndDownstream, const pandora::CartesianVector &showerStartDirection,
+        pandora::CartesianVector &positiveEdgeStart, pandora::CartesianVector &positiveEdgeEnd, pandora::CartesianVector &negativeEdgeStart,
+        pandora::CartesianVector &negativeEdgeEnd, bool &isBetween) const;
 
     /**
      *  @brief  Determine whether a point lies on the RHS or LHS (wrt +ve Z) of the shower core
@@ -167,20 +169,20 @@ private:
      *
      *  @return whether suitable positions could be found
      */
-    pandora::StatusCode GetBoundaryExtremalPoints(const TwoDSlidingShowerFitResult &showerTwoDSlidingFit, const LayerFitResultMap &layerFitResultMap, 
-        const pandora::CartesianVector &showerStartPosition, const int showerStartLayer, const int showerEndLayer, pandora::CartesianVector &boundaryEdgeStart, 
-        pandora::CartesianVector &boundaryEdgeEnd) const;
+    pandora::StatusCode GetBoundaryExtremalPoints(const TwoDSlidingShowerFitResult &showerTwoDSlidingFit,
+        const LayerFitResultMap &layerFitResultMap, const pandora::CartesianVector &showerStartPosition, const int showerStartLayer,
+        const int showerEndLayer, pandora::CartesianVector &boundaryEdgeStart, pandora::CartesianVector &boundaryEdgeEnd) const;
 
-    unsigned int m_spineSlidingFitWindow;   ///< The sliding window used to fit the shower spine
-    float m_longitudinalCoordinateBinSize;  ///< The longitudinal coordinate bin size 
-    unsigned int m_nInitialEnergyBins;      ///< The number of longitudinal bins that define the initial region
-    float m_minSigmaDeviation;              ///< The min. average energy deviation of a candidate shower start
-    float m_maxEdgeGap;                     ///< The max. allowed layer gap in a shower boundary 
-    float m_longitudinalShowerFraction;     ///< The shower region fraction considered
-    float m_minShowerOpeningAngle;          ///< The min. opening angle of a sensible shower
-    float m_molliereRadius;                 ///< The max. distance from the shower core of a collected shower region hit
-    unsigned int m_showerSlidingFitWindow;  ///< The sliding window used to fit the shower region
-    unsigned int m_maxLayerSeparation;      ///< The max. allowed separation between the shower start and boundary start layers
+    unsigned int m_spineSlidingFitWindow;  ///< The sliding window used to fit the shower spine
+    float m_longitudinalCoordinateBinSize; ///< The longitudinal coordinate bin size
+    unsigned int m_nInitialEnergyBins;     ///< The number of longitudinal bins that define the initial region
+    float m_minSigmaDeviation;             ///< The min. average energy deviation of a candidate shower start
+    float m_maxEdgeGap;                    ///< The max. allowed layer gap in a shower boundary
+    float m_longitudinalShowerFraction;    ///< The shower region fraction considered
+    float m_minShowerOpeningAngle;         ///< The min. opening angle of a sensible shower
+    float m_molliereRadius;                ///< The max. distance from the shower core of a collected shower region hit
+    unsigned int m_showerSlidingFitWindow; ///< The sliding window used to fit the shower region
+    unsigned int m_maxLayerSeparation;     ///< The max. allowed separation between the shower start and boundary start layers
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

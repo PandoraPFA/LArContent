@@ -24,7 +24,7 @@ public:
      */
     ProtoShowerMatchingTool();
 
-    pandora::StatusCode Run(const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV, 
+    pandora::StatusCode Run(const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV,
         const ProtoShowerVector &protoShowerVectorW, ProtoShowerMatchVector &protoShowerMatchVector);
 
 private:
@@ -40,8 +40,8 @@ private:
      * 
      *  @return whether three 2D connection pathways form a consistent 3D connection pathway
      */
-    bool ArePathwaysConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, 
-        Consistency &consistency) const;
+    bool ArePathwaysConsistent(
+        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, Consistency &consistency) const;
 
     /**
      *  @brief  Determine whether three 2D shower start positions correspond to the same 3D shower start position
@@ -76,10 +76,10 @@ private:
      */
     bool AreDirectionsConsistent(pandora::CartesianVector directionU, pandora::CartesianVector directionV, pandora::CartesianVector directionW) const;
 
-    unsigned int m_spineSlidingFitWindow;  ///< The shower spine sliding fit window
-    float m_maxXSeparation;                ///< The max. drift-coordinate separation between matched 2D shower start positions
-    float m_maxSeparation;                 ///< The max. average separation between true and projected 2D shower start positions for a match
-    float m_maxAngularDeviation;           ///< The max. opening angle between true and projected 2D initial directions for a match 
+    unsigned int m_spineSlidingFitWindow; ///< The shower spine sliding fit window
+    float m_maxXSeparation;               ///< The max. drift-coordinate separation between matched 2D shower start positions
+    float m_maxSeparation;                ///< The max. average separation between true and projected 2D shower start positions for a match
+    float m_maxAngularDeviation;          ///< The max. opening angle between true and projected 2D initial directions for a match
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

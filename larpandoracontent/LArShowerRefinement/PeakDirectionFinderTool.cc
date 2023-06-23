@@ -9,8 +9,8 @@
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/AlgorithmTool.h"
 
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArShowerRefinement/PeakDirectionFinderTool.h"
 
@@ -29,8 +29,8 @@ PeakDirectionFinderTool::PeakDirectionFinderTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PeakDirectionFinderTool::Run(const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertex3D, const CaloHitList *const pViewHitList, 
-    const HitType hitType, CartesianPointVector &peakDirectionVector)
+StatusCode PeakDirectionFinderTool::Run(const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertex3D,
+    const CaloHitList *const pViewHitList, const HitType hitType, CartesianPointVector &peakDirectionVector)
 {
     CaloHitList viewShowerHitList;
     LArPfoHelper::GetCaloHits(pShowerPfo, hitType, viewShowerHitList);
@@ -53,7 +53,7 @@ StatusCode PeakDirectionFinderTool::Run(const ParticleFlowObject *const pShowerP
 
     // Smooth angular decomposition map
     this->SmoothAngularDecompositionMap(angularDecompositionMap);
-    
+
     // Get peak directions
     this->RetrievePeakDirections(angularDecompositionMap, peakDirectionVector);
 
@@ -65,7 +65,7 @@ StatusCode PeakDirectionFinderTool::Run(const ParticleFlowObject *const pShowerP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PeakDirectionFinderTool::CollectHitsWithinROI(const CaloHitList &showerHitList, const CaloHitList *const pViewHitList, 
+void PeakDirectionFinderTool::CollectHitsWithinROI(const CaloHitList &showerHitList, const CaloHitList *const pViewHitList,
     const CartesianVector &nuVertex2D, CaloHitList &viewROIHits) const
 {
     if (m_eventMode)
@@ -89,8 +89,8 @@ void PeakDirectionFinderTool::CollectHitsWithinROI(const CaloHitList &showerHitL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PeakDirectionFinderTool::GetAngularExtrema(const CaloHitList &showerHitList, const CartesianVector &nuVertex2D, 
-    float &lowestTheta, float &highestTheta) const
+void PeakDirectionFinderTool::GetAngularExtrema(
+    const CaloHitList &showerHitList, const CartesianVector &nuVertex2D, float &lowestTheta, float &highestTheta) const
 {
     lowestTheta = std::numeric_limits<float>::max();
     highestTheta = (-1.f) * std::numeric_limits<float>::max();
@@ -117,7 +117,7 @@ void PeakDirectionFinderTool::GetAngularExtrema(const CaloHitList &showerHitList
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PeakDirectionFinderTool::CollectHitsWithinExtrema(const CaloHitList *const pViewHitList, const CartesianVector &nuVertex2D, 
+void PeakDirectionFinderTool::CollectHitsWithinExtrema(const CaloHitList *const pViewHitList, const CartesianVector &nuVertex2D,
     const float lowestTheta, const float highestTheta, CaloHitList &viewROIHits) const
 {
     const CartesianVector xAxis(1.f, 0.f, 0.f);
@@ -141,8 +141,8 @@ void PeakDirectionFinderTool::CollectHitsWithinExtrema(const CaloHitList *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PeakDirectionFinderTool::FillAngularDecompositionMap(const CaloHitList &viewShowerHitList, const CartesianVector &nuVertex2D, 
-    AngularDecompositionMap &angularDecompositionMap) const
+void PeakDirectionFinderTool::FillAngularDecompositionMap(
+    const CaloHitList &viewShowerHitList, const CartesianVector &nuVertex2D, AngularDecompositionMap &angularDecompositionMap) const
 {
     const CartesianVector xAxis(1.f, 0.f, 0.f);
 
@@ -187,7 +187,9 @@ void PeakDirectionFinderTool::SmoothAngularDecompositionMap(AngularDecomposition
         for (int binOffset = loopMin; binOffset <= loopMax; ++binOffset)
         {
             const int contributingBin = currentBin + binOffset;
-            total += (angularDecompositionMapTemp.find(contributingBin) == angularDecompositionMapTemp.end()) ? 0.f : angularDecompositionMapTemp.at(contributingBin);
+            total += (angularDecompositionMapTemp.find(contributingBin) == angularDecompositionMapTemp.end())
+                         ? 0.f
+                         : angularDecompositionMapTemp.at(contributingBin);
         }
 
         angularDecompositionMap[currentBin] = total / static_cast<float>((2.0 * m_smoothingWindow) + 1);
@@ -205,18 +207,15 @@ void PeakDirectionFinderTool::RetrievePeakDirections(const AngularDecompositionM
 
     // Order peak bin vector from highest to lowest bin height
     // Tie-break: highest index wins
-    std::sort(orderedBinIndexVector.begin(), orderedBinIndexVector.end(),
-        [&angularDecompositionMap](const int a, const int b) -> bool {
+    std::sort(orderedBinIndexVector.begin(), orderedBinIndexVector.end(), [&angularDecompositionMap](const int a, const int b) -> bool {
+        float aWeight = angularDecompositionMap.at(a);
+        float bWeight = angularDecompositionMap.at(b);
 
-                  float aWeight = angularDecompositionMap.at(a);
-                  float bWeight = angularDecompositionMap.at(b);
-
-                  if (std::fabs(aWeight - bWeight) < std::numeric_limits<float>::epsilon())
-                      return a > b;
-                  else
-                      return aWeight > bWeight;
-              });
-
+        if (std::fabs(aWeight - bWeight) < std::numeric_limits<float>::epsilon())
+            return a > b;
+        else
+            return aWeight > bWeight;
+    });
 
     for (int binIndex : orderedBinIndexVector)
     {
@@ -252,8 +251,10 @@ void PeakDirectionFinderTool::RetrievePeakDirections(const AngularDecompositionM
             ++followingBin;
         }
 
-        const float precedingBinWeight(angularDecompositionMap.find(precedingBin) == angularDecompositionMap.end() ? 0.f : angularDecompositionMap.at(precedingBin));
-        const float followingBinWeight(angularDecompositionMap.find(followingBin) == angularDecompositionMap.end() ? 0.f : angularDecompositionMap.at(followingBin));
+        const float precedingBinWeight(
+            angularDecompositionMap.find(precedingBin) == angularDecompositionMap.end() ? 0.f : angularDecompositionMap.at(precedingBin));
+        const float followingBinWeight(
+            angularDecompositionMap.find(followingBin) == angularDecompositionMap.end() ? 0.f : angularDecompositionMap.at(followingBin));
 
         if ((binWeight < precedingBinWeight) || (binWeight < followingBinWeight))
             continue;
@@ -268,23 +269,18 @@ void PeakDirectionFinderTool::RetrievePeakDirections(const AngularDecompositionM
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-
 StatusCode PeakDirectionFinderTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "PathwaySearchRegion", m_pathwaySearchRegion));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PathwaySearchRegion", m_pathwaySearchRegion));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "Theta0XZBinSize", m_theta0XZBinSize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Theta0XZBinSize", m_theta0XZBinSize));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "SmoothingWindow", m_smoothingWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SmoothingWindow", m_smoothingWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "EventMode", m_eventMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EventMode", m_eventMode));
 
     return STATUS_CODE_SUCCESS;
 }
-
 
 } // namespace lar_content

@@ -21,9 +21,8 @@ class ShowerSpineFinderTool : public pandora::AlgorithmTool
 public:
     ShowerSpineFinderTool();
 
-    pandora::StatusCode Run(const pandora::CartesianVector &nuVertex3D, const pandora::CaloHitList *const pViewHitList, 
-        const pandora::HitType hitType, const pandora::CartesianVector &peakDirection, 
-        pandora::CaloHitList &unavailableHitList, pandora::CaloHitList &showerSpineHitList);
+    pandora::StatusCode Run(const pandora::CartesianVector &nuVertex3D, const pandora::CaloHitList *const pViewHitList, const pandora::HitType hitType,
+        const pandora::CartesianVector &peakDirection, pandora::CaloHitList &unavailableHitList, pandora::CaloHitList &showerSpineHitList);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -37,7 +36,7 @@ private:
      *  @param  unavailableHitList protected hits that cannot be collected
      *  @param  showerSpineHitList the output list of shower spine hits
      */
-    void FindShowerSpine(const pandora::CaloHitList *const pViewHitList, const pandora::CartesianVector &nuVertex2D, 
+    void FindShowerSpine(const pandora::CaloHitList *const pViewHitList, const pandora::CartesianVector &nuVertex2D,
         const pandora::CartesianVector &initialDirection, pandora::CaloHitList &unavailableHitList, pandora::CaloHitList &showerSpineHitList) const;
 
     /**
@@ -55,10 +54,10 @@ private:
      *
      *  @return whether any hits were collected in the running fit step
      */
-    bool CollectSubsectionHits(const TwoDSlidingFitResult &extrapolatedFit, const pandora::CartesianVector &extrapolatedStartPosition, 
-        const pandora::CartesianVector &extrapolatedEndPosition, const pandora::CartesianVector &extrapolatedDirection, const bool isEndDownstream, 
-        const pandora::CaloHitList *const pViewHitList, pandora::CartesianPointVector &runningFitPositionVector, pandora::CaloHitList &unavailableHitList, 
-        pandora::CaloHitList &showerSpineHitList) const;
+    bool CollectSubsectionHits(const TwoDSlidingFitResult &extrapolatedFit, const pandora::CartesianVector &extrapolatedStartPosition,
+        const pandora::CartesianVector &extrapolatedEndPosition, const pandora::CartesianVector &extrapolatedDirection,
+        const bool isEndDownstream, const pandora::CaloHitList *const pViewHitList, pandora::CartesianPointVector &runningFitPositionVector,
+        pandora::CaloHitList &unavailableHitList, pandora::CaloHitList &showerSpineHitList) const;
 
     /**
      *  @brief  Determine whether a hit lies close to the shower spine projection
@@ -70,7 +69,7 @@ private:
      *
      *  @return whether the hit is close to the shower spine projection
      */
-    bool IsCloseToLine(const pandora::CartesianVector &hitPosition, const pandora::CartesianVector &lineStart, 
+    bool IsCloseToLine(const pandora::CartesianVector &hitPosition, const pandora::CartesianVector &lineStart,
         const pandora::CartesianVector &lineDirection, const float distanceToLine) const;
 
     /**
@@ -82,8 +81,8 @@ private:
      *  @param  runningFitPositionVector the vector of the collected hit positions
      *  @param  showerSpineHitList the list of collected shower spine hits
      */
-    void CollectConnectedHits(const pandora::CaloHitList &collectedHits, const pandora::CartesianVector &extrapolatedStartPosition, 
-        const pandora::CartesianVector &extrapolatedDirection, pandora::CartesianPointVector &runningFitPositionVector, 
+    void CollectConnectedHits(const pandora::CaloHitList &collectedHits, const pandora::CartesianVector &extrapolatedStartPosition,
+        const pandora::CartesianVector &extrapolatedDirection, pandora::CartesianPointVector &runningFitPositionVector,
         pandora::CaloHitList &showerSpineHitList) const;
 
     /**
@@ -96,16 +95,16 @@ private:
      */
     float GetClosestDistance(const pandora::CartesianVector &position, const pandora::CartesianPointVector &testPositions) const;
 
-    unsigned int m_hitThresholdForSpine;            ///< The hit threshold for a significant spine
-    float m_growingFitInitialLength;                ///< The first step distance
-    float m_initialFitDistanceToLine;               ///< The max. proximity to the spine projection for collection in the first step
-    unsigned int m_minInitialHitsFound;             ///< The min. number of hits collected in the first step for continuation
-    unsigned int m_maxFittingHits;                  ///< The number of hits to consider in the running fit
-    unsigned int m_localSlidingFitWindow;           ///< The standard sliding fit window for spine fits
-    float m_growingFitSegmentLength;                ///< The standard step distance
-    unsigned int m_highResolutionSlidingFitWindow;  ///< The high resolution sliding fit window for spine fits
-    float m_distanceToLine;                         ///< The max. proximity to the spine projection for collection
-    float m_hitConnectionDistance;                  ///< The max. separation between connected hits
+    unsigned int m_hitThresholdForSpine;           ///< The hit threshold for a significant spine
+    float m_growingFitInitialLength;               ///< The first step distance
+    float m_initialFitDistanceToLine;              ///< The max. proximity to the spine projection for collection in the first step
+    unsigned int m_minInitialHitsFound;            ///< The min. number of hits collected in the first step for continuation
+    unsigned int m_maxFittingHits;                 ///< The number of hits to consider in the running fit
+    unsigned int m_localSlidingFitWindow;          ///< The standard sliding fit window for spine fits
+    float m_growingFitSegmentLength;               ///< The standard step distance
+    unsigned int m_highResolutionSlidingFitWindow; ///< The high resolution sliding fit window for spine fits
+    float m_distanceToLine;                        ///< The max. proximity to the spine projection for collection
+    float m_hitConnectionDistance;                 ///< The max. separation between connected hits
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

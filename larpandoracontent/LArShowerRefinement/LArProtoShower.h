@@ -34,14 +34,15 @@ public:
      */
     ShowerCore(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection);
 
-    pandora::CartesianVector m_startPosition;   ///< the 2D position at which the cascade looks to begin
-    pandora::CartesianVector m_startDirection;  ///< the initial 2D direction of the shower cascade
+    pandora::CartesianVector m_startPosition;  ///< the 2D position at which the cascade looks to begin
+    pandora::CartesianVector m_startDirection; ///< the initial 2D direction of the shower cascade
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ShowerCore::ShowerCore(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection) : 
-    m_startPosition(startPosition), m_startDirection(startDirection)
+inline ShowerCore::ShowerCore(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection) :
+    m_startPosition(startPosition),
+    m_startDirection(startDirection)
 {
 }
 
@@ -73,16 +74,17 @@ public:
      */
     ConnectionPathway(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection);
 
-    pandora::CartesianVector m_startPosition;   ///< the start position of the connection pathway
-    pandora::CartesianVector m_startDirection;  ///< the initial direction of the connection pathway
+    pandora::CartesianVector m_startPosition;  ///< the start position of the connection pathway
+    pandora::CartesianVector m_startDirection; ///< the initial direction of the connection pathway
 };
 
 typedef std::vector<ConnectionPathway> ConnectionPathwayVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ConnectionPathway::ConnectionPathway(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection) : 
-    m_startPosition(startPosition), m_startDirection(startDirection)
+inline ConnectionPathway::ConnectionPathway(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection) :
+    m_startPosition(startPosition),
+    m_startDirection(startDirection)
 {
 }
 
@@ -100,7 +102,7 @@ inline ConnectionPathway::ConnectionPathway() : m_startPosition(0.f, 0.f, 0.f), 
  */
 class ProtoShower
 {
-public: 
+public:
     /**
      *  @brief  Constructor
      *
@@ -111,8 +113,9 @@ public:
      *  @param  ambiguousDirectionVector the initial directions of the ambiguous hit owners
      *  @param  hitsToAdd the list of hits to add to an electron shower pfo
      */
-    ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const pandora::CaloHitList &spineHitList, 
-        const pandora::CaloHitList &ambiguousHitList, const pandora::CartesianPointVector &ambiguousDirectionVector, const pandora::CaloHitList &hitsToAdd);
+    ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const pandora::CaloHitList &spineHitList,
+        const pandora::CaloHitList &ambiguousHitList, const pandora::CartesianPointVector &ambiguousDirectionVector,
+        const pandora::CaloHitList &hitsToAdd);
 
     /**
      *  @brief  Copy constructor
@@ -121,22 +124,27 @@ public:
      */
     ProtoShower(const ProtoShower &protoShower);
 
-    ShowerCore m_showerCore;                                   ///< the ShowerCore object
-    ConnectionPathway m_connectionPathway;                     ///< the ConnectionPathway object
-    pandora::CaloHitList m_spineHitList;                       ///< the shower spine hit list 
-    pandora::CaloHitList m_ambiguousHitList;                   ///< the list of ambiguous hits (those with shared energy deposits)
-    pandora::CartesianPointVector m_ambiguousDirectionVector;  ///< the initial directions of the ambiguous hit owners 
-    pandora::CaloHitList m_hitsToAdd;                          ///< the list of hits to add to an electron shower pfo
+    ShowerCore m_showerCore;                                  ///< the ShowerCore object
+    ConnectionPathway m_connectionPathway;                    ///< the ConnectionPathway object
+    pandora::CaloHitList m_spineHitList;                      ///< the shower spine hit list
+    pandora::CaloHitList m_ambiguousHitList;                  ///< the list of ambiguous hits (those with shared energy deposits)
+    pandora::CartesianPointVector m_ambiguousDirectionVector; ///< the initial directions of the ambiguous hit owners
+    pandora::CaloHitList m_hitsToAdd;                         ///< the list of hits to add to an electron shower pfo
 };
 
 typedef std::vector<ProtoShower> ProtoShowerVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ProtoShower::ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const pandora::CaloHitList &spineHitList, 
-    const pandora::CaloHitList &ambiguousHitList, const pandora::CartesianPointVector &ambiguousDirectionVector, const pandora::CaloHitList &hitsToAdd) : 
-    m_showerCore(showerCore), m_connectionPathway(connectionPathway), m_spineHitList(spineHitList), m_ambiguousHitList(ambiguousHitList), 
-    m_ambiguousDirectionVector(ambiguousDirectionVector), m_hitsToAdd(hitsToAdd)
+inline ProtoShower::ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway,
+    const pandora::CaloHitList &spineHitList, const pandora::CaloHitList &ambiguousHitList,
+    const pandora::CartesianPointVector &ambiguousDirectionVector, const pandora::CaloHitList &hitsToAdd) :
+    m_showerCore(showerCore),
+    m_connectionPathway(connectionPathway),
+    m_spineHitList(spineHitList),
+    m_ambiguousHitList(ambiguousHitList),
+    m_ambiguousDirectionVector(ambiguousDirectionVector),
+    m_hitsToAdd(hitsToAdd)
 {
 }
 
@@ -173,7 +181,7 @@ enum Consistency
  */
 class ProtoShowerMatch
 {
-public: 
+public:
     /**
      *  @brief  Default constructor
      */
@@ -187,22 +195,24 @@ public:
      *  @param  protoShowerW the W view ProtoShower
      *  @param  consistencyType the nature of the 2D->3D match
      */
-    ProtoShowerMatch(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, 
-        const Consistency consistencyType);
+    ProtoShowerMatch(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const Consistency consistencyType);
 
-    ProtoShower m_protoShowerU;     ///< the U view ProtoShower   
-    ProtoShower m_protoShowerV;     ///< the V view ProtoShower
-    ProtoShower m_protoShowerW;     ///< the W view ProtoShower 
-    Consistency m_consistencyType;  ///< the nature of the 2D->3D match 
+    ProtoShower m_protoShowerU;    ///< the U view ProtoShower
+    ProtoShower m_protoShowerV;    ///< the V view ProtoShower
+    ProtoShower m_protoShowerW;    ///< the W view ProtoShower
+    Consistency m_consistencyType; ///< the nature of the 2D->3D match
 };
 
 typedef std::vector<ProtoShowerMatch> ProtoShowerMatchVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ProtoShowerMatch::ProtoShowerMatch(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW,
-    const Consistency consistencyType) : 
-        m_protoShowerU(protoShowerU), m_protoShowerV(protoShowerV), m_protoShowerW(protoShowerW), m_consistencyType(consistencyType)
+inline ProtoShowerMatch::ProtoShowerMatch(
+    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const Consistency consistencyType) :
+    m_protoShowerU(protoShowerU),
+    m_protoShowerV(protoShowerV),
+    m_protoShowerW(protoShowerW),
+    m_consistencyType(consistencyType)
 {
 }
 
