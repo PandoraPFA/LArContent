@@ -86,9 +86,8 @@ private:
      */
     template <typename T>
     int FindShowerStartLongitudinalCoordinate(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType,
-        const TwoDSlidingFitResult &spineTwoDSlidingFit, const EnergySpectrumMap &energySpectrumMap, const pandora::CaloHitList &showerSpineHitList,
-        const bool isEndDownstream, const T startIter, const T endIter) const;
-
+        const TwoDSlidingFitResult &spineTwoDSlidingFit, const EnergySpectrumMap &energySpectrumMap,
+        const pandora::CaloHitList &showerSpineHitList, const bool isEndDownstream, const T startIter, const T endIter) const;
 
     /**
      *  @brief  Find the mean and standard deviation of the energy depositions in the initial region
@@ -161,8 +160,8 @@ private:
      *  @return whether the 'shower characterisation' mechanics could proceed
      */
     pandora::StatusCode CharacteriseShowerTopology(const pandora::CartesianPointVector &showerRegionPositionVector,
-        const pandora::CartesianVector &showerStartPosition, const pandora::HitType hitType, const bool isEndDownstream, 
-        const pandora::CartesianVector &showerStartDirection, pandora::CartesianVector &positiveEdgeStart, pandora::CartesianVector &positiveEdgeEnd, 
+        const pandora::CartesianVector &showerStartPosition, const pandora::HitType hitType, const bool isEndDownstream,
+        const pandora::CartesianVector &showerStartDirection, pandora::CartesianVector &positiveEdgeStart, pandora::CartesianVector &positiveEdgeEnd,
         pandora::CartesianVector &negativeEdgeStart, pandora::CartesianVector &negativeEdgeEnd, bool &isBetween) const;
 
     /**
@@ -201,7 +200,7 @@ private:
     float m_minShowerOpeningAngle;         ///< The min. opening angle of a sensible shower
     float m_molliereRadius;                ///< The max. distance from the shower core of a collected shower region hit
     unsigned int m_showerSlidingFitWindow; ///< The sliding window used to fit the shower region
-    int m_maxLayerSeparation;     ///< The max. allowed separation between the shower start and boundary start layers
+    int m_maxLayerSeparation;              ///< The max. allowed separation between the shower start and boundary start layers
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -49,7 +49,8 @@ StatusCode ShowerStartFinderTool::Run(const ParticleFlowObject *const pShowerPfo
         for (const CaloHit *const pCaloHit : showerSpineHitList)
             hitPositions.push_back(pCaloHit->GetPositionVector());
 
-        const TwoDSlidingFitResult spineTwoDSlidingFit(&hitPositions, m_spineSlidingFitWindow, LArGeometryHelper::GetWirePitch(this->GetPandora(), hitType));
+        const TwoDSlidingFitResult spineTwoDSlidingFit(
+            &hitPositions, m_spineSlidingFitWindow, LArGeometryHelper::GetWirePitch(this->GetPandora(), hitType));
 
         // First obtain the longitudinal position of spine hits
         LongitudinalPositionMap longitudinalPositionMap;
@@ -192,7 +193,7 @@ void ShowerStartFinderTool::FindShowerStartAndDirection(const ParticleFlowObject
     }
     else
     {
-        longitudinalStartBin = this->FindShowerStartLongitudinalCoordinate(pShowerPfo, hitType, spineTwoDSlidingFit, energySpectrumMap, 
+        longitudinalStartBin = this->FindShowerStartLongitudinalCoordinate(pShowerPfo, hitType, spineTwoDSlidingFit, energySpectrumMap,
             showerSpineHitList, isEndDownstream, energySpectrumMap.rbegin(), std::prev(energySpectrumMap.rend()));
     }
 
@@ -204,7 +205,6 @@ void ShowerStartFinderTool::FindShowerStartAndDirection(const ParticleFlowObject
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 
 template <typename T>
 int ShowerStartFinderTool::FindShowerStartLongitudinalCoordinate(const ParticleFlowObject *const pShowerPfo, const HitType hitType,
@@ -489,9 +489,9 @@ StatusCode ShowerStartFinderTool::BuildShowerRegion(const ParticleFlowObject *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ShowerStartFinderTool::CharacteriseShowerTopology(const CartesianPointVector &showerRegionPositionVector,
-    const CartesianVector &showerStartPosition, const HitType hitType, const bool isEndDownstream, const CartesianVector &showerStartDirection, 
-    CartesianVector &positiveEdgeStart, CartesianVector &positiveEdgeEnd, CartesianVector &negativeEdgeStart, CartesianVector &negativeEdgeEnd, bool &isBetween) const
+StatusCode ShowerStartFinderTool::CharacteriseShowerTopology(const CartesianPointVector &showerRegionPositionVector, const CartesianVector &showerStartPosition,
+    const HitType hitType, const bool isEndDownstream, const CartesianVector &showerStartDirection, CartesianVector &positiveEdgeStart,
+    CartesianVector &positiveEdgeEnd, CartesianVector &negativeEdgeStart, CartesianVector &negativeEdgeEnd, bool &isBetween) const
 {
     try
     {

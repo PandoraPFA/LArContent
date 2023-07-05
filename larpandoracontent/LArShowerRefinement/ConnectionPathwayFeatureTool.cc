@@ -84,8 +84,9 @@ void InitialRegionFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, Stri
 void InitialRegionFeatureTool::GetViewInitialRegionVariables(const Algorithm *const pAlgorithm, const CartesianVector &nuVertex3D,
     const ProtoShowerMatch &protoShowerMatch, const HitType hitType, float &initialGapSize, float &largestGapSize) const
 {
-    const ProtoShower &protoShower(hitType == TPC_VIEW_U ? protoShowerMatch.GetProtoShowerU()
-        : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV() : protoShowerMatch.GetProtoShowerW()));
+    const ProtoShower &protoShower(hitType == TPC_VIEW_U
+                                       ? protoShowerMatch.GetProtoShowerU()
+                                       : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV() : protoShowerMatch.GetProtoShowerW()));
     const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertex3D, hitType));
     const CartesianVector &startDirection(protoShower.GetConnectionPathway().GetStartDirection());
 
@@ -192,9 +193,9 @@ float ConnectionRegionFeatureTool::Get2DKink(
 
         for (HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
-            const ProtoShower &protoShower(hitType == TPC_VIEW_U
-                ? protoShowerMatch.GetProtoShowerU()
-                : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV() : protoShowerMatch.GetProtoShowerW()));
+            const ProtoShower &protoShower(
+                hitType == TPC_VIEW_U ? protoShowerMatch.GetProtoShowerU()
+                                      : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV() : protoShowerMatch.GetProtoShowerW()));
             CartesianPointVector &spinePositions(hitType == TPC_VIEW_U ? spinePositionsU : (hitType == TPC_VIEW_V ? spinePositionsV : spinePositionsW));
 
             for (const CaloHit *const pCaloHit : protoShower.GetSpineHitList())
@@ -514,8 +515,8 @@ void ShowerRegionFeatureTool::GetViewShowerRegionVariables(const Algorithm *cons
     {
         // Fit the spine to get the initial shower direction
         const CaloHitList &spineHitList(hitType == TPC_VIEW_U ? protoShowerMatch.GetProtoShowerU().GetSpineHitList()
-            : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV().GetSpineHitList()
-            : protoShowerMatch.GetProtoShowerW().GetSpineHitList()));
+                                                              : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV().GetSpineHitList()
+                                                                                       : protoShowerMatch.GetProtoShowerW().GetSpineHitList()));
 
         CartesianPointVector spinePositions;
         for (const CaloHit *const pCaloHit : spineHitList)
@@ -532,7 +533,8 @@ void ShowerRegionFeatureTool::GetViewShowerRegionVariables(const Algorithm *cons
         this->GetShowerHitVariables(spineHitList, postShowerHitList, pShowerPfo, hitType, nHits, foundHitRatio);
 
         // Fit the shower
-        TwoDSlidingFitResult showerFitResult(&postShowerPositions, m_showerFitWindow, LArGeometryHelper::GetWirePitch(pAlgorithm->GetPandora(), hitType));
+        TwoDSlidingFitResult showerFitResult(
+            &postShowerPositions, m_showerFitWindow, LArGeometryHelper::GetWirePitch(pAlgorithm->GetPandora(), hitType));
 
         const bool isShowerDownstream((showerStart2D - showerFitResult.GetGlobalMinLayerPosition()).GetMagnitude() <
                                       (showerStart2D - showerFitResult.GetGlobalMaxLayerPosition()).GetMagnitude());
@@ -656,7 +658,7 @@ void ShowerRegionFeatureTool::CalculateViewScatterAngle(const CartesianVector &n
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerRegionFeatureTool::CalculateViewOpeningAngle(const TwoDSlidingFitResult &showerFitResult, const CaloHitList &postShowerHitList, 
+void ShowerRegionFeatureTool::CalculateViewOpeningAngle(const TwoDSlidingFitResult &showerFitResult, const CaloHitList &postShowerHitList,
     const CartesianVector &showerStart2D, float &openingAngle)
 {
     try
@@ -688,10 +690,8 @@ void ShowerRegionFeatureTool::CalculateViewOpeningAngle(const TwoDSlidingFitResu
         for (auto &entry : negativeEdges)
             negativeEdgePositions.push_back(CartesianVector(entry.second, 0.f, entry.first));
 
-        const TwoDSlidingFitResult positiveEdgeFit(
-            &positiveEdgePositions, m_showerFitWindow, showerFitResult.GetLayerPitch());
-        const TwoDSlidingFitResult negativeEdgeFit(
-            &negativeEdgePositions, m_showerFitWindow, showerFitResult.GetLayerPitch());
+        const TwoDSlidingFitResult positiveEdgeFit(&positiveEdgePositions, m_showerFitWindow, showerFitResult.GetLayerPitch());
+        const TwoDSlidingFitResult negativeEdgeFit(&negativeEdgePositions, m_showerFitWindow, showerFitResult.GetLayerPitch());
 
         const CartesianVector positiveMinLayer(positiveEdgeFit.GetGlobalMinLayerPosition());
         const CartesianVector positiveMaxLayer(positiveEdgeFit.GetGlobalMaxLayerPosition());
@@ -955,8 +955,9 @@ bool AmbiguousRegionFeatureTool::GetViewAmbiguousHitVariables(const Algorithm *c
     std::map<int, CaloHitList> ambiguousHitSpines;
     CaloHitList hitsToExcludeInEnergyCalcs; // to avoid double  counting
     const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertex3D, hitType));
-    const ProtoShower &protoShower(hitType == TPC_VIEW_U ? protoShowerMatch.GetProtoShowerU()
-                                   : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV() : protoShowerMatch.GetProtoShowerW()));
+    const ProtoShower &protoShower(hitType == TPC_VIEW_U
+                                       ? protoShowerMatch.GetProtoShowerU()
+                                       : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV() : protoShowerMatch.GetProtoShowerW()));
 
     this->BuildAmbiguousSpines(pAlgorithm, hitType, protoShower, nuVertex2D, ambiguousHitSpines, hitsToExcludeInEnergyCalcs);
 

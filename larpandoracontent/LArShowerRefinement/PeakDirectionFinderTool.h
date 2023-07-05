@@ -90,10 +90,10 @@ private:
      */
     void RetrievePeakDirections(const AngularDecompositionMap &angularDecompositionMap, pandora::CartesianPointVector &peakDirectionVector) const;
 
-    float m_pathwaySearchRegion; ///< The initial shower cone distance
-    float m_theta0XZBinSize;     ///< The angular distribution bin size
-    int m_smoothingWindow;       ///< On each side, the number of neighbouring bins with which each bin is averaged
-    bool m_ambiguousParticleMode;  ///< Whether to find the initial pathway direction of the shower or of the other event particles
+    float m_pathwaySearchRegion;  ///< The initial shower cone distance
+    float m_theta0XZBinSize;      ///< The angular distribution bin size
+    int m_smoothingWindow;        ///< On each side, the number of neighbouring bins with which each bin is averaged
+    bool m_ambiguousParticleMode; ///< Whether to find the initial pathway direction of the shower or of the other event particles
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

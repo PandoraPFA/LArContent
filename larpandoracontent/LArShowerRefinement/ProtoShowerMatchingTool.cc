@@ -150,7 +150,8 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(const ProtoShower &protoSh
     }
     else
     {
-        const bool isDownstream(protoShowerW.GetShowerCore().GetStartPosition().GetZ() > protoShowerW.GetConnectionPathway().GetStartPosition().GetZ());
+        const bool isDownstream(
+            protoShowerW.GetShowerCore().GetStartPosition().GetZ() > protoShowerW.GetConnectionPathway().GetStartPosition().GetZ());
 
         CartesianPointVector spinePositionsU, spinePositionsV, spinePositionsW;
 

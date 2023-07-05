@@ -10,8 +10,8 @@
 
 #include "Pandora/PandoraInternal.h"
 
-#include "Objects/CartesianVector.h"
 #include "Objects/CaloHit.h"
+#include "Objects/CartesianVector.h"
 
 namespace lar_content
 {
@@ -254,9 +254,8 @@ public:
     void AddHitToAdd(const pandora::CaloHit *const hitToAdd);
 
 private:
-
-    const ShowerCore m_showerCore;                                  ///< the ShowerCore object
-    const ConnectionPathway m_connectionPathway;                    ///< the ConnectionPathway object
+    const ShowerCore m_showerCore;                            ///< the ShowerCore object
+    const ConnectionPathway m_connectionPathway;              ///< the ConnectionPathway object
     pandora::CaloHitList m_spineHitList;                      ///< the shower spine hit list
     pandora::CaloHitList m_ambiguousHitList;                  ///< the list of ambiguous hits (those with shared energy deposits)
     pandora::CartesianPointVector m_ambiguousDirectionVector; ///< the initial directions of the ambiguous hit owners
@@ -283,7 +282,8 @@ inline ProtoShower::ProtoShower(const ShowerCore &showerCore, const ConnectionPa
 
 inline ProtoShower::ProtoShower(const ProtoShower &protoShower) :
     m_showerCore(ShowerCore(protoShower.GetShowerCore().GetStartPosition(), protoShower.GetShowerCore().GetStartDirection())),
-    m_connectionPathway(ConnectionPathway(protoShower.GetConnectionPathway().GetStartPosition(), protoShower.GetConnectionPathway().GetStartDirection())),
+    m_connectionPathway(
+        ConnectionPathway(protoShower.GetConnectionPathway().GetStartPosition(), protoShower.GetConnectionPathway().GetStartDirection())),
     m_spineHitList(protoShower.GetSpineHitList()),
     m_ambiguousHitList(protoShower.GetAmbiguousHitList()),
     m_ambiguousDirectionVector(protoShower.GetAmbiguousDirectionVector()),
@@ -480,7 +480,7 @@ inline const ProtoShower &ProtoShowerMatch::GetProtoShowerW() const
 
 inline ProtoShower &ProtoShowerMatch::GetProtoShowerToModify(const pandora::HitType hitType)
 {
-    return hitType == pandora::TPC_VIEW_U ? m_protoShowerU :  (hitType == pandora::TPC_VIEW_V ? m_protoShowerV : m_protoShowerW);
+    return hitType == pandora::TPC_VIEW_U ? m_protoShowerU : (hitType == pandora::TPC_VIEW_V ? m_protoShowerV : m_protoShowerW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

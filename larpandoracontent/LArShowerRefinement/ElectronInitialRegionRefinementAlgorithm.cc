@@ -459,8 +459,8 @@ void ElectronInitialRegionRefinementAlgorithm::RefineHitsToAdd(
             {
                 found = true;
 
-                if (std::find(protoShower.GetAmbiguousDirectionVector().begin(), protoShower.GetAmbiguousDirectionVector().end(), eventPeakDirection) ==
-                    protoShower.GetAmbiguousDirectionVector().end())
+                if (std::find(protoShower.GetAmbiguousDirectionVector().begin(), protoShower.GetAmbiguousDirectionVector().end(),
+                        eventPeakDirection) == protoShower.GetAmbiguousDirectionVector().end())
                 {
                     protoShower.AddAmbiguousDirection(connectionPathway.GetStartDirection());
                 }
@@ -478,8 +478,8 @@ void ElectronInitialRegionRefinementAlgorithm::RefineHitsToAdd(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ElectronInitialRegionRefinementAlgorithm::FindContinuousPath(const CaloHitList &refinedHitList, const CartesianVector &nuVertex2D, 
-    CaloHitList &continuousHitList) const
+void ElectronInitialRegionRefinementAlgorithm::FindContinuousPath(
+    const CaloHitList &refinedHitList, const CartesianVector &nuVertex2D, CaloHitList &continuousHitList) const
 {
     continuousHitList.clear();
 
@@ -731,7 +731,8 @@ StatusCode ElectronInitialRegionRefinementAlgorithm::ReadSettings(const TiXmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingFileName", m_trainingFileName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingFileName", m_trainingFileName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UnambiguousThreshold", m_unambiguousThreshold));

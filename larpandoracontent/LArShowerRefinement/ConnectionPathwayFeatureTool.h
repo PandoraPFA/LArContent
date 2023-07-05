@@ -216,7 +216,7 @@ private:
      *  @param  showerStart2D the 2D shower start position 
      *  @param  openingAngle the output opening angle
      */
-    void CalculateViewOpeningAngle(const TwoDSlidingFitResult &showerFitResult, const pandora::CaloHitList &postShowerHitList, 
+    void CalculateViewOpeningAngle(const TwoDSlidingFitResult &showerFitResult, const pandora::CaloHitList &postShowerHitList,
         const pandora::CartesianVector &showerStart2D, float &openingAngle);
 
     /**

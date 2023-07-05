@@ -294,9 +294,8 @@ bool LArConnectionPathwayHelper::FindClosestSpinePosition(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(const Algorithm *const pAlgorithm,
-    const ProtoShower &protoShower, const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation,
-    const float maxXSeparation, CartesianVector &showerStart3D)
+bool LArConnectionPathwayHelper::FindShowerStartFromXProjectionRelaxed(const Algorithm *const pAlgorithm, const ProtoShower &protoShower,
+    const ProtoShower &protoShower1, const ProtoShower &protoShower2, const float maxSeparation, const float maxXSeparation, CartesianVector &showerStart3D)
 {
     const CartesianVector showerStart(protoShower.GetShowerCore().GetStartPosition());
     CartesianVector showerStart1(0.f, 0.f, 0.f);
