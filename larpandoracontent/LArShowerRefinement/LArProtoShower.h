@@ -11,6 +11,7 @@
 #include "Pandora/PandoraInternal.h"
 
 #include "Objects/CartesianVector.h"
+#include "Objects/CaloHit.h"
 
 namespace lar_content
 {
@@ -34,6 +35,21 @@ public:
      */
     ShowerCore(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection);
 
+    /**
+     *  @brief  Get the start position of the shower core
+     * 
+     *  @return the start position
+     */
+    const pandora::CartesianVector &GetStartPosition() const;
+
+    /**
+     *  @brief  Get the start direction of the shower core
+     * 
+     *  @return the start direction
+     */
+    const pandora::CartesianVector &GetStartDirection() const;
+
+private:
     pandora::CartesianVector m_startPosition;  ///< the 2D position at which the cascade looks to begin
     pandora::CartesianVector m_startDirection; ///< the initial 2D direction of the shower cascade
 };
@@ -50,6 +66,20 @@ inline ShowerCore::ShowerCore(const pandora::CartesianVector &startPosition, con
 
 inline ShowerCore::ShowerCore() : m_startPosition(0.f, 0.f, 0.f), m_startDirection(0.f, 0.f, 0.f)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CartesianVector &ShowerCore::GetStartPosition() const
+{
+    return m_startPosition;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CartesianVector &ShowerCore::GetStartDirection() const
+{
+    return m_startDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -74,6 +104,21 @@ public:
      */
     ConnectionPathway(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection);
 
+    /**
+     *  @brief  Get the start position of the connection pathway
+     * 
+     *  @return the start position
+     */
+    const pandora::CartesianVector &GetStartPosition() const;
+
+    /**
+     *  @brief  Get the start direction of the connection pathway
+     * 
+     *  @return the start direction
+     */
+    const pandora::CartesianVector &GetStartDirection() const;
+
+private:
     pandora::CartesianVector m_startPosition;  ///< the start position of the connection pathway
     pandora::CartesianVector m_startDirection; ///< the initial direction of the connection pathway
 };
@@ -92,6 +137,20 @@ inline ConnectionPathway::ConnectionPathway(const pandora::CartesianVector &star
 
 inline ConnectionPathway::ConnectionPathway() : m_startPosition(0.f, 0.f, 0.f), m_startDirection(0.f, 0.f, 0.f)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CartesianVector &ConnectionPathway::GetStartPosition() const
+{
+    return m_startPosition;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CartesianVector &ConnectionPathway::GetStartDirection() const
+{
+    return m_startDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,8 +183,80 @@ public:
      */
     ProtoShower(const ProtoShower &protoShower);
 
-    ShowerCore m_showerCore;                                  ///< the ShowerCore object
-    ConnectionPathway m_connectionPathway;                    ///< the ConnectionPathway object
+    /**
+     *  @brief  Get the shower core
+     * 
+     *  @return the shower core
+     */
+    const ShowerCore &GetShowerCore() const;
+
+    /**
+     *  @brief  Get the connection pathway
+     * 
+     *  @return the connection pathway
+     */
+    const ConnectionPathway &GetConnectionPathway() const;
+
+    /**
+     *  @brief  Get the spine hit list
+     * 
+     *  @return the spine hit list
+     */
+    const pandora::CaloHitList &GetSpineHitList() const;
+
+    /**
+     *  @brief  Get the ambiguous hit list
+     * 
+     *  @return the ambiguous hit list
+     */
+    const pandora::CaloHitList &GetAmbiguousHitList() const;
+
+    /**
+     *  @brief  Add an ambiguous hit to the ambiguous hit list
+     *
+     *  @param  ambiguousHit the ambiguous hit to add
+     */
+    void AddAmbiguousHit(const pandora::CaloHit *const ambiguousHit);
+
+    /**
+     *  @brief  Get the ambiguous direction vector
+     * 
+     *  @return the ambiguous direction vector
+     */
+    const pandora::CartesianPointVector &GetAmbiguousDirectionVector() const;
+
+    /**
+     *  @brief  Add an ambiguous direction to the ambiguous direction vector
+     *
+     *  @param  ambiguousDirection the ambiguous direction to add
+     */
+    void AddAmbiguousDirection(const pandora::CartesianVector &ambiguousDirection);
+
+    /**
+     *  @brief  Get the hits to add list
+     * 
+     *  @return the hits to add list
+     */
+    const pandora::CaloHitList &GetHitsToAddList() const;
+
+    /**
+     *  @brief  Set the hits to add list
+     * 
+     *  @param  the hits to add list
+     */
+    void SetHitsToAddList(const pandora::CaloHitList &hitsToAddList);
+
+    /**
+     *  @brief  Add a hit to the hits to add list
+     *
+     *  @param  hitToAdd the hit to add
+     */
+    void AddHitToAdd(const pandora::CaloHit *const hitToAdd);
+
+private:
+
+    const ShowerCore m_showerCore;                                  ///< the ShowerCore object
+    const ConnectionPathway m_connectionPathway;                    ///< the ConnectionPathway object
     pandora::CaloHitList m_spineHitList;                      ///< the shower spine hit list
     pandora::CaloHitList m_ambiguousHitList;                  ///< the list of ambiguous hits (those with shared energy deposits)
     pandora::CartesianPointVector m_ambiguousDirectionVector; ///< the initial directions of the ambiguous hit owners
@@ -150,14 +281,84 @@ inline ProtoShower::ProtoShower(const ShowerCore &showerCore, const ConnectionPa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ProtoShower::ProtoShower(const ProtoShower &protoShower)
+inline ProtoShower::ProtoShower(const ProtoShower &protoShower) :
+    m_showerCore(ShowerCore(protoShower.GetShowerCore().GetStartPosition(), protoShower.GetShowerCore().GetStartDirection())),
+    m_connectionPathway(ConnectionPathway(protoShower.GetConnectionPathway().GetStartPosition(), protoShower.GetConnectionPathway().GetStartDirection())),
+    m_spineHitList(protoShower.GetSpineHitList()),
+    m_ambiguousHitList(protoShower.GetAmbiguousHitList()),
+    m_ambiguousDirectionVector(protoShower.GetAmbiguousDirectionVector()),
+    m_hitsToAdd(protoShower.GetHitsToAddList())
 {
-    m_showerCore = ShowerCore(protoShower.m_showerCore.m_startPosition, protoShower.m_showerCore.m_startDirection);
-    m_connectionPathway = ConnectionPathway(protoShower.m_connectionPathway.m_startPosition, protoShower.m_connectionPathway.m_startDirection);
-    m_spineHitList = protoShower.m_spineHitList;
-    m_ambiguousHitList = protoShower.m_ambiguousHitList;
-    m_ambiguousDirectionVector = protoShower.m_ambiguousDirectionVector;
-    m_hitsToAdd = protoShower.m_hitsToAdd;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const ShowerCore &ProtoShower::GetShowerCore() const
+{
+    return m_showerCore;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const ConnectionPathway &ProtoShower::GetConnectionPathway() const
+{
+    return m_connectionPathway;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CaloHitList &ProtoShower::GetSpineHitList() const
+{
+    return m_spineHitList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CaloHitList &ProtoShower::GetAmbiguousHitList() const
+{
+    return m_ambiguousHitList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void ProtoShower::AddAmbiguousHit(const pandora::CaloHit *const ambiguousHit)
+{
+    m_ambiguousHitList.push_back(ambiguousHit);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CartesianPointVector &ProtoShower::GetAmbiguousDirectionVector() const
+{
+    return m_ambiguousDirectionVector;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void ProtoShower::AddAmbiguousDirection(const pandora::CartesianVector &ambiguousDirection)
+{
+    m_ambiguousDirectionVector.push_back(ambiguousDirection);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CaloHitList &ProtoShower::GetHitsToAddList() const
+{
+    return m_hitsToAdd;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void ProtoShower::SetHitsToAddList(const pandora::CaloHitList &hitsToAddList)
+{
+    m_hitsToAdd = hitsToAddList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void ProtoShower::AddHitToAdd(const pandora::CaloHit *const hitToAdd)
+{
+    m_hitsToAdd.push_back(hitToAdd);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -197,6 +398,44 @@ public:
      */
     ProtoShowerMatch(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const Consistency consistencyType);
 
+    /**
+     *  @brief  Get the U view ProtoShower
+     * 
+     *  @return the U view ProtoShower
+     */
+    const ProtoShower &GetProtoShowerU() const;
+
+    /**
+     *  @brief  Get the V view ProtoShower
+     * 
+     *  @return the V view ProtoShower
+     */
+    const ProtoShower &GetProtoShowerV() const;
+
+    /**
+     *  @brief  Get the W view ProtoShower
+     * 
+     *  @return the W view ProtoShower
+     */
+    const ProtoShower &GetProtoShowerW() const;
+
+    /**
+     *  @brief  Get a modifiable ProtoShower in a given view
+     * 
+     *  @param  hitType the 2D view
+     *
+     *  @return the modifiable ProtoShower in the specified view
+     */
+    ProtoShower &GetProtoShowerToModify(const pandora::HitType hitType);
+
+    /**
+     *  @brief  Get the consistency type
+     * 
+     *  @return the consistency type
+     */
+    const Consistency &GetConsistencyType() const;
+
+private:
     ProtoShower m_protoShowerU;    ///< the U view ProtoShower
     ProtoShower m_protoShowerV;    ///< the V view ProtoShower
     ProtoShower m_protoShowerW;    ///< the W view ProtoShower
@@ -215,6 +454,43 @@ inline ProtoShowerMatch::ProtoShowerMatch(
     m_consistencyType(consistencyType)
 {
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const ProtoShower &ProtoShowerMatch::GetProtoShowerU() const
+{
+    return m_protoShowerU;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const ProtoShower &ProtoShowerMatch::GetProtoShowerV() const
+{
+    return m_protoShowerV;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const ProtoShower &ProtoShowerMatch::GetProtoShowerW() const
+{
+    return m_protoShowerW;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ProtoShower &ProtoShowerMatch::GetProtoShowerToModify(const pandora::HitType hitType)
+{
+    return hitType == pandora::TPC_VIEW_U ? m_protoShowerU :  (hitType == pandora::TPC_VIEW_V ? m_protoShowerV : m_protoShowerW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const Consistency &ProtoShowerMatch::GetConsistencyType() const
+{
+    return m_consistencyType;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 } // namespace lar_content
 

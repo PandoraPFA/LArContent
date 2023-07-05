@@ -211,14 +211,13 @@ private:
     /**
      *  @brief  Calculate the opening angle of the shower region
      *
-     *  @param  pAlgorithm the algorithm
      *  @param  showerFitResult the shower region fit
      *  @param  postShowerHitList the collected shower region hit list 
      *  @param  showerStart2D the 2D shower start position 
      *  @param  openingAngle the output opening angle
      */
-    void CalculateViewOpeningAngle(const pandora::Algorithm *const pAlgorithm, const TwoDSlidingFitResult &showerFitResult,
-        const pandora::CaloHitList &postShowerHitList, const pandora::CartesianVector &showerStart2D, float &openingAngle);
+    void CalculateViewOpeningAngle(const TwoDSlidingFitResult &showerFitResult, const pandora::CaloHitList &postShowerHitList, 
+        const pandora::CartesianVector &showerStart2D, float &openingAngle);
 
     /**
      *  @brief  Evaluate the neutrino vertex consistency variables

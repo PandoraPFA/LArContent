@@ -23,7 +23,7 @@ PeakDirectionFinderTool::PeakDirectionFinderTool() :
     m_pathwaySearchRegion(10.f),
     m_theta0XZBinSize(0.005f),
     m_smoothingWindow(1),
-    m_eventMode(false)
+    m_ambiguousParticleMode(false)
 {
 }
 
@@ -68,7 +68,7 @@ StatusCode PeakDirectionFinderTool::Run(const ParticleFlowObject *const pShowerP
 void PeakDirectionFinderTool::CollectHitsWithinROI(const CaloHitList &showerHitList, const CaloHitList *const pViewHitList,
     const CartesianVector &nuVertex2D, CaloHitList &viewROIHits) const
 {
-    if (m_eventMode)
+    if (m_ambiguousParticleMode)
     {
         for (const CaloHit *const pCaloHit : *pViewHitList)
         {
@@ -172,8 +172,8 @@ void PeakDirectionFinderTool::FillAngularDecompositionMap(
 
 void PeakDirectionFinderTool::SmoothAngularDecompositionMap(AngularDecompositionMap &angularDecompositionMap) const
 {
-    const int loopMin = (-1) * m_smoothingWindow;
-    const int loopMax = m_smoothingWindow;
+    const int loopMin((-1) * m_smoothingWindow);
+    const int loopMax(m_smoothingWindow);
 
     const AngularDecompositionMap angularDecompositionMapTemp(angularDecompositionMap);
 
@@ -208,8 +208,8 @@ void PeakDirectionFinderTool::RetrievePeakDirections(const AngularDecompositionM
     // Order peak bin vector from highest to lowest bin height
     // Tie-break: highest index wins
     std::sort(orderedBinIndexVector.begin(), orderedBinIndexVector.end(), [&angularDecompositionMap](const int a, const int b) -> bool {
-        float aWeight = angularDecompositionMap.at(a);
-        float bWeight = angularDecompositionMap.at(b);
+        const float aWeight(angularDecompositionMap.at(a));
+        const float bWeight(angularDecompositionMap.at(b));
 
         if (std::fabs(aWeight - bWeight) < std::numeric_limits<float>::epsilon())
             return a > b;
@@ -278,7 +278,7 @@ StatusCode PeakDirectionFinderTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SmoothingWindow", m_smoothingWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EventMode", m_eventMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "AmbiguousParticleMode", m_ambiguousParticleMode));
 
     return STATUS_CODE_SUCCESS;
 }

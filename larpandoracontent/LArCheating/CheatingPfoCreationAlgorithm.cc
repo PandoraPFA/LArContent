@@ -130,7 +130,7 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const MCParticleToClusterListMap &
         try
         {
             PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-            pfoParameters.m_particleId = (this->IsShower(pMCParticle) ? 11 : 13);
+            pfoParameters.m_particleId = (this->IsShower(pMCParticle) ? E_MINUS : MU_MINUS);
             pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
             pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
             pfoParameters.m_energy = pMCParticle->GetEnergy();

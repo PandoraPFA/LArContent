@@ -49,7 +49,7 @@ StatusCode ShowerStartFinderTool::Run(const ParticleFlowObject *const pShowerPfo
         for (const CaloHit *const pCaloHit : showerSpineHitList)
             hitPositions.push_back(pCaloHit->GetPositionVector());
 
-        const TwoDSlidingFitResult spineTwoDSlidingFit(&hitPositions, m_spineSlidingFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const TwoDSlidingFitResult spineTwoDSlidingFit(&hitPositions, m_spineSlidingFitWindow, LArGeometryHelper::GetWirePitch(this->GetPandora(), hitType));
 
         // First obtain the longitudinal position of spine hits
         LongitudinalPositionMap longitudinalPositionMap;
@@ -90,20 +90,22 @@ void ShowerStartFinderTool::ObtainLongitudinalDecomposition(const TwoDSlidingFit
         layerToHitMap[spineTwoDSlidingFit.GetLayer(hitL)].push_back(pCaloHit);
     }
 
-    // Find the longitudinal distance of each hit along shower spine fit
+    // Walk through layers and store the longitudinal distance of each hit
+    // IMPORTANT: layer positions correspond to the middle of the layer
+    // IMPORTANT: the longitudinal distance is measured relative to the first layer position (where l = 0)
+    // IMPORTANT: at any point, the running distance is that at the lowest neighbour central position
     float runningDistance(0);
     const LayerFitResultMap &layerFitResultMap(spineTwoDSlidingFit.GetLayerFitResultMap());
 
     for (auto iter = layerToHitMap.begin(); iter != layerToHitMap.end(); ++iter)
     {
         const int layer(iter->first);
-
         const float layerL(layerFitResultMap.at(layer).GetL());
 
+        // Get global positions of layer and its neighbours
         const int higherLayer(std::next(iter) == layerToHitMap.end() ? layer : std::next(iter)->first);
         const int middleLayer(layer);
         const int lowerLayer(iter == layerToHitMap.begin() ? layer : std::prev(iter)->first);
-
         CartesianVector lowerLayerPosition(0.f, 0.f, 0.f), middleLayerPosition(0.f, 0.f, 0.f), higherLayerPosition(0.f, 0.f, 0.f);
 
         spineTwoDSlidingFit.GetGlobalPosition(layerFitResultMap.at(lowerLayer).GetL(), layerFitResultMap.at(lowerLayer).GetFitT(), lowerLayerPosition);
@@ -121,6 +123,8 @@ void ShowerStartFinderTool::ObtainLongitudinalDecomposition(const TwoDSlidingFit
             float hitL(0.f), hitT(0.f);
             spineTwoDSlidingFit.GetLocalPosition(hitPosition, hitL, hitT);
 
+            // Is the hit below or above the middle of the layer?
+            // Therefore, determine which layer positions the hit is between
             CartesianVector localLowerLayerPosition(0.f, 0.f, 0.f), localHigherLayerPosition(0.f, 0.f, 0.f);
 
             if (hitL < layerL)
@@ -134,12 +138,15 @@ void ShowerStartFinderTool::ObtainLongitudinalDecomposition(const TwoDSlidingFit
                 localHigherLayerPosition = higherLayerPosition;
             }
 
+            // Determine the axis to project onto
+            // Calculate the distance of axis between its two nearest neighbours
             const CartesianVector displacement((higherLayerPosition - lowerLayerPosition).GetUnitVector());
+            float longitudinalDisplacement = (displacement.GetDotProduct(hitPosition - lowerLayerPosition) + runningDistance);
 
-            float longitudinalDisplament = (hitL > layerL ? layerLength : 0.f);
-            longitudinalDisplament += (displacement.GetDotProduct(hitPosition - lowerLayerPosition) + runningDistance);
+            // If we've passed the central position, we need to add on the layer length
+            longitudinalDisplacement += (hitL > layerL ? layerLength : 0.f);
 
-            longitudinalPositionMap[pCaloHit] = longitudinalDisplament;
+            longitudinalPositionMap[pCaloHit] = longitudinalDisplacement;
         }
 
         runningDistance += layerLength;
@@ -175,26 +182,50 @@ void ShowerStartFinderTool::FindShowerStartAndDirection(const ParticleFlowObject
     const TwoDSlidingFitResult &spineTwoDSlidingFit, const EnergySpectrumMap &energySpectrumMap, const CaloHitList &showerSpineHitList,
     const bool isEndDownstream, CartesianVector &showerStartPosition, CartesianVector &showerStartDirection) const
 {
+    // Search for shower start at significant energy deviations
+    int longitudinalStartBin(0);
+
+    if (isEndDownstream)
+    {
+        longitudinalStartBin = this->FindShowerStartLongitudinalCoordinate(pShowerPfo, hitType, spineTwoDSlidingFit, energySpectrumMap,
+            showerSpineHitList, isEndDownstream, energySpectrumMap.begin(), std::prev(energySpectrumMap.end()));
+    }
+    else
+    {
+        longitudinalStartBin = this->FindShowerStartLongitudinalCoordinate(pShowerPfo, hitType, spineTwoDSlidingFit, energySpectrumMap, 
+            showerSpineHitList, isEndDownstream, energySpectrumMap.rbegin(), std::prev(energySpectrumMap.rend()));
+    }
+
+    const float longitudinalStartCoordinate(longitudinalStartBin * m_longitudinalCoordinateBinSize);
+
+    this->ConvertLongitudinalProjectionToGlobal(spineTwoDSlidingFit, longitudinalStartCoordinate, showerStartPosition, showerStartDirection);
+
+    showerStartDirection = isEndDownstream ? showerStartDirection : showerStartDirection * (-1.f);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+
+template <typename T>
+int ShowerStartFinderTool::FindShowerStartLongitudinalCoordinate(const ParticleFlowObject *const pShowerPfo, const HitType hitType,
+    const TwoDSlidingFitResult &spineTwoDSlidingFit, const EnergySpectrumMap &energySpectrumMap, const CaloHitList &showerSpineHitList,
+    const bool isEndDownstream, const T startIter, const T endIter) const
+{
     // Characterise initial energy
     float meanEnergy(0.f), energySigma(0.f);
 
     if (energySpectrumMap.size() > m_nInitialEnergyBins)
         this->CharacteriseInitialEnergy(energySpectrumMap, isEndDownstream, meanEnergy, energySigma);
 
-    // Search for shower start at significant energy deviations
-    auto energySpectrumIter(isEndDownstream ? energySpectrumMap.begin() : std::prev(energySpectrumMap.end()));
+    // Now loop through energySpectrumMap
+    T iter(startIter);
 
-    for (unsigned int i = 0; i < energySpectrumMap.size(); ++i)
+    std::advance(iter, (energySpectrumMap.size() > m_nInitialEnergyBins) ? m_nInitialEnergyBins : (energySpectrumMap.size() - 1));
+
+    for (; iter != endIter; iter++)
     {
-        // Bypass bins used to asses the initial energy
-        if (i < m_nInitialEnergyBins)
-        {
-            isEndDownstream ? ++energySpectrumIter : --energySpectrumIter;
-            continue;
-        }
-
-        const float longitudinalCoordinate(energySpectrumIter->first * m_longitudinalCoordinateBinSize);
-        const float energyDeviation((energySpectrumIter->second - meanEnergy) / energySigma);
+        const float longitudinalCoordinate(iter->first * m_longitudinalCoordinateBinSize);
+        const float energyDeviation((iter->second - meanEnergy) / energySigma);
 
         // Use energy and local topology to assess whether we are at the shower start
         if ((energyDeviation > m_minSigmaDeviation) &&
@@ -202,17 +233,9 @@ void ShowerStartFinderTool::FindShowerStartAndDirection(const ParticleFlowObject
         {
             break;
         }
-
-        if (i != (energySpectrumMap.size() - 1))
-            isEndDownstream ? ++energySpectrumIter : --energySpectrumIter;
     }
 
-    const int longitudinalStartBin(energySpectrumIter->first);
-    const float longitudinalStartCoordinate(longitudinalStartBin * m_longitudinalCoordinateBinSize);
-
-    this->ConvertLongitudinalProjectionToGlobal(spineTwoDSlidingFit, longitudinalStartCoordinate, showerStartPosition, showerStartDirection);
-
-    showerStartDirection = isEndDownstream ? showerStartDirection : showerStartDirection * (-1.f);
+    return iter->first;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -262,7 +285,7 @@ bool ShowerStartFinderTool::IsShowerTopology(const ParticleFlowObject *const pSh
     CartesianVector positiveEdgeStart(0.f, 0.f, 0.f), positiveEdgeEnd(0.f, 0.f, 0.f), positiveEdgeDirection(0.f, 0.f, 0.f);
     CartesianVector negativeEdgeStart(0.f, 0.f, 0.f), negativeEdgeEnd(0.f, 0.f, 0.f), negativeEdgeDirection(0.f, 0.f, 0.f);
 
-    if (this->CharacteriseShowerTopology(showerRegionPositionVector, showerStartPosition, isEndDownstream, showerStartDirection,
+    if (this->CharacteriseShowerTopology(showerRegionPositionVector, showerStartPosition, hitType, isEndDownstream, showerStartDirection,
             positiveEdgeStart, positiveEdgeEnd, negativeEdgeStart, negativeEdgeEnd, isBetween) != STATUS_CODE_SUCCESS)
     {
         return false;
@@ -357,7 +380,7 @@ StatusCode ShowerStartFinderTool::BuildShowerRegion(const ParticleFlowObject *co
     {
         // Perform shower sliding fit
         const TwoDSlidingShowerFitResult twoDShowerSlidingFit(
-            &showerRegionPositionVector, m_showerSlidingFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+            &showerRegionPositionVector, m_showerSlidingFitWindow, LArGeometryHelper::GetWirePitch(this->GetPandora(), hitType));
         const LayerFitResultMap &layerFitResultMapS(twoDShowerSlidingFit.GetShowerFitResult().GetLayerFitResultMap());
         const LayerFitResultMap &layerFitResultMapP(twoDShowerSlidingFit.GetPositiveEdgeFitResult().GetLayerFitResultMap());
         const LayerFitResultMap &layerFitResultMapN(twoDShowerSlidingFit.GetNegativeEdgeFitResult().GetLayerFitResultMap());
@@ -467,14 +490,14 @@ StatusCode ShowerStartFinderTool::BuildShowerRegion(const ParticleFlowObject *co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ShowerStartFinderTool::CharacteriseShowerTopology(const CartesianPointVector &showerRegionPositionVector,
-    const CartesianVector &showerStartPosition, const bool isEndDownstream, const CartesianVector &showerStartDirection, CartesianVector &positiveEdgeStart,
-    CartesianVector &positiveEdgeEnd, CartesianVector &negativeEdgeStart, CartesianVector &negativeEdgeEnd, bool &isBetween) const
+    const CartesianVector &showerStartPosition, const HitType hitType, const bool isEndDownstream, const CartesianVector &showerStartDirection, 
+    CartesianVector &positiveEdgeStart, CartesianVector &positiveEdgeEnd, CartesianVector &negativeEdgeStart, CartesianVector &negativeEdgeEnd, bool &isBetween) const
 {
     try
     {
         // Perform shower sliding fit
         const TwoDSlidingShowerFitResult twoDShowerSlidingFit(
-            &showerRegionPositionVector, m_showerSlidingFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+            &showerRegionPositionVector, m_showerSlidingFitWindow, LArGeometryHelper::GetWirePitch(this->GetPandora(), hitType));
         const LayerFitResultMap &layerFitResultMapS(twoDShowerSlidingFit.GetShowerFitResult().GetLayerFitResultMap());
         const LayerFitResultMap &layerFitResultMapP(twoDShowerSlidingFit.GetPositiveEdgeFitResult().GetLayerFitResultMap());
         const LayerFitResultMap &layerFitResultMapN(twoDShowerSlidingFit.GetNegativeEdgeFitResult().GetLayerFitResultMap());

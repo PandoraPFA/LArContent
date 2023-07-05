@@ -99,6 +99,31 @@ public:
         pandora::CartesianVector &vShowerStart3D, pandora::CartesianVector &wShowerStart3D);
 
     /**
+     *  @brief  Create a 3D shower start position from an input 2D position, assuming consistency of initial direction
+     *
+     *  @param  pAlgorithm the calling algorithm
+     *  @param  protoShower the input 2D position ProtoShower owner
+     *  @param  protoShowerA the ProtoShower of another view
+     *  @param  protoShowerB the ProtoShower in the remaining view
+     *  @param  showerStart3D the output 3D shower start
+     *
+     *  @return whether a 3D shower start position could be created
+     */
+    static bool FindShowerStartFromDirection(const pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShower,
+        const ProtoShower &protoShowerA, const ProtoShower &protoShowerB, pandora::CartesianVector &showerStart3D);
+
+    /**
+     *  @brief  Find a 2D shower start, from a drift coordinate by assuming consistency of initial direction 
+     *
+     *  @param  protoShower the ProtoShower for which to find the shower start
+     *  @param  x the drift-coordinate
+     *  @param  showerStart2D the output 2D shower start
+     *
+     *  @return whether a 2D shower start position could be found
+     */
+    static bool ProjectShowerStartByDirection(const ProtoShower &protoShower, const float x, pandora::CartesianVector &showerStart2D);
+
+    /**
      *  @brief  Create a 3D shower start position from an input 2D position, assuming consistency of the drift coordinate
      *
      *  @param  pAlgorithm the calling algorithm

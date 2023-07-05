@@ -159,10 +159,10 @@ private:
      *
      *  @param  refinedHitList the input hit list
      *  @param  nuVertex2D the given point (the 2D neutrino vertex)
-     *
-     *  @return a continuous pathway of hits
+     *  @param  continuousHitList the input hit list to be filled
      */
-    pandora::CaloHitList FindContinuousPath(const pandora::CaloHitList &refinedHitList, const pandora::CartesianVector &nuVertex2D) const;
+    void FindContinuousPath(const pandora::CaloHitList &refinedHitList, const pandora::CartesianVector &nuVertex2D,
+        pandora::CaloHitList &continuousHitList) const;
 
     /**
      *  @brief  Add the shower characterisation information to the pfo metadata
@@ -203,6 +203,7 @@ private:
     float m_maxCoincidenceTransverseSeparation; ///< The max. transverse distance from the pathway direction of a coincident shower vertex
     float m_minSpinePurity;                     ///< The min. purity of a coincident shower spine downstream of the shower vertex
     bool m_trainingMode;                        ///< Whether to run the algorithm to train the BDT
+    std::string m_trainingFileName;             ///< The name of the output training file name
     float m_unambiguousThreshold;     ///< The min. transverse distance of an unambiguous shower hit from another pathway direction
     float m_maxConnectionDistance;    ///< The max. distance between connected hits
     unsigned int m_minNConnectedHits; ///< The number of connected hits needed for a conntected pathway

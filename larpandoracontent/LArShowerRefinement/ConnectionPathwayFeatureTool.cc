@@ -84,13 +84,13 @@ void InitialRegionFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, Stri
 void InitialRegionFeatureTool::GetViewInitialRegionVariables(const Algorithm *const pAlgorithm, const CartesianVector &nuVertex3D,
     const ProtoShowerMatch &protoShowerMatch, const HitType hitType, float &initialGapSize, float &largestGapSize) const
 {
-    const ProtoShower &protoShower(hitType == TPC_VIEW_U ? protoShowerMatch.m_protoShowerU
-                                                         : (hitType == TPC_VIEW_V ? protoShowerMatch.m_protoShowerV : protoShowerMatch.m_protoShowerW));
+    const ProtoShower &protoShower(hitType == TPC_VIEW_U ? protoShowerMatch.GetProtoShowerU()
+        : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV() : protoShowerMatch.GetProtoShowerW()));
     const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertex3D, hitType));
-    const CartesianVector &startDirection(protoShower.m_connectionPathway.m_startDirection);
+    const CartesianVector &startDirection(protoShower.GetConnectionPathway().GetStartDirection());
 
     // Initial gap size
-    CaloHitVector spineHitVector(protoShower.m_spineHitList.begin(), protoShower.m_spineHitList.end());
+    CaloHitVector spineHitVector(protoShower.GetSpineHitList().begin(), protoShower.GetSpineHitList().end());
 
     std::sort(spineHitVector.begin(), spineHitVector.end(), LArConnectionPathwayHelper::SortByDistanceToPoint(nuVertex2D));
     initialGapSize = (nuVertex2D - spineHitVector.front()->GetPositionVector()).GetMagnitude();
@@ -100,7 +100,7 @@ void InitialRegionFeatureTool::GetViewInitialRegionVariables(const Algorithm *co
 
     std::vector<float> longitudinalProjections;
 
-    for (const CaloHit *const pCaloHit : protoShower.m_spineHitList)
+    for (const CaloHit *const pCaloHit : protoShower.GetSpineHitList())
         longitudinalProjections.push_back(startDirection.GetDotProduct(pCaloHit->GetPositionVector() - nuVertex2D));
 
     std::sort(longitudinalProjections.begin(), longitudinalProjections.end());
@@ -193,17 +193,17 @@ float ConnectionRegionFeatureTool::Get2DKink(
         for (HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             const ProtoShower &protoShower(hitType == TPC_VIEW_U
-                                               ? protoShowerMatch.m_protoShowerU
-                                               : (hitType == TPC_VIEW_V ? protoShowerMatch.m_protoShowerV : protoShowerMatch.m_protoShowerW));
+                ? protoShowerMatch.GetProtoShowerU()
+                : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV() : protoShowerMatch.GetProtoShowerW()));
             CartesianPointVector &spinePositions(hitType == TPC_VIEW_U ? spinePositionsU : (hitType == TPC_VIEW_V ? spinePositionsV : spinePositionsW));
 
-            for (const CaloHit *const pCaloHit : protoShower.m_spineHitList)
+            for (const CaloHit *const pCaloHit : protoShower.GetSpineHitList())
                 spinePositions.push_back(pCaloHit->GetPositionVector());
         }
 
-        const TwoDSlidingFitResult spineFitU(&spinePositionsU, m_spineFitWindow, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
-        const TwoDSlidingFitResult spineFitV(&spinePositionsV, m_spineFitWindow, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
-        const TwoDSlidingFitResult spineFitW(&spinePositionsW, m_spineFitWindow, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
+        const TwoDSlidingFitResult spineFitU(&spinePositionsU, m_spineFitWindow, LArGeometryHelper::GetWirePitch(pAlgorithm->GetPandora(), TPC_VIEW_U));
+        const TwoDSlidingFitResult spineFitV(&spinePositionsV, m_spineFitWindow, LArGeometryHelper::GetWirePitch(pAlgorithm->GetPandora(), TPC_VIEW_V));
+        const TwoDSlidingFitResult spineFitW(&spinePositionsW, m_spineFitWindow, LArGeometryHelper::GetWirePitch(pAlgorithm->GetPandora(), TPC_VIEW_W));
 
         const float scatterAngleU(this->GetLargest2DKinkFromView(pAlgorithm, spineFitU, TPC_VIEW_U, showerStart3D));
         const float scatterAngleV(this->GetLargest2DKinkFromView(pAlgorithm, spineFitV, TPC_VIEW_V, showerStart3D));
@@ -299,7 +299,7 @@ float ConnectionRegionFeatureTool::GetLargest2DKinkFromView(const Algorithm *con
         {
             if (openingAngle2D > highestOpeningAngle)
             {
-                highestOpeningAngle = std::max(highestOpeningAngle, openingAngle2D);
+                highestOpeningAngle = openingAngle2D;
                 highestKinkPosition = thisHighestKinkPosition;
             }
         }
@@ -513,15 +513,15 @@ void ShowerRegionFeatureTool::GetViewShowerRegionVariables(const Algorithm *cons
     try
     {
         // Fit the spine to get the initial shower direction
-        const CaloHitList &spineHitList(hitType == TPC_VIEW_U ? protoShowerMatch.m_protoShowerU.m_spineHitList
-                                                              : (hitType == TPC_VIEW_V ? protoShowerMatch.m_protoShowerV.m_spineHitList
-                                                                                       : protoShowerMatch.m_protoShowerW.m_spineHitList));
+        const CaloHitList &spineHitList(hitType == TPC_VIEW_U ? protoShowerMatch.GetProtoShowerU().GetSpineHitList()
+            : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV().GetSpineHitList()
+            : protoShowerMatch.GetProtoShowerW().GetSpineHitList()));
 
         CartesianPointVector spinePositions;
         for (const CaloHit *const pCaloHit : spineHitList)
             spinePositions.push_back(pCaloHit->GetPositionVector());
 
-        const TwoDSlidingFitResult spineFitResult(&spinePositions, m_spineFitWindow, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
+        const TwoDSlidingFitResult spineFitResult(&spinePositions, m_spineFitWindow, LArGeometryHelper::GetWirePitch(pAlgorithm->GetPandora(), hitType));
 
         // Now can build the shower
         CaloHitList postShowerHitList;
@@ -532,7 +532,7 @@ void ShowerRegionFeatureTool::GetViewShowerRegionVariables(const Algorithm *cons
         this->GetShowerHitVariables(spineHitList, postShowerHitList, pShowerPfo, hitType, nHits, foundHitRatio);
 
         // Fit the shower
-        TwoDSlidingFitResult showerFitResult(&postShowerPositions, m_showerFitWindow, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
+        TwoDSlidingFitResult showerFitResult(&postShowerPositions, m_showerFitWindow, LArGeometryHelper::GetWirePitch(pAlgorithm->GetPandora(), hitType));
 
         const bool isShowerDownstream((showerStart2D - showerFitResult.GetGlobalMinLayerPosition()).GetMagnitude() <
                                       (showerStart2D - showerFitResult.GetGlobalMaxLayerPosition()).GetMagnitude());
@@ -559,7 +559,7 @@ void ShowerRegionFeatureTool::GetViewShowerRegionVariables(const Algorithm *cons
 
         this->CalculateViewScatterAngle(nuVertex2D, spineFitResult, showerStart2D, showerFitResult, scatterAngle);
 
-        this->CalculateViewOpeningAngle(pAlgorithm, showerFitResult, postShowerHitList, showerStart2D, openingAngle);
+        this->CalculateViewOpeningAngle(showerFitResult, postShowerHitList, showerStart2D, openingAngle);
 
         this->CalculateViewNuVertexConsistencyVariables(
             spineFitResult, postShowerHitList, isDownstream, nuVertex2D, nuVertexEnergyAsymmetry, nuVertexEnergyWeightedMeanRadialDistance);
@@ -656,8 +656,8 @@ void ShowerRegionFeatureTool::CalculateViewScatterAngle(const CartesianVector &n
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerRegionFeatureTool::CalculateViewOpeningAngle(const Algorithm *const pAlgorithm, const TwoDSlidingFitResult &showerFitResult,
-    const CaloHitList &postShowerHitList, const CartesianVector &showerStart2D, float &openingAngle)
+void ShowerRegionFeatureTool::CalculateViewOpeningAngle(const TwoDSlidingFitResult &showerFitResult, const CaloHitList &postShowerHitList, 
+    const CartesianVector &showerStart2D, float &openingAngle)
 {
     try
     {
@@ -689,9 +689,9 @@ void ShowerRegionFeatureTool::CalculateViewOpeningAngle(const Algorithm *const p
             negativeEdgePositions.push_back(CartesianVector(entry.second, 0.f, entry.first));
 
         const TwoDSlidingFitResult positiveEdgeFit(
-            &positiveEdgePositions, m_showerFitWindow, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
+            &positiveEdgePositions, m_showerFitWindow, showerFitResult.GetLayerPitch());
         const TwoDSlidingFitResult negativeEdgeFit(
-            &negativeEdgePositions, m_showerFitWindow, LArGeometryHelper::GetWireZPitch(pAlgorithm->GetPandora()));
+            &negativeEdgePositions, m_showerFitWindow, showerFitResult.GetLayerPitch());
 
         const CartesianVector positiveMinLayer(positiveEdgeFit.GetGlobalMinLayerPosition());
         const CartesianVector positiveMaxLayer(positiveEdgeFit.GetGlobalMaxLayerPosition());
@@ -790,7 +790,7 @@ void ShowerRegionFeatureTool::CalculateViewShowerStartConsistencyVariables(const
         showerStartEnergyAsymmetry += (thisL < 0.f) ? (-1.f * hitEnergy) : hitEnergy;
     }
 
-    showerStartEnergyAsymmetry = (totalEnergy < std::numeric_limits<float>::epsilon()) ? -0.5f : (showerStartEnergyAsymmetry / totalEnergy);
+    showerStartEnergyAsymmetry = (totalEnergy < std::numeric_limits<float>::epsilon()) ? m_defaultRatio : (showerStartEnergyAsymmetry / totalEnergy);
     showerStartEnergyAsymmetry = std::fabs(showerStartEnergyAsymmetry);
 
     // showerStartMoliereRadius
@@ -937,13 +937,13 @@ void AmbiguousRegionFeatureTool::CalculateNAmbiguousViews(const ProtoShowerMatch
 {
     nAmbiguousViews = 0.f;
 
-    const int nAmbiguousHitsU(protoShowerMatch.m_protoShowerU.m_ambiguousHitList.size());
+    const int nAmbiguousHitsU(protoShowerMatch.GetProtoShowerU().GetAmbiguousHitList().size());
     nAmbiguousViews += (nAmbiguousHitsU == 0) ? 0.f : 1.f;
 
-    const int nAmbiguousHitsV(protoShowerMatch.m_protoShowerV.m_ambiguousHitList.size());
+    const int nAmbiguousHitsV(protoShowerMatch.GetProtoShowerV().GetAmbiguousHitList().size());
     nAmbiguousViews += (nAmbiguousHitsV == 0) ? 0.f : 1.f;
 
-    const int nAmbiguousHitsW(protoShowerMatch.m_protoShowerW.m_ambiguousHitList.size());
+    const int nAmbiguousHitsW(protoShowerMatch.GetProtoShowerW().GetAmbiguousHitList().size());
     nAmbiguousViews += (nAmbiguousHitsW == 0) ? 0.f : 1.f;
 }
 
@@ -955,20 +955,20 @@ bool AmbiguousRegionFeatureTool::GetViewAmbiguousHitVariables(const Algorithm *c
     std::map<int, CaloHitList> ambiguousHitSpines;
     CaloHitList hitsToExcludeInEnergyCalcs; // to avoid double  counting
     const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertex3D, hitType));
-    const ProtoShower &protoShower(hitType == TPC_VIEW_U ? protoShowerMatch.m_protoShowerU
-                                                         : (hitType == TPC_VIEW_V ? protoShowerMatch.m_protoShowerV : protoShowerMatch.m_protoShowerW));
+    const ProtoShower &protoShower(hitType == TPC_VIEW_U ? protoShowerMatch.GetProtoShowerU()
+                                   : (hitType == TPC_VIEW_V ? protoShowerMatch.GetProtoShowerV() : protoShowerMatch.GetProtoShowerW()));
 
     this->BuildAmbiguousSpines(pAlgorithm, hitType, protoShower, nuVertex2D, ambiguousHitSpines, hitsToExcludeInEnergyCalcs);
 
     if (ambiguousHitSpines.empty())
         return false;
 
-    const CartesianVector &startDirection(protoShower.m_connectionPathway.m_startDirection);
+    const CartesianVector &startDirection(protoShower.GetConnectionPathway().GetStartDirection());
     float startL(-std::numeric_limits<float>::max());
     float ambiguousHitEnergyMean(0.f);
 
     // Get average energy of the ambiguous hits
-    for (const CaloHit *const pAmbiguousCaloHit : protoShower.m_ambiguousHitList)
+    for (const CaloHit *const pAmbiguousCaloHit : protoShower.GetAmbiguousHitList())
     {
         const float thisT(startDirection.GetCrossProduct(pAmbiguousCaloHit->GetPositionVector() - nuVertex2D).GetMagnitude());
         const float thisL(startDirection.GetDotProduct(pAmbiguousCaloHit->GetPositionVector() - nuVertex2D));
@@ -979,7 +979,7 @@ bool AmbiguousRegionFeatureTool::GetViewAmbiguousHitVariables(const Algorithm *c
         ambiguousHitEnergyMean += pAmbiguousCaloHit->GetElectromagneticEnergy() * 1000.f;
     }
 
-    ambiguousHitEnergyMean /= protoShower.m_ambiguousHitList.size();
+    ambiguousHitEnergyMean /= protoShower.GetAmbiguousHitList().size();
 
     // Get mean energy of other pathways, avoiding the float counting hits
     float otherEnergyMeanSum(0.f);
@@ -1009,10 +1009,10 @@ bool AmbiguousRegionFeatureTool::GetViewAmbiguousHitVariables(const Algorithm *c
     float spineEnergyMean(0.f);
     unsigned int nSpineEnergyHits(0);
 
-    for (const CaloHit *const pSpineCaloHit : protoShower.m_spineHitList)
+    for (const CaloHit *const pSpineCaloHit : protoShower.GetSpineHitList())
     {
-        if (std::find(protoShower.m_ambiguousHitList.begin(), protoShower.m_ambiguousHitList.end(), pSpineCaloHit) !=
-            protoShower.m_ambiguousHitList.end())
+        if (std::find(protoShower.GetAmbiguousHitList().begin(), protoShower.GetAmbiguousHitList().end(), pSpineCaloHit) !=
+            protoShower.GetAmbiguousHitList().end())
             continue;
 
         const float thisL(startDirection.GetDotProduct(pSpineCaloHit->GetPositionVector() - nuVertex2D));
@@ -1047,16 +1047,16 @@ void AmbiguousRegionFeatureTool::BuildAmbiguousSpines(const Algorithm *const pAl
 
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
-        if (std::find(protoShower.m_ambiguousHitList.begin(), protoShower.m_ambiguousHitList.end(), pCaloHit) !=
-            protoShower.m_ambiguousHitList.end())
+        if (std::find(protoShower.GetAmbiguousHitList().begin(), protoShower.GetAmbiguousHitList().end(), pCaloHit) !=
+            protoShower.GetAmbiguousHitList().end())
             continue;
 
         int count(0);
 
         // A hit can be in more than one spine
-        for (unsigned int i = 0; i < protoShower.m_ambiguousDirectionVector.size(); ++i)
+        for (unsigned int i = 0; i < protoShower.GetAmbiguousDirectionVector().size(); ++i)
         {
-            const CartesianVector &significantDirection(protoShower.m_ambiguousDirectionVector[i]);
+            const CartesianVector &significantDirection(protoShower.GetAmbiguousDirectionVector()[i]);
             const CartesianVector displacement(pCaloHit->GetPositionVector() - nuVertex2D);
             const float thisT(significantDirection.GetCrossProduct(displacement).GetMagnitude());
             const float thisL(significantDirection.GetDotProduct(displacement));
@@ -1078,7 +1078,7 @@ void AmbiguousRegionFeatureTool::BuildAmbiguousSpines(const Algorithm *const pAl
     // Make sure the pathways are continuous
     for (const auto &entry : ambiguousHitSpinesTemp)
     {
-        CaloHitList continuousSpine(this->FindAmbiguousContinuousSpine(entry.second, protoShower.m_ambiguousHitList, nuVertex2D));
+        CaloHitList continuousSpine(this->FindAmbiguousContinuousSpine(entry.second, protoShower.GetAmbiguousHitList(), nuVertex2D));
 
         if (continuousSpine.size() > 0)
             ambiguousHitSpines[entry.first] = continuousSpine;

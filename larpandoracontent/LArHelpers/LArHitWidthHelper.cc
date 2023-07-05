@@ -352,10 +352,18 @@ float LArHitWidthHelper::GetClosestDistance(const CaloHit *const pCaloHit1, cons
 
     const float modDeltaZ(std::fabs(hitPosition1.GetZ() - hitPosition2.GetZ()));
 
+    // Partial overlap case
     if ((hitLowXEdge1 < hitHighXEdge2) && (hitLowXEdge1 > hitLowXEdge2))
         return modDeltaZ;
 
     if ((hitHighXEdge1 > hitLowXEdge2) && (hitHighXEdge1 < hitHighXEdge2))
+        return modDeltaZ;
+
+    // Complete overlap case
+    if ((hitLowXEdge1 > hitLowXEdge2) && (hitHighXEdge1 < hitHighXEdge2))
+        return modDeltaZ;
+
+    if ((hitLowXEdge2 > hitLowXEdge1) && (hitHighXEdge2 < hitHighXEdge1))
         return modDeltaZ;
 
     const float deltaX = hitLowXEdge1 < hitLowXEdge2 ? (hitLowXEdge2 - hitHighXEdge1) : (hitLowXEdge1 - hitHighXEdge2);

@@ -32,7 +32,7 @@ private:
 
     /**
      *  @brief  Collect the 2D hits within a region of interest 
-     *          (m_eventMode ? hits not in the shower : hits within the initial shower cone [originating from the nu vertex])
+     *          (m_ambiguousParticleMode ? hits not in the shower : hits within the initial shower cone [originating from the nu vertex])
      *
      *  @param  showerHitList the 2D shower hit list
      *  @param  pViewHitList the event 2D hits list
@@ -93,7 +93,7 @@ private:
     float m_pathwaySearchRegion; ///< The initial shower cone distance
     float m_theta0XZBinSize;     ///< The angular distribution bin size
     int m_smoothingWindow;       ///< On each side, the number of neighbouring bins with which each bin is averaged
-    bool m_eventMode;            ///< Whether to find the initial pathway direction of the shower or of the other event particles
+    bool m_ambiguousParticleMode;  ///< Whether to find the initial pathway direction of the shower or of the other event particles
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

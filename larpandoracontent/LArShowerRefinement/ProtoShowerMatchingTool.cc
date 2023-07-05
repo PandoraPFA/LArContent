@@ -37,27 +37,30 @@ StatusCode ProtoShowerMatchingTool::Run(const ProtoShowerVector &protoShowerVect
 {
     IntVector usedProtoShowersU, usedProtoShowersV, usedProtoShowersW;
 
+    bool added(false);
+
     for (unsigned int uIndex = 0; uIndex < protoShowerVectorU.size(); ++uIndex)
     {
+        added = false;
+
+        if (std::find(usedProtoShowersU.begin(), usedProtoShowersU.end(), uIndex) != usedProtoShowersU.end())
+            continue;
+
         const ProtoShower &protoShowerU(protoShowerVectorU.at(uIndex));
 
         for (unsigned int vIndex = 0; vIndex < protoShowerVectorV.size(); ++vIndex)
         {
+            if (std::find(usedProtoShowersV.begin(), usedProtoShowersV.end(), vIndex) != usedProtoShowersV.end())
+                continue;
+
             const ProtoShower &protoShowerV(protoShowerVectorV.at(vIndex));
 
             for (unsigned int wIndex = 0; wIndex < protoShowerVectorW.size(); ++wIndex)
             {
-                const ProtoShower &protoShowerW(protoShowerVectorW.at(wIndex));
-
-                if (std::find(usedProtoShowersU.begin(), usedProtoShowersU.end(), uIndex) != usedProtoShowersU.end())
-                    continue;
-
-                if (std::find(usedProtoShowersV.begin(), usedProtoShowersV.end(), vIndex) != usedProtoShowersV.end())
-                    continue;
-
                 if (std::find(usedProtoShowersW.begin(), usedProtoShowersW.end(), wIndex) != usedProtoShowersW.end())
                     continue;
 
+                const ProtoShower &protoShowerW(protoShowerVectorW.at(wIndex));
                 Consistency consistency(Consistency::POSITION);
 
                 if (!this->ArePathwaysConsistent(protoShowerU, protoShowerV, protoShowerW, consistency))
@@ -68,7 +71,13 @@ StatusCode ProtoShowerMatchingTool::Run(const ProtoShowerVector &protoShowerVect
                 usedProtoShowersW.push_back(wIndex);
 
                 protoShowerMatchVector.push_back(ProtoShowerMatch(protoShowerU, protoShowerV, protoShowerW, consistency));
+
+                added = true;
+                break;
             }
+
+            if (added)
+                break;
         }
     }
 
@@ -100,9 +109,9 @@ bool ProtoShowerMatchingTool::ArePathwaysConsistent(
 
 bool ProtoShowerMatchingTool::AreShowerStartsConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW) const
 {
-    const CartesianVector &showerStartU(protoShowerU.m_showerCore.m_startPosition);
-    const CartesianVector &showerStartV(protoShowerV.m_showerCore.m_startPosition);
-    const CartesianVector &showerStartW(protoShowerW.m_showerCore.m_startPosition);
+    const CartesianVector &showerStartU(protoShowerU.GetShowerCore().GetStartPosition());
+    const CartesianVector &showerStartV(protoShowerV.GetShowerCore().GetStartPosition());
+    const CartesianVector &showerStartW(protoShowerW.GetShowerCore().GetStartPosition());
 
     const float xSeparationUV(std::fabs(showerStartU.GetX() - showerStartV.GetX()));
     const float xSeparationUW(std::fabs(showerStartU.GetX() - showerStartW.GetX()));
@@ -131,9 +140,9 @@ bool ProtoShowerMatchingTool::AreShowerStartsConsistent(const ProtoShower &proto
 
 bool ProtoShowerMatchingTool::AreDirectionsConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW) const
 {
-    const CartesianVector &directionU1(protoShowerU.m_connectionPathway.m_startDirection);
-    const CartesianVector &directionV1(protoShowerV.m_connectionPathway.m_startDirection);
-    const CartesianVector &directionW1(protoShowerW.m_connectionPathway.m_startDirection);
+    const CartesianVector &directionU1(protoShowerU.GetConnectionPathway().GetStartDirection());
+    const CartesianVector &directionV1(protoShowerV.GetConnectionPathway().GetStartDirection());
+    const CartesianVector &directionW1(protoShowerW.GetConnectionPathway().GetStartDirection());
 
     if (this->AreDirectionsConsistent(directionU1, directionV1, directionW1))
     {
@@ -141,22 +150,22 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(const ProtoShower &protoSh
     }
     else
     {
-        const bool isDownstream(protoShowerW.m_showerCore.m_startPosition.GetZ() > protoShowerW.m_connectionPathway.m_startPosition.GetZ());
+        const bool isDownstream(protoShowerW.GetShowerCore().GetStartPosition().GetZ() > protoShowerW.GetConnectionPathway().GetStartPosition().GetZ());
 
         CartesianPointVector spinePositionsU, spinePositionsV, spinePositionsW;
 
-        for (const CaloHit *const pCaloHit : protoShowerU.m_spineHitList)
+        for (const CaloHit *const pCaloHit : protoShowerU.GetSpineHitList())
             spinePositionsU.push_back(pCaloHit->GetPositionVector());
 
-        for (const CaloHit *const pCaloHit : protoShowerV.m_spineHitList)
+        for (const CaloHit *const pCaloHit : protoShowerV.GetSpineHitList())
             spinePositionsV.push_back(pCaloHit->GetPositionVector());
 
-        for (const CaloHit *const pCaloHit : protoShowerW.m_spineHitList)
+        for (const CaloHit *const pCaloHit : protoShowerW.GetSpineHitList())
             spinePositionsW.push_back(pCaloHit->GetPositionVector());
 
-        const TwoDSlidingFitResult spineFitU(&spinePositionsU, m_spineSlidingFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const TwoDSlidingFitResult spineFitV(&spinePositionsV, m_spineSlidingFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const TwoDSlidingFitResult spineFitW(&spinePositionsW, m_spineSlidingFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const TwoDSlidingFitResult spineFitU(&spinePositionsU, m_spineSlidingFitWindow, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U));
+        const TwoDSlidingFitResult spineFitV(&spinePositionsV, m_spineSlidingFitWindow, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V));
+        const TwoDSlidingFitResult spineFitW(&spinePositionsW, m_spineSlidingFitWindow, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W));
 
         const CartesianVector directionU2(isDownstream ? spineFitU.GetGlobalMinLayerDirection() : spineFitU.GetGlobalMaxLayerDirection() * (-1.f));
         const CartesianVector directionV2(isDownstream ? spineFitV.GetGlobalMinLayerDirection() : spineFitV.GetGlobalMaxLayerDirection() * (-1.f));
@@ -188,17 +197,10 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(CartesianVector directionU
 
     if (isIsochronous)
     {
-        int positiveCount(0);
-        positiveCount += directionU.GetX() > 0.f ? 0 : 1;
-        positiveCount += directionV.GetX() > 0.f ? 0 : 1;
-        positiveCount += directionW.GetX() > 0.f ? 0 : 1;
-
-        if (positiveCount >= 2)
-        {
-            directionU = CartesianVector(std::fabs(directionU.GetX()), 0.f, directionU.GetZ());
-            directionV = CartesianVector(std::fabs(directionV.GetX()), 0.f, directionV.GetZ());
-            directionW = CartesianVector(std::fabs(directionW.GetX()), 0.f, directionW.GetZ());
-        }
+        // Enforce consistency
+        directionU = CartesianVector(std::fabs(directionU.GetX()), 0.f, directionU.GetZ());
+        directionV = CartesianVector(std::fabs(directionV.GetX()), 0.f, directionV.GetZ());
+        directionW = CartesianVector(std::fabs(directionW.GetX()), 0.f, directionW.GetZ());
     }
 
     if (directionU.GetX() * directionV.GetX() < 0.f)

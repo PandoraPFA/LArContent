@@ -73,6 +73,24 @@ private:
         const bool isEndDownstream, pandora::CartesianVector &showerStartPosition, pandora::CartesianVector &showerStartDirection) const;
 
     /**
+     *  @brief  Find the longitudinal bin which corresponds to the start position of the shower cascade
+     *
+     *  @param  pShowerPfo the shower pfo
+     *  @param  hitType the 2D view
+     *  @param  spineTwoDSlidingFit the shower spine fit
+     *  @param  energySpectrumMap the [longitudial projection bin -> contained energy] map 
+     *  @param  showerSpineHitList the shower spine hit list
+     *  @param  isEndDownstream whether the shower direction is downstream (in Z) of the neutrino vertex
+     *  @param  startIter the start iterator of energySpectrumMap
+     *  @param  endIter the end iterator of energySpectrumMap
+     */
+    template <typename T>
+    int FindShowerStartLongitudinalCoordinate(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType,
+        const TwoDSlidingFitResult &spineTwoDSlidingFit, const EnergySpectrumMap &energySpectrumMap, const pandora::CaloHitList &showerSpineHitList,
+        const bool isEndDownstream, const T startIter, const T endIter) const;
+
+
+    /**
      *  @brief  Find the mean and standard deviation of the energy depositions in the initial region
      *
      *  @param  energySpectrumMap the [longitudial projection bin -> contained energy] map
@@ -131,6 +149,7 @@ private:
      *
      *  @param  showerRegionPositionVector the vector of shower region hit positions
      *  @param  showerStartPosition the shower start position
+     *  @param  hitType the 2D view 
      *  @param  isEndDownstream whether the shower direction is downstream (in Z) of the neutrino vertex 
      *  @param  showerStartDirection the shower start direction
      *  @param  positiveEdgeStart the start position of one shower boundary   
@@ -142,9 +161,9 @@ private:
      *  @return whether the 'shower characterisation' mechanics could proceed
      */
     pandora::StatusCode CharacteriseShowerTopology(const pandora::CartesianPointVector &showerRegionPositionVector,
-        const pandora::CartesianVector &showerStartPosition, const bool isEndDownstream, const pandora::CartesianVector &showerStartDirection,
-        pandora::CartesianVector &positiveEdgeStart, pandora::CartesianVector &positiveEdgeEnd, pandora::CartesianVector &negativeEdgeStart,
-        pandora::CartesianVector &negativeEdgeEnd, bool &isBetween) const;
+        const pandora::CartesianVector &showerStartPosition, const pandora::HitType hitType, const bool isEndDownstream, 
+        const pandora::CartesianVector &showerStartDirection, pandora::CartesianVector &positiveEdgeStart, pandora::CartesianVector &positiveEdgeEnd, 
+        pandora::CartesianVector &negativeEdgeStart, pandora::CartesianVector &negativeEdgeEnd, bool &isBetween) const;
 
     /**
      *  @brief  Determine whether a point lies on the RHS or LHS (wrt +ve Z) of the shower core
@@ -159,7 +178,7 @@ private:
     /**
      *  @brief  Determine the start and end positions of a shower boundary
      *
-     *  @param  spineTwoDSlidingFit the shower spine fit    
+     *  @param  showerTwoDSlidingFit the shower fit    
      *  @param  layerFitResultMap the layer fit result map of the shower boundary fit
      *  @param  showerStartPosition the shower start position       
      *  @param  showerStartLayer the shower start layer wrt the shower region fit
