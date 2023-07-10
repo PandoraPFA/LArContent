@@ -335,6 +335,21 @@ void LArMCParticleHelper::GetLeadingMCParticleList(const MCParticleList *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArMCParticleHelper::GetFirstVisibleMCParticles(const MCParticle *const pRoot, MCParticleList &visibleParticleList)
+{
+    if (LArMCParticleHelper::IsVisible(pRoot))
+    {
+        visibleParticleList.emplace_back(pRoot);
+    }
+    else
+    {
+        for (const MCParticle *const pMCParticle : pRoot->GetDaughterList())
+            LArMCParticleHelper::GetFirstVisibleMCParticles(pMCParticle, visibleParticleList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const MCParticle *LArMCParticleHelper::GetPrimaryMCParticle(const MCParticle *const pMCParticle)
 {
     // Navigate upward through MC daughter/parent links - collect this particle and all its parents

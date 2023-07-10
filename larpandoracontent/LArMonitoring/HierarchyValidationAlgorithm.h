@@ -48,18 +48,12 @@ private:
      */
     void MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const;
 
-    /**
-     *  @brief  Collates variables and fills ROOT tree for MC particles with matches
-     *
-     *  @param  matches The MCMatches object containing the matches
-     *  @param  matchInfo The MatchInfo object with the full event context
-     */
-    void Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo) const;
 #endif
 
     int m_event;                   ///< The current event
     std::string m_caloHitListName; ///< Name of input calo hit list
     std::string m_pfoListName;     ///< Name of input PFO list
+    std::string m_detector;        ///< Name of the detector
     bool m_writeTree;              ///< Whether or not to output validation information to a ROOT file
     std::string m_filename;        ///< The name of the ROOT file to write
     std::string m_treename;        ///< The name of the ROOT tree to write
@@ -68,6 +62,8 @@ private:
     bool m_foldToLeadingShowers;   ///< Whether or not to fold the hierarchy back to leading shower particles
     bool m_validateEvent;          ///< Whether to validate at the level of an event
     bool m_validateMC;             ///< Whether to validate at the level of MC nodes
+    float m_minPurity;             ///< Minimum purity to tag a node as being of good quality
+    float m_minCompleteness;       ///< Minimum completeness to tag a node as being of good quality
 };
 
 } // namespace lar_content
