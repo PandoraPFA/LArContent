@@ -368,7 +368,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
         const LArHierarchyHelper::MCMatchesVector &matches{matchInfo.GetMatches(pRoot)};
         std::map<const LArHierarchyHelper::RecoHierarchy::Node *, bool> matchedReco;
         std::map<const ParticleFlowObject *, bool> matchedRoots;
-        for (const auto match : matches)
+        for (const auto &match : matches)
         {
             const LArHierarchyHelper::MCHierarchy::Node *pMC{match.GetMC()};
             for (const LArHierarchyHelper::RecoHierarchy::Node *pReco : match.GetRecoMatches())
