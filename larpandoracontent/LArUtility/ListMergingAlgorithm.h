@@ -22,6 +22,9 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    pandora::StringVector m_sourceVertexListNames; ///< The source vertex list names
+    pandora::StringVector m_targetVertexListNames; ///< The target vertex list names
+
     pandora::StringVector m_sourceClusterListNames; ///< The source cluster list names
     pandora::StringVector m_targetClusterListNames; ///< The target cluster list names
 

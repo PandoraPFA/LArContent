@@ -17,6 +17,38 @@ namespace lar_content
 
 StatusCode ListMergingAlgorithm::Run()
 {
+    // Vertex list merging
+    if (m_sourceVertexListNames.size() != m_targetVertexListNames.size())
+        return STATUS_CODE_FAILURE;
+
+    for (unsigned int iIndex = 0, iIndexEnd = m_sourceVertexListNames.size(); iIndex < iIndexEnd; ++iIndex)
+    {
+        const std::string &sourceListName(m_sourceVertexListNames.at(iIndex));
+        const std::string &targetListName(m_targetVertexListNames.at(iIndex));
+
+        const StatusCode statusCode(PandoraContentApi::SaveList<Vertex>(*this, sourceListName, targetListName));
+
+        if (STATUS_CODE_SUCCESS != statusCode)
+        {
+            if (STATUS_CODE_NOT_FOUND == statusCode)
+            {
+                if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
+                    std::cout << "ListMergingAlgorithm: vertex list not found, source: " << sourceListName << ", target: " << targetListName
+                              << std::endl;
+            }
+            else if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+            {
+                if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
+                    std::cout << "ListMergingAlgorithm: no vertexs to move, source: " << sourceListName << ", target: " << targetListName << std::endl;
+            }
+            else
+            {
+                std::cout << "ListMergingAlgorithm: error in vertex merging, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                return statusCode;
+            }
+        }
+    }
+
     // Cluster list merging
     if (m_sourceClusterListNames.size() != m_targetClusterListNames.size())
         return STATUS_CODE_FAILURE;
@@ -88,6 +120,12 @@ StatusCode ListMergingAlgorithm::Run()
 
 StatusCode ListMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "SourceVertexListNames", m_sourceVertexListNames));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "TargetVertexListNames", m_targetVertexListNames));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadVectorOfValues(xmlHandle, "SourceClusterListNames", m_sourceClusterListNames));
 

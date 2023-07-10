@@ -61,6 +61,24 @@ private:
      */
     unsigned int GetNHitTypesAboveThreshold(const pandora::ClusterList &clusterList, const unsigned int nHitsThreshold) const;
 
+    /**
+     *  @brief  Determine whether an input MCParticle is a track-like particle
+     *
+     *  @param  pMCParticle the input MCParticle
+     *
+     *  @return whether an input MCParticle is a track-like particle
+     */
+    bool IsTrack(const pandora::MCParticle *const pMCParticle) const;
+
+    /**
+     *  @brief  Determine whether an input MCParticle is a shower-like particle
+     *
+     *  @param  pMCParticle the input MCParticle
+     *
+     *  @return whether an input MCParticle is a shower-like particle
+     */
+    bool IsShower(const pandora::MCParticle *const pMCParticle) const;
+
     typedef std::map<pandora::HitType, unsigned int> HitTypeMap;
     typedef std::set<int> ParticleIdList;
 

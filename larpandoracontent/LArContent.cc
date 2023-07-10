@@ -68,6 +68,13 @@
 
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 
+#include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
+#include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
+#include "larpandoracontent/LArShowerRefinement/PeakDirectionFinderTool.h"
+#include "larpandoracontent/LArShowerRefinement/ProtoShowerMatchingTool.h"
+#include "larpandoracontent/LArShowerRefinement/ShowerSpineFinderTool.h"
+#include "larpandoracontent/LArShowerRefinement/ShowerStartFinderTool.h"
+
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/AmbiguousDeltaRayTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayRemovalTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
@@ -215,6 +222,7 @@
 // clang-format off
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
     d("LArMuonLeadingEventValidation",          MuonLeadingEventValidationAlgorithm)                                            \
+    d("LArElectronInitialRegionRefinement",     ElectronInitialRegionRefinementAlgorithm)                                       \
     d("LArNeutrinoEventValidation",             NeutrinoEventValidationAlgorithm)                                               \
     d("LArTestBeamEventValidation",             TestBeamEventValidationAlgorithm)                                               \
     d("LArTestBeamHierarchyEventValidation",    TestBeamHierarchyEventValidationAlgorithm)                                      \
@@ -324,6 +332,14 @@
     d("LArVertexRefinement",                    VertexRefinementAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
+    d("LArConnectionRegionFeatureTool",         ConnectionRegionFeatureTool)                                                    \
+    d("LArShowerRegionFeatureTool",             ShowerRegionFeatureTool)                                                        \
+    d("LArAmbiguousRegionFeatureTool",          AmbiguousRegionFeatureTool)                                                     \
+    d("LArInitialRegionFeatureTool",            InitialRegionFeatureTool)                                                       \
+    d("LArPeakDirectionFinder",                 PeakDirectionFinderTool)                                                        \
+    d("LArProtoShowerMatching",                 ProtoShowerMatchingTool)                                                        \
+    d("LArShowerSpineFinder",                   ShowerSpineFinderTool)                                                          \
+    d("LArShowerStartFinder",                   ShowerStartFinderTool)                                                          \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
     d("LArBeamParticleId",                      BeamParticleIdTool)                                                             \
     d("LArCosmicRayTagging",                    CosmicRayTaggingTool)                                                           \
