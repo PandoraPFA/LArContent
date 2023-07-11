@@ -45,7 +45,7 @@ private:
     void FillShowerPfoVector(pandora::PfoVector &showerPfoVector) const;
 
     /**
-     *  @brief  Find and evaluate shower connection pathway, removing if necessary  
+     *  @brief  Find and evaluate shower connection pathway, removing if necessary
      *
      *  @param  pShowerPfo the input shower pfo
      */
@@ -74,7 +74,7 @@ private:
     /**
      *  @brief  Obtain the event hit list of a given view
      *
-     *  @param  hitType the 2D view 
+     *  @param  hitType the 2D view
      *  @param  pCaloHitList the output 2D hit list
      *
      *  @return whether a valid 2D hit list could be found
@@ -85,8 +85,8 @@ private:
      *  @brief  Fit the shower to obtain a 2D shower vertex
      *
      *  @param  pShowerPfo the input shower pfo
-     *  @param  hitType the 2D view 
-     *  @param  nuVertex3D the 3D neutrino vertex 
+     *  @param  hitType the 2D view
+     *  @param  nuVertex3D the 3D neutrino vertex
      *
      *  @return the 2D shower vertex position
      */
@@ -97,10 +97,10 @@ private:
      *  @brief  Move the shower vertex closer to the connection pathway
      *
      *  @param  pShowerPfo the input shower pfo
-     *  @param  hitType the 2D view 
+     *  @param  hitType the 2D view
      *  @param  nuVertex3D the 3D neutrino vertex
      *  @param  peakDirection the initial direction of the connection pathway
-     *  @param  showerVertexPosition the (perhaps) refined 2D shower vertex position 
+     *  @param  showerVertexPosition the (perhaps) refined 2D shower vertex position
      */
     void RefineShowerVertex(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType,
         const pandora::CartesianVector &nuVertex3D, const pandora::CartesianVector &peakDirection, pandora::CartesianVector &showerVertexPosition) const;
@@ -120,7 +120,7 @@ private:
     /**
      *  @brief  To determine if the hits downstream of the shower vertex lie within the shower
      *
-     *  @param  pShowerPfo the input shower pfo 
+     *  @param  pShowerPfo the input shower pfo
      *  @param  nuVertex3D the 3D neutrino vertex
      *  @param  hitType the 2D view
      *  @param  showerVertex the 2D shower vertex
@@ -134,7 +134,7 @@ private:
     /**
      *  @brief  Build the connection pathways of all other particles in the event
      *
-     *  @param  pShowerPfo the input shower pfo 
+     *  @param  pShowerPfo the input shower pfo
      *  @param  protectedHits the list of protected hits which will not be considered
      *  @param  nuVertex3D the 3D neutrino vertex
      *  @param  hitType the 2D view
@@ -167,7 +167,7 @@ private:
     /**
      *  @brief  Add the shower characterisation information to the pfo metadata
      *
-     *  @param  pShowerPfo the input shower pfo 
+     *  @param  pShowerPfo the input shower pfo
      *  @param  featureMap the map of [characterisation variable -> value]
      */
     void SetMetadata(const pandora::ParticleFlowObject *const pShowerPfo, const LArMvaHelper::MvaFeatureMap &featureMap) const;
@@ -182,7 +182,7 @@ private:
     /**
      *  @brief  To determine whether a pfo is a true leading electron via its completeness and purity
      *
-     *  @param  pShowerPfo the input shower pfo 
+     *  @param  pShowerPfo the input shower pfo
      *  @param  electronHitMap the mapping of [MCParticle leading electrons -> their associated hits]
      */
     bool IsElectron(const pandora::ParticleFlowObject *const pShowerPfo, const HitOwnershipMap &electronHitMap) const;

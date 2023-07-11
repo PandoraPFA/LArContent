@@ -31,13 +31,13 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Determine whether three 2D connection pathways form a consistent 3D connection pathway 
+     *  @brief  Determine whether three 2D connection pathways form a consistent 3D connection pathway
      *
      *  @param  protoShowerU the U view ProtoShower
      *  @param  protoShowerV the V view ProtoShower
      *  @param  protoShowerW the W view ProtoShower
      *  @param  consistency the basis of the match
-     * 
+     *
      *  @return whether three 2D connection pathways form a consistent 3D connection pathway
      */
     bool ArePathwaysConsistent(
@@ -49,7 +49,7 @@ private:
      *  @param  protoShowerU the U view ProtoShower
      *  @param  protoShowerV the V view ProtoShower
      *  @param  protoShowerW the W view ProtoShower
-     * 
+     *
      *  @return whether three 2D shower start positions correspond to the same 3D shower start position
      */
     bool AreShowerStartsConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW) const;
@@ -60,7 +60,7 @@ private:
      *  @param  protoShowerU the U view ProtoShower
      *  @param  protoShowerV the V view ProtoShower
      *  @param  protoShowerW the W view ProtoShower
-     * 
+     *
      *  @return whether three 2D initial spine directions correspond to the same 3D initial spine direction
      */
     bool AreDirectionsConsistent(const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW) const;
@@ -71,7 +71,7 @@ private:
      *  @param  directionU the U view initial spine direction
      *  @param  directionU the V view initial spine direction
      *  @param  directionU the W view initial spine direction
-     * 
+     *
      *  @return whether three 2D initial spine directions correspond to the same 3D initial spine direction
      */
     bool AreDirectionsConsistent(pandora::CartesianVector directionU, pandora::CartesianVector directionV, pandora::CartesianVector directionW) const;

@@ -216,7 +216,6 @@ void HierarchyMonitoringAlgorithm::VisualizeMCProcess(const LArHierarchyHelper::
         {"ioni", 5}, {"brem", 6}, {"conv", 3}, {"capture", 6}, {"inelastic", 9}, {"elastic", 8}, {"decay", 7}, {"coulomb", 9},
         {"pair_prod", 4}, {"transport", 1}, {"rayleigh", 9}, {"kill", 2}, {"nuclear", 5}, {"background", 7}};
 
-
     MCParticleList rootMCParticles;
     hierarchy.GetRootMCParticles(rootMCParticles);
     for (const MCParticle *const pRoot : rootMCParticles)
@@ -343,7 +342,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
         bool isReconstructable{false};
         LArHierarchyHelper::MCHierarchy::NodeVector nodes;
         mcHierarchy.GetFlattenedNodes(pRoot, nodes);
-    
+
         // Display MC
         for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
         {
@@ -381,7 +380,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
 
                 this->FillHitLists(pReco->GetCaloHits(), uHits, vHits, wHits);
                 const std::string suffix{"Reco - Slice " + std::to_string(recoRootToSliceMap[recoNodeToRootMap[pReco]]) + " ID " +
-                    std::to_string(recoNodeToIdMap[pReco]) + " -> " + std::to_string(mcNodeToIdMap[pMC])};
+                                         std::to_string(recoNodeToIdMap[pReco]) + " -> " + std::to_string(mcNodeToIdMap[pMC])};
                 const LArHierarchyHelper::QualityCuts &quality{matchInfo.GetQualityCuts()};
                 if (purity >= quality.m_minPurity && completeness >= quality.m_minCompleteness)
                 {
@@ -409,7 +408,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
         }
 
         // Display unmatched reco (for this true slice)
-        for (const auto [ pRecoRoot, val ] : matchedRoots)
+        for (const auto [pRecoRoot, val] : matchedRoots)
         {
             (void)val;
             LArHierarchyHelper::RecoHierarchy::NodeVector recoNodes;
@@ -421,7 +420,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
                     CaloHitList uHits, vHits, wHits;
                     this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
                     const std::string suffix{"Reco - Slice " + std::to_string(recoRootToSliceMap[recoNodeToRootMap[pNode]]) + " ID " +
-                        std::to_string(recoNodeToIdMap[pNode]) + " -> #"};
+                                             std::to_string(recoNodeToIdMap[pNode]) + " -> #"};
                     this->Visualize(uHits, "U " + suffix, 14);
                     this->Visualize(vHits, "V " + suffix, 14);
                     this->Visualize(wHits, "W " + suffix, 14);
@@ -500,7 +499,8 @@ StatusCode HierarchyMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         m_foldDynamic = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinPurity", m_minPurity));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCompleteness", m_minCompleteness));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchCompleteness", m_minMatchCompleteness));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchCompleteness", m_minMatchCompleteness));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TransparencyThresholdE", m_transparencyThresholdE));
     PANDORA_RETURN_RESULT_IF_AND_IF(

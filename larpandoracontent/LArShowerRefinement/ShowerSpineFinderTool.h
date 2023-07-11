@@ -65,7 +65,7 @@ private:
      *  @param  hitPosition the hit position
      *  @param  lineStart the shower spine projection start position
      *  @param  lineDirection the shower spine projection direction
-     *  @param  distanceToLine the comparison distance for 'is close' 
+     *  @param  distanceToLine the comparison distance for 'is close'
      *
      *  @return whether the hit is close to the shower spine projection
      */

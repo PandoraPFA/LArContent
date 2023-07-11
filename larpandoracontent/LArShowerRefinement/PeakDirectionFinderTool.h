@@ -31,7 +31,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Collect the 2D hits within a region of interest 
+     *  @brief  Collect the 2D hits within a region of interest
      *          (m_ambiguousParticleMode ? hits not in the shower : hits within the initial shower cone [originating from the nu vertex])
      *
      *  @param  showerHitList the 2D shower hit list
@@ -43,7 +43,7 @@ private:
         const pandora::CartesianVector &nuVertex2D, pandora::CaloHitList &viewROIHits) const;
 
     /**
-     *  @brief  Determine the angle (from the +ve drift-axis) of the shower cone boundaries (originating from the nu vertex) 
+     *  @brief  Determine the angle (from the +ve drift-axis) of the shower cone boundaries (originating from the nu vertex)
      *
      *  @param  showerHitList the 2D shower hit list
      *  @param  nuVertex2D the 2D neutrino vertex
@@ -56,11 +56,11 @@ private:
     /**
      *  @brief  Collect the hits that lie within the initial shower cone (originating from the nu vertex)
      *
-     *  @param  pViewHitList the event 2D hits list  
+     *  @param  pViewHitList the event 2D hits list
      *  @param  nuVertex2D the 2D neutrino vertex
      *  @param  lowestTheta the lower angle (from the +ve drift-axis) boundary
      *  @param  highestTheta the higher angle (from the +ve drift-axis) boundary
-     *  @param  viewROIHits the region of interest 2D hit list  
+     *  @param  viewROIHits the region of interest 2D hit list
      */
     void CollectHitsWithinExtrema(const pandora::CaloHitList *const pViewHitList, const pandora::CartesianVector &nuVertex2D,
         const float lowestTheta, const float highestTheta, pandora::CaloHitList &viewROIHits) const;
@@ -86,7 +86,7 @@ private:
      *  @brief  Obtain a vector of directions from the angular distribution peaks
      *
      *  @param  angularDecompositionMap the [angle from drift-axis -> weight] map
-     *  @param  peakDirectionVector the output peak direction vector 
+     *  @param  peakDirectionVector the output peak direction vector
      */
     void RetrievePeakDirections(const AngularDecompositionMap &angularDecompositionMap, pandora::CartesianPointVector &peakDirectionVector) const;
 

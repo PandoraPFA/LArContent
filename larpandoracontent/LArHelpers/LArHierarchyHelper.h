@@ -409,7 +409,7 @@ public:
          */
         bool IsReconstructable(const pandora::CaloHitList &caloHits) const;
 
-        MCNodeVectorMap m_interactions; ///< Map from incident particles (e.g. neutrino) to primaries
+        MCNodeVectorMap m_interactions;            ///< Map from incident particles (e.g. neutrino) to primaries
         ReconstructabilityCriteria m_recoCriteria; ///< The criteria used to determine if the node is reconstructable
         std::map<const pandora::MCParticle *, pandora::CaloHitList> m_mcToHitsMap; ///< The map between MC particles and calo hits
         std::map<const Node *, int> m_nodeToIdMap;                                 ///< A map from nodes to unique ids
@@ -514,12 +514,12 @@ public:
             const std::string ToString(const std::string &prefix) const;
 
         private:
-            const RecoHierarchy &m_hierarchy; ///< The parent reco hierarchy
-            pandora::PfoList m_pfos;          ///< The list of PFOs of which this node is composed
-            pandora::CaloHitList m_caloHits;  ///< The list of calo hits of which this node is composed
-            NodeVector m_children;            ///< The child nodes of this nodea
+            const RecoHierarchy &m_hierarchy;             ///< The parent reco hierarchy
+            pandora::PfoList m_pfos;                      ///< The list of PFOs of which this node is composed
+            pandora::CaloHitList m_caloHits;              ///< The list of calo hits of which this node is composed
+            NodeVector m_children;                        ///< The child nodes of this nodea
             const pandora::ParticleFlowObject *m_mainPfo; ///< The leading particle flow object for this node
-            int m_pdg;                        ///< The particle ID (track = muon, shower = electron)
+            int m_pdg;                                    ///< The particle ID (track = muon, shower = electron)
         };
 
         /**
@@ -729,7 +729,7 @@ public:
     };
 
     typedef std::vector<MCMatches> MCMatchesVector;
-    typedef std::map<const pandora::MCParticle*, MCMatchesVector> InteractionInfo;
+    typedef std::map<const pandora::MCParticle *, MCMatchesVector> InteractionInfo;
 
     /**
      *  @brief  MatcheInfo class

@@ -95,7 +95,7 @@ private:
      *  @param  protoShowerMatch the ProtoShower match
      *  @param  showerStart3D the 3D shower start position
      *
-     *  @return  a cautious estimate of the largest 2D deflection of the connection pathway 
+     *  @return  a cautious estimate of the largest 2D deflection of the connection pathway
      */
     float Get2DKink(const pandora::Algorithm *const pAlgorithm, const ProtoShowerMatch &protoShowerMatch,
         const pandora::CartesianVector &showerStart3D) const;
@@ -105,7 +105,7 @@ private:
      *
      *  @param  pAlgorithm the algorithm
      *  @param  spineFit the shower spine fit
-     *  @param  hitType the 2D view  
+     *  @param  hitType the 2D view
      *  @param  showerStart3D the 3D shower start position
      *
      *  @return a cautious estimate of the largest 2D deflection of a connection pathway in a given view
@@ -159,7 +159,7 @@ private:
      *  @param  openingAngle the output opening angle
      *  @param  nuVertexEnergyAsymmetry the output neutrino vertex energy asymmetry
      *  @param  nuVertexEnergyWeightedMeanRadialDistance the output neutrino vertex energy weighted mean radial distance
-     *  @param  showerStartEnergyAsymmetry the output shower start energy asymmetry 
+     *  @param  showerStartEnergyAsymmetry the output shower start energy asymmetry
      *  @param  showerStartMoliereRadius the output shower start moliere radius
      */
     void GetViewShowerRegionVariables(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo,
@@ -212,8 +212,8 @@ private:
      *  @brief  Calculate the opening angle of the shower region
      *
      *  @param  showerFitResult the shower region fit
-     *  @param  postShowerHitList the collected shower region hit list 
-     *  @param  showerStart2D the 2D shower start position 
+     *  @param  postShowerHitList the collected shower region hit list
+     *  @param  showerStart2D the 2D shower start position
      *  @param  openingAngle the output opening angle
      */
     void CalculateViewOpeningAngle(const TwoDSlidingFitResult &showerFitResult, const pandora::CaloHitList &postShowerHitList,
@@ -239,7 +239,7 @@ private:
      *  @param  showerFitResult the shower fit result
      *  @param  postShowerHitList the collected shower region hit list
      *  @param  isShowerDownstream whether the shower direction is downstream (in Z) of the neutrino vertex
-     *  @param  showerStartEnergyAsymmetry the output shower start energy asymmetry 
+     *  @param  showerStartEnergyAsymmetry the output shower start energy asymmetry
      *  @param  showerStartMoliereRadius the output shower start moliere radius
      */
     void CalculateViewShowerStartConsistencyVariables(const TwoDSlidingFitResult &showerFitResult, const pandora::CaloHitList &postShowerHitList,
@@ -296,10 +296,10 @@ private:
      *  @brief  Calculate the ambiguous region variables for the input view
      *
      *  @param  pAlgorithm the algorithm
-     *  @param  protoShowerMatch the ProtoShower match 
+     *  @param  protoShowerMatch the ProtoShower match
      *  @param  hitType the 2D view
      *  @param  nuVertex3D the 3D neutrino vertex
-     *  @param  unaccountedHitEnergy the output unaccounted hit energy 
+     *  @param  unaccountedHitEnergy the output unaccounted hit energy
      *
      *  @return whether the ambiguous region variables could be calculated
      */
@@ -323,8 +323,8 @@ private:
     /**
      *  @brief  Obtain the event hit list of a given view
      *
-     *  @param  pAlgorithm the algorithm 
-     *  @param  hitType the 2D view 
+     *  @param  pAlgorithm the algorithm
+     *  @param  hitType the 2D view
      *  @param  pCaloHitList the output 2D hit list
      *
      *  @return whether a valid 2D hit list could be found
@@ -333,7 +333,7 @@ private:
         const pandora::Algorithm *const pAlgorithm, const pandora::HitType hitType, const pandora::CaloHitList *&pCaloHitList) const;
 
     /**
-     *  @brief  Determine a continuous pathway of an ambigous particle's spine hits 
+     *  @brief  Determine a continuous pathway of an ambigous particle's spine hits
      *
      *  @param  caloHitList the input ambiguous particle spine hit list
      *  @param  ambiguousHitList the ambiguous hit list

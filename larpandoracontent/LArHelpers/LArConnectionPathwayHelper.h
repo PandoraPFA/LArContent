@@ -113,7 +113,7 @@ public:
         const ProtoShower &protoShowerA, const ProtoShower &protoShowerB, pandora::CartesianVector &showerStart3D);
 
     /**
-     *  @brief  Find a 2D shower start, from a drift coordinate by assuming consistency of initial direction 
+     *  @brief  Find a 2D shower start, from a drift coordinate by assuming consistency of initial direction
      *
      *  @param  protoShower the ProtoShower for which to find the shower start
      *  @param  x the drift-coordinate
@@ -130,7 +130,7 @@ public:
      *  @param  protoShower the ProtoShower from which the input 2D shower start is obtained
      *  @param  protoShower1 a matched ProtoShower from another view
      *  @param  protoShower2 the matched ProtoShower from the final view
-     *  @param  maxSeparation the max. separation between the projected 3D shower start and the shower start of that view     
+     *  @param  maxSeparation the max. separation between the projected 3D shower start and the shower start of that view
      *  @param  maxXSeparation the max. drift-coordinate separation between a 3D shower start and a matched 2D shower hit
      *  @param  showerStart3D the output 3D shower start
      *
@@ -144,7 +144,7 @@ public:
      *
      *  @param  protoShower the input ProtoShower in which to search
      *  @param  showerStart3D the input 3D shower start position
-     *  @param  maxXSeparation the max. drift-coordinate separation between a 3D shower start and a matched 2D shower hit 
+     *  @param  maxXSeparation the max. drift-coordinate separation between a 3D shower start and a matched 2D shower hit
      *  @param  foundShowerStart the output matched 2D hit position
      *
      *  @return whether a 2D spine hit could be found
@@ -159,7 +159,7 @@ public:
      *  @param  protoShower the ProtoShower from which the input 2D shower start is obtained
      *  @param  protoShower1 a matched ProtoShower from another view
      *  @param  protoShower2 the matched ProtoShower from the final view
-     *  @param  maxSeparation the max. separation between the projected 3D shower start and the shower start of that view     
+     *  @param  maxSeparation the max. separation between the projected 3D shower start and the shower start of that view
      *  @param  maxXSeparation the max. drift-coordinate separation between a 3D shower start and a matched 2D shower hit
      *  @param  ShowerStart3D the output 3D shower start
      *

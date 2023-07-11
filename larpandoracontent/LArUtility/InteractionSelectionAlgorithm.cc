@@ -46,7 +46,7 @@ StatusCode InteractionSelectionAlgorithm::Run()
     }
 
     std::cout << "Num hits: " << pCaloHitList->size() << " Num MC: " << mcSet.size() << std::endl;
-    for (auto & [ pParent, caloHits ] : mcHitMap)
+    for (auto &[pParent, caloHits] : mcHitMap)
         std::cout << "MC: " << pParent << " (" << pParent->GetParticleId() << ") " << caloHits.size() << std::endl;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RenameList<CaloHitList>(*this, "CaloHitList2D", "InputCaloHitList2D"));
@@ -57,7 +57,7 @@ StatusCode InteractionSelectionAlgorithm::Run()
     int i{0};
     MCParticleList selectedNeutrinos;
     CaloHitList caloHitListU, caloHitListV, caloHitListW, caloHitList2D;
-    for (auto & [ pParent, caloHits ] : mcHitMap)
+    for (auto &[pParent, caloHits] : mcHitMap)
     {
         if (std::find(m_interactionIds.begin(), m_interactionIds.end(), i) != m_interactionIds.end())
         {

@@ -47,10 +47,10 @@ private:
         LongitudinalPositionMap &longitudinalPositionMap) const;
 
     /**
-     *  @brief  Create the longituidnal energy distribution 
+     *  @brief  Create the longituidnal energy distribution
      *
      *  @param  showerSpineHitList the shower spine hit list
-     *  @param  longitudinalPositionMap the shower spine longitudinal projection map 
+     *  @param  longitudinalPositionMap the shower spine longitudinal projection map
      *  @param  energySpectrumMap the output [longitudial projection bin -> contained energy] map
      */
     void GetEnergyDistribution(const pandora::CaloHitList &showerSpineHitList, const LongitudinalPositionMap &longitudinalPositionMap,
@@ -62,7 +62,7 @@ private:
      *  @param  pShowerPfo the shower pfo
      *  @param  hitType the 2D view
      *  @param  spineTwoDSlidingFit the shower spine fit
-     *  @param  energySpectrumMap the [longitudial projection bin -> contained energy] map 
+     *  @param  energySpectrumMap the [longitudial projection bin -> contained energy] map
      *  @param  showerSpineHitList the shower spine hit list
      *  @param  isEndDownstream whether the shower direction is downstream (in Z) of the neutrino vertex
      *  @param  showerStartPosition the position at which the shower cascade looks to originate
@@ -78,7 +78,7 @@ private:
      *  @param  pShowerPfo the shower pfo
      *  @param  hitType the 2D view
      *  @param  spineTwoDSlidingFit the shower spine fit
-     *  @param  energySpectrumMap the [longitudial projection bin -> contained energy] map 
+     *  @param  energySpectrumMap the [longitudial projection bin -> contained energy] map
      *  @param  showerSpineHitList the shower spine hit list
      *  @param  isEndDownstream whether the shower direction is downstream (in Z) of the neutrino vertex
      *  @param  startIter the start iterator of energySpectrumMap
@@ -93,7 +93,7 @@ private:
      *  @brief  Find the mean and standard deviation of the energy depositions in the initial region
      *
      *  @param  energySpectrumMap the [longitudial projection bin -> contained energy] map
-     *  @param  isEndDownstream whether the shower direction is downstream (in Z) of the neutrino vertex 
+     *  @param  isEndDownstream whether the shower direction is downstream (in Z) of the neutrino vertex
      *  @param  meanEnergy the output mean energy
      *  @param  energySigma the output standard deviation
      */
@@ -104,10 +104,10 @@ private:
      *
      *  @param  pShowerPfo the shower pfo
      *  @param  hitType the 2D view
-     *  @param  spineTwoDSlidingFit the shower spine fit 
+     *  @param  spineTwoDSlidingFit the shower spine fit
      *  @param  longitudinalDistance the longitudinal projection of the candidate shower start position
-     *  @param  showerSpineHitList the shower spine hit list     
-     *  @param  isEndDownstream whether the shower direction is downstream (in Z) of the neutrino vertex 
+     *  @param  showerSpineHitList the shower spine hit list
+     *  @param  isEndDownstream whether the shower direction is downstream (in Z) of the neutrino vertex
      *
      *  @return whether a sensible shower cascade looks to originate at the given position
      */
@@ -117,7 +117,7 @@ private:
     /**
      *  @brief  Determine the (X,Y,Z) position and direction at a given longitudinal distance along the spine
      *
-     *  @param  spineTwoDSlidingFit the shower spine fit   
+     *  @param  spineTwoDSlidingFit the shower spine fit
      *  @param  longitudinalDistance the input longitudinal distance
      *  @param  globalPosition the output (X,Y,Z) position
      *  @param  globalDirection the output (X,Y,Z) direction
@@ -128,9 +128,9 @@ private:
     /**
      *  @brief  Build the downstream 'shower region' at a given longitudinal distance along the spine
      *
-     *  @param  pShowerPfo the shower pfo 
+     *  @param  pShowerPfo the shower pfo
      *  @param  hitType the 2D view
-     *  @param  showerSpineHitList the shower spine hit list    
+     *  @param  showerSpineHitList the shower spine hit list
      *  @param  showerStartPosition the candidate shower start position
      *  @param  showerStartDirection the candidate shower start direction
      *  @param  isEndDownstream whether the shower direction is downstream (in Z) of the neutrino vertex
@@ -148,10 +148,10 @@ private:
      *
      *  @param  showerRegionPositionVector the vector of shower region hit positions
      *  @param  showerStartPosition the shower start position
-     *  @param  hitType the 2D view 
-     *  @param  isEndDownstream whether the shower direction is downstream (in Z) of the neutrino vertex 
+     *  @param  hitType the 2D view
+     *  @param  isEndDownstream whether the shower direction is downstream (in Z) of the neutrino vertex
      *  @param  showerStartDirection the shower start direction
-     *  @param  positiveEdgeStart the start position of one shower boundary   
+     *  @param  positiveEdgeStart the start position of one shower boundary
      *  @param  positiveEdgeEnd the end position of one shower boundary
      *  @param  negativeEdgeStart the start position of the other shower boundary
      *  @param  negativeEdgeEnd the end position of the other shower boundary
@@ -170,16 +170,16 @@ private:
      *  @param  showerStartDirection the shower start direction
      *  @param  displacementVector the input position wrt the shower start position
      *
-     *  @return whether a point lies on the RHS or LHS (wrt +ve Z) of the shower core 
+     *  @return whether a point lies on the RHS or LHS (wrt +ve Z) of the shower core
      */
     bool IsClockwiseRotation(const pandora::CartesianVector &showerStartDirection, const pandora::CartesianVector &displacementVector) const;
 
     /**
      *  @brief  Determine the start and end positions of a shower boundary
      *
-     *  @param  showerTwoDSlidingFit the shower fit    
+     *  @param  showerTwoDSlidingFit the shower fit
      *  @param  layerFitResultMap the layer fit result map of the shower boundary fit
-     *  @param  showerStartPosition the shower start position       
+     *  @param  showerStartPosition the shower start position
      *  @param  showerStartLayer the shower start layer wrt the shower region fit
      *  @param  showerEndLayer the shower end layer wrt the shower region fit
      *  @param  boundaryEdgeStart the output boundary start position

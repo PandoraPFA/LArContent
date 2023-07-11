@@ -37,14 +37,14 @@ public:
 
     /**
      *  @brief  Get the start position of the shower core
-     * 
+     *
      *  @return the start position
      */
     const pandora::CartesianVector &GetStartPosition() const;
 
     /**
      *  @brief  Get the start direction of the shower core
-     * 
+     *
      *  @return the start direction
      */
     const pandora::CartesianVector &GetStartDirection() const;
@@ -106,14 +106,14 @@ public:
 
     /**
      *  @brief  Get the start position of the connection pathway
-     * 
+     *
      *  @return the start position
      */
     const pandora::CartesianVector &GetStartPosition() const;
 
     /**
      *  @brief  Get the start direction of the connection pathway
-     * 
+     *
      *  @return the start direction
      */
     const pandora::CartesianVector &GetStartDirection() const;
@@ -185,28 +185,28 @@ public:
 
     /**
      *  @brief  Get the shower core
-     * 
+     *
      *  @return the shower core
      */
     const ShowerCore &GetShowerCore() const;
 
     /**
      *  @brief  Get the connection pathway
-     * 
+     *
      *  @return the connection pathway
      */
     const ConnectionPathway &GetConnectionPathway() const;
 
     /**
      *  @brief  Get the spine hit list
-     * 
+     *
      *  @return the spine hit list
      */
     const pandora::CaloHitList &GetSpineHitList() const;
 
     /**
      *  @brief  Get the ambiguous hit list
-     * 
+     *
      *  @return the ambiguous hit list
      */
     const pandora::CaloHitList &GetAmbiguousHitList() const;
@@ -220,7 +220,7 @@ public:
 
     /**
      *  @brief  Get the ambiguous direction vector
-     * 
+     *
      *  @return the ambiguous direction vector
      */
     const pandora::CartesianPointVector &GetAmbiguousDirectionVector() const;
@@ -234,14 +234,14 @@ public:
 
     /**
      *  @brief  Get the hits to add list
-     * 
+     *
      *  @return the hits to add list
      */
     const pandora::CaloHitList &GetHitsToAddList() const;
 
     /**
      *  @brief  Set the hits to add list
-     * 
+     *
      *  @param  the hits to add list
      */
     void SetHitsToAddList(const pandora::CaloHitList &hitsToAddList);
@@ -400,28 +400,28 @@ public:
 
     /**
      *  @brief  Get the U view ProtoShower
-     * 
+     *
      *  @return the U view ProtoShower
      */
     const ProtoShower &GetProtoShowerU() const;
 
     /**
      *  @brief  Get the V view ProtoShower
-     * 
+     *
      *  @return the V view ProtoShower
      */
     const ProtoShower &GetProtoShowerV() const;
 
     /**
      *  @brief  Get the W view ProtoShower
-     * 
+     *
      *  @return the W view ProtoShower
      */
     const ProtoShower &GetProtoShowerW() const;
 
     /**
      *  @brief  Get a modifiable ProtoShower in a given view
-     * 
+     *
      *  @param  hitType the 2D view
      *
      *  @return the modifiable ProtoShower in the specified view
@@ -430,7 +430,7 @@ public:
 
     /**
      *  @brief  Get the consistency type
-     * 
+     *
      *  @return the consistency type
      */
     const Consistency &GetConsistencyType() const;

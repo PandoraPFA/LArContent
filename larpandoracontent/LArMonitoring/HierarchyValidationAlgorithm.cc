@@ -209,7 +209,7 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
             float vtxDr{std::numeric_limits<float>::max()};
             const int isFiducial{LArVertexHelper::IsInFiducialVolume(this->GetPandora(), trueVertex, m_detector)};
 
-            for (const ParticleFlowObject * pRootPfo : matchedRecoSliceRoots)
+            for (const ParticleFlowObject *pRootPfo : matchedRecoSliceRoots)
             {
                 const CartesianVector &recoVertex{LArPfoHelper::GetVertex(pRootPfo)->GetPosition()};
                 const float dx{recoVertex.GetX() - trueVertex.GetX()};
@@ -348,8 +348,8 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
 
                 for (const LArHierarchyHelper::RecoHierarchy::Node *pRecoNode : nodeVector)
                 {
-                    const int sliceId{static_cast<int>(std::distance(rootPfos.begin(), std::find(rootPfos.begin(), rootPfos.end(),
-                        recoNodeToRootMap[pRecoNode])))};
+                    const int sliceId{static_cast<int>(
+                        std::distance(rootPfos.begin(), std::find(rootPfos.begin(), rootPfos.end(), recoNodeToRootMap[pRecoNode])))};
                     recoSliceIdVector.emplace_back(sliceId);
                     recoIdVector.emplace_back(pRecoNode->GetParticleId());
                     nRecoHitsVector.emplace_back(static_cast<int>(pRecoNode->GetCaloHits().size()));
