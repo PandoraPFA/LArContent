@@ -41,6 +41,7 @@ HierarchyMonitoringAlgorithm::~HierarchyMonitoringAlgorithm()
 
 StatusCode HierarchyMonitoringAlgorithm::Run()
 {
+#ifdef MONITORING
     PANDORA_MONITORING_API(
         SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, m_transparencyThresholdE, m_energyScaleThresholdE, m_scalingFactor));
 
@@ -85,12 +86,13 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
         if (m_visualizeReco)
             this->VisualizeReco(recoHierarchy);
     }
+#endif
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
+#ifdef MONITORING
 void HierarchyMonitoringAlgorithm::VisualizeMC(const LArHierarchyHelper::MCHierarchy &hierarchy) const
 {
     const std::map<int, const std::string> keys = {{13, "mu"}, {11, "e"}, {22, "gamma"}, {321, "kaon"}, {211, "pi"}, {2212, "p"}};
@@ -388,6 +390,7 @@ void HierarchyMonitoringAlgorithm::FillHitLists(const CaloHitList &hits, CaloHit
             wHits.emplace_back(pCaloHit);
     }
 }
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

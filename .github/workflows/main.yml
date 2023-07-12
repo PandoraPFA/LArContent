@@ -1,0 +1,162 @@
+name: Build LArContent
+
+# Controls when the workflow will run
+on:
+  # Trigger the workflow on push to master, or any pull request.
+  # workflow_dispatch allows manual running through the GitHub UI.
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+# Workflow with 1 stage: Build.
+# Each of the sub-stages in the build job run in parallel.
+jobs:
+  build:
+
+    # Use the latest ubuntu image: https://github.com/actions/runner-images
+    runs-on: ubuntu-20.04
+    name: LArContent - ${{ matrix.compiler.c }} - Monitoring ${{ matrix.monitoring }} - DL ${{ matrix.torch }}
+
+    # Only run in the PandoraPFA repos.
+    if: github.repository_owner == 'PandoraPFA'
+
+    # Defines the build matrix, so what combinatorics of compiler etc. to test.
+    strategy:
+      fail-fast: false # Don't quit other jobs if one job fails.
+      matrix:
+        compiler: [ {cpp: g++-8, c: gcc-8}, {cpp: clang++, c: clang} ]
+        monitoring: [ "ON", "OFF" ]
+        torch: [ "ON", "OFF" ]
+
+    # Set the compiler env vars to ensure the correct compiler is used.
+    env:
+        CC: ${{ matrix.compiler.c }}
+        CXX: ${{ matrix.compiler.cpp }}
+
+    steps:
+
+      # Setup dependencies and build folder...
+      - name: Install Dependencies
+        run: |
+          sudo apt install -y xlibmesa-glu-dev gcc-8 g++-8
+          sudo mkdir -m 0777 -p /pandora
+
+      # Pull and Install Eigen...
+      - name: Pull Eigen
+        run: wget https://gitlab.com/libeigen/eigen/-/archive/3.3.5/eigen-3.3.5.tar.gz
+      - name: Unpack Eigen
+        run: tar -xf eigen-3.3.5.tar.gz && rm eigen-3.3.5.tar.gz && mv eigen-3.3.5 Eigen3
+      - name: Build Eigen
+        run: |
+          cd Eigen3 && mkdir build && cd build
+          cmake -DCMAKE_INSTALL_PREFIX=/pandora/Eigen3 ..
+          make -j$(nproc) install
+
+      # Sort ROOT install out if needed...
+      - name: Install ROOT
+        if: matrix.monitoring == 'ON'
+        run: |
+          wget https://root.cern/download/root_v6.26.10.Linux-ubuntu18-x86_64-gcc7.5.tar.gz
+          tar -xzvf root_v6.26.10.Linux-ubuntu18-x86_64-gcc7.5.tar.gz && mv root/ /pandora/root
+
+      # Sort LibTorch install out...
+      - name: Install Torch
+        if: matrix.torch == 'ON'
+        run: |
+          wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip
+          unzip libtorch-cxx11-abi-shared-with-deps-1.13.0+cpu.zip && mv libtorch/ /pandora/libtorch
+
+      # Pull the various Pandora repos...
+      - name: Pull PandoraPFA
+        uses: actions/checkout@v3
+        with:
+          repository: 'PandoraPFA/PandoraPFA'
+          path: PandoraPFA
+
+      - name: Pull PandoraSDK
+        uses: actions/checkout@v3
+        with:
+          repository: 'PandoraPFA/PandoraSDK'
+          path: PandoraSDK
+
+      - name: Pull PandoraMonitoring
+        if: matrix.monitoring == 'ON'
+        uses: actions/checkout@v3
+        with:
+          repository: 'PandoraPFA/PandoraMonitoring'
+          path: PandoraMonitoring
+
+      - name: Pull LArContent
+        uses: actions/checkout@v3
+        with:
+          path: LArContent
+
+      - name: Pull LArReco
+        uses: actions/checkout@v3
+        with:
+          repository: 'PandoraPFA/LArReco'
+          path: LArReco
+
+      # Lets move all the repos to a central /pandora/ path, for easier pathing.
+      - name: Update Repo Locations
+        run: |
+          mv Pandora* /pandora/
+          mv LAr* /pandora/
+
+      # Build the SDK then monitoring (if required).
+      - name: Build PandoraSDK
+        run: |
+          mkdir -p /pandora/PandoraSDK/build && cd /pandora/PandoraSDK/build
+          cmake -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules /pandora/PandoraSDK/
+          make -j$(nproc) install
+
+      - name: Build PandoraMonitoring
+        if: matrix.monitoring == 'ON'
+        run: |
+          mkdir -p /pandora/PandoraMonitoring/build && cd /pandora/PandoraMonitoring/build
+          cmake \
+            -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules \
+            -DROOT_DIR=/pandora/root/cmake \
+            -DPandoraSDK_DIR=/pandora/PandoraSDK \
+            /pandora/PandoraMonitoring/
+          make -j$(nproc) install
+
+      # Now build LArContent.
+      - name: Build LArContent
+        run: |
+          mkdir -p /pandora/LArContent/build && cd /pandora/LArContent/build
+          cmake \
+            -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules \
+            -DPandoraSDK_DIR=/pandora/PandoraSDK \
+            -DEigen3_DIR=/pandora/Eigen3/share/eigen3/cmake \
+            -DROOT_DIR=/pandora/root/cmake \
+            -DPANDORA_MONITORING=${{ matrix.monitoring }} \
+            -DPandoraMonitoring_DIR=/pandora/PandoraMonitoring \
+            -DPANDORA_LIBTORCH=${{ matrix.torch }} \
+            -DCMAKE_PREFIX_PATH=/pandora/libtorch/ \
+            /pandora/LArContent/
+          make -j$(nproc) install
+
+      # Finally, lets build LArReco and run the final binary to check
+      # everything is happy (no linker errors etc.)
+      - name: Build LArReco
+        run: |
+          mkdir -p /pandora/LArReco/build && cd /pandora/LArReco/build
+          cmake \
+            -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules \
+            -DPandoraSDK_DIR=/pandora/PandoraSDK \
+            -DEigen3_DIR=/pandora/Eigen3/share/eigen3/cmake \
+            -DROOT_DIR=/pandora/root/cmake \
+            -DLArContent_DIR=/pandora/LArContent/ \
+            -DLArDLContent_DIR=/pandora/LArContent/ \
+            -DPANDORA_MONITORING=${{ matrix.monitoring }} \
+            -DPandoraMonitoring_DIR=/pandora/PandoraMonitoring \
+            -DPANDORA_LIBTORCH=${{ matrix.torch }} \
+            -DCMAKE_PREFIX_PATH=/pandora/libtorch/ \
+            /pandora/LArReco/
+          make -j$(nproc) install
+

@@ -12,7 +12,7 @@ if (cetmodules_FOUND)
   cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
   set(LAR_CONTENT_LIBRARY_NAME LArPandoraContent)
   set(LAR_PROJECT_NAME larpandoracontent) ## CET-VAR
-  set(PANDORA_LIBTORCH_DEF ON)
+  #set(PANDORA_LIBTORCH_DEF ON)
   set(CET_EXPORT EXPORT)
   set(LAR_CONTENT_SOURCE_SHUNT ${LAR_CONTENT_SOURCE_DIRNAME})
   set(LAR_DL_CONTENT_SOURCE_SHUNT ${LAR_DL_CONTENT_SOURCE_DIRNAME})
@@ -26,10 +26,10 @@ else() # Configure for standalone build.
 endif()
 
 # Single project() call with/without Cetmodules (CMake >=3.0, CMP0048).
-project(${LAR_PROJECT_NAME} VERSION 04.02.00)
+project(${LAR_PROJECT_NAME} VERSION 04.04.02)
 
 # Build options.
-option(PANDORA_LIBTORCH "Flag for building against LibTorch" ${PANDORA_LIBTORCH_DEF})
+#option(PANDORA_LIBTORCH "Flag for building against LibTorch" ${PANDORA_LIBTORCH_DEF})
 if (EXISTS "${CMAKE_PROJECT_BINARY_DIR}/doc")
   option(LArContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
 endif()
@@ -45,6 +45,14 @@ if (cetmodules_FOUND)
   )
 
   cet_report_compiler_flags(REPORT_THRESHOLD VERBOSE)
+
+  find_package(Torch QUIET ${CET_EXPORT})
+  if (Torch_FOUND)
+    set(PANDORA_LIBTORCH_DEF ON)
+  else()
+    set(PANDORA_LIBTORCH_DEF OFF)
+  endif()
+  option(PANDORA_LIBTORCH "Flag for building against LibTorch" ${PANDORA_LIBTORCH_DEF})
 
   cet_cmake_module_directories(Modules)
   add_subdirectory(Modules)
@@ -62,7 +70,11 @@ file(GLOB_RECURSE ${PROJECT_NAME}_SRCS RELATIVE "${PROJECT_SOURCE_DIR}/${LAR_CON
   "${LAR_CONTENT_SOURCE_DIRNAME}/*.cc")
 
 if (PANDORA_LIBTORCH)
-  find_package(Torch REQUIRED ${CET_EXPORT})
+  if (NOT cetmodules_FOUND)
+    find_package(Torch REQUIRED ${CET_EXPORT})
+  else()
+    find_package(TBB REQUIRED EXPORT)
+  endif()
   string(REGEX REPLACE "^(LAr(Pandora)?)(Content)$" "\\1DL\\3"
     LAR_DL_CONTENT_LIBRARY_NAME "${LAR_CONTENT_LIBRARY_NAME}")
   set(DL_PROJECT_NAME "${LAR_DL_CONTENT_LIBRARY_NAME}")
@@ -78,7 +90,9 @@ endif()
 
 if (cetmodules_FOUND)
   add_subdirectory(${LAR_CONTENT_SOURCE_DIRNAME})
+if (PANDORA_LIBTORCH)
   add_subdirectory(${LAR_DL_CONTENT_SOURCE_DIRNAME})
+endif()
   cet_cmake_config()
   ### MIGRATE-NO-ACTION # No nagging beyond this point.
 else()

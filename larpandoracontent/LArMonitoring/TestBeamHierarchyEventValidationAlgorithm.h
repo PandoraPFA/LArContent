@@ -66,8 +66,6 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<pandora::HitType> HitTypeVector;
-
-    int m_eventNumber; ///< The event number
 };
 
 } // namespace lar_content

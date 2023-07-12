@@ -57,7 +57,7 @@ DlHitValidationAlgorithm::~DlHitValidationAlgorithm()
 StatusCode DlHitValidationAlgorithm::Run()
 {
     const int SHOWER_IDX{0}, TRACK_IDX{1};
-    for (const std::string listName : m_caloHitListNames)
+    for (const std::string &listName : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));

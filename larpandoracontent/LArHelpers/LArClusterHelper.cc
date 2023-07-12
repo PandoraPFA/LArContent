@@ -248,10 +248,34 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
 
 CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &position, const Cluster *const pCluster)
 {
-    CaloHitList caloHitList;
-    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+    return LArClusterHelper::GetClosestPosition(position, pCluster->GetOrderedCaloHitList());
+}
 
-    return LArClusterHelper::GetClosestPosition(position, caloHitList);
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &position, const OrderedCaloHitList &caloHitList)
+{
+    const CaloHit *pClosestCaloHit(nullptr);
+    float closestDistanceSquared(std::numeric_limits<float>::max());
+
+    for (const auto &entry : caloHitList)
+    {
+        for (const CaloHit *const pCaloHit : *entry.second)
+        {
+            const float distanceSquared((pCaloHit->GetPositionVector() - position).GetMagnitudeSquared());
+
+            if (distanceSquared < closestDistanceSquared)
+            {
+                closestDistanceSquared = distanceSquared;
+                pClosestCaloHit = pCaloHit;
+            }
+        }
+    }
+
+    if (pClosestCaloHit)
+        return pClosestCaloHit->GetPositionVector();
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

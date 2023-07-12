@@ -66,7 +66,7 @@ void TwoDShowerFitFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, Stri
     }
 
     featureOrder.push_back(featureToolName + "_WidthLenRatio");
-    featureMap[featureToolName + "_WidthLenRatio"] = toolFeatureVec[0].Get();
+    featureMap[featureToolName + "_WidthLenRatio"] = toolFeatureVec[0];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -144,12 +144,12 @@ void TwoDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, Stri
     featureOrder.push_back(featureToolName + "_MaxFitGapLen");
     featureOrder.push_back(featureToolName + "_rmsSlidingLinFit");
 
-    featureMap[featureToolName + "_StLineLenLarge"] = toolFeatureVec[0].Get();
-    featureMap[featureToolName + "_DiffStLineMean"] = toolFeatureVec[1].Get();
-    featureMap[featureToolName + "_DiffStLineSigma"] = toolFeatureVec[2].Get();
-    featureMap[featureToolName + "_dTdLWidth"] = toolFeatureVec[3].Get();
-    featureMap[featureToolName + "_MaxFitGapLen"] = toolFeatureVec[4].Get();
-    featureMap[featureToolName + "_rmsSlidingLinFit"] = toolFeatureVec[5].Get();
+    featureMap[featureToolName + "_StLineLenLarge"] = toolFeatureVec[0];
+    featureMap[featureToolName + "_DiffStLineMean"] = toolFeatureVec[1];
+    featureMap[featureToolName + "_DiffStLineSigma"] = toolFeatureVec[2];
+    featureMap[featureToolName + "_dTdLWidth"] = toolFeatureVec[3];
+    featureMap[featureToolName + "_MaxFitGapLen"] = toolFeatureVec[4];
+    featureMap[featureToolName + "_rmsSlidingLinFit"] = toolFeatureVec[5];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -298,7 +298,7 @@ void TwoDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap,
     }
 
     featureOrder.push_back(featureToolName + "_DistLenRatio");
-    featureMap[featureToolName + "_DistLenRatio"] = toolFeatureVec[0].Get();
+    featureMap[featureToolName + "_DistLenRatio"] = toolFeatureVec[0];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -379,9 +379,9 @@ void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, Strin
     featureOrder.push_back(featureToolName + "_NDaughterHits3D");
     featureOrder.push_back(featureToolName + "_DaughterParentHitRatio");
 
-    featureMap[featureToolName + "_NDaughters"] = toolFeatureVec[0].Get();
-    featureMap[featureToolName + "_NDaughterHits3D"] = toolFeatureVec[1].Get();
-    featureMap[featureToolName + "_DaughterParentHitRatio"] = toolFeatureVec[2].Get();
+    featureMap[featureToolName + "_NDaughters"] = toolFeatureVec[0];
+    featureMap[featureToolName + "_NDaughterHits3D"] = toolFeatureVec[1];
+    featureMap[featureToolName + "_DaughterParentHitRatio"] = toolFeatureVec[2];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -462,9 +462,9 @@ void ConeChargeFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, StringV
     featureOrder.push_back(featureToolName + "_Concentration");
     featureOrder.push_back(featureToolName + "_Conicalness");
 
-    featureMap[featureToolName + "_HaloTotalRatio"] = toolFeatureVec[0].Get();
-    featureMap[featureToolName + "_Concentration"] = toolFeatureVec[1].Get();
-    featureMap[featureToolName + "_Conicalness"] = toolFeatureVec[2].Get();
+    featureMap[featureToolName + "_HaloTotalRatio"] = toolFeatureVec[0];
+    featureMap[featureToolName + "_Concentration"] = toolFeatureVec[1];
+    featureMap[featureToolName + "_Conicalness"] = toolFeatureVec[2];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -616,10 +616,10 @@ void ThreeDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, St
     featureOrder.push_back(featureToolName + "_MaxFitGapLength");
     featureOrder.push_back(featureToolName + "_SlidingLinearFitRMS");
 
-    featureMap[featureToolName + "_Length"] = toolFeatureVec[0].Get();
-    featureMap[featureToolName + "_DiffStraightLineMean"] = toolFeatureVec[1].Get();
-    featureMap[featureToolName + "_MaxFitGapLength"] = toolFeatureVec[2].Get();
-    featureMap[featureToolName + "_SlidingLinearFitRMS"] = toolFeatureVec[3].Get();
+    featureMap[featureToolName + "_Length"] = toolFeatureVec[0];
+    featureMap[featureToolName + "_DiffStraightLineMean"] = toolFeatureVec[1];
+    featureMap[featureToolName + "_MaxFitGapLength"] = toolFeatureVec[2];
+    featureMap[featureToolName + "_SlidingLinearFitRMS"] = toolFeatureVec[3];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -788,7 +788,7 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMa
 
     featureOrder.push_back(featureToolName + "_VertexDistance");
 
-    featureMap[featureToolName + "_VertexDistance"] = toolFeatureVec[0].Get();
+    featureMap[featureToolName + "_VertexDistance"] = toolFeatureVec[0];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -869,7 +869,7 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap,
 
     featureOrder.push_back(featureToolName + "_AngleDiff");
 
-    featureMap[featureToolName + "_AngleDiff"] = toolFeatureVec[0].Get();
+    featureMap[featureToolName + "_AngleDiff"] = toolFeatureVec[0];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1040,8 +1040,8 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, StringVe
     featureOrder.push_back(featureToolName + "_SecondaryPCARatio");
     featureOrder.push_back(featureToolName + "_TertiaryPCARatio");
 
-    featureMap[featureToolName + "_SecondaryPCARatio"] = toolFeatureVec[0].Get();
-    featureMap[featureToolName + "_TertiaryPCARatio"] = toolFeatureVec[1].Get();
+    featureMap[featureToolName + "_SecondaryPCARatio"] = toolFeatureVec[0];
+    featureMap[featureToolName + "_TertiaryPCARatio"] = toolFeatureVec[1];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1103,8 +1103,8 @@ void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureMap &featureMap, Strin
     featureOrder.push_back(featureToolName + "_FractionalSpread");
     featureOrder.push_back(featureToolName + "_EndFraction");
 
-    featureMap[featureToolName + "_FractionalSpread"] = toolFeatureVec[0].Get();
-    featureMap[featureToolName + "_EndFraction"] = toolFeatureVec[1].Get();
+    featureMap[featureToolName + "_FractionalSpread"] = toolFeatureVec[0];
+    featureMap[featureToolName + "_EndFraction"] = toolFeatureVec[1];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
