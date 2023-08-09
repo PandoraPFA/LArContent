@@ -100,6 +100,13 @@ bool LArVertexHelper::IsInFiducialVolume(const Pandora &pandora, const Cartesian
         return (tpcMinX + 50.f) < x && x < (tpcMaxX - 50.f) && (tpcMinY + 50.f) < y && y < (tpcMaxY - 50.f) && (tpcMinZ + 50.f) < z &&
                z < (tpcMaxZ - 150.f);
     }
+    else if (detector == "dune_nd")
+    {
+        const float x{vertex.GetX()};
+        const float y{vertex.GetY()};
+        const float z{vertex.GetZ()};
+	return tpcMinX < x && x < tpcMaxX && tpcMinY < y && y < tpcMaxY && tpcMinZ < z && z < tpcMaxZ;
+    }
     else
     {
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);

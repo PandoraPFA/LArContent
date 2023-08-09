@@ -236,6 +236,7 @@ private:
     std::string m_rootFileName;               ///< The ROOT file name
     std::mt19937 m_rng;                       ///< The random number generator
     std::vector<double> m_thresholds;         ///< Distance class thresholds
+    std::string m_volumeType;                 ///< The name of the fiducial volume type for the monitoring output
 };
 
 } // namespace lar_dl_content
