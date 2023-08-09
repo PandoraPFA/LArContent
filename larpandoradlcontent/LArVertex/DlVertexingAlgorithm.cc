@@ -36,7 +36,8 @@ DlVertexingAlgorithm::DlVertexingAlgorithm() :
     m_driftStep{0.5f},
     m_visualise{false},
     m_writeTree{false},
-    m_rng(static_cast<std::mt19937::result_type>(std::chrono::high_resolution_clock::now().time_since_epoch().count()))
+    m_rng(static_cast<std::mt19937::result_type>(std::chrono::high_resolution_clock::now().time_since_epoch().count())),
+    m_volumeType{"dune_fd_hd"}
 {
 }
 
@@ -358,13 +359,12 @@ StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(const CaloHitList &cal
     // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
     const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
     const float pitch(view == TPC_VIEW_U ? pTPC->GetWirePitchU() : view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW());
-    const float driftStep{0.5f};
 
     // Determine the bin edges
     std::vector<double> xBinEdges(m_width + 1);
     std::vector<double> zBinEdges(m_height + 1);
-    xBinEdges[0] = xMin - 0.5f * driftStep;
-    const double dx = ((xMax + 0.5f * driftStep) - xBinEdges[0]) / m_width;
+    xBinEdges[0] = xMin - 0.5f * m_driftStep;
+    const double dx = ((xMax + 0.5f * m_driftStep) - xBinEdges[0]) / m_width;
     for (int i = 1; i < m_width + 1; ++i)
         xBinEdges[i] = xBinEdges[i - 1] + dx;
     zBinEdges[0] = zMin - 0.5f * pitch;
@@ -411,9 +411,8 @@ StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromCanvas(float **canv
     // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
     const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
     const float pitch(view == TPC_VIEW_U ? pTPC->GetWirePitchU() : view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW());
-    const float driftStep{0.5f};
 
-    const double dx = ((xMax + 0.5f * driftStep) - (xMin - 0.5f * driftStep)) / m_width;
+    const double dx = ((xMax + 0.5f * m_driftStep) - (xMin - 0.5f * m_driftStep)) / m_width;
     const double dz = ((zMax + 0.5f * pitch) - (zMin - 0.5f * pitch)) / m_height;
 
     float best{-1.f};
@@ -799,7 +798,7 @@ void DlVertexingAlgorithm::PopulateRootTree(const std::vector<VertexTuple> &vert
                         {
                             const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
                             const CartesianVector &trueVertex{primaries.front()->GetVertex()};
-                            if (LArVertexHelper::IsInFiducialVolume(this->GetPandora(), trueVertex, "dune_fd_hd"))
+                            if (LArVertexHelper::IsInFiducialVolume(this->GetPandora(), trueVertex, m_volumeType))
                             {
                                 const CartesianVector &recoVertex{vertexTuples.front().GetPosition()};
                                 const float tx{trueVertex.GetX()};
@@ -881,6 +880,9 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DriftStep", m_driftStep));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VolumeType", m_volumeType));
 
     return STATUS_CODE_SUCCESS;
 }
