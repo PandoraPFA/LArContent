@@ -105,7 +105,7 @@ bool LArVertexHelper::IsInFiducialVolume(const Pandora &pandora, const Cartesian
         const float x{vertex.GetX()};
         const float y{vertex.GetY()};
         const float z{vertex.GetZ()};
-	return tpcMinX < x && x < tpcMaxX && tpcMinY < y && y < tpcMaxY && tpcMinZ < z && z < tpcMaxZ;
+        return tpcMinX < x && x < tpcMaxX && tpcMinY < y && y < tpcMaxY && tpcMinZ < z && z < tpcMaxZ;
     }
     else
     {
