@@ -467,6 +467,10 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
     const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
     const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
     const HitType hitType3(LArClusterHelper::GetClusterHitType(pCluster3));
+    const float pitch1{LArGeometryHelper::GetWirePitch(this->GetPandora(), hitType1)};
+    const float pitch2{LArGeometryHelper::GetWirePitch(this->GetPandora(), hitType2)};
+    const float pitch3{LArGeometryHelper::GetWirePitch(this->GetPandora(), hitType3)};
+    const float pitchMax{std::max({pitch1, pitch2, pitch3})};
 
     if (hitType1 == hitType2 || hitType2 == hitType3 || hitType3 == hitType1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -493,7 +497,7 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
             const float dz1(zMax1 - zMin1);
             const float dz2(zMax2 - zMin2);
             const float dz3(zMax3 - zMin3);
-            const float dz4(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+            const float dz4(pitchMax);
 
             const float zproj1(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType2, hitType3, z2, z3));
             const float zproj2(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType3, hitType1, z3, z1));

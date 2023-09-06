@@ -262,7 +262,7 @@ void ParticleRecoveryAlgorithm::CalculateEffectiveSpan(
     // TODO cache sliding linear fit results and optimise protection against exceptions from TwoDSlidingFitResult and IsXSamplingPointInGap
     try
     {
-        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(pCluster)));
 
         const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow, slidingFitPitch);
 

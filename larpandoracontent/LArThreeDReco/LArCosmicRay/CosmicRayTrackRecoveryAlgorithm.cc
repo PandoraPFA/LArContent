@@ -131,7 +131,6 @@ void CosmicRayTrackRecoveryAlgorithm::SelectCleanClusters(const ClusterVector &i
 void CosmicRayTrackRecoveryAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
     const unsigned int m_halfWindowLayers(25);
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
@@ -139,6 +138,7 @@ void CosmicRayTrackRecoveryAlgorithm::BuildSlidingFitResultMap(const ClusterVect
         {
             try
             {
+                const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(*iter)));
                 const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers, slidingFitPitch);
 
                 if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)

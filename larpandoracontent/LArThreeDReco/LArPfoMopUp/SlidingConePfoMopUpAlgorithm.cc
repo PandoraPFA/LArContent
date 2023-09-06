@@ -125,7 +125,10 @@ void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVerte
     const ClusterToPfoMap &clusterToPfoMap, ClusterMergeMap &clusterMergeMap) const
 {
     VertexAssociationMap vertexAssociationMap;
-    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
+    const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
+    const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
+    const float pitchMax{std::max({pitchU, pitchV, pitchW})};
 
     for (const Cluster *const pShowerCluster : clusters3D)
     {
@@ -138,6 +141,13 @@ void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVerte
 
         try
         {
+            float layerPitch{0.f};
+            const HitType view{LArClusterHelper::GetClusterHitType(pShowerCluster)};
+            if (view == TPC_VIEW_U || view == TPC_VIEW_V || view == TPC_VIEW_W)
+                layerPitch = LArGeometryHelper::GetWirePitch(this->GetPandora(), view);
+            else
+                layerPitch = pitchMax;
+
             const ThreeDSlidingConeFitResult slidingConeFitResult3D(pShowerCluster, m_halfWindowLayers, layerPitch);
 
             const CartesianVector &minLayerPosition(slidingConeFitResult3D.GetSlidingFitResult().GetGlobalMinLayerPosition());
@@ -212,9 +222,20 @@ bool SlidingConePfoMopUpAlgorithm::IsVertexAssociated(const Cluster *const pClus
 bool SlidingConePfoMopUpAlgorithm::IsVertexAssociated(
     const Cluster *const pCluster, const CartesianVector &vertexPosition, const ThreeDSlidingFitResult *const pSlidingFitResult) const
 {
+    const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
+    const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
+    const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
+    const float pitchMax{std::max({pitchU, pitchV, pitchW})};
+
     try
     {
-        const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        float layerPitch{0.f};
+        const HitType view{LArClusterHelper::GetClusterHitType(pCluster)};
+        if (view == TPC_VIEW_U || view == TPC_VIEW_V || view == TPC_VIEW_W)
+            layerPitch = LArGeometryHelper::GetWirePitch(this->GetPandora(), view);
+        else
+            layerPitch = pitchMax;
+
         const LArPointingCluster pointingCluster(
             pSlidingFitResult ? LArPointingCluster(*pSlidingFitResult) : LArPointingCluster(pCluster, m_halfWindowLayers, layerPitch));
 

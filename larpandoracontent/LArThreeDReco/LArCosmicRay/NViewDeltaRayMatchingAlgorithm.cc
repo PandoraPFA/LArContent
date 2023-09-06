@@ -199,6 +199,10 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(const Clu
     const HitType hitTypeU(LArClusterHelper::GetClusterHitType(pClusterU));
     const HitType hitTypeV(LArClusterHelper::GetClusterHitType(pClusterV));
     const HitType hitTypeW(LArClusterHelper::GetClusterHitType(pClusterW));
+    const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), hitTypeU)};
+    const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), hitTypeV)};
+    const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), hitTypeW)};
+    const float pitchMax{std::max({pitchU, pitchV, pitchW})};
 
     if (hitTypeU == hitTypeV || hitTypeU == hitTypeW || hitTypeV == hitTypeW)
         return STATUS_CODE_FAILURE;
@@ -229,7 +233,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(const Clu
             const float dzU(zMaxU - zMinU);
             const float dzV(zMaxV - zMinV);
             const float dzW(zMaxW - zMinW);
-            const float dzPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+            const float dzPitch(pitchMax);
 
             const float zprojU(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitTypeV, hitTypeW, zV, zW));
             const float zprojV(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitTypeW, hitTypeU, zW, zU));
@@ -321,6 +325,10 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(const Cal
     const HitType hitTypeU(clusterU.front()->GetHitType());
     const HitType hitTypeV(clusterV.front()->GetHitType());
     const HitType hitTypeW(clusterW.front()->GetHitType());
+    const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), hitTypeU)};
+    const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), hitTypeV)};
+    const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), hitTypeW)};
+    const float pitchMax{std::max({pitchU, pitchV, pitchW})};
 
     if (hitTypeU == hitTypeV || hitTypeU == hitTypeW || hitTypeV == hitTypeW)
         return STATUS_CODE_FAILURE;
@@ -351,7 +359,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(const Cal
             const float dzU(zMaxU - zMinU);
             const float dzV(zMaxV - zMinV);
             const float dzW(zMaxW - zMinW);
-            const float dzPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+            const float dzPitch(pitchMax);
 
             const float zprojU(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitTypeV, hitTypeW, zV, zW));
             const float zprojV(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitTypeW, hitTypeU, zW, zU));
@@ -664,7 +672,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlo
         return STATUS_CODE_NOT_FOUND;
 
     const Cluster *const pMuonCluster(muonClusterList.front());
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), hitType));
     const TwoDSlidingFitResult slidingFitResult(pMuonCluster, 40, slidingFitPitch);
 
     CartesianVector deltaRayVertex(0.f, 0.f, 0.f), muonVertex(0.f, 0.f, 0.f);

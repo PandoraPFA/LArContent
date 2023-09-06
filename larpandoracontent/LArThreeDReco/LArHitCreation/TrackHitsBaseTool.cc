@@ -55,7 +55,6 @@ void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const 
 void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo, MatchedSlidingFitMap &matchedSlidingFitMap) const
 {
     const ClusterList &pfoClusterList(pPfo->GetClusterList());
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     ClusterVector pfoClusterVector;
     pfoClusterVector.insert(pfoClusterVector.end(), pfoClusterList.begin(), pfoClusterList.end());
@@ -73,6 +72,7 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
 
         try
         {
+            const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(pCluster)));
             const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
             if (!matchedSlidingFitMap.insert(MatchedSlidingFitMap::value_type(hitType, slidingFitResult)).second)

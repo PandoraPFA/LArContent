@@ -130,7 +130,7 @@ bool DeltaRayRemovalTool::IsContaminated(const TensorType::Element &element, con
     if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
         return false;
 
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), hitType));
     const TwoDSlidingFitResult slidingFitResult(pMuonCluster, m_slidingFitWindow, slidingFitPitch);
 
     CartesianVector muonDirection(0.f, 0.f, 0.f);
