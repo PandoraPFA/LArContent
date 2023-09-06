@@ -40,8 +40,6 @@ template <typename T>
 void TrackRefinementBaseAlgorithm::InitialiseContainers(const ClusterList *pClusterList, const T sortFunction, ClusterVector &clusterVector,
     SlidingFitResultMapPair &slidingFitResultMapPair) const
 {
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-
     for (const Cluster *const pCluster : *pClusterList)
     {
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
@@ -49,6 +47,7 @@ void TrackRefinementBaseAlgorithm::InitialiseContainers(const ClusterList *pClus
 
         try
         {
+            const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(pCluster)));
             const TwoDSlidingFitResult microSlidingFitResult(pCluster, m_microSlidingFitWindow, slidingFitPitch);
             const TwoDSlidingFitResult macroSlidingFitResult(pCluster, m_macroSlidingFitWindow, slidingFitPitch);
 

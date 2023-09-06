@@ -30,7 +30,6 @@ BoundedClusterMopUpAlgorithm::BoundedClusterMopUpAlgorithm() :
 void BoundedClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
 {
     ClusterAssociationMap clusterAssociationMap;
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     ClusterVector sortedPfoClusters(pfoClusters.begin(), pfoClusters.end());
     std::sort(sortedPfoClusters.begin(), sortedPfoClusters.end(), LArClusterHelper::SortByNHits);
@@ -46,6 +45,7 @@ void BoundedClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, 
             continue;
         try
         {
+            const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(pPfoCluster)));
             const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch, m_showerEdgeMultiplier);
 
             ShowerPositionMap showerPositionMap;

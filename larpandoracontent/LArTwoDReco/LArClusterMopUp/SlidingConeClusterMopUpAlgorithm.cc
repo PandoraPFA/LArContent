@@ -146,8 +146,6 @@ void SlidingConeClusterMopUpAlgorithm::GetAvailableTwoDClusters(ClusterVector &a
 void SlidingConeClusterMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVertex, const ClusterVector &clusters3D,
     const ClusterVector &availableClusters2D, ClusterMergeMap &clusterMergeMap) const
 {
-    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-
     for (const Cluster *const pShowerCluster : clusters3D)
     {
         float coneLength3D(0.f);
@@ -155,6 +153,10 @@ void SlidingConeClusterMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pV
 
         try
         {
+            HitType view{LArClusterHelper::GetClusterHitType(pShowerCluster)};
+            if (!(view == TPC_VIEW_U || view == TPC_VIEW_V))
+                view = TPC_VIEW_W;
+            const float layerPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), view));
             const ThreeDSlidingConeFitResult slidingConeFitResult3D(pShowerCluster, m_halfWindowLayers, layerPitch);
 
             const CartesianVector &minLayerPosition(slidingConeFitResult3D.GetSlidingFitResult().GetGlobalMinLayerPosition());

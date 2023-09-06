@@ -34,7 +34,6 @@ ConeClusterMopUpAlgorithm::ConeClusterMopUpAlgorithm() :
 void ConeClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
 {
     ClusterAssociationMap clusterAssociationMap;
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     const VertexList *pVertexList(NULL);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
@@ -54,6 +53,7 @@ void ConeClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
     {
         try
         {
+            const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(pPfoCluster)));
             const TwoDSlidingShowerFitResult showerFitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch, m_showerEdgeMultiplier);
 
             const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());
