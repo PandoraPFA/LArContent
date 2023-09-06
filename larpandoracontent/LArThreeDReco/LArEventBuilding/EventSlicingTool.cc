@@ -169,7 +169,11 @@ void EventSlicingTool::GetThreeDClusters(
 
 void EventSlicingTool::GetClusterSliceList(const ClusterList &trackClusters3D, const ClusterList &showerClusters3D, ClusterSliceList &clusterSliceList) const
 {
-    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
+    const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
+    const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
+    const float pitchMax{std::max({pitchU, pitchV, pitchW})};
+    const float layerPitch(pitchMax);
 
     ThreeDSlidingFitResultMap trackFitResults;
 

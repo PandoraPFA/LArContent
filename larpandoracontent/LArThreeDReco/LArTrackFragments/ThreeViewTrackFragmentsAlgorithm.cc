@@ -330,7 +330,11 @@ StatusCode ThreeViewTrackFragmentsAlgorithm::GetProjectedPositions(
     const CartesianVector vtxProjection3(LArGeometryHelper::ProjectPosition(this->GetPandora(), vtxPosition3D, hitType3));
     const CartesianVector endProjection3(LArGeometryHelper::ProjectPosition(this->GetPandora(), endPosition3D, hitType3));
 
-    const float samplingPitch(0.5f * LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
+    const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
+    const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
+    const float pitchMax{std::max({pitchU, pitchV, pitchW})};
+    const float samplingPitch(0.5f * pitchMax);
     const float nSamplingPoints((endProjection3 - vtxProjection3).GetMagnitude() / samplingPitch);
 
     if (nSamplingPoints < 1.f)

@@ -135,7 +135,7 @@ void ThreeViewShowersAlgorithm::TidyUp()
 
 void ThreeViewShowersAlgorithm::AddToSlidingFitCache(const Cluster *const pCluster)
 {
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(pCluster)));
     const TwoDSlidingShowerFitResult slidingShowerFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
     if (!m_slidingFitResultMap.insert(TwoDSlidingShowerFitResultMap::value_type(pCluster, slidingShowerFitResult)).second)

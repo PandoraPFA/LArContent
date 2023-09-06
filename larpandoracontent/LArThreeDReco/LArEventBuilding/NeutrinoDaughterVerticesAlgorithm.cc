@@ -78,7 +78,11 @@ void NeutrinoDaughterVerticesAlgorithm::GetDaughterPfos(const PfoList *const pPf
 
 void NeutrinoDaughterVerticesAlgorithm::BuildPointingClusterMap(const PfoVector &pfoList, LArPointingClusterMap &pointingClusterMap) const
 {
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
+    const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
+    const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
+    const float pitchMax{std::max({pitchU, pitchV, pitchW})};
+    const float slidingFitPitch(pitchMax);
 
     for (PfoVector::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
     {

@@ -254,7 +254,7 @@ void NViewTrackMatchingAlgorithm<T>::SetPfoParticleId(PandoraContentApi::Particl
 template <typename T>
 void NViewTrackMatchingAlgorithm<T>::AddToSlidingFitCache(const Cluster *const pCluster)
 {
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(pCluster)));
     const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
     if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult)).second)

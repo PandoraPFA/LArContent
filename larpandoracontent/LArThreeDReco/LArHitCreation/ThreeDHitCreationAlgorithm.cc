@@ -137,7 +137,10 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(
 
 void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVector) const
 {
-    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
+    const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
+    const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
+    const float layerPitch(std::max({pitchU, pitchV, pitchW}));
     const unsigned int layerWindow(m_slidingFitHalfWindow);
 
     double originalChi2(0.);

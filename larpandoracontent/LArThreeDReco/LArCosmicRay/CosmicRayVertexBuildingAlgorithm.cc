@@ -83,7 +83,10 @@ void CosmicRayVertexBuildingAlgorithm::GetCosmicPfos(const PfoList *const pPfoLi
 
 void CosmicRayVertexBuildingAlgorithm::BuildPointingClusterMap(const PfoVector &pfoVector, LArPointingClusterMap &pointingClusterMap) const
 {
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
+    const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
+    const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
+    const float slidingFitPitch(std::max({pitchU, pitchV, pitchW}));
 
     for (PfoVector::const_iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
     {

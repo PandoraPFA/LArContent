@@ -196,8 +196,6 @@ void MissingTrackSegmentTool::GetCandidateClusters(
 void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeViewTransverseTracksAlgorithm *const pAlgorithm,
     const ClusterList &candidateClusterList, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-
     for (ClusterList::const_iterator iter = candidateClusterList.begin(), iterEnd = candidateClusterList.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster(*iter);
@@ -214,6 +212,7 @@ void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeViewTransverseTracksAl
 
         try
         {
+            const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(pCluster)));
             const TwoDSlidingFitResult slidingFitResult(pCluster, pAlgorithm->GetSlidingFitWindow(), slidingFitPitch);
             (void)slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult));
             continue;
