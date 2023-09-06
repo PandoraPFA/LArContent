@@ -31,7 +31,7 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::DivideCaloHits(const Cluster *const
 
     try
     {
-        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(pCluster)));
 
         const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow, slidingFitPitch);
         CartesianVector splitPosition(0.f, 0.f, 0.f);

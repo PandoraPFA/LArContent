@@ -59,13 +59,13 @@ void CrossGapsAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *co
 void CrossGapsAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const
 {
     TwoDSlidingFitResultMap slidingFitResultMap;
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (const Cluster *const pCluster : clusterVector)
     {
         try
         {
-            (void)slidingFitResultMap.insert(
+            const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(pCluster)));
+            slidingFitResultMap.insert(
                 TwoDSlidingFitResultMap::value_type(pCluster, TwoDSlidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch)));
         }
         catch (StatusCodeException &)
