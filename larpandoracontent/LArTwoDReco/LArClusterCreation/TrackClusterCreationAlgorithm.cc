@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 
@@ -69,6 +70,9 @@ StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(
     if (availableHitList.empty())
         return STATUS_CODE_SUCCESS;
 
+    HitType view{availableHitList.front()->GetHitType()};
+    const float minSeparationSquaredAdjusted{m_minCaloHitSeparationSquared * LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, selectedCaloHitList.Add(availableHitList));
 
     for (OrderedCaloHitList::const_iterator iter = selectedCaloHitList.begin(), iterEnd = selectedCaloHitList.end(); iter != iterEnd; ++iter)
@@ -86,7 +90,7 @@ StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(
                     continue;
 
                 if ((pCaloHitI->GetMipEquivalentEnergy() < pCaloHitJ->GetMipEquivalentEnergy()) &&
-                    ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_minCaloHitSeparationSquared))
+                    ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < minSeparationSquaredAdjusted))
                 {
                     useCaloHit = false;
                     break;
@@ -112,6 +116,11 @@ StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(
         CaloHitList *pCaloHitList = NULL;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, selectedCaloHitList.GetCaloHitsInPseudoLayer(iter->first, pCaloHitList));
 
+        if (!pCaloHitList || pCaloHitList->empty())
+            continue;
+        HitType view{pCaloHitList->front()->GetHitType()};
+        const float minSeparationSquaredAdjusted{m_minCaloHitSeparationSquared * LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+
         CaloHitSet unavailableHits;
 
         CaloHitVector inputAvailableHits(iter->second->begin(), iter->second->end());
@@ -136,7 +145,7 @@ StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(
                     continue;
 
                 const CaloHit *pClosestHit = NULL;
-                float closestSeparationSquared(m_minCaloHitSeparationSquared);
+                float closestSeparationSquared(minSeparationSquaredAdjusted);
 
                 for (const CaloHit *const pCaloHitJ : clusteredHits)
                 {
@@ -318,9 +327,12 @@ void TrackClusterCreationAlgorithm::CreateClusters(
 void TrackClusterCreationAlgorithm::CreatePrimaryAssociation(const CaloHit *const pCaloHitI, const CaloHit *const pCaloHitJ,
     HitAssociationMap &forwardHitAssociationMap, HitAssociationMap &backwardHitAssociationMap) const
 {
+    HitType view{pCaloHitI->GetHitType()};
+    const float maxSeparationSquaredAdjusted{m_maxCaloHitSeparationSquared * LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+
     const float distanceSquared((pCaloHitJ->GetPositionVector() - pCaloHitI->GetPositionVector()).GetMagnitudeSquared());
 
-    if (distanceSquared > m_maxCaloHitSeparationSquared)
+    if (distanceSquared > maxSeparationSquaredAdjusted)
         return;
 
     HitAssociationMap::iterator forwardIter = forwardHitAssociationMap.find(pCaloHitI);
@@ -351,6 +363,9 @@ void TrackClusterCreationAlgorithm::CreatePrimaryAssociation(const CaloHit *cons
 void TrackClusterCreationAlgorithm::CreateSecondaryAssociation(const CaloHit *const pCaloHitI, const CaloHit *const pCaloHitJ,
     HitAssociationMap &forwardHitAssociationMap, HitAssociationMap &backwardHitAssociationMap) const
 {
+    HitType view{pCaloHitI->GetHitType()};
+    const float closeSeparationSquaredAdjusted{m_closeSeparationSquared * LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+
     HitAssociationMap::iterator forwardIter = forwardHitAssociationMap.find(pCaloHitI);
     HitAssociationMap::iterator backwardIter = backwardHitAssociationMap.find(pCaloHitJ);
 
@@ -363,7 +378,7 @@ void TrackClusterCreationAlgorithm::CreateSecondaryAssociation(const CaloHit *co
     if ((forwardAssociation.GetPrimaryTarget() != pCaloHitJ) && (backwardAssociation.GetPrimaryTarget() == pCaloHitI))
     {
         if ((backwardAssociation.GetPrimaryDistanceSquared() < forwardAssociation.GetSecondaryDistanceSquared()) &&
-            (backwardAssociation.GetPrimaryDistanceSquared() < m_closeSeparationSquared))
+            (backwardAssociation.GetPrimaryDistanceSquared() < closeSeparationSquaredAdjusted))
         {
             forwardAssociation.SetSecondaryTarget(pCaloHitJ, backwardAssociation.GetPrimaryDistanceSquared());
         }
@@ -372,7 +387,7 @@ void TrackClusterCreationAlgorithm::CreateSecondaryAssociation(const CaloHit *co
     if ((backwardAssociation.GetPrimaryTarget() != pCaloHitI) && (forwardAssociation.GetPrimaryTarget() == pCaloHitJ))
     {
         if ((forwardAssociation.GetPrimaryDistanceSquared() < backwardAssociation.GetSecondaryDistanceSquared()) &&
-            (forwardAssociation.GetPrimaryDistanceSquared() < m_closeSeparationSquared))
+            (forwardAssociation.GetPrimaryDistanceSquared() < closeSeparationSquaredAdjusted))
         {
             backwardAssociation.SetSecondaryTarget(pCaloHitI, forwardAssociation.GetPrimaryDistanceSquared());
         }

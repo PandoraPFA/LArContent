@@ -195,6 +195,16 @@ public:
     static float GetWirePitch(const pandora::Pandora &pandora, const pandora::HitType view, const float maxWirePitchDiscrepancy = 0.01);
 
     /**
+     *  @brief  Return the ratio of the wire pitch of the specified view to the minimum wire pitch for the detector
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  view the 2D projection
+     *
+     *  @return The ratio of the specified view's wire pitch to the minimum wire pitch
+     */
+    static float GetWirePitchRatio(const pandora::Pandora &pandora, const pandora::HitType view);
+
+    /**
      *  @brief  Return the wire axis (vector perpendicular to the wire direction and drift direction)
      *
      *  @param  pandora the associated pandora instance
