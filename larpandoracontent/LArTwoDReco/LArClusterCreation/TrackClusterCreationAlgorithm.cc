@@ -71,7 +71,8 @@ StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(
         return STATUS_CODE_SUCCESS;
 
     HitType view{availableHitList.front()->GetHitType()};
-    const float minSeparationSquaredAdjusted{m_minCaloHitSeparationSquared * LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+    const float minSeparationSquaredAdjusted{ratio * ratio * m_minCaloHitSeparationSquared};
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, selectedCaloHitList.Add(availableHitList));
 
@@ -119,7 +120,8 @@ StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(
         if (!pCaloHitList || pCaloHitList->empty())
             continue;
         HitType view{pCaloHitList->front()->GetHitType()};
-        const float minSeparationSquaredAdjusted{m_minCaloHitSeparationSquared * LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+        const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+        const float minSeparationSquaredAdjusted{ratio * ratio * m_minCaloHitSeparationSquared};
 
         CaloHitSet unavailableHits;
 
@@ -328,7 +330,8 @@ void TrackClusterCreationAlgorithm::CreatePrimaryAssociation(const CaloHit *cons
     HitAssociationMap &forwardHitAssociationMap, HitAssociationMap &backwardHitAssociationMap) const
 {
     HitType view{pCaloHitI->GetHitType()};
-    const float maxSeparationSquaredAdjusted{m_maxCaloHitSeparationSquared * LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+    const float maxSeparationSquaredAdjusted{ratio * ratio * m_maxCaloHitSeparationSquared};
 
     const float distanceSquared((pCaloHitJ->GetPositionVector() - pCaloHitI->GetPositionVector()).GetMagnitudeSquared());
 
@@ -364,7 +367,8 @@ void TrackClusterCreationAlgorithm::CreateSecondaryAssociation(const CaloHit *co
     HitAssociationMap &forwardHitAssociationMap, HitAssociationMap &backwardHitAssociationMap) const
 {
     HitType view{pCaloHitI->GetHitType()};
-    const float closeSeparationSquaredAdjusted{m_closeSeparationSquared * LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+    const float closeSeparationSquaredAdjusted{ratio * ratio * m_closeSeparationSquared};
 
     HitAssociationMap::iterator forwardIter = forwardHitAssociationMap.find(pCaloHitI);
     HitAssociationMap::iterator backwardIter = backwardHitAssociationMap.find(pCaloHitJ);
