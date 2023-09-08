@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 
@@ -26,7 +27,8 @@ LongitudinalAssociationAlgorithm::LongitudinalAssociationAlgorithm() :
     m_maxTransverseDisplacement(2.f),
     m_maxLongitudinalDisplacement(2.f),
     m_hitSizeZ(0.3f),
-    m_hitSizeX(0.5f)
+    m_hitSizeX(0.5f),
+    m_view(TPC_3D)
 {
 }
 
@@ -34,6 +36,9 @@ LongitudinalAssociationAlgorithm::LongitudinalAssociationAlgorithm() :
 
 void LongitudinalAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
+    if (!pClusterList->empty())
+        m_view = LArClusterHelper::GetClusterHitType(pClusterList->front());
+
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster = *iter;
@@ -117,7 +122,10 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
     const CartesianVector innerEndCentroid(pInnerCluster->GetCentroid(pInnerCluster->GetOuterPseudoLayer()));
     const CartesianVector outerStartCentroid(pOuterCluster->GetCentroid(pOuterCluster->GetInnerPseudoLayer()));
 
-    if ((innerEndCentroid - outerStartCentroid).GetMagnitudeSquared() > m_maxGapDistanceSquared)
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), m_view)};
+    const float maxGapDistanceSquaredAdjusted{ratio * ratio * m_maxGapDistanceSquared};
+
+    if ((innerEndCentroid - outerStartCentroid).GetMagnitudeSquared() > maxGapDistanceSquaredAdjusted)
         return false;
 
     ClusterFitResult innerEndFit, outerStartFit;
@@ -141,6 +149,10 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const CartesianVect
     if (innerFit.GetDirection().GetCosOpeningAngle(outerFit.GetDirection()) < m_minCosRelativeAngle)
         return false;
 
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), m_view)};
+    const float maxTransverseDisplacementAdjusted{ratio * m_maxTransverseDisplacement};
+    const float maxLongitudinalDisplacementAdjusted{ratio * m_maxLongitudinalDisplacement};
+
     const CartesianVector innerEndFit1(
         innerFit.GetIntercept() + innerFit.GetDirection() * (innerFit.GetDirection().GetDotProduct(innerClusterEnd - innerFit.GetIntercept())));
     const CartesianVector innerEndFit2(
@@ -153,26 +165,26 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const CartesianVect
 
     const CartesianVector clusterSeparation(outerClusterStart - innerClusterEnd);
 
-    if ((std::fabs(clusterSeparation.GetX()) < m_hitSizeX * m_maxTransverseDisplacement) &&
-        (std::fabs(clusterSeparation.GetZ()) < m_hitSizeZ * m_maxLongitudinalDisplacement))
+    if ((std::fabs(clusterSeparation.GetX()) < m_hitSizeX * maxTransverseDisplacementAdjusted) &&
+        (std::fabs(clusterSeparation.GetZ()) < m_hitSizeZ * maxLongitudinalDisplacementAdjusted))
         return true;
 
     const CartesianVector fittedSeparation(outerStartFit1 - innerEndFit1);
 
-    if ((std::fabs(fittedSeparation.GetX()) < m_hitSizeX * m_maxTransverseDisplacement) &&
-        (std::fabs(fittedSeparation.GetZ()) < m_hitSizeZ * m_maxLongitudinalDisplacement))
+    if ((std::fabs(fittedSeparation.GetX()) < m_hitSizeX * maxTransverseDisplacementAdjusted) &&
+        (std::fabs(fittedSeparation.GetZ()) < m_hitSizeZ * maxLongitudinalDisplacementAdjusted))
         return true;
 
     const CartesianVector fittedInnerSeparation(innerEndFit2 - innerEndFit1);
 
-    if ((std::fabs(fittedInnerSeparation.GetX()) < m_hitSizeX * m_maxTransverseDisplacement) &&
-        (std::fabs(fittedInnerSeparation.GetZ()) < m_hitSizeZ * m_maxLongitudinalDisplacement))
+    if ((std::fabs(fittedInnerSeparation.GetX()) < m_hitSizeX * maxTransverseDisplacementAdjusted) &&
+        (std::fabs(fittedInnerSeparation.GetZ()) < m_hitSizeZ * maxLongitudinalDisplacementAdjusted))
         return true;
 
     const CartesianVector fittedOuterSeparation(outerStartFit2 - outerStartFit1);
 
-    if ((std::fabs(fittedOuterSeparation.GetX()) < m_hitSizeX * m_maxTransverseDisplacement) &&
-        (std::fabs(fittedOuterSeparation.GetZ()) < m_hitSizeZ * m_maxLongitudinalDisplacement))
+    if ((std::fabs(fittedOuterSeparation.GetX()) < m_hitSizeX * maxTransverseDisplacementAdjusted) &&
+        (std::fabs(fittedOuterSeparation.GetZ()) < m_hitSizeZ * maxLongitudinalDisplacementAdjusted))
         return true;
 
     return false;

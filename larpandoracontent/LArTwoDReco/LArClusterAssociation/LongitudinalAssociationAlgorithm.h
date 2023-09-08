@@ -66,6 +66,7 @@ private:
     float m_maxLongitudinalDisplacement; ///< maximum allowed longitudinal displacement after extrapolation (normalised to cell size)
     float m_hitSizeZ;                    ///< estimated hit size in z (wire number) dimension, units cm
     float m_hitSizeX;                    ///< estimated hit size in x (drift time) dimension, units cm
+    mutable pandora::HitType m_view;     ///< The view to which the hits under consideration belong
 };
 
 } // namespace lar_content
