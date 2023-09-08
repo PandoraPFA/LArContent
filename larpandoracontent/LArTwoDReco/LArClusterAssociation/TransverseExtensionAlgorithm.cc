@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h"
@@ -85,6 +86,10 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointin
     if (pParentCluster == pDaughterCluster)
         return;
 
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), LArClusterHelper::GetClusterHitType(pParentCluster))};
+    const float maxLongitudinalDisplacementAdjusted{ratio * m_maxLongitudinalDisplacement};
+    const float maxTransverseDisplacementAdjusted{ratio * m_maxTransverseDisplacement};
+
     for (unsigned int useInner = 0; useInner < 2; ++useInner)
     {
         const LArPointingCluster::Vertex &pointingVertex(useInner == 1 ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
@@ -95,7 +100,7 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointin
 
         const float projectedDisplacement(LArClusterHelper::GetClosestDistance(pointingVertex.GetPosition(), pDaughterCluster));
 
-        if (projectedDisplacement > m_maxLongitudinalDisplacement)
+        if (projectedDisplacement > maxLongitudinalDisplacementAdjusted)
             continue;
 
         ClusterAssociation::AssociationType associationType(ClusterAssociation::WEAK);
@@ -114,8 +119,8 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointin
         const float outerL(firstL > secondL ? firstL : secondL);
         const float outerT(firstL > secondL ? firstT : secondT);
 
-        if (innerL > 0.f && innerL < 2.5f && outerL < m_maxLongitudinalDisplacement && innerT < m_maxTransverseDisplacement &&
-            outerT < 1.5f * m_maxTransverseDisplacement)
+        if (innerL > 0.f && innerL < 2.5f && outerL < maxLongitudinalDisplacementAdjusted && innerT < maxTransverseDisplacementAdjusted &&
+            outerT < 1.5f * maxTransverseDisplacementAdjusted)
         {
             associationType = ClusterAssociation::STRONG;
             figureOfMerit = outerL;

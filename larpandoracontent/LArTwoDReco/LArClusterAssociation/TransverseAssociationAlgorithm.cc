@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
 
@@ -246,11 +247,14 @@ void TransverseAssociationAlgorithm::FillTransverseClusterList(const ClusterToCl
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster = *iter;
+        const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), LArClusterHelper::GetClusterHitType(pCluster))};
+        const float transverseClusterMinLengthAdjusted{ratio * m_transverseClusterMinLength};
+
         ClusterVector associatedClusters;
 
         this->GetAssociatedClusters(nearbyClusters, pCluster, inputAssociationMap, associatedClusters);
 
-        if (this->GetTransverseSpan(pCluster, associatedClusters) < m_transverseClusterMinLength)
+        if (this->GetTransverseSpan(pCluster, associatedClusters) < transverseClusterMinLengthAdjusted)
             continue;
 
         transverseClusterList.push_back(new LArTransverseCluster(pCluster, associatedClusters));
@@ -430,7 +434,12 @@ bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseC
     const CartesianVector &outerVertex(pTransverseCluster->GetOuterVertex());
     const CartesianVector &direction(pTransverseCluster->GetDirection());
 
-    if (direction.GetCrossProduct(testVertex - innerVertex).GetMagnitudeSquared() > m_transverseClusterMaxDisplacement * m_transverseClusterMaxDisplacement)
+    const HitType view{LArClusterHelper::GetClusterHitType(pTransverseCluster->GetSeedCluster())};
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+    const float transverseMaxDisplacementAdjusted{ratio * m_transverseClusterMaxDisplacement};
+    const float transverseMaxDisplacementSquaredAdjusted{transverseMaxDisplacementAdjusted * transverseMaxDisplacementAdjusted};
+
+    if (direction.GetCrossProduct(testVertex - innerVertex).GetMagnitudeSquared() > transverseMaxDisplacementSquaredAdjusted)
         return false;
 
     if ((direction.GetDotProduct(testVertex - innerVertex) < -1.f * m_clusterWindow) ||
