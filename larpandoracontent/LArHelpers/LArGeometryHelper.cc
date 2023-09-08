@@ -375,8 +375,16 @@ CartesianVector LArGeometryHelper::ProjectDirection(const Pandora &pandora, cons
 
 float LArGeometryHelper::GetWirePitch(const Pandora &pandora, const HitType view, const float maxWirePitchDiscrepancy)
 {
-    if (view != TPC_VIEW_U && view != TPC_VIEW_V && view != TPC_VIEW_W)
+    if (view != TPC_VIEW_U && view != TPC_VIEW_V && view != TPC_VIEW_W && view != TPC_3D)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    if (view == TPC_3D)
+    {
+        const float pitchU{LArGeometryHelper::GetWirePitch(pandora, TPC_VIEW_U, maxWirePitchDiscrepancy)};
+        const float pitchV{LArGeometryHelper::GetWirePitch(pandora, TPC_VIEW_V, maxWirePitchDiscrepancy)};
+        const float pitchW{LArGeometryHelper::GetWirePitch(pandora, TPC_VIEW_W, maxWirePitchDiscrepancy)};
+        return std::max({pitchU, pitchV, pitchW});
+    }
 
     const LArTPCMap &larTPCMap(pandora.GetGeometry()->GetLArTPCMap());
 
@@ -405,6 +413,20 @@ float LArGeometryHelper::GetWirePitch(const Pandora &pandora, const HitType view
 
     return wirePitch;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArGeometryHelper::GetWirePitchRatio(const Pandora &pandora, const HitType view)
+{
+    const float pitchU{LArGeometryHelper::GetWirePitch(pandora, TPC_VIEW_U)};
+    const float pitchV{LArGeometryHelper::GetWirePitch(pandora, TPC_VIEW_V)};
+    const float pitchW{LArGeometryHelper::GetWirePitch(pandora, TPC_VIEW_W)};
+    const float pitchMin{std::min({pitchU, pitchV, pitchW})};
+    const float pitchView{LArGeometryHelper::GetWirePitch(pandora, view)};
+
+    return pitchView / pitchMin;
+}
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
