@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h"
 
 using namespace pandora;
@@ -53,6 +55,9 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult 
     ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
 {
     const Cluster *const pClusterI(slidingFitResultI.GetCluster());
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), LArClusterHelper::GetClusterHitType(pClusterI))};
+    const float maxTransverseDisplacementAdjusted{ratio * m_maxTransverseDisplacement};
+    const float minAssociatedSpanAdjusted{ratio * m_minAssociatedSpan};
 
     CaloHitList associatedHits, caloHitListJ;
     pClusterJ->GetOrderedCaloHitList().FillCaloHitList(caloHitListJ);
@@ -93,7 +98,7 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult 
         const float rsqJK((positionJ - positionK).GetMagnitudeSquared());
         const float rsqKI((positionK - positionI).GetMagnitudeSquared());
 
-        if (rsqJK < std::min(m_maxTransverseDisplacement * m_maxTransverseDisplacement, std::min(rsqIJ, rsqKI)))
+        if (rsqJK < std::min(maxTransverseDisplacementAdjusted * maxTransverseDisplacementAdjusted, std::min(rsqIJ, rsqKI)))
         {
             if (associatedHits.empty())
             {
@@ -114,7 +119,7 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult 
     const float associatedFraction(
         associatedHits.empty() ? 0.f : static_cast<float>(associatedHits.size()) / static_cast<float>(pClusterJ->GetNCaloHits()));
 
-    if (associatedSpan > m_minAssociatedSpan || associatedFraction > m_minAssociatedFraction)
+    if (associatedSpan > minAssociatedSpanAdjusted || associatedFraction > m_minAssociatedFraction)
     {
         for (CaloHitList::const_iterator iterK = associatedHits.begin(), iterEndK = associatedHits.end(); iterK != iterEndK; ++iterK)
         {
