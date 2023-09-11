@@ -129,12 +129,14 @@ void CrossGapsExtensionAlgorithm::BuildPointingClusterList(
 
 bool CrossGapsExtensionAlgorithm::IsAssociated(const LArPointingCluster::Vertex &pointingVertex1, const LArPointingCluster::Vertex &pointingVertex2) const
 {
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), LArClusterHelper::GetClusterHitType(pointingVertex1.GetCluster()))};
+    const float maxTransverseDisplacementAdjusted{ratio * m_maxTransverseDisplacement};
     const float maxLongitudinalDisplacement((pointingVertex2.GetPosition() - pointingVertex1.GetPosition()).GetMagnitude());
 
     const bool isAssociated1(LArPointingClusterHelper::IsEmission(pointingVertex1.GetPosition(), pointingVertex2, -1.f,
-        maxLongitudinalDisplacement + 1.f, m_maxTransverseDisplacement, m_maxRelativeAngle));
+        maxLongitudinalDisplacement + 1.f, maxTransverseDisplacementAdjusted, m_maxRelativeAngle));
     const bool isAssociated2(LArPointingClusterHelper::IsEmission(pointingVertex2.GetPosition(), pointingVertex1, -1.f,
-        maxLongitudinalDisplacement + 1.f, m_maxTransverseDisplacement, m_maxRelativeAngle));
+        maxLongitudinalDisplacement + 1.f, maxTransverseDisplacementAdjusted, m_maxRelativeAngle));
 
     return (isAssociated1 && isAssociated2);
 }

@@ -139,12 +139,14 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(
     const CartesianVector &startPosition, const CartesianVector &startDirection, const TwoDSlidingFitResult &targetFitResult) const
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(targetFitResult.GetCluster()));
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), hitType)};
+    const float sampleStepSizeAdjusted{ratio * m_sampleStepSize};
     unsigned int nSamplingPoints(0), nGapSamplingPoints(0), nMatchedSamplingPoints(0), nUnmatchedSampleRun(0);
 
     for (unsigned int iSample = 0; iSample < m_maxSamplingPoints; ++iSample)
     {
         ++nSamplingPoints;
-        const CartesianVector samplingPoint(startPosition + startDirection * static_cast<float>(iSample) * m_sampleStepSize);
+        const CartesianVector samplingPoint(startPosition + startDirection * static_cast<float>(iSample) * sampleStepSizeAdjusted);
 
         if (LArGeometryHelper::IsInGap(this->GetPandora(), samplingPoint, hitType, m_gapTolerance))
         {
@@ -164,7 +166,7 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(
         }
     }
 
-    const float expectation((targetFitResult.GetGlobalMaxLayerPosition() - targetFitResult.GetGlobalMinLayerPosition()).GetMagnitude() / m_sampleStepSize);
+    const float expectation((targetFitResult.GetGlobalMaxLayerPosition() - targetFitResult.GetGlobalMinLayerPosition()).GetMagnitude() / sampleStepSizeAdjusted);
     const float matchedSamplingFraction(expectation > 0.f ? static_cast<float>(nMatchedSamplingPoints) / expectation : 0.f);
 
     if ((nMatchedSamplingPoints > m_minMatchedSamplingPoints) || (matchedSamplingFraction > m_minMatchedSamplingFraction))
@@ -177,6 +179,10 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(
 
 bool CrossGapsAssociationAlgorithm::IsNearCluster(const CartesianVector &samplingPoint, const TwoDSlidingFitResult &targetFitResult) const
 {
+    const HitType hitType(LArClusterHelper::GetClusterHitType(targetFitResult.GetCluster()));
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), hitType)};
+    const float maxOnClusterDistanceAdjusted{ratio * m_maxOnClusterDistance};
+
     float rL(std::numeric_limits<float>::max()), rT(std::numeric_limits<float>::max());
     targetFitResult.GetLocalPosition(samplingPoint, rL, rT);
 
@@ -184,7 +190,7 @@ bool CrossGapsAssociationAlgorithm::IsNearCluster(const CartesianVector &samplin
 
     if (STATUS_CODE_SUCCESS == targetFitResult.GetGlobalFitPosition(rL, fitPosition))
     {
-        if ((fitPosition - samplingPoint).GetMagnitudeSquared() < m_maxOnClusterDistance * m_maxOnClusterDistance)
+        if ((fitPosition - samplingPoint).GetMagnitudeSquared() < maxOnClusterDistanceAdjusted * maxOnClusterDistanceAdjusted)
             return true;
     }
 
@@ -192,7 +198,7 @@ bool CrossGapsAssociationAlgorithm::IsNearCluster(const CartesianVector &samplin
 
     if (STATUS_CODE_SUCCESS == targetFitResult.GetGlobalFitPositionAtX(samplingPoint.GetX(), fitPositionAtX))
     {
-        if ((fitPositionAtX - samplingPoint).GetMagnitudeSquared() < m_maxOnClusterDistance * m_maxOnClusterDistance)
+        if ((fitPositionAtX - samplingPoint).GetMagnitudeSquared() < maxOnClusterDistanceAdjusted * maxOnClusterDistanceAdjusted)
             return true;
     }
 
