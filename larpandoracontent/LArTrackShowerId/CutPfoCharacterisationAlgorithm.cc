@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -41,7 +42,8 @@ bool CutPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster
 
     try
     {
-        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const HitType view{LArClusterHelper::GetClusterHitType(pCluster)};
+        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, LArGeometryHelper::GetWirePitch(this->GetPandora(), view));
         straightLineLength = (slidingFitResult.GetGlobalMaxLayerPosition() - slidingFitResult.GetGlobalMinLayerPosition()).GetMagnitude();
 
         for (const auto &mapEntry : slidingFitResult.GetLayerFitResultMap())
