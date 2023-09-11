@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedClusterMopUpAlgorithm.h"
 
@@ -96,6 +97,12 @@ void IsolatedClusterMopUpAlgorithm::GetCaloHitToClusterMap(
     KDTreeBox hitsBoundingRegion2D(fill_and_bound_2d_kd_tree(allCaloHits, hitKDNode2DList));
     kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 
+    HitType view{TPC_3D};
+    if (!caloHitList.empty())
+        view = caloHitList.front()->GetHitType();
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), view)};
+    const float maxHitClusterDistanceAdjusted{ratio * m_maxHitClusterDistance};
+
     for (const CaloHit *const pCaloHit : caloHitList)
     {
         if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
@@ -106,7 +113,7 @@ void IsolatedClusterMopUpAlgorithm::GetCaloHitToClusterMap(
         const HitKDNode2D targetHit(pCaloHit, pCaloHit->GetPositionVector().GetX(), pCaloHit->GetPositionVector().GetZ());
         kdTree.findNearestNeighbour(targetHit, pResultHit, resultDistance);
 
-        if (pResultHit && (resultDistance < m_maxHitClusterDistance))
+        if (pResultHit && (resultDistance < maxHitClusterDistanceAdjusted))
             (void)caloHitToClusterMap.insert(CaloHitToClusterMap::value_type(pCaloHit, hitToParentClusterMap.at(pResultHit->data)));
     }
 }
