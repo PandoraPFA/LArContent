@@ -203,6 +203,7 @@ private:
     float m_maxCaloHitSeparationSquared; ///< Square of maximum calo hit separation
     float m_minCaloHitSeparationSquared; ///< Square of minimum calo hit separation
     float m_closeSeparationSquared;      ///< Length scale (squared) for close hit separation
+    float m_minMipFraction;              ///< Minimum fraction of a MIP to consider a hit
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

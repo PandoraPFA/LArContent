@@ -23,7 +23,8 @@ TrackClusterCreationAlgorithm::TrackClusterCreationAlgorithm() :
     m_maxGapLayers(2),
     m_maxCaloHitSeparationSquared(1.3f * 1.3f),
     m_minCaloHitSeparationSquared(0.4f * 0.4f),
-    m_closeSeparationSquared(0.9f * 0.9f)
+    m_closeSeparationSquared(0.9f * 0.9f),
+    m_minMipFraction{0.f}
 {
 }
 
@@ -63,7 +64,7 @@ StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(
 
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
-        if (PandoraContentApi::IsAvailable(*this, pCaloHit))
+        if (PandoraContentApi::IsAvailable(*this, pCaloHit) && pCaloHit->GetMipEquivalentEnergy() >= m_minMipFraction)
             availableHitList.push_back(pCaloHit);
     }
 
@@ -477,6 +478,8 @@ StatusCode TrackClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     float closeSeparation = std::sqrt(m_closeSeparationSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CloseSeparation", closeSeparation));
     m_closeSeparationSquared = closeSeparation * closeSeparation;
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMipFraction", m_minMipFraction));
 
     return STATUS_CODE_SUCCESS;
 }
