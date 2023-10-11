@@ -52,7 +52,9 @@ StatusCode HierarchyValidationAlgorithm::Run()
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
     const PfoList *pPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
+    StatusCode status{PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)};
+    if (status != STATUS_CODE_SUCCESS)
+        pPfoList = new PfoList();
 
     LArHierarchyHelper::FoldingParameters foldParameters;
     if (m_foldToPrimaries)
@@ -76,6 +78,8 @@ StatusCode HierarchyValidationAlgorithm::Run()
     else if (m_validateMC)
         this->MCValidation(matchInfo);
 #endif
+    if (status != STATUS_CODE_SUCCESS)
+        delete pPfoList;
 
     return STATUS_CODE_SUCCESS;
 }
@@ -209,7 +213,7 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
             float vtxDr{std::numeric_limits<float>::max()};
             const int isFiducial{LArVertexHelper::IsInFiducialVolume(this->GetPandora(), trueVertex, m_detector)};
 
-            for (const ParticleFlowObject *pRootPfo : matchedRecoSliceRoots)
+            for (const ParticleFlowObject * pRootPfo : matchedRecoSliceRoots)
             {
                 const CartesianVector &recoVertex{LArPfoHelper::GetVertex(pRootPfo)->GetPosition()};
                 const float dx{recoVertex.GetX() - trueVertex.GetX()};
@@ -348,8 +352,8 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
 
                 for (const LArHierarchyHelper::RecoHierarchy::Node *pRecoNode : nodeVector)
                 {
-                    const int sliceId{static_cast<int>(
-                        std::distance(rootPfos.begin(), std::find(rootPfos.begin(), rootPfos.end(), recoNodeToRootMap[pRecoNode])))};
+                    const int sliceId{static_cast<int>(std::distance(rootPfos.begin(), std::find(rootPfos.begin(), rootPfos.end(),
+                        recoNodeToRootMap[pRecoNode])))};
                     recoSliceIdVector.emplace_back(sliceId);
                     recoIdVector.emplace_back(pRecoNode->GetParticleId());
                     nRecoHitsVector.emplace_back(static_cast<int>(pRecoNode->GetCaloHits().size()));
