@@ -27,8 +27,8 @@ HierarchyValidationAlgorithm::HierarchyValidationAlgorithm() :
     m_foldToLeadingShowers{false},
     m_validateEvent{false},
     m_validateMC{false},
-    m_minPurity{0.8f},
-    m_minCompleteness{0.65f}
+    m_minPurity{0},
+    m_minCompleteness{0}
 {
 }
 
@@ -383,7 +383,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                         vtxDr = std::sqrt(vtxDx * vtxDx + vtxDy * vtxDy + vtxDz * vtxDz);
                     }
                 }
-
+  
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interaction", interaction));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcId", mcId));
