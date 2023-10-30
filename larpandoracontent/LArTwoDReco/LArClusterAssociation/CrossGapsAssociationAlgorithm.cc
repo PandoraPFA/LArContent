@@ -166,7 +166,8 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(
         }
     }
 
-    const float expectation((targetFitResult.GetGlobalMaxLayerPosition() - targetFitResult.GetGlobalMinLayerPosition()).GetMagnitude() / sampleStepSizeAdjusted);
+    const float expectation(
+        (targetFitResult.GetGlobalMaxLayerPosition() - targetFitResult.GetGlobalMinLayerPosition()).GetMagnitude() / sampleStepSizeAdjusted);
     const float matchedSamplingFraction(expectation > 0.f ? static_cast<float>(nMatchedSamplingPoints) / expectation : 0.f);
 
     if ((nMatchedSamplingPoints > m_minMatchedSamplingPoints) || (matchedSamplingFraction > m_minMatchedSamplingFraction))

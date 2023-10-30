@@ -427,7 +427,6 @@ float LArGeometryHelper::GetWirePitchRatio(const Pandora &pandora, const HitType
     return pitchView / pitchMin;
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 CartesianVector LArGeometryHelper::GetWireAxis(const Pandora &pandora, const HitType view)
