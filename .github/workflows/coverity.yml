@@ -83,10 +83,10 @@ jobs:
       # TODO: Does the version need to change with compiler?
       - name: Pull ROOT
         if: matrix.monitoring == 'ON'
-        run: wget https://root.cern/download/root_v6.26.10.Linux-ubuntu22-x86_64-gcc11.3.tar.gz
+        run: wget https://root.cern/download/root_v6.26.14.Linux-ubuntu22-x86_64-gcc11.4.tar.gz
       - name: Unpack ROOT
         if: matrix.monitoring == 'ON'
-        run: tar -xzvf root_v6.26.10.Linux-ubuntu22-x86_64-gcc11.3.tar.gz && mv root/ /pandora/root
+        run: tar -xzvf root_v6.26.14.Linux-ubuntu22-x86_64-gcc11.4.tar.gz && mv root/ /pandora/root
 
       # Sort LibTorch install out.
       - name: Pull Torch
