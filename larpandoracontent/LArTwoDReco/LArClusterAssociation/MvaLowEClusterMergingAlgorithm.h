@@ -57,7 +57,7 @@ protected:
 
     const pandora::CaloHitList EdgeHitFinder(const pandora::Cluster *const cluster, pandora::CaloHitList &clusterEdgeHits) const;
 
-    bool ClusterTool(std::vector<std::string> featureOrder, LArMvaHelper::MvaFeatureMap featureMap, const bool mcMatch) const;
+    bool ClusterTool(std::vector<std::string> featureOrder, LArMvaHelper::MvaFeatureMap featureMap) const;
 
     pandora::StatusCode EdgeHitComparer(const pandora::ClusterList *const pClusterList, const std::string &listName) const;
 
@@ -79,6 +79,7 @@ protected:
     std::string            m_mvaFileName;           ///< The mva input file
     std::string            m_mvaName;               ///< The name of the mva to find
     T                      m_mva;                   ///< The mva
+    float                  m_countHitsThreshold;    ///< A cut on whether cluster merges will occur depending on total event hits
 
 
 

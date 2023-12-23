@@ -25,7 +25,7 @@ ClearTracksTool::ClearTracksTool() :
 bool ClearTracksTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+    std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     bool particlesMade(false);
 
@@ -42,10 +42,11 @@ void ClearTracksTool::CreateThreeDParticles(
     ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;
-
+    std::cout << " RUNNING HERE !!! " << std::endl;
     for (TensorType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
-        if (iter->GetOverlapResult().GetMatchedFraction() < m_minMatchedFraction)
+         std::cout << " FRACTION: " << iter->GetOverlapResult().GetMatchedFraction() << std::endl;
+         if (iter->GetOverlapResult().GetMatchedFraction() < m_minMatchedFraction)
             continue;
 
         const XOverlap &xOverlap(iter->GetOverlapResult().GetXOverlap());
