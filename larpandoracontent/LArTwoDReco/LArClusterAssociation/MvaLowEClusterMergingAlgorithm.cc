@@ -31,22 +31,23 @@ using namespace pandora;
 namespace lar_content
 {
 template <typename T>
-MvaLowEClusterMergingAlgorithm::MvaLowEClusterMergingAlgorithm() :
+MvaLowEClusterMergingAlgorithm<T>::MvaLowEClusterMergingAlgorithm() :
+    m_trainingSetMode{false},
+    m_enableProbability{true},
+    m_minProbabilityCut{0.5f},
     m_event{-1},
     m_minNCaloHits{1},
     m_writeTree{true},
     m_upperHitThreshold{100},
-    m_minProbabilityCut{0.5f},
-    m_enableProbability{true},
-    m_trainingSetMode{false},
-    m_filePathEnvironmentVariable{"FW_SEARCH_PATH"}
+    m_filePathEnvironmentVariable{"FW_SEARCH_PATH"},
+    m_countHitsThreshold{0}
 
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-MvaLowEClusterMergingAlgorithm::~MvaLowEClusterMergingAlgorithm()
+MvaLowEClusterMergingAlgorithm<T>::~MvaLowEClusterMergingAlgorithm()
 {
     if (m_writeTree)
         {
@@ -58,7 +59,7 @@ MvaLowEClusterMergingAlgorithm::~MvaLowEClusterMergingAlgorithm()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-StatusCode MvaLowEClusterMergingAlgorithm::Run()
+StatusCode MvaLowEClusterMergingAlgorithm<T>::Run()
 {
     ++m_event;
     std::map<const Cluster*, ClusterVector> clustersToMerge;
@@ -91,7 +92,8 @@ StatusCode MvaLowEClusterMergingAlgorithm::Run()
         
 	if (!clustersToMerge.empty())
         {
-	       	PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_clusterToMerge, clustersToMerge));
+	       	//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_clustersToMerge, clustersToMerge));
+		std::cout << std::endl;
         }
 
 	if (m_writeTree)
@@ -99,13 +101,15 @@ StatusCode MvaLowEClusterMergingAlgorithm::Run()
             PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "RECREATE"))
          }
 
+    }
+
     return STATUS_CODE_SUCCESS;
 }
 
 //--------------------------------------------------------------------------------------------//
 
 template <typename T>
-const MCParticle* LowEClusterMergingAlgorithm::GetMCForCluster(const Cluster *const cluster, std::map<const Cluster*,
+const MCParticle* MvaLowEClusterMergingAlgorithm<T>::GetMCForCluster(const Cluster *const cluster, std::map<const Cluster*,
     const MCParticle*> &clusterToMCMap) const
 {
     const MCParticle* clusterMC = nullptr;
@@ -134,12 +138,12 @@ const MCParticle* LowEClusterMergingAlgorithm::GetMCForCluster(const Cluster *co
 //---------------------------------------------------------------------------------------------//
 
 template <typename T>
-bool LowEClusterMergingAlgorithm::IsValidToUse(const Cluster *const cluster, std::map<const Cluster*, bool> &clusterIsUsed) const
+bool MvaLowEClusterMergingAlgorithm<T>::IsValidToUse(const Cluster *const cluster, std::map<const Cluster*, bool> &clusterIsUsed) const
 {
 
-    // if (!cluster->IsAvailable())
-    //    return false;
-
+   // if (!cluster->IsAvailable())
+   //     return false;
+    
     if (cluster->GetNCaloHits() < m_minNCaloHits)
         return false;
 
@@ -154,12 +158,21 @@ bool LowEClusterMergingAlgorithm::IsValidToUse(const Cluster *const cluster, std
 
 //--------------------------------------------------------------------------------------------------------------------
 template <typename T>
-StatusCode MvaLowEClusterMergingAlgorithm::EdgeHitComparer(const pandora::ClusterList *const pClusterList, const std::string &listName ) const
+StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::ClusterList *const pClusterList, const std::string &listName ) const
 {
     std::map<const Cluster*, const MCParticle*> clusterToMCParticleMap;
     std::map<const Cluster*, bool> clusterIsUsed;
+    std::map<const Cluster*, ClusterVector> clustersToMerge;
     int sigBac;
-    std::cout << listName << std::endl; 
+    std::cout << listName << std::endl;
+    int countHits{0};
+
+    for (auto iter = pClusterList->begin(); iter != pClusterList->end(); ++iter)
+    {
+	const Cluster *const cluster(*iter);
+	countHits = countHits + (cluster->GetNCaloHits());
+    }
+    std::cout << " ************************ HITS **************** " << countHits << std::endl;
 
     for (auto iter = pClusterList->begin(); iter != pClusterList->end(); ++iter)
     {
@@ -246,7 +259,9 @@ StatusCode MvaLowEClusterMergingAlgorithm::EdgeHitComparer(const pandora::Cluste
 		vertexPosition = LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition() , hitType);
 		const CartesianVector vtxToCluster(centroid1.GetX() - vertexPosition.GetX(), 0.f, centroid1.GetZ() - vertexPosition.GetZ());
                 const CartesianVector vtxToOtherCluster(centroid2.GetX() - vertexPosition.GetX(), 0.f, centroid2.GetZ() - vertexPosition.GetZ());
-	        vtxClusterAngle = vtxToCluster.GetDotProduct(vtxToOtherCluster);
+		const float D1(std::sqrt((vtxToCluster.GetX() * vtxToCluster.GetX()) + (vtxToCluster.GetZ() * vtxToCluster.GetZ())));
+		const float D2(std::sqrt((vtxToOtherCluster.GetX() * vtxToOtherCluster.GetX()) + (vtxToOtherCluster.GetZ() * vtxToOtherCluster.GetZ())));
+	        vtxClusterAngle = (vtxToCluster.GetDotProduct(vtxToOtherCluster) / (D1 * D2));
 	     
 	     	std::cout << "Vertex Cluster Angle: " << vtxClusterAngle << std::endl;
 	    }
@@ -257,7 +272,9 @@ StatusCode MvaLowEClusterMergingAlgorithm::EdgeHitComparer(const pandora::Cluste
 	    std::cout << "Cluster2 pos: " << centroid2 << std::endl;
 
 	    this->EdgeHitFinder(otherCluster, otherClusterEdgeHits);
-            
+            // cluster->GetOrderedCaloHitList().FillCaloHitList(clusterEdgeHits);
+	    // otherCluster->GetOrderedCaloHitList().FillCaloHitList(otherClusterEdgeHits);
+
 	    const unsigned int otherClusterNHits{otherCluster->GetNCaloHits()};
       	    const unsigned long int otherClusterNEdgeHits{otherClusterEdgeHits.size()};
 	    
@@ -292,6 +309,8 @@ StatusCode MvaLowEClusterMergingAlgorithm::EdgeHitComparer(const pandora::Cluste
 	    int proximity{0};
 	    float contactThreshold{2};
 	    float proximityThreshold{5}; 
+	    float adc1(0);
+	    float adc2(0);
 
 	    for (auto iter3 = largestList.begin() ; iter3 != largestList.end() ; ++iter3)
             {
@@ -301,6 +320,9 @@ StatusCode MvaLowEClusterMergingAlgorithm::EdgeHitComparer(const pandora::Cluste
                   CartesianVector hit1Position(caloHit1->GetPositionVector());
                   float nearestHit{-1};
 		  double nearestHitAngle{-1};
+		  float hitAdc1(caloHit1->GetInputEnergy());
+		  adc1 += hitAdc1;
+		  
 
 		  for (auto iter4 = smallestList.begin() ; iter4 != smallestList.end() ; ++iter4)
                   {
@@ -315,7 +337,9 @@ StatusCode MvaLowEClusterMergingAlgorithm::EdgeHitComparer(const pandora::Cluste
 		      const float c(tangent.GetX() * vectorTool.GetX() + tangent.GetZ() * vectorTool.GetZ());
 		      const float intercept(tangent.GetX() * hit2Position.GetX() + tangent.GetZ() * hit2Position.GetZ());
                       std::cout << c << intercept << std::endl;
-		      std::cout << vector1.GetDotProduct(centroidVector) << std::endl; 
+		      std::cout << vector1.GetDotProduct(centroidVector) << std::endl;
+		      float hitAdc2(caloHit2->GetInputEnergy());
+                      adc2 += hitAdc2;
                       
                       nearestHitDistribution.push_back(nearestHit);
                       nearestHitAngleDistribution.push_back(nearestHitAngle);
@@ -410,63 +434,70 @@ StatusCode MvaLowEClusterMergingAlgorithm::EdgeHitComparer(const pandora::Cluste
 	    float combinedNClusterEdgeHits(clusterNEdgeHits + otherClusterNEdgeHits);
   
 	    std::vector<std::string> featureOrder;
-	    LArMvaHelper::MvaFeatureMap featureMap;
-	   
+	    const bool mcMatch(clusterMC == otherClusterMC);
+
+	    featureOrder.emplace_back("VertexClusterAngle");
+            featureOrder.emplace_back("MinEdgeHitSeparation");
+            featureOrder.emplace_back("Cluster1NHits");
+            featureOrder.emplace_back("Cluster2NHits");
+            featureOrder.emplace_back("NHitsInContact");
+            featureOrder.emplace_back("NHitsInProximity");
+            featureOrder.emplace_back("CentroidSeparation");
+            featureOrder.emplace_back("AvgDistance");
+	    featureOrder.emplace_back("CentroidVectorX");
+	    featureOrder.emplace_back("CentroidVectorZ");
+	    featureOrder.emplace_back("Cluster1ADC");
+	    featureOrder.emplace_back("Cluster2ADC");
+
 	    if (m_trainingSetMode)
             {
-            	bool areClustersToMerge(false);
-                
+                            
                 LArMvaHelper::MvaFeatureVector featureVector;
-                std::string trainingFileName("MyBDT3Paramters.csv");
-                featureVector.emplace_back(static_cast<double>(vtxClusterAngle));
-                featureVector.emplace_back(static_cast<double>(minEdgeHitSeparation));
+                
+		featureVector.emplace_back(static_cast<double>(vtxClusterAngle));
+		featureVector.emplace_back(static_cast<double>(minEdgeHitSeparation));
                 featureVector.emplace_back(static_cast<double>(clusterNHits));
                 featureVector.emplace_back(static_cast<double>(otherClusterNHits));
-                featureVector.emplace_back(static_cast<double>(centroidSeparation));
-                featureVector.emplace_back(static_cast<double>(avgDistance));
+                featureVector.emplace_back(static_cast<double>(contact));
+		featureVector.emplace_back(static_cast<double>(proximity));
+ 		featureVector.emplace_back(static_cast<double>(centroidSeparation));
+		featureVector.emplace_back(static_cast<double>(avgDistance));
+		featureVector.emplace_back(static_cast<double>(centroidVector.GetX()));
+		featureVector.emplace_back(static_cast<double>(centroidVector.GetZ()));
+		featureVector.emplace_back(static_cast<double>(adc1));
+		featureVector.emplace_back(static_cast<double>(adc2));
 
-		const bool mcMatch(clusterMC == otherClusterMC);
-                LArMvaHelper::ProduceTrainingExample(m_trainingOutputFile, isTrueTrack, featureOrder, featureMap);
+                LArMvaHelper::ProduceTrainingExample(m_trainingOutputFile, mcMatch, featureVector);
  
             }
 	   
-	    LArMvaHelper::MvaFeatureVector featureVector;
-            std::string trainingFileName("MyBDT3Paramters.csv");
-            featureVector.emplace_back(static_cast<double>(vtxClusterAngle));
-            featureVector.emplace_back(static_cast<double>(minEdgeHitSeparation));
-            featureVector.emplace_back(static_cast<double>(clusterNHits));
-	    featureVector.emplace_back(static_cast<double>(otherClusterNHits));
-            featureVector.emplace_back(static_cast<double>(centroidSeparation));
-            featureVector.emplace_back(static_cast<double>(avgDistance));
-	   
+	    if (! m_trainingSetMode)
+	    {	    
+	        LArMvaHelper::MvaFeatureMap featureMap;
+	    	    
+                featureMap["VertexClusterAngle"] = vtxClusterAngle;
+	        featureMap["MinEdgeHitSeparation"] = minEdgeHitSeparation;
+                featureMap["Cluster1NHits"] = clusterNHits;
+	        featureMap["Cluster2NHits"] = otherClusterNHits;
+	        featureMap["NHitsInContact"] = contact;
+                featureMap["NHitsInProximity"] = proximity;
+	        featureMap["CentroidSeparation"] = centroidSeparation;
+	        featureMap["AvgDistance"] = avgDistance;
+		featureMap["CentroidVectorX"] = centroidVector.GetX();
+		featureMap["CentroidVectorZ"] = centroidVector.GetZ();
+		featureMap["Cluster1ADC"] = adc1;
+		featureMap["Cluster2ADC"] = adc2;
+           
+	        const bool areClustersToMerge(this->ClusterTool(featureOrder, featureMap));
 
-            LArMvaHelper::ProduceTrainingExample(trainingFileName, clusterMC == otherClusterMC, featureVector);
-
-	    featureMap["VertexClusterAngle"] = vtxClusterAngle;
-	    featureMap["MinEdgeHitSeparation"] = minEdgeHitSeparation;
-            featureMap["Cluster1NHits"] = clusterNHits;
-	    featureMap["Cluster2NHits"] = otherClusterNHits;
-	    featureMap["CentroidSeparation"] = centroidSeparation;
-            featureMap["AvgDistance"] = avgDistance;
-            
-            featureOrder.emplace_back("VertexClusterAngle");
-	    featureOrder.emplace_back("MinEdgeHitSeparation");
-	    featureOrder.emplace_back("Cluster1NHits");
-	    featureOrder.emplace_back("Cluster2NHits");
-            featureOrder.emplace_back("CentroidSeparation"); 	    
-	    featureOrder.emplace_back("AvgDistance");
-              
-	    const bool mcMatch(clusterMC == otherClusterMC);
-
-	    const bool areClustersToMerge(this->ClusterTool(featureMap, featureOrder, mcMatch));
-
-            if (areClustersToMerge)
-            {
-               // lowEClustersMetadata = m_merge;
-               clusterIsUsed[cluster] = true;
-               clusterIsUsed[otherCluster] = true;
-               clustersToMerge[cluster].push_back(otherCluster);
-            }
+                if (areClustersToMerge && countHits > m_countHitsThreshold)
+                {
+                   // lowEClustersMetadata = m_merge;
+                   clusterIsUsed[cluster] = true;
+                   clusterIsUsed[otherCluster] = true;
+                   clustersToMerge[cluster].push_back(otherCluster);
+                }
+	    }
             
 	    if (m_writeTree)
             {
@@ -524,7 +555,7 @@ StatusCode MvaLowEClusterMergingAlgorithm::EdgeHitComparer(const pandora::Cluste
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-bool MvaLowEClusterMergingAlgorithm<T>::ClusterTool(std::vector<std::string> featureOrder, LArMvaHelper::MvaFeatureMap featureMap, const bool mcMatch) const
+bool MvaLowEClusterMergingAlgorithm<T>::ClusterTool(std::vector<std::string> featureOrder, LArMvaHelper::MvaFeatureMap featureMap) const
 {
 
     if (!m_enableProbability)
@@ -533,14 +564,16 @@ bool MvaLowEClusterMergingAlgorithm<T>::ClusterTool(std::vector<std::string> fea
     }
     else
     {
-        return (LArMvaHelper::CalculateProbability(m_mva, featureOrder, featureMap) > m_minProbabilityCut);
+	std::cout << "CUT VALUE USED: " << m_minProbabilityCut << std::endl;
+	std::cout << "PROBABILITY: " << LArMvaHelper::CalculateProbability(m_mva, featureOrder, featureMap) << std::endl;
+	return (LArMvaHelper::CalculateProbability(m_mva, featureOrder, featureMap) > m_minProbabilityCut);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-const CaloHitList MvaLowEClusterMergingAlgorithm::EdgeHitFinder(const pandora::Cluster *const cluster, pandora::CaloHitList &clusterEdgeHits) const
+const CaloHitList MvaLowEClusterMergingAlgorithm<T>::EdgeHitFinder(const pandora::Cluster *const cluster, pandora::CaloHitList &clusterEdgeHits) const
 {
         CartesianVector vector1(0.f,0.f,0.f);
         CartesianVector vector2(0.f,0.f,0.f);
@@ -551,7 +584,7 @@ const CaloHitList MvaLowEClusterMergingAlgorithm::EdgeHitFinder(const pandora::C
         const CartesianVector centroid1(cluster->GetCentroid(cluster->GetInnerPseudoLayer()));
         const CartesianVector centroid2(cluster->GetCentroid(cluster->GetOuterPseudoLayer()));
         const CartesianVector centroid((centroid1 + centroid2) * 0.5f);
-        float divisions(16);
+        float divisions(8);
         std::map<const CaloHit*, bool> hitIsUsed;
 
 
@@ -618,7 +651,7 @@ const CaloHitList MvaLowEClusterMergingAlgorithm::EdgeHitFinder(const pandora::C
 //----------------------------------------------------------------------------------------------------
 
 template <typename T>
-float MvaLowEClusterMergingAlgorithm::Distance(const CartesianVector vector1, const CartesianVector vector2) const
+float MvaLowEClusterMergingAlgorithm<T>::Distance(const CartesianVector vector1, const CartesianVector vector2) const
 {
     const float dx{std::abs(vector1.GetX() - vector2.GetX())};
     const float dz{vector1.GetZ() - vector2.GetZ()};
@@ -630,7 +663,7 @@ float MvaLowEClusterMergingAlgorithm::Distance(const CartesianVector vector1, co
 //-------------------------------------------------------------------------------------------------
 
 template <typename T>
-double MvaLowEClusterMergingAlgorithm::Angle(const CartesianVector vector1, const CartesianVector vector2) const
+double MvaLowEClusterMergingAlgorithm<T>::Angle(const CartesianVector vector1, const CartesianVector vector2) const
 {
     const double dx{vector1.GetX() - vector2.GetX()};
     const double dz{vector1.GetZ() - vector2.GetZ()};
@@ -641,7 +674,7 @@ double MvaLowEClusterMergingAlgorithm::Angle(const CartesianVector vector1, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-StatusCode MvaLowEClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode MvaLowEClusterMergingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingSetMode", m_trainingSetMode));
 
@@ -669,6 +702,9 @@ StatusCode MvaLowEClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinNCaloHits", m_minNCaloHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CountHitsThreshold", m_countHitsThreshold));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WriteTree", m_writeTree));
 

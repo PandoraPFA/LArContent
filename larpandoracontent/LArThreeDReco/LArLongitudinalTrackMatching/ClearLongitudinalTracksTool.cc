@@ -44,6 +44,7 @@ void ClearLongitudinalTracksTool::CreateThreeDParticles(
 
     for (TensorType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
+        std::cout << " FRACTION: " << iter->GetOverlapResult().GetMatchedFraction() << std::endl;
         if (iter->GetOverlapResult().GetMatchedFraction() < m_minMatchedFraction)
             continue;
 
