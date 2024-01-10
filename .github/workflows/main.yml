@@ -60,8 +60,8 @@ jobs:
       - name: Install ROOT
         if: matrix.monitoring == 'ON'
         run: |
-          wget https://root.cern/download/root_v6.26.10.Linux-ubuntu18-x86_64-gcc7.5.tar.gz
-          tar -xzvf root_v6.26.10.Linux-ubuntu18-x86_64-gcc7.5.tar.gz && mv root/ /pandora/root
+          wget https://root.cern/download/root_v6.26.14.Linux-ubuntu20-x86_64-gcc9.4.tar.gz
+          tar -xzvf root_v6.26.14.Linux-ubuntu20-x86_64-gcc9.4.tar.gz && mv root/ /pandora/root
 
       # Sort LibTorch install out...
       - name: Install Torch
