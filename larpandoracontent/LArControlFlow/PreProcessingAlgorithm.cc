@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
+
 #include "larpandoracontent/LArControlFlow/PreProcessingAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -87,10 +89,18 @@ void PreProcessingAlgorithm::ProcessCaloHits()
     if (pCaloHitList->size() > m_maxEventHits)
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
 
-    CaloHitList selectedCaloHitListU, selectedCaloHitListV, selectedCaloHitListW;
+    CaloHitList selectedCaloHitListU, selectedCaloHitListV, selectedCaloHitListW, fullHitList;
 
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
+
+        LArCaloHit *pLArCaloHit{const_cast<LArCaloHit *>(dynamic_cast<const LArCaloHit *>(pCaloHit))};
+
+        if (pLArCaloHit && pLArCaloHit->GetNCellInteractionLengths() == -999.f) {
+            fullHitList.push_back(pCaloHit);
+            continue;
+        }
+
         if (m_processedHits.count(pCaloHit))
             continue;
 
@@ -135,10 +145,11 @@ void PreProcessingAlgorithm::ProcessCaloHits()
         }
     }
 
-    CaloHitList filteredCaloHitListU, filteredCaloHitListV, filteredCaloHitListW;
+    CaloHitList filteredCaloHitListU, filteredCaloHitListV, filteredCaloHitListW, filteredFullHitList;
     this->GetFilteredCaloHitList(selectedCaloHitListU, filteredCaloHitListU);
     this->GetFilteredCaloHitList(selectedCaloHitListV, filteredCaloHitListV);
     this->GetFilteredCaloHitList(selectedCaloHitListW, filteredCaloHitListW);
+    this->GetFilteredCaloHitList(fullHitList, filteredFullHitList);
 
     CaloHitList filteredInputList;
     filteredInputList.insert(filteredInputList.end(), filteredCaloHitListU.begin(), filteredCaloHitListU.end());
@@ -156,6 +167,9 @@ void PreProcessingAlgorithm::ProcessCaloHits()
 
     if (!filteredCaloHitListW.empty() && !m_outputCaloHitListNameW.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredCaloHitListW, m_outputCaloHitListNameW));
+
+    if (!filteredFullHitList.empty() && !m_outputFullHistListName.empty())
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_ALREADY_PRESENT, !=, PandoraContentApi::SaveList(*this, filteredFullHitList, m_outputFullHistListName));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -266,6 +280,8 @@ StatusCode PreProcessingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListNameV", m_outputCaloHitListNameV));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListNameW", m_outputCaloHitListNameW));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFullCaloHitListName", m_outputFullHistListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FilteredCaloHitListName", m_filteredCaloHitListName));
 

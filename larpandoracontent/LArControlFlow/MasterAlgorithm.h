@@ -106,6 +106,11 @@ protected:
     pandora::StatusCode CopyMCParticles() const;
 
     /**
+     *  @brief  Copy all calo hits in the named input list to all pandora worker instances
+     */
+    pandora::StatusCode CopyAllCaloHits() const;
+
+    /**
      *  @brief  Get the mapping from lar tpc volume id to lists of all hits, and truncated hits
      *
      *  @param  volumeIdToHitListMap to receive the populated volume id to hit list map
@@ -186,8 +191,9 @@ protected:
      *
      *  @param  pPandora the address of the target pandora instance
      *  @param  pCaloHit the address of the calo hit
+     *  @param  ignoredHit if true, the calo hit will be ignored by the target pandora instance (except for metrics)
      */
-    pandora::StatusCode Copy(const pandora::Pandora *const pPandora, const pandora::CaloHit *const pCaloHit) const;
+    pandora::StatusCode Copy(const pandora::Pandora *const pPandora, const pandora::CaloHit *const pCaloHit, const bool ignoredHit = false) const;
 
     /**
      *  @brief  Copy a specified mc particle to the provided pandora instance

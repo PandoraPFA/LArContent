@@ -262,6 +262,30 @@ StatusCode MasterAlgorithm::CopyMCParticles() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+StatusCode MasterAlgorithm::CopyAllCaloHits() const
+{
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "Input", pCaloHitList));
+
+    PandoraInstanceList pandoraWorkerInstances(m_crWorkerInstances);
+    if (m_pSlicingWorkerInstance)
+        pandoraWorkerInstances.push_back(m_pSlicingWorkerInstance);
+    if (m_pSliceNuWorkerInstance)
+        pandoraWorkerInstances.push_back(m_pSliceNuWorkerInstance);
+    if (m_pSliceCRWorkerInstance)
+        pandoraWorkerInstances.push_back(m_pSliceCRWorkerInstance);
+
+    for (const Pandora *const pPandoraWorker : pandoraWorkerInstances)
+    {
+        for (const CaloHit *const pCaloHit : *pCaloHitList)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pPandoraWorker, pCaloHit, true));
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode MasterAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &volumeIdToHitListMap) const
 {
     const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
@@ -644,7 +668,7 @@ StatusCode MasterAlgorithm::Reset()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *const pCaloHit) const
+StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *const pCaloHit, const bool ignoredHit) const
 {
     const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
     if (pLArCaloHit == nullptr)
@@ -654,6 +678,10 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
     }
     LArCaloHitParameters parameters;
     pLArCaloHit->FillParameters(parameters);
+
+    if (ignoredHit)
+        parameters.m_nCellInteractionLengths = -999.f;
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
     if (m_passMCParticlesToWorkerInstances)
