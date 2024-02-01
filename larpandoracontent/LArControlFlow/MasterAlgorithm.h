@@ -335,6 +335,7 @@ protected:
 
     bool m_fullWidthCRWorkerWireGaps;        ///< Whether wire-type line gaps in cosmic-ray worker instances should cover all drift time
     bool m_passMCParticlesToWorkerInstances; ///< Whether to pass mc particle details (and links to calo hits) to worker instances
+    bool m_passAllCaloHitsToWorkers;    ///< Whether to pass all (i.e no filtering at all) calo hits to worker instances
 
     typedef std::vector<StitchingBaseTool *> StitchingToolVector;
     typedef std::vector<CosmicRayTaggingBaseTool *> CosmicRayTaggingToolVector;
