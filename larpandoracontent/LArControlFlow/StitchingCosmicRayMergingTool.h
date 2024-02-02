@@ -9,6 +9,7 @@
 #define LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/StitchingBaseTool.h"
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 

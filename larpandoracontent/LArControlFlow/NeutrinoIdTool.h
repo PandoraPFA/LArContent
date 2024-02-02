@@ -9,6 +9,7 @@
 #define LAR_NEUTRINO_ID_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/SliceIdBaseTool.h"
 
 #include "larpandoracontent/LArObjects/LArAdaBoostDecisionTree.h"
 #include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
