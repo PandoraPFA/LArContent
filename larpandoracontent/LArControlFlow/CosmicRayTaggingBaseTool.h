@@ -10,8 +10,6 @@
 
 #include "Pandora/AlgorithmTool.h"
 
-#include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
-
 namespace lar_content
 {
 
