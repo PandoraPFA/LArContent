@@ -36,8 +36,8 @@ private:
      *  @param  caloHitListNames the hit type to calo hit list name map
      *  @param  mcParticleToSliceMap to receive the parent mc particle to slice map
      */
-    void InitializeMCParticleToSliceMap(const pandora::Algorithm *const pAlgorithm,
-        const HitTypeToNameMap &caloHitListNames, MCParticleToSliceMap &mcParticleToSliceMap) const;
+    void InitializeMCParticleToSliceMap(const pandora::Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
+        MCParticleToSliceMap &mcParticleToSliceMap) const;
 
     /**
      *  @brief  Fill slices using hits from a specified view
@@ -47,8 +47,8 @@ private:
      *  @param  caloHitListNames the hit type to calo hit list name map
      *  @param  mcParticleToSliceMap to receive the parent mc particle to slice map
      */
-    void FillSlices(const pandora::Algorithm *const pAlgorithm, const pandora::HitType hitType,
-        const HitTypeToNameMap &caloHitListNames, MCParticleToSliceMap &mcParticleToSliceMap) const;
+    void FillSlices(const pandora::Algorithm *const pAlgorithm, const pandora::HitType hitType, const HitTypeToNameMap &caloHitListNames,
+        MCParticleToSliceMap &mcParticleToSliceMap) const;
 };
 
 } // namespace lar_content

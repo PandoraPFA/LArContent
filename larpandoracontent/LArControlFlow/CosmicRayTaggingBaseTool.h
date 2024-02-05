@@ -34,6 +34,6 @@ public:
         const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos, const MasterAlgorithm *const pAlgorithm) = 0;
 };
 
-}
+} // namespace lar_content
 
 #endif // #ifndef LAR_COSMIC_RAY_TAGGING_BASE_TOOL_H

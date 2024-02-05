@@ -29,7 +29,6 @@ class EventSlicingBaseTool;
 class SlicingAlgorithm : public pandora::Algorithm
 {
 public:
-
     /**
      *  @brief  Default constructor
      */

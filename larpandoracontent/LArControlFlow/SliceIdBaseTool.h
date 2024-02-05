@@ -34,6 +34,6 @@ public:
         const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos) = 0;
 };
 
-}
+} // namespace lar_content
 
 #endif // #ifndef LAR_SLICE_ID_BASE_TOOL_H

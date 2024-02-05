@@ -37,6 +37,6 @@ public:
         PfoToFloatMap &stitchedPfosToX0Map) = 0;
 };
 
-}
+} // namespace lar_content
 
 #endif // #ifndef LAR_STITCHING_BASE_TOOL_H

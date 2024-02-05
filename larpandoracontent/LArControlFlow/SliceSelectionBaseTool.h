@@ -32,6 +32,6 @@ public:
     virtual void SelectSlices(const pandora::Algorithm *const pAlgorithm, const SliceVector &inputSliceVector, SliceVector &outputSliceVector) = 0;
 };
 
-}
+} // namespace lar_content
 
 #endif // #ifndef LAR_SLICE_SELECTION_BASE_TOOL_H

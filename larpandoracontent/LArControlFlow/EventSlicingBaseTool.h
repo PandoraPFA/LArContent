@@ -35,6 +35,6 @@ public:
         const HitTypeToNameMap &clusterListNames, SliceList &sliceList) = 0;
 };
 
-}
+} // namespace lar_content
 
 #endif // #ifndef LAR_EVENT_SLICING_BASE_TOOL_H

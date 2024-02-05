@@ -14,10 +14,10 @@
 #include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 
-#include "larpandoracontent/LArControlFlow/StitchingBaseTool.h"
 #include "larpandoracontent/LArControlFlow/CosmicRayTaggingBaseTool.h"
 #include "larpandoracontent/LArControlFlow/SliceIdBaseTool.h"
 #include "larpandoracontent/LArControlFlow/SliceSelectionBaseTool.h"
+#include "larpandoracontent/LArControlFlow/StitchingBaseTool.h"
 
 #include <unordered_map>
 

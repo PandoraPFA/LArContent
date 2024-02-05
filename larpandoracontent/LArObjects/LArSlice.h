@@ -28,6 +28,6 @@ public:
 
 typedef std::vector<Slice> SliceList;
 
-}
+} // namespace lar_content
 
 #endif // #ifndef LAR_SLICE_H
