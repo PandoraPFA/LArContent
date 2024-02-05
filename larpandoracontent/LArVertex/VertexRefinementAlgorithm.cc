@@ -210,9 +210,9 @@ void VertexRefinementAlgorithm::GetBestFitPoint(const CartesianPointVector &inte
         G(3 * i + 1, 1) = weights[i];
         G(3 * i + 2, 2) = weights[i];
 
-        G(3 * i, i + 3) = -directions[i].GetX();
-        G(3 * i + 1, i + 3) = -directions[i].GetY();
-        G(3 * i + 2, i + 3) = -directions[i].GetZ();
+        G(3 * i, i + 3) = - directions[i].GetX() * weights[i];
+        G(3 * i + 1, i + 3) = - directions[i].GetY() * weights[i];
+        G(3 * i + 2, i + 3) = - directions[i].GetZ() * weights[i];
     }
 
     if ((G.transpose() * G).determinant() < std::numeric_limits<float>::epsilon())
