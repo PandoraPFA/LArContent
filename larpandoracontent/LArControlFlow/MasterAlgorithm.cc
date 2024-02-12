@@ -50,6 +50,7 @@ MasterAlgorithm::MasterAlgorithm() :
     m_pSliceCRWorkerInstance(nullptr),
     m_fullWidthCRWorkerWireGaps(true),
     m_passMCParticlesToWorkerInstances(false),
+    m_passAllCaloHitsToWorkers(false),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_inTimeMaxX0(1.f)
 {
@@ -160,6 +161,9 @@ StatusCode MasterAlgorithm::Run()
     if (m_passMCParticlesToWorkerInstances)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles());
 
+    if (m_passAllCaloHitsToWorkers)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyAllCaloHits());
+
     PfoToFloatMap stitchedPfosToX0Map;
     VolumeIdToHitListMap volumeIdToHitListMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetVolumeIdToHitListMap(volumeIdToHitListMap));
@@ -255,6 +259,30 @@ StatusCode MasterAlgorithm::CopyMCParticles() const
     {
         for (const MCParticle *const pMCParticle : *pMCParticleList)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pPandoraWorker, pMCParticle, &mcParticleFactory));
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MasterAlgorithm::CopyAllCaloHits() const
+{
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "Input", pCaloHitList));
+
+    PandoraInstanceList pandoraWorkerInstances(m_crWorkerInstances);
+    if (m_pSlicingWorkerInstance)
+        pandoraWorkerInstances.push_back(m_pSlicingWorkerInstance);
+    if (m_pSliceNuWorkerInstance)
+        pandoraWorkerInstances.push_back(m_pSliceNuWorkerInstance);
+    if (m_pSliceCRWorkerInstance)
+        pandoraWorkerInstances.push_back(m_pSliceCRWorkerInstance);
+
+    for (const Pandora *const pPandoraWorker : pandoraWorkerInstances)
+    {
+        for (const CaloHit *const pCaloHit : *pCaloHitList)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pPandoraWorker, pCaloHit, true));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -644,7 +672,7 @@ StatusCode MasterAlgorithm::Reset()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *const pCaloHit) const
+StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *const pCaloHit, const bool ignoredHit) const
 {
     const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
     if (pLArCaloHit == nullptr)
@@ -654,6 +682,10 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
     }
     LArCaloHitParameters parameters;
     pLArCaloHit->FillParameters(parameters);
+
+    if (ignoredHit)
+        parameters.m_nCellInteractionLengths = -999.f;
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
     if (m_passMCParticlesToWorkerInstances)
@@ -1193,6 +1225,9 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "PassMCParticlesToWorkerInstances", m_passMCParticlesToWorkerInstances));
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "PassAllHitsToWorkerInstances", m_passAllCaloHitsToWorkers));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));

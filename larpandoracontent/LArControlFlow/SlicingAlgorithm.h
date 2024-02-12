@@ -20,6 +20,7 @@ namespace lar_content
 typedef std::map<pandora::HitType, std::string> HitTypeToNameMap;
 
 class EventSlicingBaseTool;
+class SliceMonitoringTool;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -46,6 +47,8 @@ private:
 
     std::string m_sliceClusterListName; ///< The name of the output slice cluster list
     std::string m_slicePfoListName;     ///< The name of the output slice pfo list
+
+    SliceMonitoringTool *m_pSliceMonitoringTool; ///< The address of the slice monitoring tool
 };
 
 } // namespace lar_content

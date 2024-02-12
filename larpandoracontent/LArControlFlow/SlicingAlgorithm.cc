@@ -11,13 +11,14 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArControlFlow/SlicingAlgorithm.h"
+#include "larpandoracontent/LArMonitoring/SliceMonitoringTool.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-SlicingAlgorithm::SlicingAlgorithm() : m_pEventSlicingTool(nullptr)
+SlicingAlgorithm::SlicingAlgorithm() : m_pEventSlicingTool(nullptr), m_pSliceMonitoringTool(nullptr)
 {
 }
 
@@ -28,6 +29,9 @@ StatusCode SlicingAlgorithm::Run()
     SliceList sliceList;
     m_pEventSlicingTool->RunSlicing(this, m_caloHitListNames, m_clusterListNames, sliceList);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_slicingListDeletionAlgorithm));
+
+    if (m_pSliceMonitoringTool != nullptr)
+        m_pSliceMonitoringTool->ProcessSlices(this, sliceList);
 
     if (sliceList.empty())
         return STATUS_CODE_SUCCESS;
@@ -120,6 +124,11 @@ StatusCode SlicingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListName", m_sliceClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_slicePfoListName));
+
+    AlgorithmTool *pAlgorithmTool2(nullptr);
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "MonitoringTool", pAlgorithmTool2));
+    m_pSliceMonitoringTool = dynamic_cast<SliceMonitoringTool *>(pAlgorithmTool2);
 
     return STATUS_CODE_SUCCESS;
 }
