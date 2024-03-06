@@ -53,7 +53,9 @@ void DeltaRayMatchingContainers::FillHitToClusterMap(const ClusterList &inputClu
 void DeltaRayMatchingContainers::AddToClusterMap(const Cluster *const pCluster)
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
-    HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
+    HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U)   ? m_hitToClusterMapU
+                                     : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV
+                                                               : m_hitToClusterMapW);
 
     CaloHitList caloHitList;
     pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
@@ -81,7 +83,9 @@ void DeltaRayMatchingContainers::FillClusterProximityMap(const ClusterList &inpu
 
 void DeltaRayMatchingContainers::BuildKDTree(const HitType hitType)
 {
-    const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
+    const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U)   ? m_hitToClusterMapU
+                                           : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV
+                                                                     : m_hitToClusterMapW);
     HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);
 
     CaloHitList allCaloHits;
@@ -100,10 +104,13 @@ void DeltaRayMatchingContainers::BuildKDTree(const HitType hitType)
 void DeltaRayMatchingContainers::AddToClusterProximityMap(const Cluster *const pCluster)
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
-    const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
+    const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U)   ? m_hitToClusterMapU
+                                           : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV
+                                                                     : m_hitToClusterMapW);
     HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);
-    ClusterProximityMap &clusterProximityMap(
-        (hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
+    ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U)   ? m_clusterProximityMapU
+                                             : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV
+                                                                       : m_clusterProximityMapW);
 
     CaloHitList caloHitList;
     pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
@@ -152,7 +159,9 @@ void DeltaRayMatchingContainers::AddClustersToPfoMaps(const ParticleFlowObject *
         ClusterList pfoClusters;
         LArPfoHelper::GetClusters(pPfo, hitType, pfoClusters);
 
-        ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
+        ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U)   ? m_clusterToPfoMapU
+                                         : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV
+                                                                   : m_clusterToPfoMapW);
 
         for (const Cluster *const pCluster : pfoClusters)
         {
@@ -188,10 +197,15 @@ void DeltaRayMatchingContainers::AddClustersToContainers(const ClusterVector &ne
 void DeltaRayMatchingContainers::RemoveClusterFromContainers(const Cluster *const pDeletedCluster)
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pDeletedCluster));
-    HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
-    ClusterProximityMap &clusterProximityMap(
-        (hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
-    ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
+    HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U)   ? m_hitToClusterMapU
+                                     : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV
+                                                               : m_hitToClusterMapW);
+    ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U)   ? m_clusterProximityMapU
+                                             : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV
+                                                                       : m_clusterProximityMapW);
+    ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U)   ? m_clusterToPfoMapU
+                                     : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV
+                                                               : m_clusterToPfoMapW);
 
     CaloHitList caloHitList;
     pDeletedCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);

@@ -15,10 +15,7 @@ namespace lar_content
 {
 
 MissingTrackTool::MissingTrackTool() :
-    m_minMatchedSamplingPoints(15),
-    m_minMatchedFraction(0.95f),
-    m_maxReducedChiSquared(0.707f),
-    m_minXOverlapFraction(0.75f)
+    m_minMatchedSamplingPoints(15), m_minMatchedFraction(0.95f), m_maxReducedChiSquared(0.707f), m_minXOverlapFraction(0.75f)
 {
 }
 

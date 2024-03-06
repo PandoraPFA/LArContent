@@ -19,10 +19,7 @@ namespace lar_content
 {
 
 ThreeViewLongitudinalTracksAlgorithm::ThreeViewLongitudinalTracksAlgorithm() :
-    m_nMaxTensorToolRepeats(1000),
-    m_vertexChi2Cut(10.f),
-    m_reducedChi2Cut(5.f),
-    m_samplingPitch(1.f)
+    m_nMaxTensorToolRepeats(1000), m_vertexChi2Cut(10.f), m_reducedChi2Cut(5.f), m_samplingPitch(1.f)
 {
 }
 

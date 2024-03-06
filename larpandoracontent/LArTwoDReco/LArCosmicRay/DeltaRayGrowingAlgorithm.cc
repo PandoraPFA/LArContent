@@ -19,10 +19,7 @@ namespace lar_content
 {
 
 DeltaRayGrowingAlgorithm::DeltaRayGrowingAlgorithm() :
-    m_minCaloHitsPerCluster(2),
-    m_minSeedClusterCaloHits(5),
-    m_maxSeedClusterLength(10.f),
-    m_maxSeedClusterDisplacement(1.5f)
+    m_minCaloHitsPerCluster(2), m_minSeedClusterCaloHits(5), m_maxSeedClusterLength(10.f), m_maxSeedClusterDisplacement(1.5f)
 {
 }
 

@@ -18,10 +18,7 @@ namespace lar_content
 {
 
 DeltaRaySplittingAlgorithm::DeltaRaySplittingAlgorithm() :
-    m_stepSize(1.f),
-    m_maxTransverseDisplacement(1.5f),
-    m_maxLongitudinalDisplacement(10.f),
-    m_minCosRelativeAngle(0.985f)
+    m_stepSize(1.f), m_maxTransverseDisplacement(1.5f), m_maxLongitudinalDisplacement(10.f), m_minCosRelativeAngle(0.985f)
 {
 }
 

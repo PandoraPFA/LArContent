@@ -335,9 +335,7 @@ inline void OverlapMatrix<T>::Clear()
 template <typename T>
 inline OverlapMatrix<T>::Element::Element(
     const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const OverlapResult &overlapResult) :
-    m_pCluster1(pCluster1),
-    m_pCluster2(pCluster2),
-    m_overlapResult(overlapResult)
+    m_pCluster1(pCluster1), m_pCluster2(pCluster2), m_overlapResult(overlapResult)
 {
 }
 

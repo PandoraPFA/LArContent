@@ -18,10 +18,7 @@ namespace lar_content
 {
 
 DeltaRayExtensionAlgorithm::DeltaRayExtensionAlgorithm() :
-    m_minClusterLength(1.f),
-    m_maxClusterLength(10.f),
-    m_maxLongitudinalDisplacement(2.5f),
-    m_maxTransverseDisplacement(1.5f)
+    m_minClusterLength(1.f), m_maxClusterLength(10.f), m_maxLongitudinalDisplacement(2.5f), m_maxTransverseDisplacement(1.5f)
 {
 }
 

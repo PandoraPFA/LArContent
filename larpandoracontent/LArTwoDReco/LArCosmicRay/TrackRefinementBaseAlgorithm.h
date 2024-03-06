@@ -322,9 +322,7 @@ protected:
 
 inline TrackRefinementBaseAlgorithm::SortByDistanceAlongLine::SortByDistanceAlongLine(
     const pandora::CartesianVector &startPoint, const pandora::CartesianVector &lineDirection, const bool hitWidthMode) :
-    m_startPoint(startPoint),
-    m_lineDirection(lineDirection.GetUnitVector()),
-    m_hitWidthMode(hitWidthMode)
+    m_startPoint(startPoint), m_lineDirection(lineDirection.GetUnitVector()), m_hitWidthMode(hitWidthMode)
 {
 }
 

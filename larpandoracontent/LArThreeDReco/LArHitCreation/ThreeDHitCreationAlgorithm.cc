@@ -284,17 +284,14 @@ void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult
         if (protoHit.GetNTrajectorySamples() == 2)
         {
             u = (TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                        : (TPC_VIEW_U == protoHit.GetFirstTrajectorySample().GetHitType())
-                                              ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
-                                              : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+                : (TPC_VIEW_U == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
+                                                                                   : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
             v = (TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                        : (TPC_VIEW_V == protoHit.GetFirstTrajectorySample().GetHitType())
-                                              ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
-                                              : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+                : (TPC_VIEW_V == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
+                                                                                   : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
             w = (TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                        : (TPC_VIEW_W == protoHit.GetFirstTrajectorySample().GetHitType())
-                                              ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
-                                              : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+                : (TPC_VIEW_W == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
+                                                                                   : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
         }
         else if (protoHit.GetNTrajectorySamples() == 1)
         {

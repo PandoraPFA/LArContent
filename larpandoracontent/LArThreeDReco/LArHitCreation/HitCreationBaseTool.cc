@@ -83,12 +83,15 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
     CartesianVector position3D(0.f, 0.f, 0.f);
     double chi2(std::numeric_limits<double>::max());
 
-    const double u((TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                           : (TPC_VIEW_U == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
-    const double v((TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                           : (TPC_VIEW_V == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
-    const double w((TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                           : (TPC_VIEW_W == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+    const double u((TPC_VIEW_U == hitType)    ? pCaloHit2D->GetPositionVector().GetZ()
+                   : (TPC_VIEW_U == hitType1) ? fitPosition1.GetZ()
+                                              : fitPosition2.GetZ());
+    const double v((TPC_VIEW_V == hitType)    ? pCaloHit2D->GetPositionVector().GetZ()
+                   : (TPC_VIEW_V == hitType1) ? fitPosition1.GetZ()
+                                              : fitPosition2.GetZ());
+    const double w((TPC_VIEW_W == hitType)    ? pCaloHit2D->GetPositionVector().GetZ()
+                   : (TPC_VIEW_W == hitType1) ? fitPosition1.GetZ()
+                                              : fitPosition2.GetZ());
 
     const double sigmaU((TPC_VIEW_U == hitType) ? sigmaHit : sigmaFit);
     const double sigmaV((TPC_VIEW_V == hitType) ? sigmaHit : sigmaFit);

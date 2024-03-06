@@ -296,10 +296,7 @@ void VertexBasedPfoMopUpAlgorithm::MergePfos(const PfoAssociation &pfoAssociatio
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 VertexBasedPfoMopUpAlgorithm::ClusterAssociation::ClusterAssociation() :
-    m_pVertexCluster(nullptr),
-    m_pDaughterCluster(nullptr),
-    m_boundedFraction(0.f),
-    m_isConsistentDirection(false)
+    m_pVertexCluster(nullptr), m_pDaughterCluster(nullptr), m_boundedFraction(0.f), m_isConsistentDirection(false)
 {
 }
 
@@ -307,10 +304,7 @@ VertexBasedPfoMopUpAlgorithm::ClusterAssociation::ClusterAssociation() :
 
 VertexBasedPfoMopUpAlgorithm::ClusterAssociation::ClusterAssociation(const Cluster *const pVertexCluster,
     const Cluster *const pDaughterCluster, const float boundedFraction, const bool isConsistentDirection) :
-    m_pVertexCluster(pVertexCluster),
-    m_pDaughterCluster(pDaughterCluster),
-    m_boundedFraction(boundedFraction),
-    m_isConsistentDirection(isConsistentDirection)
+    m_pVertexCluster(pVertexCluster), m_pDaughterCluster(pDaughterCluster), m_boundedFraction(boundedFraction), m_isConsistentDirection(isConsistentDirection)
 {
 }
 
@@ -388,11 +382,7 @@ bool VertexBasedPfoMopUpAlgorithm::PfoAssociation::operator<(const PfoAssociatio
 
 VertexBasedPfoMopUpAlgorithm::ConeParameters::ConeParameters(
     const Cluster *const pCluster, const CartesianVector &vertexPosition2D, const float coneAngleCentile, const float maxCosHalfAngle) :
-    m_pCluster(pCluster),
-    m_apex(vertexPosition2D),
-    m_direction(0.f, 0.f, 0.f),
-    m_coneLength(0.f),
-    m_coneCosHalfAngle(0.f)
+    m_pCluster(pCluster), m_apex(vertexPosition2D), m_direction(0.f, 0.f, 0.f), m_coneLength(0.f), m_coneCosHalfAngle(0.f)
 {
     m_direction = this->GetDirectionEstimate();
     m_coneLength = this->GetSignedConeLength();

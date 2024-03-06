@@ -113,9 +113,9 @@ void ShowerStartFinderTool::ObtainLongitudinalDecomposition(const TwoDSlidingFit
         spineTwoDSlidingFit.GetGlobalPosition(layerFitResultMap.at(middleLayer).GetL(), layerFitResultMap.at(middleLayer).GetFitT(), middleLayerPosition);
         spineTwoDSlidingFit.GetGlobalPosition(layerFitResultMap.at(higherLayer).GetL(), layerFitResultMap.at(higherLayer).GetFitT(), higherLayerPosition);
 
-        const float layerLength = std::next(iter) == layerToHitMap.end()
-                                      ? 0.f
-                                      : iter == layerToHitMap.begin() ? 0.f : (middleLayerPosition - lowerLayerPosition).GetMagnitude();
+        const float layerLength = std::next(iter) == layerToHitMap.end() ? 0.f
+                                  : iter == layerToHitMap.begin()        ? 0.f
+                                                                         : (middleLayerPosition - lowerLayerPosition).GetMagnitude();
 
         for (const CaloHit *const pCaloHit : iter->second)
         {

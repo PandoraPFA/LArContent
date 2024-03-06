@@ -22,10 +22,7 @@ namespace lar_content
 {
 
 CosmicRayTaggingMonitoringTool::CosmicRayTaggingMonitoringTool() :
-    m_minHitsToConsiderTagging(15),
-    m_minPurity(0.95),
-    m_minImpurity(0.95),
-    m_minSignificance(0.1)
+    m_minHitsToConsiderTagging(15), m_minPurity(0.95), m_minImpurity(0.95), m_minSignificance(0.1)
 {
 }
 

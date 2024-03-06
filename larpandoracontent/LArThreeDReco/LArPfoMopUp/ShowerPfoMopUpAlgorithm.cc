@@ -22,9 +22,7 @@ namespace lar_content
 {
 
 ShowerPfoMopUpAlgorithm::ShowerPfoMopUpAlgorithm() :
-    VertexBasedPfoMopUpAlgorithm(),
-    m_maxVertexLongitudinalDistance(20.f),
-    m_vertexAngularAllowance(3.f)
+    VertexBasedPfoMopUpAlgorithm(), m_maxVertexLongitudinalDistance(20.f), m_vertexAngularAllowance(3.f)
 {
     // ATTN Some default values differ from base class
     m_maxVertexTransverseDistance = 3.5f;

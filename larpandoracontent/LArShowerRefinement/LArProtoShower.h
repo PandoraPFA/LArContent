@@ -57,8 +57,7 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ShowerCore::ShowerCore(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection) :
-    m_startPosition(startPosition),
-    m_startDirection(startDirection)
+    m_startPosition(startPosition), m_startDirection(startDirection)
 {
 }
 
@@ -128,8 +127,7 @@ typedef std::vector<ConnectionPathway> ConnectionPathwayVector;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ConnectionPathway::ConnectionPathway(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection) :
-    m_startPosition(startPosition),
-    m_startDirection(startDirection)
+    m_startPosition(startPosition), m_startDirection(startDirection)
 {
 }
 
@@ -448,10 +446,7 @@ typedef std::vector<ProtoShowerMatch> ProtoShowerMatchVector;
 
 inline ProtoShowerMatch::ProtoShowerMatch(
     const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const Consistency consistencyType) :
-    m_protoShowerU(protoShowerU),
-    m_protoShowerV(protoShowerV),
-    m_protoShowerW(protoShowerW),
-    m_consistencyType(consistencyType)
+    m_protoShowerU(protoShowerU), m_protoShowerV(protoShowerV), m_protoShowerW(protoShowerW), m_consistencyType(consistencyType)
 {
 }
 

@@ -411,10 +411,7 @@ inline void OverlapTensor<T>::Clear()
 template <typename T>
 inline OverlapTensor<T>::Element::Element(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV,
     const pandora::Cluster *const pClusterW, const OverlapResult &overlapResult) :
-    m_pClusterU(pClusterU),
-    m_pClusterV(pClusterV),
-    m_pClusterW(pClusterW),
-    m_overlapResult(overlapResult)
+    m_pClusterU(pClusterU), m_pClusterV(pClusterV), m_pClusterW(pClusterW), m_overlapResult(overlapResult)
 {
 }
 

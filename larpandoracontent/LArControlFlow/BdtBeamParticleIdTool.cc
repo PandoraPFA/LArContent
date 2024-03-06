@@ -351,9 +351,7 @@ void BdtBeamParticleIdTool::SelectPfosByAdaBDTScore(const pandora::Algorithm *co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 BdtBeamParticleIdTool::Plane::Plane(const CartesianVector &normal, const CartesianVector &point) :
-    m_unitNormal(0.f, 0.f, 0.f),
-    m_point(point),
-    m_d(-1. * static_cast<double>(normal.GetDotProduct(point)))
+    m_unitNormal(0.f, 0.f, 0.f), m_point(point), m_d(-1. * static_cast<double>(normal.GetDotProduct(point)))
 {
     try
     {
@@ -431,8 +429,7 @@ void BdtBeamParticleIdTool::SliceFeatureParameters::Initialize(const float larTP
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 BdtBeamParticleIdTool::SliceFeatures::SliceFeatures(const PfoList &pfosNu, const PfoList &pfosCr, const SliceFeatureParameters &sliceFeatureParameters) :
-    m_isAvailable(false),
-    m_sliceFeatureParameters(sliceFeatureParameters)
+    m_isAvailable(false), m_sliceFeatureParameters(sliceFeatureParameters)
 {
     try
     {

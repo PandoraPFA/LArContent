@@ -122,13 +122,7 @@ XOverlap operator+(const XOverlap &lhs, const XOverlap &rhs);
 
 inline XOverlap::XOverlap(const float uMinX, const float uMaxX, const float vMinX, const float vMaxX, const float wMinX, const float wMaxX,
     const float xOverlapSpan) :
-    m_uMinX(uMinX),
-    m_uMaxX(uMaxX),
-    m_vMinX(vMinX),
-    m_vMaxX(vMaxX),
-    m_wMinX(wMinX),
-    m_wMaxX(wMaxX),
-    m_xOverlapSpan(xOverlapSpan)
+    m_uMinX(uMinX), m_uMaxX(uMaxX), m_vMinX(vMinX), m_vMaxX(vMaxX), m_wMinX(wMinX), m_wMaxX(wMaxX), m_xOverlapSpan(xOverlapSpan)
 {
 }
 

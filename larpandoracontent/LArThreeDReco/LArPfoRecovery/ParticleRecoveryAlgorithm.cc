@@ -85,7 +85,9 @@ void ParticleRecoveryAlgorithm::GetInputClusters(ClusterList &inputClusterListU,
             if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-            ClusterList &clusterList((TPC_VIEW_U == hitType) ? inputClusterListU : (TPC_VIEW_V == hitType) ? inputClusterListV : inputClusterListW);
+            ClusterList &clusterList((TPC_VIEW_U == hitType)   ? inputClusterListU
+                                     : (TPC_VIEW_V == hitType) ? inputClusterListV
+                                                               : inputClusterListW);
             clusterList.push_back(pCluster);
         }
     }
@@ -458,8 +460,9 @@ void ParticleRecoveryAlgorithm::SimpleOverlapTensor::GetConnectedElements(const 
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     ClusterList &clusterList((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
-    const ClusterNavigationMap &navigationMap(
-        (TPC_VIEW_U == hitType) ? m_clusterNavigationMapUV : (TPC_VIEW_V == hitType) ? m_clusterNavigationMapVW : m_clusterNavigationMapWU);
+    const ClusterNavigationMap &navigationMap((TPC_VIEW_U == hitType)   ? m_clusterNavigationMapUV
+                                              : (TPC_VIEW_V == hitType) ? m_clusterNavigationMapVW
+                                                                        : m_clusterNavigationMapWU);
 
     if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pCluster))
         return;

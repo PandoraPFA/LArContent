@@ -20,10 +20,7 @@ namespace lar_content
 {
 
 PeakDirectionFinderTool::PeakDirectionFinderTool() :
-    m_pathwaySearchRegion(10.f),
-    m_theta0XZBinSize(0.005f),
-    m_smoothingWindow(1),
-    m_ambiguousParticleMode(false)
+    m_pathwaySearchRegion(10.f), m_theta0XZBinSize(0.005f), m_smoothingWindow(1), m_ambiguousParticleMode(false)
 {
 }
 
@@ -207,15 +204,17 @@ void PeakDirectionFinderTool::RetrievePeakDirections(const AngularDecompositionM
 
     // Order peak bin vector from highest to lowest bin height
     // Tie-break: highest index wins
-    std::sort(orderedBinIndexVector.begin(), orderedBinIndexVector.end(), [&angularDecompositionMap](const int a, const int b) -> bool {
-        const float aWeight(angularDecompositionMap.at(a));
-        const float bWeight(angularDecompositionMap.at(b));
+    std::sort(orderedBinIndexVector.begin(), orderedBinIndexVector.end(),
+        [&angularDecompositionMap](const int a, const int b) -> bool
+        {
+            const float aWeight(angularDecompositionMap.at(a));
+            const float bWeight(angularDecompositionMap.at(b));
 
-        if (std::fabs(aWeight - bWeight) < std::numeric_limits<float>::epsilon())
-            return a > b;
-        else
-            return aWeight > bWeight;
-    });
+            if (std::fabs(aWeight - bWeight) < std::numeric_limits<float>::epsilon())
+                return a > b;
+            else
+                return aWeight > bWeight;
+        });
 
     for (int binIndex : orderedBinIndexVector)
     {

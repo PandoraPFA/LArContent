@@ -200,16 +200,14 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LArTrackTrajectoryPoint::LArTrackTrajectoryPoint(const float projectedDistance, const LArTrackState &larTrackState) :
-    std::pair<float, LArTrackState>(projectedDistance, larTrackState),
-    m_index(-1)
+    std::pair<float, LArTrackState>(projectedDistance, larTrackState), m_index(-1)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LArTrackTrajectoryPoint::LArTrackTrajectoryPoint(const float projectedDistance, const LArTrackState &larTrackState, const int index) :
-    std::pair<float, LArTrackState>(projectedDistance, larTrackState),
-    m_index(index)
+    std::pair<float, LArTrackState>(projectedDistance, larTrackState), m_index(index)
 {
 }
 

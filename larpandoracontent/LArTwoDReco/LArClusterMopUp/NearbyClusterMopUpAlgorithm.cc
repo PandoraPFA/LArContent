@@ -19,10 +19,7 @@ namespace lar_content
 {
 
 NearbyClusterMopUpAlgorithm::NearbyClusterMopUpAlgorithm() :
-    m_minHitsInCluster(5),
-    m_vertexProximity(5.f),
-    m_minClusterSeparation(2.5f),
-    m_touchingDistance(0.001f)
+    m_minHitsInCluster(5), m_vertexProximity(5.f), m_minClusterSeparation(2.5f), m_touchingDistance(0.001f)
 {
 }
 

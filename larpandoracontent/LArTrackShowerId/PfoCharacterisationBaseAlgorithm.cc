@@ -21,10 +21,7 @@ namespace lar_content
 {
 
 PfoCharacterisationBaseAlgorithm::PfoCharacterisationBaseAlgorithm() :
-    m_updateClusterIds(true),
-    m_postBranchAddition(false),
-    m_useThreeDInformation(true),
-    m_minTrackLikeViews(2)
+    m_updateClusterIds(true), m_postBranchAddition(false), m_useThreeDInformation(true), m_minTrackLikeViews(2)
 {
 }
 

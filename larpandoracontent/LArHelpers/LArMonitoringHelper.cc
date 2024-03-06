@@ -54,7 +54,8 @@ void LArMonitoringHelper::GetOrderedMCParticleVector(
 
         // Sort by number of hits descending
         std::sort(mcParticleToGoodHitsVect.begin(), mcParticleToGoodHitsVect.end(),
-            [](const LArMCParticleHelper::MCParticleCaloHitListPair &a, const LArMCParticleHelper::MCParticleCaloHitListPair &b) -> bool {
+            [](const LArMCParticleHelper::MCParticleCaloHitListPair &a, const LArMCParticleHelper::MCParticleCaloHitListPair &b) -> bool
+            {
                 // Neutrinos, then beam particles, then cosmic rays
                 const bool isANuFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(a.first)),
                     isBNuFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(b.first));
@@ -96,7 +97,8 @@ void LArMonitoringHelper::GetOrderedPfoVector(const LArMCParticleHelper::PfoCont
 
     // Sort by number of hits descending putting neutrino final states first
     std::sort(pfoToReconstructable2DHitsVect.begin(), pfoToReconstructable2DHitsVect.end(),
-        [](const LArMCParticleHelper::PfoCaloHitListPair &a, const LArMCParticleHelper::PfoCaloHitListPair &b) -> bool {
+        [](const LArMCParticleHelper::PfoCaloHitListPair &a, const LArMCParticleHelper::PfoCaloHitListPair &b) -> bool
+        {
             // Neutrinos before cosmic rays
             const bool isANuFinalState(LArPfoHelper::IsNeutrinoFinalState(a.first)), isBNuFinalState(LArPfoHelper::IsNeutrinoFinalState(b.first));
 

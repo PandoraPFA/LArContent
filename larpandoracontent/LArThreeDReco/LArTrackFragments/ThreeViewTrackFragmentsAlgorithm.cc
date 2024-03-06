@@ -51,8 +51,9 @@ void ThreeViewTrackFragmentsAlgorithm::UpdateForNewCluster(const Cluster *const 
 
     // ATTN This is non-standard usage, supported here only (for legacy purposes)
     MatchingType &matchingControl(this->GetMatchingControl());
-    ClusterList &clusterList((TPC_VIEW_U == hitType) ? matchingControl.m_clusterListU
-                                                     : (TPC_VIEW_V == hitType) ? matchingControl.m_clusterListV : matchingControl.m_clusterListW);
+    ClusterList &clusterList((TPC_VIEW_U == hitType)   ? matchingControl.m_clusterListU
+                             : (TPC_VIEW_V == hitType) ? matchingControl.m_clusterListV
+                                                       : matchingControl.m_clusterListW);
 
     if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pNewCluster))
         throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -146,11 +147,10 @@ void ThreeViewTrackFragmentsAlgorithm::PerformMainLoop()
 
 void ThreeViewTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
-    const HitType missingHitType(((nullptr != pClusterU) && (nullptr != pClusterV) && (nullptr == pClusterW))
-                                     ? TPC_VIEW_W
-                                     : ((nullptr != pClusterU) && (nullptr == pClusterV) && (nullptr != pClusterW))
-                                           ? TPC_VIEW_V
-                                           : ((nullptr == pClusterU) && (nullptr != pClusterV) && (nullptr != pClusterW)) ? TPC_VIEW_U : HIT_CUSTOM);
+    const HitType missingHitType(((nullptr != pClusterU) && (nullptr != pClusterV) && (nullptr == pClusterW))   ? TPC_VIEW_W
+                                 : ((nullptr != pClusterU) && (nullptr == pClusterV) && (nullptr != pClusterW)) ? TPC_VIEW_V
+                                 : ((nullptr == pClusterU) && (nullptr != pClusterV) && (nullptr != pClusterW)) ? TPC_VIEW_U
+                                                                                                                : HIT_CUSTOM);
 
     if (HIT_CUSTOM == missingHitType)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -162,10 +162,9 @@ void ThreeViewTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *con
     const TwoDSlidingFitResult &fitResult1(
         (TPC_VIEW_U == missingHitType) ? this->GetCachedSlidingFitResult(pClusterV) : this->GetCachedSlidingFitResult(pClusterU));
 
-    const TwoDSlidingFitResult &fitResult2(
-        (TPC_VIEW_U == missingHitType)
-            ? this->GetCachedSlidingFitResult(pClusterW)
-            : (TPC_VIEW_V == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW) : this->GetCachedSlidingFitResult(pClusterV));
+    const TwoDSlidingFitResult &fitResult2((TPC_VIEW_U == missingHitType)   ? this->GetCachedSlidingFitResult(pClusterW)
+                                           : (TPC_VIEW_V == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW)
+                                                                            : this->GetCachedSlidingFitResult(pClusterV));
 
     const ClusterList &inputClusterList(this->GetInputClusterList(missingHitType));
 
@@ -279,11 +278,10 @@ StatusCode ThreeViewTrackFragmentsAlgorithm::GetProjectedPositions(
     // Check hit types
     const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
     const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
-    const HitType hitType3((TPC_VIEW_U != hitType1 && TPC_VIEW_U != hitType2)
-                               ? TPC_VIEW_U
-                               : (TPC_VIEW_V != hitType1 && TPC_VIEW_V != hitType2)
-                                     ? TPC_VIEW_V
-                                     : (TPC_VIEW_W != hitType1 && TPC_VIEW_W != hitType2) ? TPC_VIEW_W : HIT_CUSTOM);
+    const HitType hitType3((TPC_VIEW_U != hitType1 && TPC_VIEW_U != hitType2)   ? TPC_VIEW_U
+                           : (TPC_VIEW_V != hitType1 && TPC_VIEW_V != hitType2) ? TPC_VIEW_V
+                           : (TPC_VIEW_W != hitType1 && TPC_VIEW_W != hitType2) ? TPC_VIEW_W
+                                                                                : HIT_CUSTOM);
 
     if (HIT_CUSTOM == hitType3)
         return STATUS_CODE_INVALID_PARAMETER;

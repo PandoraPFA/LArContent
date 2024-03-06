@@ -14,9 +14,7 @@ namespace lar_content
 {
 
 LArHitWidthHelper::ConstituentHit::ConstituentHit(const CartesianVector &positionVector, const float hitWidth, const Cluster *const pParentClusterAddress) :
-    m_positionVector(positionVector),
-    m_hitWidth(hitWidth),
-    m_pParentClusterAddress(pParentClusterAddress)
+    m_positionVector(positionVector), m_hitWidth(hitWidth), m_pParentClusterAddress(pParentClusterAddress)
 {
 }
 

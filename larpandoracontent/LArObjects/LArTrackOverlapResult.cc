@@ -18,12 +18,7 @@ namespace lar_content
 {
 
 TrackOverlapResult::TrackOverlapResult() :
-    m_isInitialized(false),
-    m_nMatchedSamplingPoints(0),
-    m_nSamplingPoints(0),
-    m_matchedFraction(0.f),
-    m_chi2(0.f),
-    m_reducedChi2(0.f)
+    m_isInitialized(false), m_nMatchedSamplingPoints(0), m_nSamplingPoints(0), m_matchedFraction(0.f), m_chi2(0.f), m_reducedChi2(0.f)
 {
 }
 
@@ -125,16 +120,14 @@ TransverseOverlapResult::TransverseOverlapResult() : TrackOverlapResult(), m_xOv
 
 TransverseOverlapResult::TransverseOverlapResult(
     const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2, const XOverlap &xOverlap) :
-    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
-    m_xOverlap(xOverlap)
+    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2), m_xOverlap(xOverlap)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TransverseOverlapResult::TransverseOverlapResult(const TransverseOverlapResult &rhs) :
-    TrackOverlapResult(rhs),
-    m_xOverlap(rhs.IsInitialized() ? rhs.GetXOverlap() : XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
+    TrackOverlapResult(rhs), m_xOverlap(rhs.IsInitialized() ? rhs.GetXOverlap() : XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
 {
 }
 
@@ -189,9 +182,7 @@ LongitudinalOverlapResult::LongitudinalOverlapResult() : TrackOverlapResult(), m
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LongitudinalOverlapResult::LongitudinalOverlapResult(const TrackOverlapResult trackOverlapResult, const float innerChi2, const float outerChi2) :
-    TrackOverlapResult(trackOverlapResult),
-    m_innerChi2(innerChi2),
-    m_outerChi2(outerChi2)
+    TrackOverlapResult(trackOverlapResult), m_innerChi2(innerChi2), m_outerChi2(outerChi2)
 {
 }
 
@@ -199,18 +190,14 @@ LongitudinalOverlapResult::LongitudinalOverlapResult(const TrackOverlapResult tr
 
 LongitudinalOverlapResult::LongitudinalOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
     const float chi2, const float innerChi2, const float outerChi2) :
-    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
-    m_innerChi2(innerChi2),
-    m_outerChi2(outerChi2)
+    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2), m_innerChi2(innerChi2), m_outerChi2(outerChi2)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LongitudinalOverlapResult::LongitudinalOverlapResult(const LongitudinalOverlapResult &rhs) :
-    TrackOverlapResult(rhs),
-    m_innerChi2(rhs.IsInitialized() ? rhs.GetInnerChi2() : 0.f),
-    m_outerChi2(rhs.IsInitialized() ? rhs.GetOuterChi2() : 0.f)
+    TrackOverlapResult(rhs), m_innerChi2(rhs.IsInitialized() ? rhs.GetInnerChi2() : 0.f), m_outerChi2(rhs.IsInitialized() ? rhs.GetOuterChi2() : 0.f)
 {
 }
 
@@ -241,9 +228,7 @@ FragmentOverlapResult::FragmentOverlapResult() : TrackOverlapResult(), m_caloHit
 
 FragmentOverlapResult::FragmentOverlapResult(
     const TrackOverlapResult trackOverlapResult, const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList) :
-    TrackOverlapResult(trackOverlapResult),
-    m_caloHitList(caloHitList),
-    m_clusterList(clusterList)
+    TrackOverlapResult(trackOverlapResult), m_caloHitList(caloHitList), m_clusterList(clusterList)
 {
 }
 
@@ -251,9 +236,7 @@ FragmentOverlapResult::FragmentOverlapResult(
 
 FragmentOverlapResult::FragmentOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
     const float chi2, const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList) :
-    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
-    m_caloHitList(caloHitList),
-    m_clusterList(clusterList)
+    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2), m_caloHitList(caloHitList), m_clusterList(clusterList)
 {
 }
 
@@ -304,16 +287,14 @@ DeltaRayOverlapResult::DeltaRayOverlapResult() : TransverseOverlapResult(), m_co
 
 DeltaRayOverlapResult::DeltaRayOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
     const float chi2, const XOverlap &xOverlap, const PfoList &commonMuonPfoList) :
-    TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2, xOverlap),
-    m_commonMuonPfoList(commonMuonPfoList)
+    TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2, xOverlap), m_commonMuonPfoList(commonMuonPfoList)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 DeltaRayOverlapResult::DeltaRayOverlapResult(const DeltaRayOverlapResult &rhs) :
-    TransverseOverlapResult(rhs),
-    m_commonMuonPfoList(rhs.GetCommonMuonPfoList())
+    TransverseOverlapResult(rhs), m_commonMuonPfoList(rhs.GetCommonMuonPfoList())
 {
 }
 

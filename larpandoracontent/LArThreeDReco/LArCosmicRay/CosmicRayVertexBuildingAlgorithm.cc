@@ -20,10 +20,7 @@ namespace lar_content
 {
 
 CosmicRayVertexBuildingAlgorithm::CosmicRayVertexBuildingAlgorithm() :
-    m_useParentShowerVertex(false),
-    m_isDualPhase(false),
-    m_halfWindowLayers(30),
-    m_maxVertexDisplacementFromTrack(1.f)
+    m_useParentShowerVertex(false), m_isDualPhase(false), m_halfWindowLayers(30), m_maxVertexDisplacementFromTrack(1.f)
 {
 }
 

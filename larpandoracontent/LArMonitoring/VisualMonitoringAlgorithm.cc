@@ -43,7 +43,9 @@ VisualMonitoringAlgorithm::VisualMonitoringAlgorithm() :
 StatusCode VisualMonitoringAlgorithm::Run()
 {
     PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), m_showDetector,
-        (m_detectorView.find("xz") != std::string::npos) ? DETECTOR_VIEW_XZ : (m_detectorView.find("xy") != std::string::npos) ? DETECTOR_VIEW_XY : DETECTOR_VIEW_DEFAULT,
+        (m_detectorView.find("xz") != std::string::npos)   ? DETECTOR_VIEW_XZ
+        : (m_detectorView.find("xy") != std::string::npos) ? DETECTOR_VIEW_XY
+                                                           : DETECTOR_VIEW_DEFAULT,
         m_transparencyThresholdE, m_energyScaleThresholdE, m_scalingFactor));
 
     // Show current mc particles
@@ -279,9 +281,10 @@ void VisualMonitoringAlgorithm::VisualizeClusterList(const std::string &listName
     }
 
     PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, listName.empty() ? "CurrentClusters" : listName.c_str(),
-        (m_hitColors.find("particleid") != std::string::npos)
-            ? AUTOID
-            : (m_hitColors.find("iterate") != std::string::npos) ? AUTOITER : (m_hitColors.find("energy") != std::string::npos) ? AUTOENERGY : AUTO,
+        (m_hitColors.find("particleid") != std::string::npos) ? AUTOID
+        : (m_hitColors.find("iterate") != std::string::npos)  ? AUTOITER
+        : (m_hitColors.find("energy") != std::string::npos)   ? AUTOENERGY
+                                                              : AUTO,
         m_showAssociatedTracks));
 }
 

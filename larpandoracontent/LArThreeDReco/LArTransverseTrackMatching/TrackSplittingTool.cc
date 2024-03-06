@@ -108,10 +108,9 @@ void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementLi
         const XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
         const float longSpan(std::max(xOverlap.GetXSpanU(), std::max(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
         const float shortSpan1(std::min(xOverlap.GetXSpanU(), std::min(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
-        const float shortSpan2(
-            ((xOverlap.GetXSpanU() > shortSpan1) && (xOverlap.GetXSpanU() < longSpan))
-                ? xOverlap.GetXSpanU()
-                : ((xOverlap.GetXSpanV() > shortSpan1) && (xOverlap.GetXSpanV() < longSpan)) ? xOverlap.GetXSpanV() : xOverlap.GetXSpanW());
+        const float shortSpan2(((xOverlap.GetXSpanU() > shortSpan1) && (xOverlap.GetXSpanU() < longSpan))   ? xOverlap.GetXSpanU()
+                               : ((xOverlap.GetXSpanV() > shortSpan1) && (xOverlap.GetXSpanV() < longSpan)) ? xOverlap.GetXSpanV()
+                                                                                                            : xOverlap.GetXSpanW());
 
         if ((shortSpan1 < std::numeric_limits<float>::epsilon()) || (longSpan < std::numeric_limits<float>::epsilon()))
             continue;
@@ -231,22 +230,25 @@ TrackSplittingTool::Particle::Particle(const TensorType::Element &element)
 {
     const XOverlap &xOverlap(element.GetOverlapResult().GetXOverlap());
 
-    const HitType longHitType =
-        ((xOverlap.GetXSpanU() > xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() > xOverlap.GetXSpanW()))
-            ? TPC_VIEW_U
-            : ((xOverlap.GetXSpanV() > xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() > xOverlap.GetXSpanW()))
-                  ? TPC_VIEW_V
-                  : ((xOverlap.GetXSpanW() > xOverlap.GetXSpanU()) && (xOverlap.GetXSpanW() > xOverlap.GetXSpanV())) ? TPC_VIEW_W : HIT_CUSTOM;
+    const HitType longHitType = ((xOverlap.GetXSpanU() > xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() > xOverlap.GetXSpanW())) ? TPC_VIEW_U
+                                : ((xOverlap.GetXSpanV() > xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() > xOverlap.GetXSpanW())) ? TPC_VIEW_V
+                                : ((xOverlap.GetXSpanW() > xOverlap.GetXSpanU()) && (xOverlap.GetXSpanW() > xOverlap.GetXSpanV())) ? TPC_VIEW_W
+                                                                                                                                   : HIT_CUSTOM;
 
     if (HIT_CUSTOM == longHitType)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    m_pLongCluster =
-        (TPC_VIEW_U == longHitType) ? element.GetClusterU() : (TPC_VIEW_V == longHitType) ? element.GetClusterV() : element.GetClusterW();
+    m_pLongCluster = (TPC_VIEW_U == longHitType)   ? element.GetClusterU()
+                     : (TPC_VIEW_V == longHitType) ? element.GetClusterV()
+                                                   : element.GetClusterW();
     m_pCluster1 = (TPC_VIEW_U == longHitType) ? element.GetClusterV() : element.GetClusterU();
     m_pCluster2 = (TPC_VIEW_W == longHitType) ? element.GetClusterV() : element.GetClusterW();
-    m_longMinX = (TPC_VIEW_U == longHitType) ? xOverlap.GetUMinX() : (TPC_VIEW_V == longHitType) ? xOverlap.GetVMinX() : xOverlap.GetWMinX();
-    m_longMaxX = (TPC_VIEW_U == longHitType) ? xOverlap.GetUMaxX() : (TPC_VIEW_V == longHitType) ? xOverlap.GetVMaxX() : xOverlap.GetWMaxX();
+    m_longMinX = (TPC_VIEW_U == longHitType)   ? xOverlap.GetUMinX()
+                 : (TPC_VIEW_V == longHitType) ? xOverlap.GetVMinX()
+                                               : xOverlap.GetWMinX();
+    m_longMaxX = (TPC_VIEW_U == longHitType)   ? xOverlap.GetUMaxX()
+                 : (TPC_VIEW_V == longHitType) ? xOverlap.GetVMaxX()
+                                               : xOverlap.GetWMaxX();
     m_short1MinX = (TPC_VIEW_U == longHitType) ? xOverlap.GetVMinX() : xOverlap.GetUMinX();
     m_short1MaxX = (TPC_VIEW_U == longHitType) ? xOverlap.GetVMaxX() : xOverlap.GetUMaxX();
     m_short2MinX = (TPC_VIEW_W == longHitType) ? xOverlap.GetVMinX() : xOverlap.GetWMinX();

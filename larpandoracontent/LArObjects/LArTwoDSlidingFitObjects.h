@@ -293,10 +293,7 @@ typedef std::vector<FitSegment> FitSegmentList;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LayerFitResult::LayerFitResult(const double l, const double fitT, const double gradient, const double rms) :
-    m_l(l),
-    m_fitT(fitT),
-    m_gradient(gradient),
-    m_rms(rms)
+    m_l(l), m_fitT(fitT), m_gradient(gradient), m_rms(rms)
 {
 }
 
@@ -403,11 +400,7 @@ inline LayerInterpolation::LayerInterpolation() : m_isInitialized(false), m_star
 
 inline LayerInterpolation::LayerInterpolation(const LayerFitResultMap::const_iterator &startLayerIter,
     const LayerFitResultMap::const_iterator &endLayerIter, const double startLayerWeight, const double endLayerWeight) :
-    m_isInitialized(true),
-    m_startLayerIter(startLayerIter),
-    m_endLayerIter(endLayerIter),
-    m_startLayerWeight(startLayerWeight),
-    m_endLayerWeight(endLayerWeight)
+    m_isInitialized(true), m_startLayerIter(startLayerIter), m_endLayerIter(endLayerIter), m_startLayerWeight(startLayerWeight), m_endLayerWeight(endLayerWeight)
 {
 }
 
@@ -462,8 +455,7 @@ inline double LayerInterpolation::GetEndLayerWeight() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline FitSegment::FitSegment(const int startLayer, const int endLayer, const double startX, const double endX) :
-    m_startLayer(startLayer),
-    m_endLayer(endLayer)
+    m_startLayer(startLayer), m_endLayer(endLayer)
 {
     m_minX = std::min(startX, endX);
     m_maxX = std::max(startX, endX);

@@ -109,7 +109,9 @@ void CandidateVertexCreationAlgorithm::SelectClusters(ClusterVector &clusterVect
         if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        ClusterVector &selectedClusterVector((TPC_VIEW_U == hitType) ? clusterVectorU : (TPC_VIEW_V == hitType) ? clusterVectorV : clusterVectorW);
+        ClusterVector &selectedClusterVector((TPC_VIEW_U == hitType)   ? clusterVectorU
+                                             : (TPC_VIEW_V == hitType) ? clusterVectorV
+                                                                       : clusterVectorW);
 
         if (!selectedClusterVector.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);

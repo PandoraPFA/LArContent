@@ -255,9 +255,7 @@ bool BeamParticleIdTool::IsContained(const CartesianVector &spacePoint) const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 BeamParticleIdTool::Plane::Plane(const CartesianVector &normal, const CartesianVector &point) :
-    m_unitNormal(normal.GetUnitVector()),
-    m_point(point),
-    m_d(-1.f * (normal.GetDotProduct(point)))
+    m_unitNormal(normal.GetUnitVector()), m_point(point), m_d(-1.f * (normal.GetDotProduct(point)))
 {
 }
 

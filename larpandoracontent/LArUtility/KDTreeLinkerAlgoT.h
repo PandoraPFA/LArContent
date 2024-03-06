@@ -160,12 +160,7 @@ private:
 
 template <typename DATA, unsigned DIM>
 inline KDTreeLinkerAlgo<DATA, DIM>::KDTreeLinkerAlgo() :
-    root_(nullptr),
-    nodePool_(nullptr),
-    nodePoolSize_(-1),
-    nodePoolPos_(-1),
-    closestNeighbour(nullptr),
-    initialEltList(nullptr)
+    root_(nullptr), nodePool_(nullptr), nodePoolSize_(-1), nodePoolPos_(-1), closestNeighbour(nullptr), initialEltList(nullptr)
 {
 }
 

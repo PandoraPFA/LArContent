@@ -16,10 +16,7 @@ namespace lar_content
 {
 
 TwoViewSimpleTracksTool::TwoViewSimpleTracksTool() :
-    m_minMatchedFraction(0.2f),
-    m_minMatchingScore(0.9f),
-    m_minMatchedSamplingPoints(5),
-    m_minXOverlapFraction(0.5f)
+    m_minMatchedFraction(0.2f), m_minMatchingScore(0.9f), m_minMatchedSamplingPoints(5), m_minXOverlapFraction(0.5f)
 {
 }
 

@@ -19,9 +19,7 @@ namespace lar_content
 {
 
 ClusterCharacterisationBaseAlgorithm::ClusterCharacterisationBaseAlgorithm() :
-    m_zeroMode(false),
-    m_overwriteExistingId(false),
-    m_useUnavailableClusters(false)
+    m_zeroMode(false), m_overwriteExistingId(false), m_useUnavailableClusters(false)
 {
 }
 

@@ -181,9 +181,7 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LArMCParticle::LArMCParticle(const LArMCParticleParameters &parameters) :
-    object_creation::MCParticle::Object(parameters),
-    m_nuanceCode(parameters.m_nuanceCode.Get()),
-    m_process(parameters.m_process.Get())
+    object_creation::MCParticle::Object(parameters), m_nuanceCode(parameters.m_nuanceCode.Get()), m_process(parameters.m_process.Get())
 {
 }
 

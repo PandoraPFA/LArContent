@@ -24,12 +24,7 @@ namespace lar_content
 {
 
 EventReadingAlgorithm::EventReadingAlgorithm() :
-    m_skipToEvent(0),
-    m_useLArCaloHits(true),
-    m_larCaloHitVersion(1),
-    m_useLArMCParticles(true),
-    m_larMCParticleVersion(2),
-    m_pEventFileReader(nullptr)
+    m_skipToEvent(0), m_useLArCaloHits(true), m_larCaloHitVersion(1), m_useLArMCParticles(true), m_larMCParticleVersion(2), m_pEventFileReader(nullptr)
 {
 }
 

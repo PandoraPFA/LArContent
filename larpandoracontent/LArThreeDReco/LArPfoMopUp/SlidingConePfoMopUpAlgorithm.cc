@@ -156,8 +156,9 @@ void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVerte
 
             const float vertexToMinLayer(!pVertex ? 0.f : (pVertex->GetPosition() - minLayerPosition).GetMagnitude());
             const float vertexToMaxLayer(!pVertex ? 0.f : (pVertex->GetPosition() - maxLayerPosition).GetMagnitude());
-            const ConeSelection coneSelection(
-                !pVertex ? CONE_BOTH_DIRECTIONS : (vertexToMaxLayer > vertexToMinLayer) ? CONE_FORWARD_ONLY : CONE_BACKWARD_ONLY);
+            const ConeSelection coneSelection(!pVertex                                ? CONE_BOTH_DIRECTIONS
+                                              : (vertexToMaxLayer > vertexToMinLayer) ? CONE_FORWARD_ONLY
+                                                                                      : CONE_BACKWARD_ONLY);
 
             slidingConeFitResult3D.GetSimpleConeList(m_nConeFitLayers, m_nConeFits, coneSelection, simpleConeList);
             isShowerVertexAssociated =

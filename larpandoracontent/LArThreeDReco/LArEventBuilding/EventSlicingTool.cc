@@ -467,7 +467,9 @@ void EventSlicingTool::CopyPfoHitsToSlices(const ClusterToSliceIndexMap &cluster
             if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-            CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+            CaloHitList &targetList((TPC_VIEW_U == hitType)   ? slice.m_caloHitListU
+                                    : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV
+                                                              : slice.m_caloHitListW);
 
             pCluster2D->GetOrderedCaloHitList().FillCaloHitList(targetList);
             targetList.insert(targetList.end(), pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
@@ -568,7 +570,9 @@ void EventSlicingTool::AssignRemainingHitsToSlices(
                 continue;
 
             Slice &slice(sliceList.at(pointToSliceIndexMap.at(pBestResultPoint->data)));
-            CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+            CaloHitList &targetList((TPC_VIEW_U == hitType)   ? slice.m_caloHitListU
+                                    : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV
+                                                              : slice.m_caloHitListW);
 
             pCluster2D->GetOrderedCaloHitList().FillCaloHitList(targetList);
             targetList.insert(targetList.end(), pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());

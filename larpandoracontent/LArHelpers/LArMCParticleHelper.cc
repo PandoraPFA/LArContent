@@ -732,14 +732,18 @@ void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const PfoContributionMa
                     mcHitPairs.push_back(MCParticleCaloHitListPair(pMCParticle, sharedHits));
                     pfoHitPairs.push_back(PfoCaloHitListPair(pPfo, sharedHits));
 
-                    std::sort(mcHitPairs.begin(), mcHitPairs.end(), [](const MCParticleCaloHitListPair &a, const MCParticleCaloHitListPair &b) -> bool {
-                        return ((a.second.size() != b.second.size()) ? a.second.size() > b.second.size()
-                                                                     : LArMCParticleHelper::SortByMomentum(a.first, b.first));
-                    });
+                    std::sort(mcHitPairs.begin(), mcHitPairs.end(),
+                        [](const MCParticleCaloHitListPair &a, const MCParticleCaloHitListPair &b) -> bool
+                        {
+                            return ((a.second.size() != b.second.size()) ? a.second.size() > b.second.size()
+                                                                         : LArMCParticleHelper::SortByMomentum(a.first, b.first));
+                        });
 
-                    std::sort(pfoHitPairs.begin(), pfoHitPairs.end(), [](const PfoCaloHitListPair &a, const PfoCaloHitListPair &b) -> bool {
-                        return ((a.second.size() != b.second.size()) ? a.second.size() > b.second.size() : LArPfoHelper::SortByNHits(a.first, b.first));
-                    });
+                    std::sort(pfoHitPairs.begin(), pfoHitPairs.end(),
+                        [](const PfoCaloHitListPair &a, const PfoCaloHitListPair &b) -> bool {
+                            return ((a.second.size() != b.second.size()) ? a.second.size() > b.second.size()
+                                                                         : LArPfoHelper::SortByNHits(a.first, b.first));
+                        });
                 }
             }
         }

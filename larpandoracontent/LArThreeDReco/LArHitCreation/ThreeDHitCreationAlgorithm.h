@@ -287,9 +287,7 @@ private:
 
 inline ThreeDHitCreationAlgorithm::TrajectorySample::TrajectorySample(
     const pandora::CartesianVector &position, const pandora::HitType hitType, const double sigma) :
-    m_position(position),
-    m_hitType(hitType),
-    m_sigma(sigma)
+    m_position(position), m_hitType(hitType), m_sigma(sigma)
 {
 }
 
@@ -318,10 +316,7 @@ inline double ThreeDHitCreationAlgorithm::TrajectorySample::GetSigma() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ThreeDHitCreationAlgorithm::ProtoHit::ProtoHit(const pandora::CaloHit *const pParentCaloHit2D) :
-    m_pParentCaloHit2D(pParentCaloHit2D),
-    m_isPositionSet(false),
-    m_position3D(0.f, 0.f, 0.f),
-    m_chi2(std::numeric_limits<double>::max())
+    m_pParentCaloHit2D(pParentCaloHit2D), m_isPositionSet(false), m_position3D(0.f, 0.f, 0.f), m_chi2(std::numeric_limits<double>::max())
 {
 }
 

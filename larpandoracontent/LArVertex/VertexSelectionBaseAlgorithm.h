@@ -433,8 +433,7 @@ inline bool VertexSelectionBaseAlgorithm::IsBeamModeOn() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline VertexSelectionBaseAlgorithm::VertexScore::VertexScore(const pandora::Vertex *const pVertex, const float score) :
-    m_pVertex(pVertex),
-    m_score(score)
+    m_pVertex(pVertex), m_score(score)
 {
 }
 

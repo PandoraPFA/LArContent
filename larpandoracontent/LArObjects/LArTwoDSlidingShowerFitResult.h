@@ -187,9 +187,7 @@ inline const TwoDSlidingFitResult &TwoDSlidingShowerFitResult::GetPositiveEdgeFi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ShowerExtent::ShowerExtent(const float xCoordinate, const float edge1, const float edge2) :
-    m_xCoordinate(xCoordinate),
-    m_highEdgeZ(std::max(edge1, edge2)),
-    m_lowEdgeZ(std::min(edge1, edge2))
+    m_xCoordinate(xCoordinate), m_highEdgeZ(std::max(edge1, edge2)), m_lowEdgeZ(std::min(edge1, edge2))
 {
 }
 

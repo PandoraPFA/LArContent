@@ -712,17 +712,7 @@ std::string LArInteractionTypeHelper::ToString(const InteractionType interaction
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArInteractionTypeHelper::InteractionParameters::InteractionParameters() :
-    m_nNonNeutrons(0),
-    m_nMuons(0),
-    m_nElectrons(0),
-    m_nPhotons(0),
-    m_nProtons(0),
-    m_nPiPlus(0),
-    m_nPiMinus(0),
-    m_nPiZero(0),
-    m_nKaonPlus(0),
-    m_nKaonMinus(0),
-    m_nKaon0L(0)
+    m_nNonNeutrons(0), m_nMuons(0), m_nElectrons(0), m_nPhotons(0), m_nProtons(0), m_nPiPlus(0), m_nPiMinus(0), m_nPiZero(0), m_nKaonPlus(0), m_nKaonMinus(0), m_nKaon0L(0)
 {
 }
 

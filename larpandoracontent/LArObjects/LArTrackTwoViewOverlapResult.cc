@@ -126,8 +126,7 @@ TrackTwoViewOverlapResult::TrackTwoViewOverlapResult(const float matchingScore) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TrackTwoViewOverlapResult::TrackTwoViewOverlapResult(const TrackTwoViewOverlapResult &rhs) :
-    m_isInitialized(rhs.m_isInitialized),
-    m_matchingScore(rhs.m_matchingScore)
+    m_isInitialized(rhs.m_isInitialized), m_matchingScore(rhs.m_matchingScore)
 {
 }
 

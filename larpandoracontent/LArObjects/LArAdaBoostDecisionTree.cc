@@ -180,14 +180,7 @@ double AdaBoostDecisionTree::CalculateScore(const LArMvaHelper::MvaFeatureVector
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 AdaBoostDecisionTree::Node::Node(const TiXmlHandle *const pXmlHandle) :
-    m_nodeId(0),
-    m_parentNodeId(0),
-    m_leftChildNodeId(0),
-    m_rightChildNodeId(0),
-    m_isLeaf(false),
-    m_threshold(0.),
-    m_variableId(0),
-    m_outcome(false)
+    m_nodeId(0), m_parentNodeId(0), m_leftChildNodeId(0), m_rightChildNodeId(0), m_isLeaf(false), m_threshold(0.), m_variableId(0), m_outcome(false)
 {
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(*pXmlHandle, "NodeId", m_nodeId));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(*pXmlHandle, "ParentNodeId", m_parentNodeId));

@@ -20,10 +20,7 @@ namespace lar_content
 {
 
 EnergyKickVertexSelectionAlgorithm::EnergyKickVertexSelectionAlgorithm() :
-    m_minClusterCaloHits(12),
-    m_slidingFitWindow(100),
-    m_epsilon(0.06),
-    m_asymmetryConstant(3.f)
+    m_minClusterCaloHits(12), m_slidingFitWindow(100), m_epsilon(0.06), m_asymmetryConstant(3.f)
 {
 }
 

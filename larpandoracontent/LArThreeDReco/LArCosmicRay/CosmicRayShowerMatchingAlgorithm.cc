@@ -19,10 +19,7 @@ namespace lar_content
 {
 
 CosmicRayShowerMatchingAlgorithm::CosmicRayShowerMatchingAlgorithm() :
-    m_minCaloHitsPerCluster(10),
-    m_minXOverlap(1.f),
-    m_minXOverlapFraction(0.5f),
-    m_pseudoChi2Cut(5.f)
+    m_minCaloHitsPerCluster(10), m_minXOverlap(1.f), m_minXOverlapFraction(0.5f), m_pseudoChi2Cut(5.f)
 {
 }
 

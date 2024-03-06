@@ -19,16 +19,7 @@ namespace lar_content
 {
 
 HierarchyValidationAlgorithm::HierarchyValidationAlgorithm() :
-    m_event{-1},
-    m_detector{"dune_fd_hd"},
-    m_writeTree{false},
-    m_foldToPrimaries{false},
-    m_foldDynamic{false},
-    m_foldToLeadingShowers{false},
-    m_validateEvent{false},
-    m_validateMC{false},
-    m_minPurity{0.8f},
-    m_minCompleteness{0.65f}
+    m_event{-1}, m_detector{"dune_fd_hd"}, m_writeTree{false}, m_foldToPrimaries{false}, m_foldDynamic{false}, m_foldToLeadingShowers{false}, m_validateEvent{false}, m_validateMC{false}, m_minPurity{0.8f}, m_minCompleteness{0.65f}
 {
 }
 

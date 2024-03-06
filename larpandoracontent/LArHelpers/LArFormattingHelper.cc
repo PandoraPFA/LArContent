@@ -86,8 +86,7 @@ void LArFormattingHelper::PrintRule(const unsigned int width)
 //--------------------------------------------------------------------------------------------------------------------------------------
 
 LArFormattingHelper::Table::Table(const StringVector &columnTitles, const unsigned int precision) :
-    m_columnTitles(columnTitles),
-    m_precision(precision)
+    m_columnTitles(columnTitles), m_precision(precision)
 {
     m_stringstream.precision(m_precision);
 

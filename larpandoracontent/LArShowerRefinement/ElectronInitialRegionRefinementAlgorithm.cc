@@ -267,7 +267,9 @@ void ElectronInitialRegionRefinementAlgorithm::BuildViewProtoShowers(const Parti
 
 StatusCode ElectronInitialRegionRefinementAlgorithm::GetHitListOfType(const HitType hitType, const CaloHitList *&pCaloHitList) const
 {
-    const std::string typeHitListName(hitType == TPC_VIEW_U ? m_caloHitListNameU : hitType == TPC_VIEW_V ? m_caloHitListNameV : m_caloHitListNameW);
+    const std::string typeHitListName(hitType == TPC_VIEW_U   ? m_caloHitListNameU
+                                      : hitType == TPC_VIEW_V ? m_caloHitListNameV
+                                                              : m_caloHitListNameW);
 
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, typeHitListName, pCaloHitList));
 

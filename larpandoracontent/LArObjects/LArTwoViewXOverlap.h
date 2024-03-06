@@ -127,11 +127,7 @@ TwoViewXOverlap operator+(const TwoViewXOverlap &lhs, const TwoViewXOverlap &rhs
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline TwoViewXOverlap::TwoViewXOverlap(const float xMin0, const float xMax0, const float xMin1, const float xMax1) :
-    m_xMin0(xMin0),
-    m_xMax0(xMax0),
-    m_xMin1(xMin1),
-    m_xMax1(xMax1),
-    m_xOverlapSpan(std::min(m_xMax0, m_xMax1) - std::max(m_xMin0, m_xMin1))
+    m_xMin0(xMin0), m_xMax0(xMax0), m_xMin1(xMin1), m_xMax1(xMax1), m_xOverlapSpan(std::min(m_xMax0, m_xMax1) - std::max(m_xMin0, m_xMin1))
 {
 }
 

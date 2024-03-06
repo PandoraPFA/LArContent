@@ -141,8 +141,7 @@ inline MvaTypes::InitializedDouble::InitializedDouble(const double number) : m_n
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline MvaTypes::InitializedDouble::InitializedDouble(const InitializedDouble &rhs) :
-    m_number(rhs.m_number),
-    m_isInitialized(rhs.m_isInitialized)
+    m_number(rhs.m_number), m_isInitialized(rhs.m_isInitialized)
 {
 }
 

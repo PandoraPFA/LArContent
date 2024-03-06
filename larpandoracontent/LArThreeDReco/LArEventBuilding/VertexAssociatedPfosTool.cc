@@ -25,10 +25,7 @@ typedef NeutrinoHierarchyAlgorithm::PfoInfo PfoInfo;
 typedef NeutrinoHierarchyAlgorithm::PfoInfoMap PfoInfoMap;
 
 VertexAssociatedPfosTool::VertexAssociatedPfosTool() :
-    m_minVertexLongitudinalDistance(-2.5f),
-    m_maxVertexLongitudinalDistance(20.f),
-    m_maxVertexTransverseDistance(3.5f),
-    m_vertexAngularAllowance(3.f)
+    m_minVertexLongitudinalDistance(-2.5f), m_maxVertexLongitudinalDistance(20.f), m_maxVertexTransverseDistance(3.5f), m_vertexAngularAllowance(3.f)
 {
 }
 

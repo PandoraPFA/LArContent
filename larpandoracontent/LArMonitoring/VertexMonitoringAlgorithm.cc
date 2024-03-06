@@ -22,11 +22,7 @@ namespace lar_content
 {
 
 VertexMonitoringAlgorithm::VertexMonitoringAlgorithm() :
-    m_visualise{true},
-    m_writeFile{false},
-    m_transparencyThresholdE{-1.f},
-    m_energyScaleThresholdE{1.f},
-    m_scalingFactor{1.f}
+    m_visualise{true}, m_writeFile{false}, m_transparencyThresholdE{-1.f}, m_energyScaleThresholdE{1.f}, m_scalingFactor{1.f}
 {
 }
 

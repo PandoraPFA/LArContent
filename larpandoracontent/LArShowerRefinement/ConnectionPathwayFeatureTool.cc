@@ -23,10 +23,7 @@ namespace lar_content
 {
 
 InitialRegionFeatureTool::InitialRegionFeatureTool() :
-    m_defaultFloat(-10.f),
-    m_nHitsToConsider(10),
-    m_maxInitialGapSizeLimit(4.f),
-    m_minLargestGapSizeLimit(2.f)
+    m_defaultFloat(-10.f), m_nHitsToConsider(10), m_maxInitialGapSizeLimit(4.f), m_minLargestGapSizeLimit(2.f)
 {
 }
 
@@ -133,11 +130,7 @@ StatusCode InitialRegionFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ConnectionRegionFeatureTool::ConnectionRegionFeatureTool() :
-    m_defaultFloat(-10.f),
-    m_spineFitWindow(10),
-    m_nLayersHalfWindow(5),
-    m_pathwayLengthLimit(30.f),
-    m_pathwayScatteringAngle2DLimit(10.f)
+    m_defaultFloat(-10.f), m_spineFitWindow(10), m_nLayersHalfWindow(5), m_pathwayLengthLimit(30.f), m_pathwayScatteringAngle2DLimit(10.f)
 {
 }
 
@@ -799,7 +792,8 @@ void ShowerRegionFeatureTool::CalculateViewShowerStartConsistencyVariables(const
     CaloHitVector showerStartPostShowerHitVector(postShowerHitList.begin(), postShowerHitList.end());
 
     std::sort(showerStartPostShowerHitVector.begin(), showerStartPostShowerHitVector.end(),
-        [&fitShowerStart, &directionAxis](const CaloHit *const pCaloHitA, const CaloHit *const pCaloHitB) -> bool {
+        [&fitShowerStart, &directionAxis](const CaloHit *const pCaloHitA, const CaloHit *const pCaloHitB) -> bool
+        {
             const CartesianVector positionA(pCaloHitA->GetPositionVector() - fitShowerStart);
             const CartesianVector positionB(pCaloHitB->GetPositionVector() - fitShowerStart);
 
@@ -1090,7 +1084,9 @@ void AmbiguousRegionFeatureTool::BuildAmbiguousSpines(const Algorithm *const pAl
 
 StatusCode AmbiguousRegionFeatureTool::GetHitListOfType(const Algorithm *const pAlgorithm, const HitType hitType, const CaloHitList *&pCaloHitList) const
 {
-    const std::string typeHitListName(hitType == TPC_VIEW_U ? m_caloHitListNameU : hitType == TPC_VIEW_V ? m_caloHitListNameV : m_caloHitListNameW);
+    const std::string typeHitListName(hitType == TPC_VIEW_U   ? m_caloHitListNameU
+                                      : hitType == TPC_VIEW_V ? m_caloHitListNameV
+                                                              : m_caloHitListNameW);
 
     PANDORA_THROW_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm, typeHitListName, pCaloHitList));

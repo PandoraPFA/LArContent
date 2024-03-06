@@ -16,10 +16,7 @@ namespace lar_content
 {
 
 TransverseTensorVisualizationTool::TransverseTensorVisualizationTool() :
-    m_minClusterConnections(1),
-    m_ignoreUnavailableClusters(true),
-    m_showEachIndividualElement(false),
-    m_showContext(false)
+    m_minClusterConnections(1), m_ignoreUnavailableClusters(true), m_showEachIndividualElement(false), m_showContext(false)
 {
 }
 

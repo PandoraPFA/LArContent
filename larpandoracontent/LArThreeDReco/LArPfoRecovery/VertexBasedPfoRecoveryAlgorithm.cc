@@ -20,11 +20,7 @@ namespace lar_content
 {
 
 VertexBasedPfoRecoveryAlgorithm::VertexBasedPfoRecoveryAlgorithm() :
-    m_slidingFitHalfWindow(10),
-    m_maxLongitudinalDisplacement(5.f),
-    m_maxTransverseDisplacement(2.f),
-    m_twoViewChi2Cut(5.f),
-    m_threeViewChi2Cut(5.f)
+    m_slidingFitHalfWindow(10), m_maxLongitudinalDisplacement(5.f), m_maxTransverseDisplacement(2.f), m_twoViewChi2Cut(5.f), m_threeViewChi2Cut(5.f)
 {
 }
 
@@ -205,12 +201,18 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
         const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
         const HitType hitType3(LArClusterHelper::GetClusterHitType(pCluster3));
 
-        const Cluster *const pClusterU(
-            (TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
-        const Cluster *const pClusterV(
-            (TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);
-        const Cluster *const pClusterW(
-            (TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : (TPC_VIEW_W == hitType3) ? pCluster3 : NULL);
+        const Cluster *const pClusterU((TPC_VIEW_U == hitType1)   ? pCluster1
+                                       : (TPC_VIEW_U == hitType2) ? pCluster2
+                                       : (TPC_VIEW_U == hitType3) ? pCluster3
+                                                                  : NULL);
+        const Cluster *const pClusterV((TPC_VIEW_V == hitType1)   ? pCluster1
+                                       : (TPC_VIEW_V == hitType2) ? pCluster2
+                                       : (TPC_VIEW_V == hitType3) ? pCluster3
+                                                                  : NULL);
+        const Cluster *const pClusterW((TPC_VIEW_W == hitType1)   ? pCluster1
+                                       : (TPC_VIEW_W == hitType2) ? pCluster2
+                                       : (TPC_VIEW_W == hitType3) ? pCluster3
+                                                                  : NULL);
 
         particleList.push_back(Particle(pClusterU, pClusterV, pClusterW));
 
@@ -517,9 +519,7 @@ void VertexBasedPfoRecoveryAlgorithm::BuildParticles(const ParticleList &particl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 VertexBasedPfoRecoveryAlgorithm::Particle::Particle(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW) :
-    m_pClusterU(pClusterU),
-    m_pClusterV(pClusterV),
-    m_pClusterW(pClusterW)
+    m_pClusterU(pClusterU), m_pClusterV(pClusterV), m_pClusterW(pClusterW)
 {
     if (NULL == m_pClusterU && NULL == m_pClusterV && NULL == m_pClusterW)
         throw StatusCodeException(STATUS_CODE_FAILURE);

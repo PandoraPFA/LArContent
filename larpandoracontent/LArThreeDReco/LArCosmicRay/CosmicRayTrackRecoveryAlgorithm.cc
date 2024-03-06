@@ -20,11 +20,7 @@ namespace lar_content
 {
 
 CosmicRayTrackRecoveryAlgorithm::CosmicRayTrackRecoveryAlgorithm() :
-    m_clusterMinLength(10.f),
-    m_clusterMinSpanZ(2.f),
-    m_clusterMinOverlapX(6.f),
-    m_clusterMaxDeltaX(3.f),
-    m_clusterMinHits(3)
+    m_clusterMinLength(10.f), m_clusterMinSpanZ(2.f), m_clusterMinOverlapX(6.f), m_clusterMaxDeltaX(3.f), m_clusterMinHits(3)
 {
 }
 
@@ -424,9 +420,15 @@ void CosmicRayTrackRecoveryAlgorithm::MatchTwoViews(const ClusterVector &cluster
         const ClusterVector &clusterVector2((0 == iView) ? clusterVectorV : (1 == iView) ? clusterVectorW : clusterVectorU);
         const ClusterVector &clusterVector3((0 == iView) ? clusterVectorW : (1 == iView) ? clusterVectorU : clusterVectorV);
 
-        const ClusterAssociationMap &matchedClusters12(((0 == iView) ? matchedClustersUV : (1 == iView) ? matchedClustersVW : matchedClustersWU));
-        const ClusterAssociationMap &matchedClusters23(((0 == iView) ? matchedClustersVW : (1 == iView) ? matchedClustersWU : matchedClustersUV));
-        const ClusterAssociationMap &matchedClusters31(((0 == iView) ? matchedClustersWU : (1 == iView) ? matchedClustersUV : matchedClustersVW));
+        const ClusterAssociationMap &matchedClusters12(((0 == iView)   ? matchedClustersUV
+                                                        : (1 == iView) ? matchedClustersVW
+                                                                       : matchedClustersWU));
+        const ClusterAssociationMap &matchedClusters23(((0 == iView)   ? matchedClustersVW
+                                                        : (1 == iView) ? matchedClustersWU
+                                                                       : matchedClustersUV));
+        const ClusterAssociationMap &matchedClusters31(((0 == iView)   ? matchedClustersWU
+                                                        : (1 == iView) ? matchedClustersUV
+                                                                       : matchedClustersVW));
 
         for (ClusterVector::const_iterator iter1 = clusterVector1.begin(), iterEnd1 = clusterVector1.end(); iter1 != iterEnd1; ++iter1)
         {
@@ -520,9 +522,15 @@ void CosmicRayTrackRecoveryAlgorithm::MatchOneView(const ClusterVector &clusterV
         const ClusterVector &clusterVector2((0 == iView) ? clusterVectorV : (1 == iView) ? clusterVectorW : clusterVectorU);
         const ClusterVector &clusterVector3((0 == iView) ? clusterVectorW : (1 == iView) ? clusterVectorU : clusterVectorV);
 
-        const ClusterAssociationMap &matchedClusters12(((0 == iView) ? matchedClustersUV : (1 == iView) ? matchedClustersVW : matchedClustersWU));
-        const ClusterAssociationMap &matchedClusters23(((0 == iView) ? matchedClustersVW : (1 == iView) ? matchedClustersWU : matchedClustersUV));
-        const ClusterAssociationMap &matchedClusters31(((0 == iView) ? matchedClustersWU : (1 == iView) ? matchedClustersUV : matchedClustersVW));
+        const ClusterAssociationMap &matchedClusters12(((0 == iView)   ? matchedClustersUV
+                                                        : (1 == iView) ? matchedClustersVW
+                                                                       : matchedClustersWU));
+        const ClusterAssociationMap &matchedClusters23(((0 == iView)   ? matchedClustersVW
+                                                        : (1 == iView) ? matchedClustersWU
+                                                                       : matchedClustersUV));
+        const ClusterAssociationMap &matchedClusters31(((0 == iView)   ? matchedClustersWU
+                                                        : (1 == iView) ? matchedClustersUV
+                                                                       : matchedClustersVW));
 
         for (ClusterVector::const_iterator iter1 = clusterVector1.begin(), iterEnd1 = clusterVector1.end(); iter1 != iterEnd1; ++iter1)
         {
@@ -699,7 +707,9 @@ void CosmicRayTrackRecoveryAlgorithm::MergeClusters(const ClusterList &inputClus
     for (unsigned int iView = 0; iView < 3; ++iView)
     {
         const ClusterList clusterList((0 == iView) ? clusterListU : (1 == iView) ? clusterListV : clusterListW);
-        const std::string inputClusterListName((0 == iView) ? m_inputClusterListNameU : (1 == iView) ? m_inputClusterListNameV : m_inputClusterListNameW);
+        const std::string inputClusterListName((0 == iView)   ? m_inputClusterListNameU
+                                               : (1 == iView) ? m_inputClusterListNameV
+                                                              : m_inputClusterListNameW);
 
         if (clusterList.empty())
             continue;

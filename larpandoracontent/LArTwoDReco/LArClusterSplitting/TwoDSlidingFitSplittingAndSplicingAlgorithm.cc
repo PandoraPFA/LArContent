@@ -19,11 +19,7 @@ namespace lar_content
 {
 
 TwoDSlidingFitSplittingAndSplicingAlgorithm::TwoDSlidingFitSplittingAndSplicingAlgorithm() :
-    m_shortHalfWindowLayers(10),
-    m_longHalfWindowLayers(20),
-    m_minClusterLength(7.5f),
-    m_vetoDisplacement(1.5f),
-    m_runCosmicMode(false)
+    m_shortHalfWindowLayers(10), m_longHalfWindowLayers(20), m_minClusterLength(7.5f), m_vetoDisplacement(1.5f), m_runCosmicMode(false)
 {
 }
 

@@ -19,9 +19,7 @@ namespace lar_content
 {
 
 DeltaRayIdentificationAlgorithm::DeltaRayIdentificationAlgorithm() :
-    m_distanceForMatching(3.f),
-    m_minParentLengthSquared(10.f * 10.f),
-    m_maxDaughterLengthSquared(175.f * 175.f)
+    m_distanceForMatching(3.f), m_minParentLengthSquared(10.f * 10.f), m_maxDaughterLengthSquared(175.f * 175.f)
 {
 }
 
