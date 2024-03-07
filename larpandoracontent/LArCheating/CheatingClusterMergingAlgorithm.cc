@@ -24,12 +24,9 @@ namespace lar_content
 {
 
 CheatingClusterMergingAlgorithm::CheatingClusterMergingAlgorithm() :
-    m_maxClusterFraction(0.25f),
     m_minNCaloHits(1),
     m_writeTree{true}
 {
-    if (m_maxClusterFraction < 0)
-        std::cout << "WARN: m_maxClusterFraction can not be below 0!" << std::endl;
 }
 //------------------------------------------------------------------------------------------//
 
@@ -69,7 +66,6 @@ StatusCode CheatingClusterMergingAlgorithm::Run()
 
     return STATUS_CODE_SUCCESS;
 }
-
 //--------------------------------------------------------------------------------------------//
 const MCParticle* CheatingClusterMergingAlgorithm::GetMCForCluster(const Cluster *const cluster, std::map<const Cluster*,
     const MCParticle*> &clusterToMCMap) const
@@ -93,7 +89,6 @@ const MCParticle* CheatingClusterMergingAlgorithm::GetMCForCluster(const Cluster
                       << " : " << e.ToString() << std::endl;
         }
     }
-
     return clusterMC;
 }
 
@@ -144,18 +139,15 @@ void CheatingClusterMergingAlgorithm::CheatedClusterMerging(const pandora::Clust
             {
                 clusterIsUsed[cluster] = true;
                 clusterIsUsed[otherCluster] = true;
-                clustersToMerge[cluster].push_back(otherCluster);
+                clustersToMerge[cluster].emplace_back(otherCluster);
             }    
         }
     }
 
- // What to do with clusters that are never merged?
- //     - Have a fallback check for second main MC, if over X%?
- 
  for (auto clusterToMergePair : clustersToMerge)
     {
-        const Cluster *currentCluster = clusterToMergePair.first;
-        const auto clusters = clusterToMergePair.second;
+        const Cluster *currentCluster{clusterToMergePair.first};
+        const auto clusters{clusterToMergePair.second};
 
         for (auto clusterToMerge : clusters)
         {
@@ -168,33 +160,9 @@ void CheatingClusterMergingAlgorithm::CheatedClusterMerging(const pandora::Clust
             } catch (StatusCodeException) {}
         }
     }
-
-    return;
 }
 
 //-------------------------------------------------------------------------------------------------
-
-float CheatingClusterMergingAlgorithm::Distance(const CartesianVector vector1, const CartesianVector vector2) const
-{
-    const float dx{vector1.GetX() - vector2.GetX()};
-    const float dz{vector1.GetZ() - vector2.GetZ()};
-    float distance{std::sqrt(dx * dx + dz * dz)};
- 
-    return distance;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-double CheatingClusterMergingAlgorithm::Angle(const CartesianVector vector1, const CartesianVector vector2) const
-{
-    const double dx{vector1.GetX() - vector2.GetX()};
-    const double dz{vector1.GetZ() - vector2.GetZ()};
-    double angle{tan(dx / dz)};
-
-    return angle;
-}
- 
-//----------------------------------------------------------------------------------------------------
 
 StatusCode CheatingClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
@@ -204,17 +172,16 @@ StatusCode CheatingClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         "MCParticleListName", m_mcParticleListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterFraction", m_maxClusterFraction));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinNCaloHits", m_minNCaloHits));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TreeName", m_treeName));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FileName", m_fileName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WriteTree", m_writeTree));
 
+    if (m_writeTree == true)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TreeName", m_treeName));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FileName", m_fileName));
+    }
     return STATUS_CODE_SUCCESS;
 }
 

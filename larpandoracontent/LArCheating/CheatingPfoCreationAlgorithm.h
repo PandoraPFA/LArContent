@@ -11,6 +11,7 @@
 #include "Pandora/Algorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include <unordered_map>
 

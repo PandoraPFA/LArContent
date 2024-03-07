@@ -11,6 +11,8 @@
 #include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+
 
 using namespace pandora;
 
@@ -130,7 +132,7 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const MCParticleToClusterListMap &
         try
         {
             PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-            pfoParameters.m_particleId = pMCParticle->GetParticleId();
+            //pfoParameters.m_particleId = (this->LArPfoHelper::IsShower(pMCParticle) ? E_MINUS : MU_MINUS);
             pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
             pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
             pfoParameters.m_energy = pMCParticle->GetEnergy();

@@ -58,11 +58,10 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::Run()
     ClusterVector selectedClusters;
     this->SelectVertexClusters(pSelectedVertex, slidingFitResultMap, availableClusters, selectedClusters);
    
-    //std::cout << "Selected Clusters !!!: " << selectedClusters.size() << std::endl;
     // Match the cluster end points
     ClusterSet vetoList;
     ParticleList particleList;
-    //this->MatchThreeViews(pSelectedVertex, slidingFitResultMap, availableClusters, vetoList, particleList);
+    this->MatchThreeViews(pSelectedVertex, slidingFitResultMap, availableClusters, vetoList, particleList);
     this->MatchTwoViews(pSelectedVertex, slidingFitResultMap, availableClusters, vetoList, particleList);
 
     // Build new particles
@@ -80,7 +79,6 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::GetAvailableClusters(const StringVec
         const ClusterList *pClusterList(NULL);
         PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, *iter, pClusterList));
 
-       // std::cout << "No. of Cluster: " << pClusterList->size() << std::endl;
 	if (NULL == pClusterList)
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
@@ -91,11 +89,10 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::GetAvailableClusters(const StringVec
         for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
         {
             const Cluster *const pCluster = *cIter;
-           // std::cout << "Cluster Type: " << pCluster->GetNCaloHits() << std::endl;
 	    if (!pCluster->IsAvailable())
                 continue;
 
-            if (pCluster->GetNCaloHits() <= 0)
+            if (pCluster->GetNCaloHits() <= 1)
                 continue;
 
             if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
@@ -113,8 +110,9 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::GetAvailableClusters(const StringVec
 
 void VertexBasedPfoRecoveryAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-    //add in modified FitPitch value of 0.68 
+    //const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    //add in modified FitPitch value of 0.68
+    const float slidingFitPitch{0.68};
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
@@ -122,8 +120,7 @@ void VertexBasedPfoRecoveryAlgorithm::BuildSlidingFitResultMap(const ClusterVect
         {
             try
             {
-                const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(*iter)));
-                const TwoDSlidingFitResult slidingFitResult(*iter, m_slidingFitHalfWindow, slidingFitPitch);
+		const TwoDSlidingFitResult slidingFitResult(*iter, m_slidingFitHalfWindow, slidingFitPitch);
                 const LArPointingCluster pointingCluster(slidingFitResult);
 
                 if (pointingCluster.GetLengthSquared() < std::numeric_limits<float>::epsilon())
@@ -149,17 +146,14 @@ void VertexBasedPfoRecoveryAlgorithm::SelectVertexClusters(const Vertex *const p
     const CartesianVector vertexU(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
     const CartesianVector vertexV(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
     const CartesianVector vertexW(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
-    //std::cout << "Vertex Location: " << vertexU << vertexV << vertexW << std::endl;
 
     for (ClusterVector::const_iterator cIter = inputClusters.begin(), cIterEnd = inputClusters.end(); cIter != cIterEnd; ++cIter)
     {
         const Cluster *const pCluster = *cIter;
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
-      //  std::cout << "!!!HIT TYPE: " << hitType << std::endl;
         if (TPC_3D == hitType)
             continue;
-      //  std::cout << "Number of Hits: " << pCluster->GetNCaloHits() << std::endl;
 	 
         const CartesianVector vertexPosition((TPC_VIEW_U == hitType) ? vertexU : (TPC_VIEW_V == hitType) ? vertexV : vertexW);
 
@@ -176,12 +170,9 @@ void VertexBasedPfoRecoveryAlgorithm::SelectVertexClusters(const Vertex *const p
 
             float rL(0.f), rT(0.f);
             LArPointingClusterHelper::GetImpactParameters(pointingVertex, vertexPosition, rL, rT);
-           // std::cout << "Impact Parameters: " << rL << " & " << rT << std::endl;
-           // std::cout << "Cuts: " << m_maxLongitudinalDisplacement << " & " << m_maxTransverseDisplacement << std::endl;
 
-            if (rL > -100.f && rL < m_maxLongitudinalDisplacement && rT < m_maxTransverseDisplacement)
+            if (rL > -1.f && rL < m_maxLongitudinalDisplacement && rT < m_maxTransverseDisplacement)
             {
-	//	std::cout << "Cluster Pass" << std::endl;
 		outputClusters.push_back(pCluster);
                 break;
             }
@@ -205,14 +196,12 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
         std::cout << clustersU.size() << clustersV.size() << clustersW.size() << std::endl;
 
 	float chi2(m_threeViewChi2Cut);
-        //std::cout << "three View Cut: " << m_threeViewChi2Cut << std::endl;
        	const Cluster *pCluster1(NULL);
         const Cluster *pCluster2(NULL);
         const Cluster *pCluster3(NULL);
 
         this->GetBestChi2(pVertex, slidingFitResultMap, clustersU, clustersV, clustersW, pCluster1, pCluster2, pCluster3, chi2);
         
-        //std::cout << "U: " << clustersU.size() << " : " << pCluster1 << " V: " << clustersV.size() << " : " << pCluster2 << " W:" << clustersW.size() << " : " << pCluster3 << std::endl;
         if (NULL == pCluster1 || NULL == pCluster2 || NULL == pCluster3)
             return;
 
@@ -233,7 +222,6 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
                 : (TPC_VIEW_W == hitType3)                      ? pCluster3
                                                                 : NULL);
 
-        //std::cout << "UU: " << pClusterU << " VV: " << pClusterV << " WW:" << pClusterW << std::endl;
 	particleList.push_back(Particle(pClusterU, pClusterV, pClusterW));
 
         vetoList.insert(pCluster1);
@@ -255,7 +243,6 @@ void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex,
         this->SelectClusters(TPC_VIEW_V, availableClusters, clustersV);
         this->SelectClusters(TPC_VIEW_W, availableClusters, clustersW);
 
-	//std::cout << clustersU.size() << clustersV.size() << clustersW.size() << std::endl;
 
 	float chi2(m_twoViewChi2Cut);
         const Cluster *pCluster1(NULL);
@@ -264,12 +251,6 @@ void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex,
         this->GetBestChi2(pVertex, slidingFitResultMap, clustersU, clustersV, pCluster1, pCluster2, chi2);
         this->GetBestChi2(pVertex, slidingFitResultMap, clustersV, clustersW, pCluster1, pCluster2, chi2);
         this->GetBestChi2(pVertex, slidingFitResultMap, clustersW, clustersU, pCluster1, pCluster2, chi2);
-
-	//if ( pCluster1 != NULL)
-	//    std::cout << " *** " << pCluster1->GetNCaloHits() << std::endl;
-
-	//if ( pCluster2 !=  NULL)
-        //   std::cout << " *** " << pCluster2->GetNCaloHits() << std::endl;
 
        	if (NULL == pCluster1 || NULL == pCluster2)
             return;
@@ -281,7 +262,6 @@ void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex,
         const Cluster *const pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : NULL);
         const Cluster *const pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : NULL);
 
-	//std::cout << "We made one " << std::endl;
         particleList.push_back(Particle(pClusterU, pClusterV, pClusterW));
         
         vetoList.insert(pCluster1);
@@ -295,7 +275,6 @@ void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, c
     const ClusterVector &clusters1, const ClusterVector &clusters2, const ClusterVector &clusters3, const Cluster *&pBestCluster1,
     const Cluster *&pBestCluster2, const Cluster *&pBestCluster3, float &bestChi2) const
 {
-    //std::cout << "1: " << clusters1.empty() << " 2: " << clusters2.empty() << " 3:" << clusters3.empty() << std::endl;	
     if (clusters1.empty() || clusters2.empty() || clusters3.empty())
         return;
 
@@ -337,7 +316,6 @@ void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, c
 
                 // Calculate chi-squared
                 const float thisChi2(this->GetChi2(pVertex, pointingCluster1, pointingCluster2, pointingCluster3));
-                std::cout << "thisChi2: " << thisChi2 << "bestChi2: " << bestChi2 << std::endl;
 
                 if (thisChi2 < bestChi2)
                 {
@@ -356,7 +334,6 @@ void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, c
 void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
     const ClusterVector &clusters1, const ClusterVector &clusters2, const Cluster *&pBestCluster1, const Cluster *&pBestCluster2, float &bestChi2) const
 {
-   // std::cout << "BestChi2 in two views: " << clusters1.size() << " clusters 2 size : " << clusters2.size() << std::endl;
     if (clusters1.empty() || clusters2.empty())
         return;
 
@@ -371,14 +348,12 @@ void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, c
 
         const TwoDSlidingFitResult &slidingFitResult1 = sIter1->second;
         const LArPointingCluster pointingCluster1(slidingFitResult1);
-      //  std::cout << "Running first Bestchi2 Loop" << std::endl;
         // Second loop
         for (ClusterVector::const_iterator cIter2 = clusters2.begin(), cIterEnd2 = clusters2.end(); cIter2 != cIterEnd2; ++cIter2)
         {
             const Cluster *const pCluster2 = *cIter2;
 
             TwoDSlidingFitResultMap::const_iterator sIter2 = slidingFitResultMap.find(pCluster2);
-        //    std::cout << "Running second Bestchi2 Loop" << std::endl;
 	    if (slidingFitResultMap.end() == sIter2)
                 continue;
 
@@ -387,7 +362,6 @@ void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, c
 
             // Calculate chi-squared
             const float thisChi2(this->GetChi2(pVertex, pointingCluster1, pointingCluster2));
-          //  std::cout << "thisChi2: " << thisChi2 << "bestChi2: " << bestChi2 << std::endl;
 
             if (thisChi2 < bestChi2)
             {
@@ -504,7 +478,6 @@ const LArPointingCluster::Vertex &VertexBasedPfoRecoveryAlgorithm::GetOuterVerte
 void VertexBasedPfoRecoveryAlgorithm::BuildParticles(const ParticleList &particleList)
 {
      
-    std::cout << "*** : " << particleList.size() << std::endl;	
     if (particleList.empty())
         return;
    

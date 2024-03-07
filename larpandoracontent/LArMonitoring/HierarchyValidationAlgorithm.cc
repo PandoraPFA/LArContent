@@ -27,8 +27,10 @@ HierarchyValidationAlgorithm::HierarchyValidationAlgorithm() :
     m_foldToLeadingShowers{false},
     m_validateEvent{false},
     m_validateMC{false},
-    m_minPurity{0},
-    m_minCompleteness{0}
+    m_minPurity{0.5},
+    m_minCompleteness{0.5},
+    m_minHits{10},
+    m_minHitsForGoodView{5}
 {
 }
 
@@ -52,9 +54,7 @@ StatusCode HierarchyValidationAlgorithm::Run()
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
     const PfoList *pPfoList(nullptr);
-    StatusCode status{PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)};
-    if (status != STATUS_CODE_SUCCESS)
-        pPfoList = new PfoList();
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
 
     LArHierarchyHelper::FoldingParameters foldParameters;
     if (m_foldToPrimaries)
@@ -67,7 +67,11 @@ StatusCode HierarchyValidationAlgorithm::Run()
     LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
     LArHierarchyHelper::RecoHierarchy recoHierarchy;
     LArHierarchyHelper::FillRecoHierarchy(*pPfoList, foldParameters, recoHierarchy);
+    StatusCode status{PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)};
     LArHierarchyHelper::QualityCuts quality(m_minPurity, m_minCompleteness);
+    LArHierarchyHelper::MCHierarchy::ReconstructabilityCriteria criteria;
+    criteria.m_minHits = m_minHits;
+    criteria.m_minHitsForGoodView = m_minHitsForGoodView;
     LArHierarchyHelper::MatchInfo matchInfo(mcHierarchy, recoHierarchy, quality);
     LArHierarchyHelper::MatchHierarchies(matchInfo);
     matchInfo.Print(mcHierarchy);
@@ -296,6 +300,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
         for (const MCParticle *const pRoot : rootMCParticles)
         {
             MCParticleList primaries;
+	    CaloHitList allHits;
             for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
             {
                 const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
@@ -304,6 +309,8 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                     const MCParticle *const pLeadingMC{pMCNode->GetLeadingMCParticle()};
                     primaries.emplace_back(pLeadingMC);
                 }
+		//allHits.emplace_back(pMCNode->GetCaloHits());
+		//std::cout << "Number of hits" << allHits.size() << std::endl;
             }
             primaries.sort(LArMCParticleHelper::SortByMomentum);
             const InteractionDescriptor descriptor{LArInteractionTypeHelper::GetInteractionDescriptor(primaries)};
@@ -314,6 +321,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
                 const int isCosmicRay{!isTestBeam && pMCNode->IsCosmicRay() ? 1 : 0};
                 const int isNeutrinoInt{!(isTestBeam || isCosmicRay) ? 1 : 0};
+		//const int mcEnergy{pLeadingMC->GetEnergy()};
                 const int mcId{pMCNode->GetId()};
                 const int pdg{pMCNode->GetParticleId()};
                 const int tier{pMCNode->GetHierarchyTier()};
@@ -386,7 +394,8 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
   
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interaction", interaction));
-                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcId", mcId));
+                //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcEnergy", mcEnergy));
+		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcId", mcId));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcPDG", pdg));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcTier", tier));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcNHits", mcHits));
@@ -481,6 +490,10 @@ StatusCode HierarchyValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinPurity", m_minPurity));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCompleteness", m_minCompleteness));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinHits", m_minHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinHitsForGoodView", m_minHitsForGoodView));
 
     return STATUS_CODE_SUCCESS;
 }
