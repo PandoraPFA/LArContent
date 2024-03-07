@@ -29,8 +29,8 @@ namespace lar_content
 using namespace pandora;
 
 LArMCParticleHelper::PrimaryParameters::PrimaryParameters() :
-    m_minPrimaryGoodHits(3),
-    m_minHitsForGoodView(1),
+    m_minPrimaryGoodHits(30),
+    m_minHitsForGoodView(10),
     m_minPrimaryGoodViews(2),
     m_selectInputHits(true),
     m_maxPhotonPropagation(2.5f),

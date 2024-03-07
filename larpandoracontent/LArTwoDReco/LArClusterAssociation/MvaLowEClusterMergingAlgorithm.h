@@ -51,8 +51,6 @@ protected:
 
     bool IsValidToUse(const pandora::Cluster *const cluster, std::map<const pandora::Cluster*, bool> &clusterIsUsed) const;
 
-    float Distance(const pandora::CartesianVector vector1, const pandora::CartesianVector vector2) const;
-
     double Angle(const pandora::CartesianVector vector1, const pandora::CartesianVector vector2) const;
 
     const pandora::CaloHitList EdgeHitFinder(const pandora::Cluster *const cluster, pandora::CaloHitList &clusterEdgeHits) const;
@@ -67,7 +65,6 @@ protected:
     bool                   m_enableProbability;     ///< Whether to use probabilities instead of binary classification
     float                  m_minProbabilityCut;     ///< The minimum probability to label a cluster as track-like
     std::string            m_treeName;              ///< Input tree name for ROOT.
-    std::string            m_treeName2;             ///< Input tree name for ROOT.
     std::string            m_fileName;              ///< Input file name for ROOT.
     int                    m_event;                 ///< Event Number Counter
     float                  m_maxClusterFraction;    ///< The maximum fraction a cluster can be contaminated by to be considered clean.
@@ -80,6 +77,11 @@ protected:
     std::string            m_mvaName;               ///< The name of the mva to find
     T                      m_mva;                   ///< The mva
     float                  m_countHitsThreshold;    ///< A cut on whether cluster merges will occur depending on total event hits
+    std::string            m_vertexListName;        ///< Input Vertex List name for vertex based calculation
+    float                  m_contactThreshold;      ///< Distance value for hits to be considered in contact
+    float                  m_proximityThreshold;    ///< Distance value for hits to be considered in proximity   
+    float                  m_divisions;             ///< Number of sectors to search in with Edge Hit Finder Function
+    float                  m_sectorTolerance;       ///< Tolerance in radians for dot product between sector and centroid to CaloHit vector
 
 
 

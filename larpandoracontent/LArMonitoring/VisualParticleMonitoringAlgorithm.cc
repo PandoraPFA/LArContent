@@ -448,24 +448,6 @@ void VisualParticleMonitoringAlgorithm::VisualizePfoByParticleId(const PfoList &
 
 void VisualParticleMonitoringAlgorithm::MakeSelection(const CaloHitList *pCaloHitList, LArMCParticleHelper::MCContributionMap &mcMap) const
 {
-    // Default reconstructability criteria are very liberal to allow for unfolded hierarchy
-    // LArMCParticleHelper::PrimaryParameters parameters;
-    // parameters.m_minPrimaryGoodHits = 2;
-    // parameters.m_minHitsForGoodView = 1;
-    // parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
-    // parameters.m_minHitSharingFraction = 0;
-    // parameters.m_foldBackHierarchy = false;
-
-    // if (!m_isTestBeam)
-    // {
-    //    LArMCParticleHelper::SelectReconstructableMCParticles(pMCList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcMap);
-    //    LArMCParticleHelper::SelectReconstructableMCParticles(pMCList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, mcMap);
-    // }
-    // else
-    //{
-    //    LArMCParticleHelper::SelectReconstructableMCParticles(pMCList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, mcMap);
-    //    LArMCParticleHelper::SelectReconstructableMCParticles(pMCList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, mcMap);
-    //}
  
     for (const CaloHit *pCaloHit : *pCaloHitList)
     {
