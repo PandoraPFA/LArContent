@@ -20,7 +20,11 @@ namespace lar_content
 {
 
 CrossGapsExtensionAlgorithm::CrossGapsExtensionAlgorithm() :
-    m_minClusterLength(5.f), m_minGapFraction(0.5f), m_maxGapTolerance(2.f), m_maxTransverseDisplacement(2.5f), m_maxRelativeAngle(10.f)
+    m_minClusterLength(5.f),
+    m_minGapFraction(0.5f),
+    m_maxGapTolerance(2.f),
+    m_maxTransverseDisplacement(2.5f),
+    m_maxRelativeAngle(10.f)
 {
 }
 

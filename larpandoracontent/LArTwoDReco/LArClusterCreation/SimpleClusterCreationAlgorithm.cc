@@ -17,7 +17,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-SimpleClusterCreationAlgorithm::SimpleClusterCreationAlgorithm() : m_clusteringWindowSquared(1.f)
+SimpleClusterCreationAlgorithm::SimpleClusterCreationAlgorithm() :
+    m_clusteringWindowSquared(1.f)
 {
 }
 

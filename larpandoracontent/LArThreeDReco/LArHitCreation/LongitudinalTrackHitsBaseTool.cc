@@ -19,7 +19,8 @@ namespace lar_content
 {
 
 LongitudinalTrackHitsBaseTool::LongitudinalTrackHitsBaseTool() :
-    m_vtxDisplacementCutSquared(5.f * 5.f), m_minTrackLengthSquared(7.5f * 7.5f)
+    m_vtxDisplacementCutSquared(5.f * 5.f),
+    m_minTrackLengthSquared(7.5f * 7.5f)
 {
 }
 

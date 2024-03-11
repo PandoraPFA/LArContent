@@ -19,7 +19,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingCosmicRayIdentificationAlg::CheatingCosmicRayIdentificationAlg() : m_maxNeutrinoFraction(0.5f)
+CheatingCosmicRayIdentificationAlg::CheatingCosmicRayIdentificationAlg() :
+    m_maxNeutrinoFraction(0.5f)
 {
 }
 

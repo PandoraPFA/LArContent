@@ -22,7 +22,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-TrackParticleBuildingAlgorithm::TrackParticleBuildingAlgorithm() : m_slidingFitHalfWindow(20)
+TrackParticleBuildingAlgorithm::TrackParticleBuildingAlgorithm() :
+    m_slidingFitHalfWindow(20)
 {
 }
 

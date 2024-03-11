@@ -19,7 +19,11 @@ namespace lar_content
 {
 
 CosmicRayTrackMatchingAlgorithm::CosmicRayTrackMatchingAlgorithm() :
-    m_clusterMinLength(10.f), m_vtxXOverlap(3.f), m_minXOverlap(3.f), m_minXOverlapFraction(0.8f), m_maxDisplacement(10.f)
+    m_clusterMinLength(10.f),
+    m_vtxXOverlap(3.f),
+    m_minXOverlap(3.f),
+    m_minXOverlapFraction(0.8f),
+    m_maxDisplacement(10.f)
 {
 }
 

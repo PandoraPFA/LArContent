@@ -16,7 +16,10 @@ namespace lar_content
 {
 
 LongTracksTool::LongTracksTool() :
-    m_minMatchedFraction(0.9f), m_minMatchedSamplingPoints(20), m_minXOverlapFraction(0.9f), m_minMatchedSamplingPointRatio(2)
+    m_minMatchedFraction(0.9f),
+    m_minMatchedSamplingPoints(20),
+    m_minXOverlapFraction(0.9f),
+    m_minMatchedSamplingPointRatio(2)
 {
 }
 

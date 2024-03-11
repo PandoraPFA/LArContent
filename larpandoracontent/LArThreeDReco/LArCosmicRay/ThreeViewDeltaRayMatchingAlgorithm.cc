@@ -15,7 +15,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm() : m_minClusterCaloHits(5), m_nMaxTensorToolRepeats(10)
+ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm() :
+    m_minClusterCaloHits(5),
+    m_nMaxTensorToolRepeats(10)
 {
 }
 

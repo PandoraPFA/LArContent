@@ -29,7 +29,11 @@ ShowerOverlapResult::ShowerOverlapResult() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ShowerOverlapResult::ShowerOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const XOverlap &xOverlap) :
-    m_isInitialized(true), m_nMatchedSamplingPoints(nMatchedSamplingPoints), m_nSamplingPoints(nSamplingPoints), m_matchedFraction(0.f), m_xOverlap(xOverlap)
+    m_isInitialized(true),
+    m_nMatchedSamplingPoints(nMatchedSamplingPoints),
+    m_nSamplingPoints(nSamplingPoints),
+    m_matchedFraction(0.f),
+    m_xOverlap(xOverlap)
 {
     if ((0 == m_nSamplingPoints) || (m_nMatchedSamplingPoints > m_nSamplingPoints))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);

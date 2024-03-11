@@ -128,20 +128,25 @@ public:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline MvaTypes::InitializedDouble::InitializedDouble() : m_number(0.), m_isInitialized(false)
+inline MvaTypes::InitializedDouble::InitializedDouble() :
+    m_number(0.),
+    m_isInitialized(false)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline MvaTypes::InitializedDouble::InitializedDouble(const double number) : m_number(number), m_isInitialized(true)
+inline MvaTypes::InitializedDouble::InitializedDouble(const double number) :
+    m_number(number),
+    m_isInitialized(true)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline MvaTypes::InitializedDouble::InitializedDouble(const InitializedDouble &rhs) :
-    m_number(rhs.m_number), m_isInitialized(rhs.m_isInitialized)
+    m_number(rhs.m_number),
+    m_isInitialized(rhs.m_isInitialized)
 {
 }
 

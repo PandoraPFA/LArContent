@@ -181,7 +181,9 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LArMCParticle::LArMCParticle(const LArMCParticleParameters &parameters) :
-    object_creation::MCParticle::Object(parameters), m_nuanceCode(parameters.m_nuanceCode.Get()), m_process(parameters.m_process.Get())
+    object_creation::MCParticle::Object(parameters),
+    m_nuanceCode(parameters.m_nuanceCode.Get()),
+    m_process(parameters.m_process.Get())
 {
 }
 
@@ -218,7 +220,8 @@ inline MCProcess LArMCParticle::GetProcess() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArMCParticleFactory::LArMCParticleFactory(const unsigned int version) : m_version(version)
+inline LArMCParticleFactory::LArMCParticleFactory(const unsigned int version) :
+    m_version(version)
 {
 }
 

@@ -400,20 +400,24 @@ inline double SupportVectorMachine::GaussianRbfKernel(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline SupportVectorMachine::SupportVectorInfo::SupportVectorInfo(const double yAlpha, LArMvaHelper::MvaFeatureVector supportVector) :
-    m_yAlpha(yAlpha), m_supportVector(std::move(supportVector))
+    m_yAlpha(yAlpha),
+    m_supportVector(std::move(supportVector))
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline SupportVectorMachine::FeatureInfo::FeatureInfo(const double muValue, const double sigmaValue) :
-    m_muValue(muValue), m_sigmaValue(sigmaValue)
+    m_muValue(muValue),
+    m_sigmaValue(sigmaValue)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SupportVectorMachine::FeatureInfo::FeatureInfo() : m_muValue(0.), m_sigmaValue(0.)
+inline SupportVectorMachine::FeatureInfo::FeatureInfo() :
+    m_muValue(0.),
+    m_sigmaValue(0.)
 {
 }
 

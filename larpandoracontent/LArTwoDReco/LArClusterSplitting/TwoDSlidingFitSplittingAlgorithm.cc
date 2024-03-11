@@ -18,7 +18,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoDSlidingFitSplittingAlgorithm::TwoDSlidingFitSplittingAlgorithm() : m_slidingFitHalfWindow(20), m_minClusterLength(10.f)
+TwoDSlidingFitSplittingAlgorithm::TwoDSlidingFitSplittingAlgorithm() :
+    m_slidingFitHalfWindow(20),
+    m_minClusterLength(10.f)
 {
 }
 

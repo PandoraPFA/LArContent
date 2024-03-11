@@ -19,7 +19,9 @@ namespace lar_content
 {
 
 TwoDSlidingFitConsolidationAlgorithm::TwoDSlidingFitConsolidationAlgorithm() :
-    m_minTrackLength(7.5f), m_maxClusterLength(15.f), m_halfWindowLayers(25)
+    m_minTrackLength(7.5f),
+    m_maxClusterLength(15.f),
+    m_halfWindowLayers(25)
 {
 }
 

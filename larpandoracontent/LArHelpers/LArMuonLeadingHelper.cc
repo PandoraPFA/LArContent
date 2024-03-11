@@ -23,7 +23,8 @@ namespace lar_content
 using namespace pandora;
 
 LArMuonLeadingHelper::ValidationParameters::ValidationParameters() :
-    LArMCParticleHelper::PrimaryParameters(), m_maxBremsstrahlungSeparation(2.5f)
+    LArMCParticleHelper::PrimaryParameters(),
+    m_maxBremsstrahlungSeparation(2.5f)
 {
 }
 

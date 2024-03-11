@@ -22,7 +22,11 @@ namespace lar_content
 {
 
 UndershootTracksTool::UndershootTracksTool() :
-    ThreeDKinkBaseTool(2), m_splitMode(false), m_maxTransverseImpactParameter(5.f), m_minImpactParameterCosTheta(0.5f), m_cosThetaCutForKinkSearch(0.75f)
+    ThreeDKinkBaseTool(2),
+    m_splitMode(false),
+    m_maxTransverseImpactParameter(5.f),
+    m_minImpactParameterCosTheta(0.5f),
+    m_cosThetaCutForKinkSearch(0.75f)
 {
 }
 
@@ -186,18 +190,18 @@ bool UndershootTracksTool::IsThreeDKink(ThreeViewTransverseTracksAlgorithm *cons
 
 UndershootTracksTool::Particle::Particle(const TensorType::Element &elementA, const TensorType::Element &elementB)
 {
-    m_pClusterA = (elementA.GetClusterU() != elementB.GetClusterU())   ? elementA.GetClusterU()
-                  : (elementA.GetClusterV() != elementB.GetClusterV()) ? elementA.GetClusterV()
-                                                                       : elementA.GetClusterW();
-    m_pClusterB = (elementA.GetClusterU() != elementB.GetClusterU())   ? elementB.GetClusterU()
-                  : (elementA.GetClusterV() != elementB.GetClusterV()) ? elementB.GetClusterV()
-                                                                       : elementB.GetClusterW();
-    m_pCommonCluster1 = (elementA.GetClusterU() == elementB.GetClusterU())   ? elementA.GetClusterU()
-                        : (elementA.GetClusterV() == elementB.GetClusterV()) ? elementA.GetClusterV()
-                                                                             : elementA.GetClusterW();
+    m_pClusterA = (elementA.GetClusterU() != elementB.GetClusterU()) ? elementA.GetClusterU()
+        : (elementA.GetClusterV() != elementB.GetClusterV())         ? elementA.GetClusterV()
+                                                                     : elementA.GetClusterW();
+    m_pClusterB = (elementA.GetClusterU() != elementB.GetClusterU()) ? elementB.GetClusterU()
+        : (elementA.GetClusterV() != elementB.GetClusterV())         ? elementB.GetClusterV()
+                                                                     : elementB.GetClusterW();
+    m_pCommonCluster1 = (elementA.GetClusterU() == elementB.GetClusterU()) ? elementA.GetClusterU()
+        : (elementA.GetClusterV() == elementB.GetClusterV())               ? elementA.GetClusterV()
+                                                                           : elementA.GetClusterW();
     m_pCommonCluster2 = ((m_pClusterA != elementA.GetClusterU()) && (m_pCommonCluster1 != elementA.GetClusterU())) ? elementA.GetClusterU()
-                        : ((m_pClusterA != elementA.GetClusterV()) && (m_pCommonCluster1 != elementA.GetClusterV())) ? elementA.GetClusterV()
-                                                                                                                     : elementA.GetClusterW();
+        : ((m_pClusterA != elementA.GetClusterV()) && (m_pCommonCluster1 != elementA.GetClusterV()))               ? elementA.GetClusterV()
+                                                                                                                   : elementA.GetClusterW();
 
     if ((m_pClusterA == m_pClusterB) || (m_pCommonCluster1 == m_pCommonCluster2))
         throw StatusCodeException(STATUS_CODE_FAILURE);

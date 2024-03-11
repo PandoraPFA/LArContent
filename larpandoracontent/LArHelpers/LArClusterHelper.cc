@@ -133,7 +133,7 @@ float LArClusterHelper::GetLayerOccupancy(const Cluster *const pCluster1, const 
 {
     const unsigned int nOccupiedLayers(pCluster1->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size());
     const unsigned int nLayers(1 + std::max(pCluster1->GetOuterPseudoLayer(), pCluster2->GetOuterPseudoLayer()) -
-                               std::min(pCluster1->GetInnerPseudoLayer(), pCluster2->GetInnerPseudoLayer()));
+        std::min(pCluster1->GetInnerPseudoLayer(), pCluster2->GetInnerPseudoLayer()));
 
     if (nLayers > 0)
         return (static_cast<float>(nOccupiedLayers) / static_cast<float>(nLayers));
@@ -604,14 +604,14 @@ void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const
         for (const CaloHit *const pCaloHit : *layerEntry.second)
         {
             const CartesianVector &hitPosition = pCaloHit->GetPositionVector();
-            if (useX && (hitPosition.GetX() < minX - std::numeric_limits<float>::epsilon() ||
-                            hitPosition.GetX() > maxX + std::numeric_limits<float>::epsilon()))
+            if (useX &&
+                (hitPosition.GetX() < minX - std::numeric_limits<float>::epsilon() || hitPosition.GetX() > maxX + std::numeric_limits<float>::epsilon()))
                 continue;
-            else if (useY && (hitPosition.GetY() < minY - std::numeric_limits<float>::epsilon() ||
-                                 hitPosition.GetY() > maxY + std::numeric_limits<float>::epsilon()))
+            else if (useY &&
+                (hitPosition.GetY() < minY - std::numeric_limits<float>::epsilon() || hitPosition.GetY() > maxY + std::numeric_limits<float>::epsilon()))
                 continue;
-            else if (useZ && (hitPosition.GetZ() < minZ - std::numeric_limits<float>::epsilon() ||
-                                 hitPosition.GetZ() > maxZ + std::numeric_limits<float>::epsilon()))
+            else if (useZ &&
+                (hitPosition.GetZ() < minZ - std::numeric_limits<float>::epsilon() || hitPosition.GetZ() > maxZ + std::numeric_limits<float>::epsilon()))
                 continue;
 
             caloHitList.push_back(pCaloHit);

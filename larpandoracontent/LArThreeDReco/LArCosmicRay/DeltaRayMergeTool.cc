@@ -20,7 +20,10 @@ namespace lar_content
 {
 
 DeltaRayMergeTool::DeltaRayMergeTool() :
-    m_maxDRSeparationFromTrack(1.5f), m_maxClusterSeparation(3.f), m_maxVertexSeparation(10.f), m_maxGoodMatchReducedChiSquared(1.f)
+    m_maxDRSeparationFromTrack(1.5f),
+    m_maxClusterSeparation(3.f),
+    m_maxVertexSeparation(10.f),
+    m_maxGoodMatchReducedChiSquared(1.f)
 {
 }
 
@@ -284,9 +287,9 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(const TensorType::ElementList &e
                 if (element1.GetCluster(hitType) == element2.GetCluster(hitType))
                 {
                     const HitType mergeHitType1(hitType == TPC_VIEW_U ? TPC_VIEW_V : hitType == TPC_VIEW_V ? TPC_VIEW_W : TPC_VIEW_U);
-                    const HitType mergeHitType2(mergeHitType1 == TPC_VIEW_U   ? TPC_VIEW_V
-                                                : mergeHitType1 == TPC_VIEW_V ? TPC_VIEW_W
-                                                                              : TPC_VIEW_U);
+                    const HitType mergeHitType2(mergeHitType1 == TPC_VIEW_U ? TPC_VIEW_V
+                            : mergeHitType1 == TPC_VIEW_V                   ? TPC_VIEW_W
+                                                                            : TPC_VIEW_U);
 
                     const Cluster *pClusterToEnlarge1 = element1.GetCluster(mergeHitType1), *pClusterToDelete1 = element2.GetCluster(mergeHitType1);
                     const Cluster *pClusterToEnlarge2 = element1.GetCluster(mergeHitType2), *pClusterToDelete2 = element2.GetCluster(mergeHitType2);

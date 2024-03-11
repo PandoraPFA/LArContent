@@ -20,7 +20,10 @@ namespace lar_content
 {
 
 OvershootTracksTool::OvershootTracksTool() :
-    ThreeDKinkBaseTool(1), m_splitMode(true), m_maxVertexXSeparation(2.f), m_cosThetaCutForKinkSearch(0.94f)
+    ThreeDKinkBaseTool(1),
+    m_splitMode(true),
+    m_maxVertexXSeparation(2.f),
+    m_cosThetaCutForKinkSearch(0.94f)
 {
 }
 
@@ -215,27 +218,29 @@ bool OvershootTracksTool::IsThreeDKink(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 OvershootTracksTool::Particle::Particle(const TensorType::Element &elementA, const TensorType::Element &elementB) :
-    m_splitPosition(0.f, 0.f, 0.f), m_splitPosition1(0.f, 0.f, 0.f), m_splitPosition2(0.f, 0.f, 0.f)
+    m_splitPosition(0.f, 0.f, 0.f),
+    m_splitPosition1(0.f, 0.f, 0.f),
+    m_splitPosition2(0.f, 0.f, 0.f)
 {
-    const HitType commonView((elementA.GetClusterU() == elementB.GetClusterU())   ? TPC_VIEW_U
-                             : (elementA.GetClusterV() == elementB.GetClusterV()) ? TPC_VIEW_V
-                             : (elementA.GetClusterW() == elementB.GetClusterW()) ? TPC_VIEW_W
-                                                                                  : HIT_CUSTOM);
+    const HitType commonView((elementA.GetClusterU() == elementB.GetClusterU()) ? TPC_VIEW_U
+            : (elementA.GetClusterV() == elementB.GetClusterV())                ? TPC_VIEW_V
+            : (elementA.GetClusterW() == elementB.GetClusterW())                ? TPC_VIEW_W
+                                                                                : HIT_CUSTOM);
 
     if (HIT_CUSTOM == commonView)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    m_pCommonCluster = (TPC_VIEW_U == commonView)   ? elementA.GetClusterU()
-                       : (TPC_VIEW_V == commonView) ? elementA.GetClusterV()
-                                                    : elementA.GetClusterW();
+    m_pCommonCluster = (TPC_VIEW_U == commonView) ? elementA.GetClusterU()
+        : (TPC_VIEW_V == commonView)              ? elementA.GetClusterV()
+                                                  : elementA.GetClusterW();
     m_pClusterA1 = (TPC_VIEW_U == commonView) ? elementA.GetClusterV() : elementA.GetClusterU();
-    m_pClusterA2 = (TPC_VIEW_U == commonView)   ? elementA.GetClusterW()
-                   : (TPC_VIEW_V == commonView) ? elementA.GetClusterW()
-                                                : elementA.GetClusterV();
+    m_pClusterA2 = (TPC_VIEW_U == commonView) ? elementA.GetClusterW()
+        : (TPC_VIEW_V == commonView)          ? elementA.GetClusterW()
+                                              : elementA.GetClusterV();
     m_pClusterB1 = (TPC_VIEW_U == commonView) ? elementB.GetClusterV() : elementB.GetClusterU();
-    m_pClusterB2 = (TPC_VIEW_U == commonView)   ? elementB.GetClusterW()
-                   : (TPC_VIEW_V == commonView) ? elementB.GetClusterW()
-                                                : elementB.GetClusterV();
+    m_pClusterB2 = (TPC_VIEW_U == commonView) ? elementB.GetClusterW()
+        : (TPC_VIEW_V == commonView)          ? elementB.GetClusterW()
+                                              : elementB.GetClusterV();
 
     if ((m_pClusterA1 == m_pClusterB1) || (m_pClusterA2 == m_pClusterB2))
         throw StatusCodeException(STATUS_CODE_FAILURE);

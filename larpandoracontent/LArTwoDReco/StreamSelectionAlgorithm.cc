@@ -22,7 +22,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-StreamSelectionAlgorithm::StreamSelectionAlgorithm() : m_inputListName{""}, m_listType{"cluster"}
+StreamSelectionAlgorithm::StreamSelectionAlgorithm() :
+    m_inputListName{""},
+    m_listType{"cluster"}
 {
 }
 

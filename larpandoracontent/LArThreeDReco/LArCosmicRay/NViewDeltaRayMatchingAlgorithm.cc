@@ -84,9 +84,9 @@ template <typename T>
 void NViewDeltaRayMatchingAlgorithm<T>::FillStrayClusterList(const HitType hitType)
 {
     const ClusterList &inputClusterList(this->GetInputClusterList(hitType));
-    ClusterList &strayClusterList((hitType == TPC_VIEW_U)   ? m_strayClusterListU
-                                  : (hitType == TPC_VIEW_V) ? m_strayClusterListV
-                                                            : m_strayClusterListW);
+    ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU
+            : (hitType == TPC_VIEW_V)                     ? m_strayClusterListV
+                                                          : m_strayClusterListW);
 
     for (const Cluster *const pCluster : inputClusterList)
     {
@@ -793,9 +793,9 @@ void NViewDeltaRayMatchingAlgorithm<T>::CollectStrayClusters(
     const Cluster *const pClusterToEnlarge, const float rangeMinX, const float rangeMaxX, ClusterList &collectedClusters)
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pClusterToEnlarge));
-    const ClusterList &strayClusterList((hitType == TPC_VIEW_U)   ? m_strayClusterListU
-                                        : (hitType == TPC_VIEW_V) ? m_strayClusterListV
-                                                                  : m_strayClusterListW);
+    const ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU
+            : (hitType == TPC_VIEW_V)                           ? m_strayClusterListV
+                                                                : m_strayClusterListW);
     const DeltaRayMatchingContainers::ClusterProximityMap &clusterProximityMap(m_deltaRayMatchingContainers.GetClusterProximityMap(hitType));
     const DeltaRayMatchingContainers::ClusterProximityMap::const_iterator clusterProximityIter(clusterProximityMap.find(pClusterToEnlarge));
 
@@ -846,9 +846,9 @@ template <typename T>
 void NViewDeltaRayMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pDeletedCluster));
-    ClusterList &strayClusterList((hitType == TPC_VIEW_U)   ? m_strayClusterListU
-                                  : (hitType == TPC_VIEW_V) ? m_strayClusterListV
-                                                            : m_strayClusterListW);
+    ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU
+            : (hitType == TPC_VIEW_V)                     ? m_strayClusterListV
+                                                          : m_strayClusterListW);
     const ClusterList::const_iterator strayClusterIter(std::find(strayClusterList.begin(), strayClusterList.end(), pDeletedCluster));
 
     if (strayClusterIter != strayClusterList.end())

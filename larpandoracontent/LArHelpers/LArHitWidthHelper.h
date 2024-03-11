@@ -60,7 +60,8 @@ public:
              *
              *  @param  referencePoint the point relative to which constituent hits are ordered
              */
-            SortByDistanceToPoint(const pandora::CartesianVector referencePoint) : m_referencePoint(referencePoint)
+            SortByDistanceToPoint(const pandora::CartesianVector referencePoint) :
+                m_referencePoint(referencePoint)
             {
             }
 

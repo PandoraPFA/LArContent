@@ -16,7 +16,11 @@ namespace lar_content
 {
 
 LayerSplittingAlgorithm::LayerSplittingAlgorithm() :
-    m_minClusterLayers(20), m_layerWindow(10), m_maxScatterRms(0.35f), m_maxScatterCosTheta(0.5f), m_maxSlidingCosTheta(0.866f)
+    m_minClusterLayers(20),
+    m_layerWindow(10),
+    m_maxScatterRms(0.35f),
+    m_maxScatterCosTheta(0.5f),
+    m_maxSlidingCosTheta(0.866f)
 {
 }
 

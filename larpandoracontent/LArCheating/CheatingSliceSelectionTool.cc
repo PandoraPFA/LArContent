@@ -17,7 +17,10 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingSliceSelectionTool::CheatingSliceSelectionTool() : m_maxSlices{1}, m_threshold{-1.f}, m_cutVariable{"completeness"}
+CheatingSliceSelectionTool::CheatingSliceSelectionTool() :
+    m_maxSlices{1},
+    m_threshold{-1.f},
+    m_cutVariable{"completeness"}
 {
 }
 

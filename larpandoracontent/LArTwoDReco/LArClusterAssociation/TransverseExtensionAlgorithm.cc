@@ -20,7 +20,9 @@ namespace lar_content
 {
 
 TransverseExtensionAlgorithm::TransverseExtensionAlgorithm() :
-    m_minClusterLength(5.f), m_maxLongitudinalDisplacement(10.f), m_maxTransverseDisplacement(1.f)
+    m_minClusterLength(5.f),
+    m_maxLongitudinalDisplacement(10.f),
+    m_maxTransverseDisplacement(1.f)
 {
 }
 

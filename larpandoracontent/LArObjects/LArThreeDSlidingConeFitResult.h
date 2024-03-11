@@ -172,7 +172,10 @@ typedef std::unordered_map<const pandora::Cluster *, ThreeDSlidingConeFitResult>
 
 inline SimpleCone::SimpleCone(const pandora::CartesianVector &coneApex, const pandora::CartesianVector &coneDirection,
     const float coneLength, const float coneTanHalfAngle) :
-    m_coneApex(coneApex), m_coneDirection(coneDirection), m_coneLength(coneLength), m_coneTanHalfAngle(coneTanHalfAngle)
+    m_coneApex(coneApex),
+    m_coneDirection(coneDirection),
+    m_coneLength(coneLength),
+    m_coneTanHalfAngle(coneTanHalfAngle)
 {
 }
 

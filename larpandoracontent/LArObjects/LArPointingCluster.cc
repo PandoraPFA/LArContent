@@ -79,7 +79,7 @@ void LArPointingCluster::BuildPointingCluster(const ThreeDSlidingFitResult &slid
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     const bool isInner((slidingFitResult.GetGlobalMinLayerPosition().GetZ() < slidingFitResult.GetGlobalMaxLayerPosition().GetZ()) &&
-                       (slidingFitResult.GetMinLayer() < slidingFitResult.GetMaxLayer()));
+        (slidingFitResult.GetMinLayer() < slidingFitResult.GetMaxLayer()));
 
     m_pCluster = slidingFitResult.GetCluster();
 
@@ -95,7 +95,12 @@ void LArPointingCluster::BuildPointingCluster(const ThreeDSlidingFitResult &slid
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArPointingCluster::Vertex::Vertex() :
-    m_pCluster(NULL), m_position(0.f, 0.f, 0.f), m_direction(0.f, 0.f, 0.f), m_rms(std::numeric_limits<float>::max()), m_isInner(false), m_isInitialized(false)
+    m_pCluster(NULL),
+    m_position(0.f, 0.f, 0.f),
+    m_direction(0.f, 0.f, 0.f),
+    m_rms(std::numeric_limits<float>::max()),
+    m_isInner(false),
+    m_isInitialized(false)
 {
 }
 
@@ -103,14 +108,24 @@ LArPointingCluster::Vertex::Vertex() :
 
 LArPointingCluster::Vertex::Vertex(
     const Cluster *const pCluster, const CartesianVector &position, const CartesianVector &direction, const float rms, const bool isInner) :
-    m_pCluster(pCluster), m_position(position), m_direction(direction), m_rms(rms), m_isInner(isInner), m_isInitialized(true)
+    m_pCluster(pCluster),
+    m_position(position),
+    m_direction(direction),
+    m_rms(rms),
+    m_isInner(isInner),
+    m_isInitialized(true)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArPointingCluster::Vertex::Vertex(const Vertex &rhs) :
-    m_pCluster(rhs.m_pCluster), m_position(rhs.m_position), m_direction(rhs.m_direction), m_rms(rhs.m_rms), m_isInner(rhs.m_isInner), m_isInitialized(rhs.m_isInitialized)
+    m_pCluster(rhs.m_pCluster),
+    m_position(rhs.m_position),
+    m_direction(rhs.m_direction),
+    m_rms(rhs.m_rms),
+    m_isInner(rhs.m_isInner),
+    m_isInitialized(rhs.m_isInitialized)
 {
 }
 

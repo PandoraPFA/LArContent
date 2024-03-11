@@ -148,7 +148,9 @@ private:
 
 inline SlidingConeClusterMopUpAlgorithm::ClusterMerge::ClusterMerge(
     const pandora::Cluster *const pParentCluster, const float boundedFraction, const float meanRT) :
-    m_pParentCluster(pParentCluster), m_boundedFraction(boundedFraction), m_meanRT(meanRT)
+    m_pParentCluster(pParentCluster),
+    m_boundedFraction(boundedFraction),
+    m_meanRT(meanRT)
 {
 }
 

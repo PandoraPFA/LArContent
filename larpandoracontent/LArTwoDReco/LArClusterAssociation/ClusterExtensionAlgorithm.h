@@ -119,7 +119,10 @@ protected:
 
 inline ClusterExtensionAlgorithm::ClusterAssociation::ClusterAssociation(
     const VertexType parent, const VertexType daughter, const AssociationType association, const float fom) :
-    m_parent(parent), m_daughter(daughter), m_association(association), m_fom(fom)
+    m_parent(parent),
+    m_daughter(daughter),
+    m_association(association),
+    m_fom(fom)
 {
 }
 

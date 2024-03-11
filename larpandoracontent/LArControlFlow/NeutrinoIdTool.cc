@@ -329,7 +329,8 @@ void NeutrinoIdTool<T>::SelectPfos(const PfoList &pfos, PfoList &selectedPfos) c
 // TODO think about how to make this function cleaner when features are more established
 template <typename T>
 NeutrinoIdTool<T>::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoList &crPfos, const NeutrinoIdTool<T> *const pTool) :
-    m_isAvailable(false), m_pTool(pTool)
+    m_isAvailable(false),
+    m_pTool(pTool)
 {
     try
     {
@@ -526,7 +527,8 @@ void NeutrinoIdTool<T>::SliceFeatures::GetSpacePoints(const ParticleFlowObject *
 template <typename T>
 CartesianVector NeutrinoIdTool<T>::SliceFeatures::GetDirectionFromVertex(const CartesianPointVector &spacePoints, const CartesianVector &vertex) const
 {
-    return this->GetDirection(spacePoints, [&](const CartesianVector &pointA, const CartesianVector &pointB)
+    return this->GetDirection(spacePoints,
+        [&](const CartesianVector &pointA, const CartesianVector &pointB)
         { return ((pointA - vertex).GetMagnitude() < (pointB - vertex).GetMagnitude()); });
 }
 

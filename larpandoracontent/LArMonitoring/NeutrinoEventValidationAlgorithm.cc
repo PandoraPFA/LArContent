@@ -21,7 +21,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-NeutrinoEventValidationAlgorithm::NeutrinoEventValidationAlgorithm() : m_useTrueNeutrinosOnly(false)
+NeutrinoEventValidationAlgorithm::NeutrinoEventValidationAlgorithm() :
+    m_useTrueNeutrinosOnly(false)
 {
 }
 
@@ -368,8 +369,8 @@ void NeutrinoEventValidationAlgorithm::ProcessOutput(
             const int interactionTypeInt(static_cast<int>(interactionType));
 #endif
             // ATTN Some redundancy introduced to contributing variables
-            const int isCorrectNu(isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == nTargetPrimaries) &&
-                                  (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
+            const int isCorrectNu(isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) &&
+                (nTargetGoodNuMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
             const int isCorrectCR(isCosmicRay && (nTargetNuMatches == 0) && (nTargetCRMatches == 1));
             const int isFakeNu(isCosmicRay && (nTargetNuMatches > 0));
             const int isFakeCR(!isCosmicRay && (nTargetCRMatches > 0));

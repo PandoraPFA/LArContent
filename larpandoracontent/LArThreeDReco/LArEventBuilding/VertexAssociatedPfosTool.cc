@@ -25,7 +25,10 @@ typedef NeutrinoHierarchyAlgorithm::PfoInfo PfoInfo;
 typedef NeutrinoHierarchyAlgorithm::PfoInfoMap PfoInfoMap;
 
 VertexAssociatedPfosTool::VertexAssociatedPfosTool() :
-    m_minVertexLongitudinalDistance(-2.5f), m_maxVertexLongitudinalDistance(20.f), m_maxVertexTransverseDistance(3.5f), m_vertexAngularAllowance(3.f)
+    m_minVertexLongitudinalDistance(-2.5f),
+    m_maxVertexLongitudinalDistance(20.f),
+    m_maxVertexTransverseDistance(3.5f),
+    m_vertexAngularAllowance(3.f)
 {
 }
 
@@ -52,7 +55,7 @@ void VertexAssociatedPfosTool::Run(const NeutrinoHierarchyAlgorithm *const pAlgo
 
         const LArPointingCluster pointingCluster(*(pPfoInfo->GetSlidingFitResult3D()));
         const bool useInner((pointingCluster.GetInnerVertex().GetPosition() - neutrinoVertex).GetMagnitudeSquared() <
-                            (pointingCluster.GetOuterVertex().GetPosition() - neutrinoVertex).GetMagnitudeSquared());
+            (pointingCluster.GetOuterVertex().GetPosition() - neutrinoVertex).GetMagnitudeSquared());
 
         const LArPointingCluster::Vertex &daughterVertex(useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
 

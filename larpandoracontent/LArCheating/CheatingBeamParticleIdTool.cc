@@ -18,7 +18,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingBeamParticleIdTool::CheatingBeamParticleIdTool() : m_minWeightFraction(0.5f)
+CheatingBeamParticleIdTool::CheatingBeamParticleIdTool() :
+    m_minWeightFraction(0.5f)
 {
 }
 

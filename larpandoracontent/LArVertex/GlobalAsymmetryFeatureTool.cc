@@ -16,7 +16,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-GlobalAsymmetryFeatureTool::GlobalAsymmetryFeatureTool() : AsymmetryFeatureBaseTool()
+GlobalAsymmetryFeatureTool::GlobalAsymmetryFeatureTool() :
+    AsymmetryFeatureBaseTool()
 {
 }
 

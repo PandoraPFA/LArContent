@@ -180,7 +180,8 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline RPhiFeatureTool::KernelEstimate::KernelEstimate(const float sigma) : m_sigma(sigma)
+inline RPhiFeatureTool::KernelEstimate::KernelEstimate(const float sigma) :
+    m_sigma(sigma)
 {
     if (m_sigma < std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);

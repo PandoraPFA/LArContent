@@ -120,9 +120,9 @@ void MissingTrackSegmentTool::SelectElements(
         const XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
         const float shortSpan(std::min(xOverlap.GetXSpanU(), std::min(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
         const float longSpan1(std::max(xOverlap.GetXSpanU(), std::max(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
-        const float longSpan2(((xOverlap.GetXSpanU() > shortSpan) && (xOverlap.GetXSpanU() < longSpan1))   ? xOverlap.GetXSpanU()
-                              : ((xOverlap.GetXSpanV() > shortSpan) && (xOverlap.GetXSpanV() < longSpan1)) ? xOverlap.GetXSpanV()
-                                                                                                           : xOverlap.GetXSpanW());
+        const float longSpan2(((xOverlap.GetXSpanU() > shortSpan) && (xOverlap.GetXSpanU() < longSpan1)) ? xOverlap.GetXSpanU()
+                : ((xOverlap.GetXSpanV() > shortSpan) && (xOverlap.GetXSpanV() < longSpan1))             ? xOverlap.GetXSpanV()
+                                                                                                         : xOverlap.GetXSpanW());
 
         if ((xOverlap.GetXOverlapSpan() < std::numeric_limits<float>::epsilon()) || (longSpan1 < std::numeric_limits<float>::epsilon()))
             continue;
@@ -385,31 +385,31 @@ MissingTrackSegmentTool::Particle::Particle(const TensorType::Element &element)
 {
     const XOverlap &xOverlap(element.GetOverlapResult().GetXOverlap());
 
-    m_shortHitType = ((xOverlap.GetXSpanU() < xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() < xOverlap.GetXSpanW()))   ? TPC_VIEW_U
-                     : ((xOverlap.GetXSpanV() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() < xOverlap.GetXSpanW())) ? TPC_VIEW_V
-                     : ((xOverlap.GetXSpanW() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanW() < xOverlap.GetXSpanV())) ? TPC_VIEW_W
-                                                                                                                        : HIT_CUSTOM;
+    m_shortHitType = ((xOverlap.GetXSpanU() < xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() < xOverlap.GetXSpanW())) ? TPC_VIEW_U
+        : ((xOverlap.GetXSpanV() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() < xOverlap.GetXSpanW()))            ? TPC_VIEW_V
+        : ((xOverlap.GetXSpanW() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanW() < xOverlap.GetXSpanV()))            ? TPC_VIEW_W
+                                                                                                                      : HIT_CUSTOM;
 
     if (HIT_CUSTOM == m_shortHitType)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    m_pShortCluster = (TPC_VIEW_U == m_shortHitType)   ? element.GetClusterU()
-                      : (TPC_VIEW_V == m_shortHitType) ? element.GetClusterV()
-                                                       : element.GetClusterW();
+    m_pShortCluster = (TPC_VIEW_U == m_shortHitType) ? element.GetClusterU()
+        : (TPC_VIEW_V == m_shortHitType)             ? element.GetClusterV()
+                                                     : element.GetClusterW();
     m_pCluster1 = (TPC_VIEW_U == m_shortHitType) ? element.GetClusterV() : element.GetClusterU();
     m_pCluster2 = (TPC_VIEW_W == m_shortHitType) ? element.GetClusterV() : element.GetClusterW();
-    m_shortMinX = (TPC_VIEW_U == m_shortHitType)   ? xOverlap.GetUMinX()
-                  : (TPC_VIEW_V == m_shortHitType) ? xOverlap.GetVMinX()
-                                                   : xOverlap.GetWMinX();
-    m_shortMaxX = (TPC_VIEW_U == m_shortHitType)   ? xOverlap.GetUMaxX()
-                  : (TPC_VIEW_V == m_shortHitType) ? xOverlap.GetVMaxX()
-                                                   : xOverlap.GetWMaxX();
-    m_longMinX = (TPC_VIEW_U == m_shortHitType)   ? std::min(xOverlap.GetVMinX(), xOverlap.GetWMinX())
-                 : (TPC_VIEW_V == m_shortHitType) ? std::min(xOverlap.GetUMinX(), xOverlap.GetWMinX())
-                                                  : std::min(xOverlap.GetUMinX(), xOverlap.GetVMinX());
-    m_longMaxX = (TPC_VIEW_U == m_shortHitType)   ? std::max(xOverlap.GetVMaxX(), xOverlap.GetWMaxX())
-                 : (TPC_VIEW_V == m_shortHitType) ? std::max(xOverlap.GetUMaxX(), xOverlap.GetWMaxX())
-                                                  : std::max(xOverlap.GetUMaxX(), xOverlap.GetVMaxX());
+    m_shortMinX = (TPC_VIEW_U == m_shortHitType) ? xOverlap.GetUMinX()
+        : (TPC_VIEW_V == m_shortHitType)         ? xOverlap.GetVMinX()
+                                                 : xOverlap.GetWMinX();
+    m_shortMaxX = (TPC_VIEW_U == m_shortHitType) ? xOverlap.GetUMaxX()
+        : (TPC_VIEW_V == m_shortHitType)         ? xOverlap.GetVMaxX()
+                                                 : xOverlap.GetWMaxX();
+    m_longMinX = (TPC_VIEW_U == m_shortHitType) ? std::min(xOverlap.GetVMinX(), xOverlap.GetWMinX())
+        : (TPC_VIEW_V == m_shortHitType)        ? std::min(xOverlap.GetUMinX(), xOverlap.GetWMinX())
+                                                : std::min(xOverlap.GetUMinX(), xOverlap.GetVMinX());
+    m_longMaxX = (TPC_VIEW_U == m_shortHitType) ? std::max(xOverlap.GetVMaxX(), xOverlap.GetWMaxX())
+        : (TPC_VIEW_V == m_shortHitType)        ? std::max(xOverlap.GetUMaxX(), xOverlap.GetWMaxX())
+                                                : std::max(xOverlap.GetUMaxX(), xOverlap.GetVMaxX());
 
     m_hitType1 = LArClusterHelper::GetClusterHitType(m_pCluster1);
     m_hitType2 = LArClusterHelper::GetClusterHitType(m_pCluster2);

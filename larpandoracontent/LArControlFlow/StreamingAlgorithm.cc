@@ -23,7 +23,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-StreamingAlgorithm::StreamingAlgorithm() : m_listType{"cluster"}
+StreamingAlgorithm::StreamingAlgorithm() :
+    m_listType{"cluster"}
 {
 }
 

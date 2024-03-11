@@ -17,7 +17,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClusterAssociationAlgorithm::ClusterAssociationAlgorithm() : m_mergeMade(false), m_resolveAmbiguousAssociations(true)
+ClusterAssociationAlgorithm::ClusterAssociationAlgorithm() :
+    m_mergeMade(false),
+    m_resolveAmbiguousAssociations(true)
 {
 }
 

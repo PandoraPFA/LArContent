@@ -719,7 +719,7 @@ void TwoDSlidingFitResult::PerformSlidingLinearFit()
         double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT +
                             intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL +
                             gradient * gradient * slidingSumLL) /
-                        (1. + gradient * gradient));
+            (1. + gradient * gradient));
 
         if (variance < -std::numeric_limits<float>::epsilon())
             continue;

@@ -175,7 +175,9 @@ private:
 
 inline SlidingConePfoMopUpAlgorithm::ClusterMerge::ClusterMerge(
     const pandora::Cluster *const pParentCluster, const float boundedFraction1, const float boundedFraction2) :
-    m_pParentCluster(pParentCluster), m_boundedFraction1(boundedFraction1), m_boundedFraction2(boundedFraction2)
+    m_pParentCluster(pParentCluster),
+    m_boundedFraction1(boundedFraction1),
+    m_boundedFraction2(boundedFraction2)
 {
 }
 

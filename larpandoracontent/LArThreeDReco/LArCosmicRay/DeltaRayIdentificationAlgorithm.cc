@@ -19,7 +19,9 @@ namespace lar_content
 {
 
 DeltaRayIdentificationAlgorithm::DeltaRayIdentificationAlgorithm() :
-    m_distanceForMatching(3.f), m_minParentLengthSquared(10.f * 10.f), m_maxDaughterLengthSquared(175.f * 175.f)
+    m_distanceForMatching(3.f),
+    m_minParentLengthSquared(10.f * 10.f),
+    m_maxDaughterLengthSquared(175.f * 175.f)
 {
 }
 
@@ -160,8 +162,8 @@ bool DeltaRayIdentificationAlgorithm::IsAssociated(
 
     const float transitionLengthSquared(125.f);
     const float displacementCut((daughterLengthSquared > transitionLengthSquared)
-                                    ? m_distanceForMatching
-                                    : m_distanceForMatching * (2.f - daughterLengthSquared / transitionLengthSquared));
+            ? m_distanceForMatching
+            : m_distanceForMatching * (2.f - daughterLengthSquared / transitionLengthSquared));
 
     try
     {

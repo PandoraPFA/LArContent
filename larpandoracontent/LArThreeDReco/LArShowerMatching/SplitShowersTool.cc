@@ -189,9 +189,9 @@ void SplitShowersTool::FindShowerMerges(ThreeViewShowersAlgorithm *const pAlgori
                     continue;
                 }
 
-                if (m_checkClusterVertexRelations && (!this->CheckClusterVertexRelations(pAlgorithm, clusterListU) ||
-                                                         !this->CheckClusterVertexRelations(pAlgorithm, clusterListV) ||
-                                                         !this->CheckClusterVertexRelations(pAlgorithm, clusterListW)))
+                if (m_checkClusterVertexRelations &&
+                    (!this->CheckClusterVertexRelations(pAlgorithm, clusterListU) || !this->CheckClusterVertexRelations(pAlgorithm, clusterListV) ||
+                        !this->CheckClusterVertexRelations(pAlgorithm, clusterListW)))
                 {
                     continue;
                 }
