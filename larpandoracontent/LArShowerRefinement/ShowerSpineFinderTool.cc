@@ -117,9 +117,9 @@ void ShowerSpineFinderTool::FindShowerSpine(const CaloHitList *const pViewHitLis
 
             const TwoDSlidingFitResult extrapolatedFit(&runningFitPositionVector, m_localSlidingFitWindow, slidingFitPitch);
 
-            extrapolatedStartPosition = count == 1        ? extrapolatedEndPosition
-                                        : isEndDownstream ? extrapolatedFit.GetGlobalMaxLayerPosition()
-                                                          : extrapolatedFit.GetGlobalMinLayerPosition();
+            extrapolatedStartPosition = count == 1 ? extrapolatedEndPosition
+                : isEndDownstream                  ? extrapolatedFit.GetGlobalMaxLayerPosition()
+                                                   : extrapolatedFit.GetGlobalMinLayerPosition();
             extrapolatedDirection =
                 isEndDownstream ? extrapolatedFit.GetGlobalMaxLayerDirection() : extrapolatedFit.GetGlobalMinLayerDirection() * (-1.f);
             extrapolatedEndPosition = extrapolatedStartPosition + (extrapolatedDirection * m_growingFitSegmentLength);
@@ -132,9 +132,9 @@ void ShowerSpineFinderTool::FindShowerSpine(const CaloHitList *const pViewHitLis
             {
                 const TwoDSlidingFitResult microExtrapolatedFit(&runningFitPositionVector, m_highResolutionSlidingFitWindow, slidingFitPitch);
 
-                extrapolatedStartPosition = count == 1        ? extrapolatedStartPosition
-                                            : isEndDownstream ? microExtrapolatedFit.GetGlobalMaxLayerPosition()
-                                                              : microExtrapolatedFit.GetGlobalMinLayerPosition();
+                extrapolatedStartPosition = count == 1 ? extrapolatedStartPosition
+                    : isEndDownstream                  ? microExtrapolatedFit.GetGlobalMaxLayerPosition()
+                                                       : microExtrapolatedFit.GetGlobalMinLayerPosition();
                 extrapolatedDirection = isEndDownstream ? microExtrapolatedFit.GetGlobalMaxLayerDirection()
                                                         : microExtrapolatedFit.GetGlobalMinLayerDirection() * (-1.f);
                 extrapolatedEndPosition = extrapolatedStartPosition + (extrapolatedDirection * m_growingFitSegmentLength);

@@ -152,18 +152,18 @@ void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap
                 if (!this->CheckMatchedClusters3D(pCluster1, pCluster2, pCluster3))
                     continue;
 
-                const Cluster *const pClusterU((TPC_VIEW_U == hitType1)   ? pCluster1
-                                               : (TPC_VIEW_U == hitType2) ? pCluster2
-                                               : (TPC_VIEW_U == hitType3) ? pCluster3
-                                                                          : NULL);
-                const Cluster *const pClusterV((TPC_VIEW_V == hitType1)   ? pCluster1
-                                               : (TPC_VIEW_V == hitType2) ? pCluster2
-                                               : (TPC_VIEW_V == hitType3) ? pCluster3
-                                                                          : NULL);
-                const Cluster *const pClusterW((TPC_VIEW_W == hitType1)   ? pCluster1
-                                               : (TPC_VIEW_W == hitType2) ? pCluster2
-                                               : (TPC_VIEW_W == hitType3) ? pCluster3
-                                                                          : NULL);
+                const Cluster *const pClusterU((TPC_VIEW_U == hitType1) ? pCluster1
+                        : (TPC_VIEW_U == hitType2)                      ? pCluster2
+                        : (TPC_VIEW_U == hitType3)                      ? pCluster3
+                                                                        : NULL);
+                const Cluster *const pClusterV((TPC_VIEW_V == hitType1) ? pCluster1
+                        : (TPC_VIEW_V == hitType2)                      ? pCluster2
+                        : (TPC_VIEW_V == hitType3)                      ? pCluster3
+                                                                        : NULL);
+                const Cluster *const pClusterW((TPC_VIEW_W == hitType1) ? pCluster1
+                        : (TPC_VIEW_W == hitType2)                      ? pCluster2
+                        : (TPC_VIEW_W == hitType3)                      ? pCluster3
+                                                                        : NULL);
 
                 candidateParticles.push_back(Particle(pClusterU, pClusterV, pClusterW));
             }
@@ -290,7 +290,9 @@ void CosmicRayBaseMatchingAlgorithm::BuildParticles(const ParticleList &particle
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 CosmicRayBaseMatchingAlgorithm::Particle::Particle(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW) :
-    m_pClusterU(pClusterU), m_pClusterV(pClusterV), m_pClusterW(pClusterW)
+    m_pClusterU(pClusterU),
+    m_pClusterV(pClusterV),
+    m_pClusterW(pClusterW)
 {
     if (NULL == m_pClusterU && NULL == m_pClusterV && NULL == m_pClusterW)
         throw StatusCodeException(STATUS_CODE_FAILURE);

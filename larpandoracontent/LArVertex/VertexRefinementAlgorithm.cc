@@ -22,7 +22,10 @@ namespace lar_content
 {
 
 VertexRefinementAlgorithm::VertexRefinementAlgorithm() :
-    m_chiSquaredCut(2.f), m_distanceCut(5.f), m_minimumHitsCut(5), m_twoDDistanceCut(10.f)
+    m_chiSquaredCut(2.f),
+    m_distanceCut(5.f),
+    m_minimumHitsCut(5),
+    m_twoDDistanceCut(10.f)
 {
 }
 

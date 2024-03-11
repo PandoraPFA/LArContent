@@ -17,7 +17,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClusterGrowingAlgorithm::ClusterGrowingAlgorithm() : m_maxClusterSeparation(2.5f)
+ClusterGrowingAlgorithm::ClusterGrowingAlgorithm() :
+    m_maxClusterSeparation(2.5f)
 {
 }
 

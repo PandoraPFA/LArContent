@@ -158,10 +158,10 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const CartesianVect
     const CartesianVector innerEndFit2(
         outerFit.GetIntercept() + outerFit.GetDirection() * (outerFit.GetDirection().GetDotProduct(innerClusterEnd - outerFit.GetIntercept())));
 
-    const CartesianVector outerStartFit1(
-        outerFit.GetIntercept() + outerFit.GetDirection() * (outerFit.GetDirection().GetDotProduct(outerClusterStart - outerFit.GetIntercept())));
-    const CartesianVector outerStartFit2(
-        innerFit.GetIntercept() + innerFit.GetDirection() * (innerFit.GetDirection().GetDotProduct(outerClusterStart - innerFit.GetIntercept())));
+    const CartesianVector outerStartFit1(outerFit.GetIntercept() +
+        outerFit.GetDirection() * (outerFit.GetDirection().GetDotProduct(outerClusterStart - outerFit.GetIntercept())));
+    const CartesianVector outerStartFit2(innerFit.GetIntercept() +
+        innerFit.GetDirection() * (innerFit.GetDirection().GetDotProduct(outerClusterStart - innerFit.GetIntercept())));
 
     const CartesianVector clusterSeparation(outerClusterStart - innerClusterEnd);
 

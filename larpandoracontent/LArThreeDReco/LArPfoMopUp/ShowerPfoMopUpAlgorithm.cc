@@ -22,7 +22,9 @@ namespace lar_content
 {
 
 ShowerPfoMopUpAlgorithm::ShowerPfoMopUpAlgorithm() :
-    VertexBasedPfoMopUpAlgorithm(), m_maxVertexLongitudinalDistance(20.f), m_vertexAngularAllowance(3.f)
+    VertexBasedPfoMopUpAlgorithm(),
+    m_maxVertexLongitudinalDistance(20.f),
+    m_vertexAngularAllowance(3.f)
 {
     // ATTN Some default values differ from base class
     m_maxVertexTransverseDistance = 3.5f;
@@ -38,11 +40,11 @@ ShowerPfoMopUpAlgorithm::ShowerPfoMopUpAlgorithm() :
 bool ShowerPfoMopUpAlgorithm::IsVertexAssociated(const CartesianVector &vertex2D, const LArPointingCluster &pointingCluster) const
 {
     return (LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-            LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-            LArPointingClusterHelper::IsEmission(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance,
-                m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
-            LArPointingClusterHelper::IsEmission(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance,
-                m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance));
+        LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+        LArPointingClusterHelper::IsEmission(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance,
+            m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
+        LArPointingClusterHelper::IsEmission(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance,
+            m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

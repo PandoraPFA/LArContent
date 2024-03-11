@@ -16,7 +16,8 @@ namespace lar_content
 {
 
 LArTrackPfo::LArTrackPfo(const LArTrackPfoParameters &parameters) :
-    ParticleFlowObject(parameters), m_trackStateVector(parameters.m_trackStateVector)
+    ParticleFlowObject(parameters),
+    m_trackStateVector(parameters.m_trackStateVector)
 {
 }
 

@@ -308,9 +308,9 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(
 #ifdef MONITORING
                 try
                 {
-                    const Vertex *const pRecoVertex(
-                        isRecoTestBeamHierarchy ? LArPfoHelper::GetTestBeamInteractionVertex(LArPfoHelper::GetParentPfo(pfoToSharedHits.first))
-                                                : LArPfoHelper::GetVertex(pfoToSharedHits.first));
+                    const Vertex *const pRecoVertex(isRecoTestBeamHierarchy
+                            ? LArPfoHelper::GetTestBeamInteractionVertex(LArPfoHelper::GetParentPfo(pfoToSharedHits.first))
+                            : LArPfoHelper::GetVertex(pfoToSharedHits.first));
                     recoVertexX = pRecoVertex->GetPosition().GetX();
                     recoVertexY = pRecoVertex->GetPosition().GetY();
                     recoVertexZ = pRecoVertex->GetPosition().GetZ();
@@ -463,8 +463,8 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(
             // ATTN Some redundancy introduced to contributing variables
             const int isCorrectTB(isBeamParticle && (nTargetTBHierarchyMatches == 1) && (nTargetCRMatches == 0));
             const int isCorrectTBHierarchy(isLeadingBeamParticle && (nTargetGoodTBHierarchyMatches == nTargetTBHierarchyMatches) &&
-                                           (nTargetGoodTBHierarchyMatches == nTargetPrimaries) && (nTargetCRMatches == 0) &&
-                                           (nTargetTBHierarchySplits == 0) && (nTargetTBHierarchyLosses == 0));
+                (nTargetGoodTBHierarchyMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetTBHierarchySplits == 0) &&
+                (nTargetTBHierarchyLosses == 0));
             const int isCorrectCR(isCosmicRay && (nTargetTBHierarchyMatches == 0) && (nTargetCRMatches == 1));
             const int isFakeTBHierarchy(isCosmicRay && (nTargetTBHierarchyMatches > 0));
             const int isFakeCR(!isCosmicRay && (nTargetCRMatches > 0));

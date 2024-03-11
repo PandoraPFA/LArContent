@@ -23,7 +23,10 @@ namespace lar_content
 
 template <typename T>
 ThreeViewMatchingControl<T>::ThreeViewMatchingControl(MatchingBaseAlgorithm *const pAlgorithm) :
-    NViewMatchingControl(pAlgorithm), m_pInputClusterListU(nullptr), m_pInputClusterListV(nullptr), m_pInputClusterListW(nullptr)
+    NViewMatchingControl(pAlgorithm),
+    m_pInputClusterListU(nullptr),
+    m_pInputClusterListV(nullptr),
+    m_pInputClusterListW(nullptr)
 {
 }
 

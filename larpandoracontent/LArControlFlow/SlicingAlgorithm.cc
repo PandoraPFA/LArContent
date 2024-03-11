@@ -17,7 +17,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-SlicingAlgorithm::SlicingAlgorithm() : m_pEventSlicingTool(nullptr)
+SlicingAlgorithm::SlicingAlgorithm() :
+    m_pEventSlicingTool(nullptr)
 {
 }
 

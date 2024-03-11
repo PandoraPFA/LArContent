@@ -16,7 +16,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-EnergyDepositionAsymmetryFeatureTool::EnergyDepositionAsymmetryFeatureTool() : GlobalAsymmetryFeatureTool()
+EnergyDepositionAsymmetryFeatureTool::EnergyDepositionAsymmetryFeatureTool() :
+    GlobalAsymmetryFeatureTool()
 {
 }
 

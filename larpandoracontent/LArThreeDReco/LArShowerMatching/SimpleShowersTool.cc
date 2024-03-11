@@ -15,7 +15,10 @@ using namespace pandora;
 namespace lar_content
 {
 
-SimpleShowersTool::SimpleShowersTool() : m_minMatchedFraction(0.2f), m_minMatchedSamplingPoints(40), m_minXOverlapFraction(0.5f)
+SimpleShowersTool::SimpleShowersTool() :
+    m_minMatchedFraction(0.2f),
+    m_minMatchedSamplingPoints(40),
+    m_minXOverlapFraction(0.5f)
 {
 }
 

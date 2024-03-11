@@ -57,12 +57,12 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStu
 
     const float dx((upperLimit - tTestStatistic) / static_cast<float>(nIntegrationSteps));
     float integral(tDistCoeff * std::pow(1.f + tTestStatistic * tTestStatistic / dof, -0.5f * (dof + 1.f)) +
-                   tDistCoeff * std::pow(1.f + upperLimit * upperLimit / dof, -0.5f * (dof + 1.f)));
+        tDistCoeff * std::pow(1.f + upperLimit * upperLimit / dof, -0.5f * (dof + 1.f)));
     for (unsigned int iStep = 1; iStep < nIntegrationSteps; ++iStep)
     {
         integral += 2.f * tDistCoeff *
-                    std::pow(1.f + (tTestStatistic + static_cast<float>(iStep) * dx) * (tTestStatistic + static_cast<float>(iStep) * dx) / dof,
-                        -0.5f * (dof + 1.f));
+            std::pow(1.f + (tTestStatistic + static_cast<float>(iStep) * dx) * (tTestStatistic + static_cast<float>(iStep) * dx) / dof,
+                -0.5f * (dof + 1.f));
     }
 
     return integral * dx / 2.f;

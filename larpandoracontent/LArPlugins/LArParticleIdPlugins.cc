@@ -27,7 +27,11 @@ namespace lar_content
 using namespace pandora;
 
 LArParticleIdPlugins::LArMuonId::LArMuonId() :
-    m_layerFitHalfWindow(20), m_minLayerOccupancy(0.75f), m_maxTrackWidth(0.5f), m_trackResidualQuantile(0.8f), m_minClustersPassingId(2)
+    m_layerFitHalfWindow(20),
+    m_minLayerOccupancy(0.75f),
+    m_maxTrackWidth(0.5f),
+    m_trackResidualQuantile(0.8f),
+    m_minClustersPassingId(2)
 {
 }
 

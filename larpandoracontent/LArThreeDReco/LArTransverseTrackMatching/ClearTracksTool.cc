@@ -14,7 +14,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClearTracksTool::ClearTracksTool() : m_minMatchedFraction(0.9f), m_minXOverlapFraction(0.9f)
+ClearTracksTool::ClearTracksTool() :
+    m_minMatchedFraction(0.9f),
+    m_minXOverlapFraction(0.9f)
 {
 }
 

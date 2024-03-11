@@ -17,7 +17,9 @@ namespace lar_content
 
 template <typename TX, typename TY>
 DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<TX, TY> &inputData, const TX xUpperBound, const bool useWidths) :
-    m_xUpperBound(static_cast<float>(xUpperBound)), m_useWidths(useWidths), m_discreteProbabilityData(this->InitialiseDiscreteProbabilityData(inputData))
+    m_xUpperBound(static_cast<float>(xUpperBound)),
+    m_useWidths(useWidths),
+    m_discreteProbabilityData(this->InitialiseDiscreteProbabilityData(inputData))
 {
     this->VerifyCompleteData();
 }

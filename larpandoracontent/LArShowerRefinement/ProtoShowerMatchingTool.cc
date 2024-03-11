@@ -23,7 +23,10 @@ namespace lar_content
 {
 
 ProtoShowerMatchingTool::ProtoShowerMatchingTool() :
-    m_spineSlidingFitWindow(20), m_maxXSeparation(5.f), m_maxSeparation(5.f), m_maxAngularDeviation(5.f)
+    m_spineSlidingFitWindow(20),
+    m_maxXSeparation(5.f),
+    m_maxSeparation(5.f),
+    m_maxAngularDeviation(5.f)
 {
 }
 

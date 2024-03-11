@@ -156,9 +156,9 @@ void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVerte
 
             const float vertexToMinLayer(!pVertex ? 0.f : (pVertex->GetPosition() - minLayerPosition).GetMagnitude());
             const float vertexToMaxLayer(!pVertex ? 0.f : (pVertex->GetPosition() - maxLayerPosition).GetMagnitude());
-            const ConeSelection coneSelection(!pVertex                                ? CONE_BOTH_DIRECTIONS
-                                              : (vertexToMaxLayer > vertexToMinLayer) ? CONE_FORWARD_ONLY
-                                                                                      : CONE_BACKWARD_ONLY);
+            const ConeSelection coneSelection(!pVertex      ? CONE_BOTH_DIRECTIONS
+                    : (vertexToMaxLayer > vertexToMinLayer) ? CONE_FORWARD_ONLY
+                                                            : CONE_BACKWARD_ONLY);
 
             slidingConeFitResult3D.GetSimpleConeList(m_nConeFitLayers, m_nConeFits, coneSelection, simpleConeList);
             isShowerVertexAssociated =
@@ -241,7 +241,7 @@ bool SlidingConePfoMopUpAlgorithm::IsVertexAssociated(
             pSlidingFitResult ? LArPointingCluster(*pSlidingFitResult) : LArPointingCluster(pCluster, m_halfWindowLayers, layerPitch));
 
         const bool useInner((pointingCluster.GetInnerVertex().GetPosition() - vertexPosition).GetMagnitudeSquared() <
-                            (pointingCluster.GetOuterVertex().GetPosition() - vertexPosition).GetMagnitudeSquared());
+            (pointingCluster.GetOuterVertex().GetPosition() - vertexPosition).GetMagnitudeSquared());
 
         const LArPointingCluster::Vertex &daughterVertex(useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
         return LArPointingClusterHelper::IsNode(vertexPosition, daughterVertex, m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance);

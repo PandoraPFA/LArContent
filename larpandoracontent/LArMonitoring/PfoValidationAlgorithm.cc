@@ -20,7 +20,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-PfoValidationAlgorithm::PfoValidationAlgorithm() : m_nMatchesToShow(3)
+PfoValidationAlgorithm::PfoValidationAlgorithm() :
+    m_nMatchesToShow(3)
 {
 }
 

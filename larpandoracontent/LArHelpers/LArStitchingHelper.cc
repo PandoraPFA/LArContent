@@ -263,12 +263,12 @@ float LArStitchingHelper::CalculateX0(const LArTPC &firstTPC, const LArTPC &seco
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     const float R1(firstDirectionYZ.GetUnitVector().GetDotProduct(firstPositionYZ - secondPositionYZ) / firstDirectionYZmag);
-    const float X1(-1.f * firstDirectionX.GetUnitVector().GetDotProduct(
-                              secondVertex.GetPosition() - (firstVertex.GetPosition() - firstVertex.GetDirection() * R1)));
+    const float X1(-1.f *
+        firstDirectionX.GetUnitVector().GetDotProduct(secondVertex.GetPosition() - (firstVertex.GetPosition() - firstVertex.GetDirection() * R1)));
 
     const float R2(secondDirectionYZ.GetUnitVector().GetDotProduct(secondPositionYZ - firstPositionYZ) / secondDirectionYZmag);
-    const float X2(-1.f * secondDirectionX.GetUnitVector().GetDotProduct(
-                              firstVertex.GetPosition() - (secondVertex.GetPosition() - secondVertex.GetDirection() * R2)));
+    const float X2(-1.f *
+        secondDirectionX.GetUnitVector().GetDotProduct(firstVertex.GetPosition() - (secondVertex.GetPosition() - secondVertex.GetDirection() * R2)));
 
     // ATTN: By convention, X0 is half the displacement in x (because both Pfos will be corrected)
     return (X1 + X2) * 0.25f;

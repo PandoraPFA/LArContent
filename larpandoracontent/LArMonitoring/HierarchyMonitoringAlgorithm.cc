@@ -237,7 +237,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMCProcess(const LArHierarchyHelper::
             CaloHitList uHits, vHits, wHits;
             this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
             std::string suffix{std::to_string(nodeIdx) + " (" + std::to_string(tier) + ") " + std::to_string(pdg) + " " + category + " " +
-                               std::to_string(process)};
+                std::to_string(process)};
             if (process == MC_PROC_DECAY)
             {
                 const MCParticleList &parentList{pMC->GetParentList()};
@@ -380,7 +380,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
 
                 this->FillHitLists(pReco->GetCaloHits(), uHits, vHits, wHits);
                 const std::string suffix{"Reco - Slice " + std::to_string(recoRootToSliceMap[recoNodeToRootMap[pReco]]) + " ID " +
-                                         std::to_string(recoNodeToIdMap[pReco]) + " -> " + std::to_string(mcNodeToIdMap[pMC])};
+                    std::to_string(recoNodeToIdMap[pReco]) + " -> " + std::to_string(mcNodeToIdMap[pMC])};
                 const LArHierarchyHelper::QualityCuts &quality{matchInfo.GetQualityCuts()};
                 if (purity >= quality.m_minPurity && completeness >= quality.m_minCompleteness)
                 {
@@ -420,7 +420,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
                     CaloHitList uHits, vHits, wHits;
                     this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
                     const std::string suffix{"Reco - Slice " + std::to_string(recoRootToSliceMap[recoNodeToRootMap[pNode]]) + " ID " +
-                                             std::to_string(recoNodeToIdMap[pNode]) + " -> #"};
+                        std::to_string(recoNodeToIdMap[pNode]) + " -> #"};
                     this->Visualize(uHits, "U " + suffix, 14);
                     this->Visualize(vHits, "V " + suffix, 14);
                     this->Visualize(wHits, "W " + suffix, 14);

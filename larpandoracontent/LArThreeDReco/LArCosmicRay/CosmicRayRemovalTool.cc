@@ -21,7 +21,11 @@ namespace lar_content
 {
 
 CosmicRayRemovalTool::CosmicRayRemovalTool() :
-    m_slidingFitWindow(10000), m_minContaminationLength(3.f), m_maxDistanceToHit(1.f), m_minRemnantClusterSize(3), m_maxDistanceToTrack(2.f)
+    m_slidingFitWindow(10000),
+    m_minContaminationLength(3.f),
+    m_maxDistanceToHit(1.f),
+    m_minRemnantClusterSize(3),
+    m_maxDistanceToTrack(2.f)
 {
 }
 
@@ -277,8 +281,8 @@ void CosmicRayRemovalTool::CollectHitsFromDeltaRay(const CartesianVector &positi
                 continue;
 
             const float distanceToCollectedHits(collectedHits.empty()
-                                                    ? std::numeric_limits<float>::max()
-                                                    : LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), collectedHits));
+                    ? std::numeric_limits<float>::max()
+                    : LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), collectedHits));
             const float distanceToMuonHits(muonDirection.GetCrossProduct(pCaloHit->GetPositionVector() - positionOnMuon).GetMagnitude());
 
             if ((distanceToMuonHits < minDistanceFromMuon) || (demandCloserToCollected && (distanceToCollectedHits > distanceToMuonHits)))

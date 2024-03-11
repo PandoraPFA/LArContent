@@ -57,13 +57,16 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ShowerCore::ShowerCore(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection) :
-    m_startPosition(startPosition), m_startDirection(startDirection)
+    m_startPosition(startPosition),
+    m_startDirection(startDirection)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ShowerCore::ShowerCore() : m_startPosition(0.f, 0.f, 0.f), m_startDirection(0.f, 0.f, 0.f)
+inline ShowerCore::ShowerCore() :
+    m_startPosition(0.f, 0.f, 0.f),
+    m_startDirection(0.f, 0.f, 0.f)
 {
 }
 
@@ -127,13 +130,16 @@ typedef std::vector<ConnectionPathway> ConnectionPathwayVector;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ConnectionPathway::ConnectionPathway(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection) :
-    m_startPosition(startPosition), m_startDirection(startDirection)
+    m_startPosition(startPosition),
+    m_startDirection(startDirection)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ConnectionPathway::ConnectionPathway() : m_startPosition(0.f, 0.f, 0.f), m_startDirection(0.f, 0.f, 0.f)
+inline ConnectionPathway::ConnectionPathway() :
+    m_startPosition(0.f, 0.f, 0.f),
+    m_startDirection(0.f, 0.f, 0.f)
 {
 }
 
@@ -446,7 +452,10 @@ typedef std::vector<ProtoShowerMatch> ProtoShowerMatchVector;
 
 inline ProtoShowerMatch::ProtoShowerMatch(
     const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const Consistency consistencyType) :
-    m_protoShowerU(protoShowerU), m_protoShowerV(protoShowerV), m_protoShowerW(protoShowerW), m_consistencyType(consistencyType)
+    m_protoShowerU(protoShowerU),
+    m_protoShowerV(protoShowerV),
+    m_protoShowerW(protoShowerW),
+    m_consistencyType(consistencyType)
 {
 }
 

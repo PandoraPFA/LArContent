@@ -19,7 +19,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingCosmicRayTaggingTool::CheatingCosmicRayTaggingTool() : m_maxCosmicRayFraction(0.25f)
+CheatingCosmicRayTaggingTool::CheatingCosmicRayTaggingTool() :
+    m_maxCosmicRayFraction(0.25f)
 {
 }
 

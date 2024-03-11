@@ -18,7 +18,9 @@ namespace lar_content
 {
 
 TrackConsolidationAlgorithm::TrackConsolidationAlgorithm() :
-    m_maxTransverseDisplacement(1.f), m_minAssociatedSpan(1.f), m_minAssociatedFraction(0.5f)
+    m_maxTransverseDisplacement(1.f),
+    m_minAssociatedSpan(1.f),
+    m_minAssociatedFraction(0.5f)
 {
 }
 

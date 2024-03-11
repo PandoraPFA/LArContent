@@ -26,7 +26,9 @@ namespace lar_content
 
 template <typename T>
 NViewTrackMatchingAlgorithm<T>::NViewTrackMatchingAlgorithm() :
-    m_slidingFitWindow(20), m_minClusterCaloHits(5), m_minClusterLengthSquared(3.f * 3.f)
+    m_slidingFitWindow(20),
+    m_minClusterCaloHits(5),
+    m_minClusterLengthSquared(3.f * 3.f)
 {
 }
 

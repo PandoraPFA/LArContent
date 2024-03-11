@@ -40,11 +40,11 @@ ShowerGrowingAlgorithm::ShowerGrowingAlgorithm() :
 bool ShowerGrowingAlgorithm::IsVertexAssociated(const LArPointingCluster &pointingCluster, const CartesianVector &vertexPosition2D) const
 {
     return (LArPointingClusterHelper::IsNode(vertexPosition2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-            LArPointingClusterHelper::IsNode(vertexPosition2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-            LArPointingClusterHelper::IsEmission(vertexPosition2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance,
-                m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
-            LArPointingClusterHelper::IsEmission(vertexPosition2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance,
-                m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance));
+        LArPointingClusterHelper::IsNode(vertexPosition2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+        LArPointingClusterHelper::IsEmission(vertexPosition2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance,
+            m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
+        LArPointingClusterHelper::IsEmission(vertexPosition2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance,
+            m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,9 +285,9 @@ ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssoc
 
     if (m_clusterDirectionMap.end() == seedIter)
     {
-        const LArVertexHelper::ClusterDirection direction((nullptr == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN
-                                                                               : LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
-                                                                                     pClusterSeed, m_directionTanAngle, m_directionApexShift));
+        const LArVertexHelper::ClusterDirection direction((nullptr == pVertex)
+                ? LArVertexHelper::DIRECTION_UNKNOWN
+                : LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pClusterSeed, m_directionTanAngle, m_directionApexShift));
         seedIter = m_clusterDirectionMap.insert(ClusterDirectionMap::value_type(pClusterSeed, direction)).first;
     }
 
@@ -300,9 +300,9 @@ ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssoc
 
     if (m_clusterDirectionMap.end() == candIter)
     {
-        const LArVertexHelper::ClusterDirection direction((nullptr == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN
-                                                                               : LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
-                                                                                     pCluster, m_directionTanAngle, m_directionApexShift));
+        const LArVertexHelper::ClusterDirection direction((nullptr == pVertex)
+                ? LArVertexHelper::DIRECTION_UNKNOWN
+                : LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pCluster, m_directionTanAngle, m_directionApexShift));
         candIter = m_clusterDirectionMap.insert(ClusterDirectionMap::value_type(pCluster, direction)).first;
     }
 

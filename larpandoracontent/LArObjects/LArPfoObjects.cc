@@ -16,14 +16,16 @@ namespace lar_content
 {
 
 LArTrackState::LArTrackState(const CartesianVector &position, const CartesianVector &direction, const CaloHit *const pCaloHit) :
-    TrackState(position, direction), m_pCaloHit(pCaloHit)
+    TrackState(position, direction),
+    m_pCaloHit(pCaloHit)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArTrackState::LArTrackState(const CartesianVector &position, const CartesianVector &direction) :
-    TrackState(position, direction), m_pCaloHit(nullptr)
+    TrackState(position, direction),
+    m_pCaloHit(nullptr)
 {
 }
 

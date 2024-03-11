@@ -21,7 +21,9 @@ namespace lar_content
 {
 
 IsolatedClusterMopUpAlgorithm::IsolatedClusterMopUpAlgorithm() :
-    m_maxCaloHitsInCluster(20), m_maxHitClusterDistance(5.f), m_addHitsAsIsolated(true)
+    m_maxCaloHitsInCluster(20),
+    m_maxHitClusterDistance(5.f),
+    m_addHitsAsIsolated(true)
 {
     // ATTN Default value differs from base class
     m_excludePfosContainingTracks = false;

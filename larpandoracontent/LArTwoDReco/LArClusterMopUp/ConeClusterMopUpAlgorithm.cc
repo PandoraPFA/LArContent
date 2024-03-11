@@ -21,7 +21,11 @@ namespace lar_content
 {
 
 ConeClusterMopUpAlgorithm::ConeClusterMopUpAlgorithm() :
-    m_slidingFitWindow(20), m_showerEdgeMultiplier(1.5f), m_coneAngleCentile(0.85f), m_maxConeLengthMultiplier(1.5f), m_minBoundedFraction(0.5f)
+    m_slidingFitWindow(20),
+    m_showerEdgeMultiplier(1.5f),
+    m_coneAngleCentile(0.85f),
+    m_maxConeLengthMultiplier(1.5f),
+    m_minBoundedFraction(0.5f)
 {
 }
 
@@ -67,7 +71,7 @@ void ConeClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
             const HitType hitType(LArClusterHelper::GetClusterHitType(pPfoCluster));
             const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
             const bool vertexAtMinL((vertexPosition2D - minLayerPositionOnAxis).GetMagnitudeSquared() <
-                                    (vertexPosition2D - maxLayerPositionOnAxis).GetMagnitudeSquared());
+                (vertexPosition2D - maxLayerPositionOnAxis).GetMagnitudeSquared());
 
             // Cone edges
             CoordinateList coordinateListP, coordinateListN;
@@ -92,13 +96,13 @@ void ConeClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
 
             const Coordinate maxP(coordinateListP.at(m_coneAngleCentile * coordinateListP.size()));
             const Coordinate minP(vertexAtMinL
-                                      ? Coordinate(layerFitResultMapP.begin()->second.GetL(), layerFitResultMapP.begin()->second.GetFitT())
-                                      : Coordinate(layerFitResultMapP.rbegin()->second.GetL(), layerFitResultMapP.rbegin()->second.GetFitT()));
+                    ? Coordinate(layerFitResultMapP.begin()->second.GetL(), layerFitResultMapP.begin()->second.GetFitT())
+                    : Coordinate(layerFitResultMapP.rbegin()->second.GetL(), layerFitResultMapP.rbegin()->second.GetFitT()));
 
             const Coordinate maxN(coordinateListN.at((1.f - m_coneAngleCentile) * coordinateListN.size()));
             const Coordinate minN(vertexAtMinL
-                                      ? Coordinate(layerFitResultMapN.begin()->second.GetL(), layerFitResultMapN.begin()->second.GetFitT())
-                                      : Coordinate(layerFitResultMapN.rbegin()->second.GetL(), layerFitResultMapN.rbegin()->second.GetFitT()));
+                    ? Coordinate(layerFitResultMapN.begin()->second.GetL(), layerFitResultMapN.begin()->second.GetFitT())
+                    : Coordinate(layerFitResultMapN.rbegin()->second.GetL(), layerFitResultMapN.rbegin()->second.GetFitT()));
 
             const float minL(layerFitResultMapS.begin()->second.GetL());
             const float maxL(minL + m_maxConeLengthMultiplier * std::fabs(layerFitResultMapS.rbegin()->second.GetL() - minL));

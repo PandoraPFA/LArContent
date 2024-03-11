@@ -19,7 +19,10 @@ namespace lar_content
 {
 
 ThreeViewRemnantsAlgorithm::ThreeViewRemnantsAlgorithm() :
-    m_nMaxTensorToolRepeats(1000), m_minClusterCaloHits(5), m_xOverlapWindow(2.f), m_pseudoChi2Cut(10.f)
+    m_nMaxTensorToolRepeats(1000),
+    m_minClusterCaloHits(5),
+    m_xOverlapWindow(2.f),
+    m_pseudoChi2Cut(10.f)
 {
 }
 

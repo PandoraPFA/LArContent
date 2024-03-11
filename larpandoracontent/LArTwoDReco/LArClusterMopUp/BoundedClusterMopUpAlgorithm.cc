@@ -19,7 +19,9 @@ namespace lar_content
 {
 
 BoundedClusterMopUpAlgorithm::BoundedClusterMopUpAlgorithm() :
-    m_slidingFitWindow(20), m_showerEdgeMultiplier(1.5f), m_minBoundedFraction(0.5f)
+    m_slidingFitWindow(20),
+    m_showerEdgeMultiplier(1.5f),
+    m_minBoundedFraction(0.5f)
 {
 }
 

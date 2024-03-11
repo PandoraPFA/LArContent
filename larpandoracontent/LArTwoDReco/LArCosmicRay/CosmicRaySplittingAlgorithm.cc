@@ -94,8 +94,9 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
             float lengthSquared1(std::numeric_limits<float>::max());
             float lengthSquared2(std::numeric_limits<float>::max());
 
-            if (STATUS_CODE_SUCCESS != this->ConfirmSplitPosition(branchSlidingFitResult, replacementSlidingFitResult, splitPosition,
-                                           splitDirection1, splitDirection2, lengthSquared1, lengthSquared2))
+            if (STATUS_CODE_SUCCESS !=
+                this->ConfirmSplitPosition(branchSlidingFitResult, replacementSlidingFitResult, splitPosition, splitDirection1,
+                    splitDirection2, lengthSquared1, lengthSquared2))
                 continue;
 
             if (lengthSquared1 < bestLengthSquared1)

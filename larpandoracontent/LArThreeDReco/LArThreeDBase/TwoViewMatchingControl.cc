@@ -22,7 +22,9 @@ namespace lar_content
 
 template <typename T>
 TwoViewMatchingControl<T>::TwoViewMatchingControl(MatchingBaseAlgorithm *const pAlgorithm) :
-    NViewMatchingControl(pAlgorithm), m_pInputClusterList1(nullptr), m_pInputClusterList2(nullptr)
+    NViewMatchingControl(pAlgorithm),
+    m_pInputClusterList1(nullptr),
+    m_pInputClusterList2(nullptr)
 {
 }
 

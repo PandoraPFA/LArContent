@@ -254,8 +254,7 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
         if (it != mcParticleToPfoHitSharingMap.end())
             pfoToSharedHitsVector = it->second;
 
-        const LArFormattingHelper::Color mcCol(
-            LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle)
+        const LArFormattingHelper::Color mcCol(LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle)
                 ? LArFormattingHelper::LIGHT_GREEN
                 : (LArMCParticleHelper::IsBeamParticle(pMCParticle) ? LArFormattingHelper::LIGHT_BLUE : LArFormattingHelper::LIGHT_RED));
 

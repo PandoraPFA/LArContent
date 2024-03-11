@@ -16,7 +16,10 @@ namespace lar_content
 {
 
 TransverseMatrixVisualizationTool::TransverseMatrixVisualizationTool() :
-    m_minClusterConnections(1), m_ignoreUnavailableClusters(true), m_showEachIndividualElement(false), m_showOnlyTrueMatchIndividualElements(false)
+    m_minClusterConnections(1),
+    m_ignoreUnavailableClusters(true),
+    m_showEachIndividualElement(false),
+    m_showOnlyTrueMatchIndividualElements(false)
 {
 }
 

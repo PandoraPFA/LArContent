@@ -222,7 +222,7 @@ double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &s
 
         const double deltaUFit(uFit - outputU), deltaVFit(vFit - outputV), deltaWFit(wFit - outputW);
         chi2WrtFit += ((deltaUFit * deltaUFit) / (sigma3DFit * sigma3DFit)) + ((deltaVFit * deltaVFit) / (sigma3DFit * sigma3DFit)) +
-                      ((deltaWFit * deltaWFit) / (sigma3DFit * sigma3DFit));
+            ((deltaWFit * deltaWFit) / (sigma3DFit * sigma3DFit));
     }
 
     return chi2WrtFit;

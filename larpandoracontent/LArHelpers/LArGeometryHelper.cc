@@ -291,7 +291,7 @@ void LArGeometryHelper::MergeThreePositions(const Pandora &pandora, const Cartes
                      (outputU.GetZ() - positionU.GetZ()) * (outputU.GetZ() - positionU.GetZ()) +
                      (outputV.GetZ() - positionV.GetZ()) * (outputV.GetZ() - positionV.GetZ()) +
                      (outputW.GetZ() - positionW.GetZ()) * (outputW.GetZ() - positionW.GetZ())) /
-                 (sigmaUVW * sigmaUVW);
+        (sigmaUVW * sigmaUVW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -20,7 +20,10 @@ namespace lar_content
 {
 
 PeakDirectionFinderTool::PeakDirectionFinderTool() :
-    m_pathwaySearchRegion(10.f), m_theta0XZBinSize(0.005f), m_smoothingWindow(1), m_ambiguousParticleMode(false)
+    m_pathwaySearchRegion(10.f),
+    m_theta0XZBinSize(0.005f),
+    m_smoothingWindow(1),
+    m_ambiguousParticleMode(false)
 {
 }
 
@@ -185,8 +188,8 @@ void PeakDirectionFinderTool::SmoothAngularDecompositionMap(AngularDecomposition
         {
             const int contributingBin = currentBin + binOffset;
             total += (angularDecompositionMapTemp.find(contributingBin) == angularDecompositionMapTemp.end())
-                         ? 0.f
-                         : angularDecompositionMapTemp.at(contributingBin);
+                ? 0.f
+                : angularDecompositionMapTemp.at(contributingBin);
         }
 
         angularDecompositionMap[currentBin] = total / static_cast<float>((2.0 * m_smoothingWindow) + 1);

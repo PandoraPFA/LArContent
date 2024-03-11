@@ -18,7 +18,9 @@ namespace lar_content
 {
 
 LocalAsymmetryFeatureTool::LocalAsymmetryFeatureTool() :
-    AsymmetryFeatureBaseTool(), m_minAsymmetryCosAngle(0.9962), m_maxAsymmetryNClusters(2)
+    AsymmetryFeatureBaseTool(),
+    m_minAsymmetryCosAngle(0.9962),
+    m_maxAsymmetryNClusters(2)
 {
 }
 

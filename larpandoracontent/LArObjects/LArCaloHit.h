@@ -242,7 +242,8 @@ inline void LArCaloHit::SetShowerProbability(const float probability)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArCaloHitFactory::LArCaloHitFactory(const unsigned int version) : m_version(version)
+inline LArCaloHitFactory::LArCaloHitFactory(const unsigned int version) :
+    m_version(version)
 {
 }
 

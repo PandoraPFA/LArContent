@@ -23,7 +23,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-PcaShowerParticleBuildingAlgorithm::PcaShowerParticleBuildingAlgorithm() : m_layerFitHalfWindow(20)
+PcaShowerParticleBuildingAlgorithm::PcaShowerParticleBuildingAlgorithm() :
+    m_layerFitHalfWindow(20)
 {
 }
 

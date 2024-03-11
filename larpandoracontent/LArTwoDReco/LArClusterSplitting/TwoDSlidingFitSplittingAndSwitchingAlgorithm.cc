@@ -19,7 +19,8 @@ namespace lar_content
 {
 
 TwoDSlidingFitSplittingAndSwitchingAlgorithm::TwoDSlidingFitSplittingAndSwitchingAlgorithm() :
-    m_halfWindowLayers(25), m_minClusterLength(10.f)
+    m_halfWindowLayers(25),
+    m_minClusterLength(10.f)
 {
 }
 

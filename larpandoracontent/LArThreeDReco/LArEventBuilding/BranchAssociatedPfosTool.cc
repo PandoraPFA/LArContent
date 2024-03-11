@@ -25,7 +25,9 @@ typedef NeutrinoHierarchyAlgorithm::PfoInfo PfoInfo;
 typedef NeutrinoHierarchyAlgorithm::PfoInfoMap PfoInfoMap;
 
 BranchAssociatedPfosTool::BranchAssociatedPfosTool() :
-    m_minNeutrinoVertexDistance(5.f), m_trackBranchAdditionFraction(0.4f), m_maxParentClusterDistance(3.5f)
+    m_minNeutrinoVertexDistance(5.f),
+    m_trackBranchAdditionFraction(0.4f),
+    m_maxParentClusterDistance(3.5f)
 {
 }
 

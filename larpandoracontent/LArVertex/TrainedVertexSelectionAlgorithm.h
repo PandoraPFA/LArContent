@@ -514,7 +514,8 @@ inline TrainedVertexSelectionAlgorithm::EventFeatureInfo::EventFeatureInfo(const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline TrainedVertexSelectionAlgorithm::VertexSharedFeatureInfo::VertexSharedFeatureInfo(const float separation, const float axisHits) :
-    m_separation(separation), m_axisHits(axisHits)
+    m_separation(separation),
+    m_axisHits(axisHits)
 {
 }
 

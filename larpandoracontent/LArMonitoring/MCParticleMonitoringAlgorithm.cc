@@ -23,7 +23,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-MCParticleMonitoringAlgorithm::MCParticleMonitoringAlgorithm() : m_useTrueNeutrinosOnly(false), m_minHitsForDisplay(1)
+MCParticleMonitoringAlgorithm::MCParticleMonitoringAlgorithm() :
+    m_useTrueNeutrinosOnly(false),
+    m_minHitsForDisplay(1)
 {
 }
 

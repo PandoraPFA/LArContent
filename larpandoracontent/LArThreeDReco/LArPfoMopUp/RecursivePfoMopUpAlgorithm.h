@@ -75,14 +75,16 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline RecursivePfoMopUpAlgorithm::RecursivePfoMopUpAlgorithm() : m_maxIterations(10)
+inline RecursivePfoMopUpAlgorithm::RecursivePfoMopUpAlgorithm() :
+    m_maxIterations(10)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline RecursivePfoMopUpAlgorithm::PfoMergeStats::PfoMergeStats(const ClusterNumHitsList &numClusterHits, const float trackScore) :
-    m_numClusterHits(numClusterHits), m_trackScore(trackScore)
+    m_numClusterHits(numClusterHits),
+    m_trackScore(trackScore)
 {
 }
 

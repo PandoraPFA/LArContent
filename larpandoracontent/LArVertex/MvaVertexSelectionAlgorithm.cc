@@ -34,7 +34,8 @@ namespace lar_content
 
 template <typename T>
 MvaVertexSelectionAlgorithm<T>::MvaVertexSelectionAlgorithm() :
-    TrainedVertexSelectionAlgorithm(), m_filePathEnvironmentVariable("FW_SEARCH_PATH")
+    TrainedVertexSelectionAlgorithm(),
+    m_filePathEnvironmentVariable("FW_SEARCH_PATH")
 {
 }
 
