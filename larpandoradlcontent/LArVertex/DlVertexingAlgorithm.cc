@@ -891,7 +891,8 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
 DlVertexingAlgorithm::VertexTuple::VertexTuple(
     const Pandora &pandora, const CartesianVector &vertexU, const CartesianVector &vertexV, const CartesianVector &vertexW) :
-    m_pos{0.f, 0.f, 0.f}, m_chi2{0.f}
+    m_pos{0.f, 0.f, 0.f},
+    m_chi2{0.f}
 {
     LArGeometryHelper::MergeThreePositions3D(pandora, TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, vertexU, vertexV, vertexW, m_pos, m_chi2);
     if (m_chi2 > 1.f)
@@ -932,7 +933,8 @@ DlVertexingAlgorithm::VertexTuple::VertexTuple(
 
 DlVertexingAlgorithm::VertexTuple::VertexTuple(
     const Pandora &pandora, const CartesianVector &vertex1, const CartesianVector &vertex2, const HitType view1, const HitType view2) :
-    m_pos{0.f, 0.f, 0.f}, m_chi2{0.f}
+    m_pos{0.f, 0.f, 0.f},
+    m_chi2{0.f}
 {
     LArGeometryHelper::MergeTwoPositions3D(pandora, view1, view2, vertex1, vertex2, m_pos, m_chi2);
     std::cout << "Merging 2, position (" << m_pos.GetX() << ", " << m_pos.GetY() << ", " << m_pos.GetZ() << ") with chi2 " << m_chi2 << std::endl;

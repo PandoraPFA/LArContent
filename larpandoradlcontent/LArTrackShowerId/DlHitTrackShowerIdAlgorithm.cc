@@ -30,7 +30,12 @@ namespace lar_dl_content
 {
 
 DlHitTrackShowerIdAlgorithm::DlHitTrackShowerIdAlgorithm() :
-    m_imageHeight(256), m_imageWidth(256), m_tileSize(128.f), m_visualize(false), m_useTrainingMode(false), m_trainingOutputFile("")
+    m_imageHeight(256),
+    m_imageWidth(256),
+    m_tileSize(128.f),
+    m_visualize(false),
+    m_useTrainingMode(false),
+    m_trainingOutputFile("")
 {
 }
 
