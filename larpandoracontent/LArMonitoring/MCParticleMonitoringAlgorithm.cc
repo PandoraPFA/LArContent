@@ -23,7 +23,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-MCParticleMonitoringAlgorithm::MCParticleMonitoringAlgorithm() : m_useTrueNeutrinosOnly(false), m_minHitsForDisplay(1)
+MCParticleMonitoringAlgorithm::MCParticleMonitoringAlgorithm() : m_useTrueNeutrinosOnly(false), m_minHitsForDisplay(1), m_minPrimaryGoodHits(3), m_minHitsForGoodView(2)
 {
 }
 
@@ -100,7 +100,10 @@ void MCParticleMonitoringAlgorithm::PrintPrimaryMCParticles(const LArMCParticleH
                       << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList) << ", "
                       << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList) << ")" << std::endl;
 
-            LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
+            LArMCParticleHelper::PrimaryParameters parameters;
+	    parameters.m_minPrimaryGoodHits = m_minPrimaryGoodHits;
+	    parameters.m_minHitsForGoodView = m_minHitsForGoodView;
+	    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
             LArMCParticleHelper::CaloHitToMCMap caloHitToPrimaryMCMap;
             LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
             LArMCParticleHelper::GetMCParticleToCaloHitMatches(&caloHitList, mcToPrimaryMCMap, caloHitToPrimaryMCMap, mcToTrueHitListMap);
@@ -150,6 +153,12 @@ StatusCode MCParticleMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinHitsForDisplay", m_minHitsForDisplay));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinPrimaryGoodHits", m_minPrimaryGoodHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinHitsForGoodView", m_minHitsForGoodView));
 
     return STATUS_CODE_SUCCESS;
 }

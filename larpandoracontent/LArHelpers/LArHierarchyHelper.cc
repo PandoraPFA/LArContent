@@ -772,8 +772,8 @@ const std::string LArHierarchyHelper::MCHierarchy::Node::ToString(const std::str
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArHierarchyHelper::MCHierarchy::ReconstructabilityCriteria::ReconstructabilityCriteria() :
-    m_minHits{30},
-    m_minHitsForGoodView{10},
+    m_minHits{3},
+    m_minHitsForGoodView{1},
     m_minGoodViews{2},
     m_removeNeutrons{true}
 {

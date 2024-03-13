@@ -112,13 +112,13 @@ public:
              *  @param  minGoodViews The minimum number of good views for a particle to be considered reconstructable
              *  @param removeNeutrons Whether to remove neutrons and downstream particles from consideration
              */
-            ReconstructabilityCriteria(const unsigned int minHits, const unsigned int minHitsForGoodView, const unsigned int minGoodViews,
-                const bool removeNeutrons);
+            ReconstructabilityCriteria( unsigned int minHits, unsigned int minHitsForGoodView, unsigned int minGoodViews,
+                 bool removeNeutrons);
 
-            const unsigned int m_minHits;            ///< the minimum number of primary good Hits
-            const unsigned int m_minHitsForGoodView; ///< the minimum number of Hits for a good view
-            const unsigned int m_minGoodViews;       ///< the minimum number of primary good views
-            const bool m_removeNeutrons;             ///< whether to remove neutrons and their downstream particles
+            unsigned int m_minHits;            ///< the minimum number of primary good Hits
+            unsigned int m_minHitsForGoodView; ///< the minimum number of Hits for a good view
+            unsigned int m_minGoodViews;       ///< the minimum number of primary good views
+            bool m_removeNeutrons;             ///< whether to remove neutrons and their downstream particles
         };
 
         class Node;
