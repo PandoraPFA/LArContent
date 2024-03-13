@@ -163,8 +163,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
     for (const Cluster *const pCluster : *pClusterList)
     {
-	const Cluster *const cluster(*iter);
-	countHits = countHits + (cluster->GetNCaloHits());
+	countHits = countHits + (pCluster->GetNCaloHits());
     }
 
     for (auto iter = pClusterList->begin(); iter != pClusterList->end(); ++iter)
@@ -227,7 +226,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	    
 	    const VertexList *pVertexList{nullptr};
             float vtxClusterAngle{-1};
-	    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,                       vertexListName, pVertexList));
+	    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,                       m_vertexListName, pVertexList));
 	    
 	    if (pVertexList && !pVertexList->empty())
             {
@@ -271,13 +270,13 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	    float finalDistance{0}, maxEdgeHitSeparation{-std::numeric_limits<float>::max()}, minEdgeHitSeparation{std::numeric_limits<float>::max()}, adc1{0}, adc2{0};
             int contact{0}, proximity{0};;
 
-	    for ( const CaloHit *const caloHit1 : *largestList)
+	    for ( const CaloHit *const caloHit1 : largestList)
             {
                   CartesianVector hit1Position(caloHit1->GetPositionVector());
                   float nearestHit{-1};
 		  adc1 += caloHit1->GetInputEnergy();
 
-		  for (const CaloHit *const caloHit2 : *smallestList)
+		  for (const CaloHit *const caloHit2 : smallestList)
                   {
 		      CartesianVector hit2Position(caloHit2->GetPositionVector());
                       float distance{std::sqrt(hit1Position.GetDistanceSquared(hit2Position))};
@@ -574,7 +573,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::ReadSettings(const TiXmlHandle xml
         "ContactThreshold", m_contactThreshold));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ProximityThreshold", m_proxmityThreshold));
+        "ProximityThreshold", m_proximityThreshold));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EdgeHitToolDivisions", m_divisions));

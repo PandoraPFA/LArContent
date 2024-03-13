@@ -24,13 +24,14 @@ ClearTracksTool::ClearTracksTool() :
 
 bool ClearTracksTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-
     bool particlesMade(false);
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    {
 
     TensorType::ElementList elementList;
     overlapTensor.GetUnambiguousElements(true, elementList);
     this->CreateThreeDParticles(pAlgorithm, elementList, particlesMade);
+    }
 
     return particlesMade;
 }
