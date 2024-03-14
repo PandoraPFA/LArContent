@@ -11,6 +11,7 @@
 #include "larpandoradlcontent/LArTwoDReco/DlClusterAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGraphHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
@@ -36,53 +37,13 @@ StatusCode DlClusterAlgorithm::Run()
         if (pCaloHitList->empty())
             continue;
         std::cout << "Num hits: " << pCaloHitList->size() << std::endl;
-        Eigen::MatrixXf hits(pCaloHitList->size(), 2);
-        int i{0};
-        for (const CaloHit *const pCaloHit : *pCaloHitList)
+        LArGraphHelper::EdgeVector edges;
+        LArGraphHelper::MakeGraph(*pCaloHitList, edges);
+        for (const LArGraphHelper::Edge *const edge : edges)
         {
-            const CartesianVector &pos{pCaloHit->GetPositionVector()};
-            hits(i, 0) = pos.GetX();
-            hits(i, 1) = pos.GetZ();
-            ++i;
-        }
-        // Edges can be double-counted, so use map of maps to avoid this
-        std::map<const CaloHit *, std::map<const CaloHit *, bool>> edges;
-        for (int r = 0; r < hits.rows(); ++r)
-        {
-            Eigen::RowVectorXf row(2);
-            row << hits(r,0), hits(r,1);
-            Eigen::MatrixXf norms((hits.rowwise() - row).array().pow(2).rowwise().sum());
-            norms(r, 0) = std::numeric_limits<float>::max();
-            Eigen::Index index1, index2;
-            norms.col(0).minCoeff(&index1);
-            auto iter0{pCaloHitList->begin()};
-            std::advance(iter0, r);
-            auto iter1{pCaloHitList->begin()};
-            std::advance(iter1, index1);
-            edges[*iter0][*iter1] = true;
-            edges[*iter1][*iter0] = true;
-            norms(index1, 0) = std::numeric_limits<float>::max();
-            auto val2{norms.col(0).minCoeff(&index2)};
-            auto val3{(hits.row(index1) - hits.row(index2)).array().pow(2).rowwise().sum()};
-            if (val2 < val3(0))
-            {
-                auto iter2{pCaloHitList->begin()};
-                std::advance(iter2, index2);
-                edges[*iter0][*iter2] = true;
-                edges[*iter2][*iter0] = true;
-            }
-        }
-
-        for (const auto &[pCaloHit1, map] : edges)
-        {
-            const CartesianVector &pos1{pCaloHit1->GetPositionVector()};
-            for (const auto &[pCaloHit2, dummy] : map)
-            {
-                const CartesianVector &pos2{pCaloHit2->GetPositionVector()};
-                CartesianVector start(pos1.GetX(), 0, pos1.GetZ());
-                CartesianVector end(pos2.GetX(), 0, pos2.GetZ());
-                PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &start, &end, "e", BLUE, 2, 1));
-            }
+            const CartesianVector &start{edge->m_v0->GetPositionVector()};
+            const CartesianVector &end{edge->m_v1->GetPositionVector()};
+            PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &start, &end, "e", BLUE, 2, 1));
         }
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
