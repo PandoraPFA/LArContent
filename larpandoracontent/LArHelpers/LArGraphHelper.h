@@ -84,9 +84,17 @@ private:
      *
      *  @param  hitToEdgesMap the input maps from calo hits to edges
      *  @param  graphs the output map between a root calo hit and all connected hits
-     *  @param  connectedHits the map of hits in use
      */
-    static void IdentifyDisconnectedRegions(const HitEdgeMap &hitToEdgesMap, HitConnectionsMap &graphs, HitUseMap &connectedHits);
+    static void IdentifyDisconnectedRegions(const HitEdgeMap &hitToEdgesMap, HitConnectionsMap &graphs);
+
+    /**
+     *  @brief  Identify the different disconnected sub graphs in a set of eges.
+     *
+     *  @param  graphs the map between a root calo hit and all connected hits
+     *  @param  hitToEdgesMap the (updatable) map from calo hits to edges
+     *  @param  edges the (updatable) vector of edges describing the entire (set of) graph(s)
+     */
+    static void ConnectRegions(const HitConnectionsMap &graphs, HitEdgeMap &hitToEdgesMap, EdgeVector &edges);
 
     /**
      *  @brief  Convert a list of calo hits into an Eigen matrix.

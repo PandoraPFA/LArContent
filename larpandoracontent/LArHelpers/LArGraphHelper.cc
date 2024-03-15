@@ -71,10 +71,58 @@ void LArGraphHelper::MakeGraph(const CaloHitList &caloHitList, EdgeVector &edges
         hitToEdgesMap[pEdge->m_v1].emplace_back(pEdge);
     }
     HitConnectionsMap graphs;
-    HitUseMap connectedHits;
-    LArGraphHelper::IdentifyDisconnectedRegions(hitToEdgesMap, graphs, connectedHits);
-    std::cout << "Graphs: " << graphs.size() << std::endl;
+    LArGraphHelper::IdentifyDisconnectedRegions(hitToEdgesMap, graphs);
+    while (graphs.size() > 1)
+    {
+        LArGraphHelper::ConnectRegions(graphs, hitToEdgesMap, edges);
+        graphs.clear();
+        LArGraphHelper::IdentifyDisconnectedRegions(hitToEdgesMap, graphs);
+    }
+}
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArGraphHelper::Walk(const CaloHit *const pRootCaloHit, const HitEdgeMap &hitToEdgesMap, CaloHitList &graph, HitUseMap &connectedHits)
+{
+    if (connectedHits.find(pRootCaloHit) != connectedHits.end())
+        return;
+    graph.emplace_back(pRootCaloHit);
+    connectedHits[pRootCaloHit] = true;
+    const EdgeVector &assocEdges{hitToEdgesMap.at(pRootCaloHit)};
+    for (const Edge *const edge : assocEdges)
+    {
+        if (pRootCaloHit == edge->m_v0)
+            LArGraphHelper::Walk(edge->m_v1, hitToEdgesMap, graph, connectedHits);
+        else
+            LArGraphHelper::Walk(edge->m_v0, hitToEdgesMap, graph, connectedHits);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArGraphHelper::IdentifyDisconnectedRegions(const HitEdgeMap &hitToEdgesMap, HitConnectionsMap &graphs)
+{
+    HitUseMap connectedHits;
+    for (const auto &[pCaloHit, assocEdges] : hitToEdgesMap)
+    {
+        if (connectedHits.find(pCaloHit) != connectedHits.end())
+            continue;
+        graphs[pCaloHit] = CaloHitList{pCaloHit};
+        connectedHits[pCaloHit] = true;
+        for (const Edge *const edge : assocEdges)
+        {
+            if (pCaloHit == edge->m_v0)
+                LArGraphHelper::Walk(edge->m_v1, hitToEdgesMap, graphs[pCaloHit], connectedHits);
+            else
+                LArGraphHelper::Walk(edge->m_v0, hitToEdgesMap, graphs[pCaloHit], connectedHits);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArGraphHelper::ConnectRegions(const HitConnectionsMap &graphs, HitEdgeMap &hitToEdgesMap, EdgeVector &edges)
+{
     std::map<int, std::vector<int>> connectedGraphMap;
     int i{0}, idx1{0}, idx2{0};
     for (const auto &[pCaloHit1, caloHitList1] : graphs)
@@ -114,48 +162,12 @@ void LArGraphHelper::MakeGraph(const CaloHitList &caloHitList, EdgeVector &edges
         }
         if (pClosestHit1 && pClosestHit2)
         {
-            edges.emplace_back(new Edge(pClosestHit1, pClosestHit2));
+            const Edge *pEdge{new Edge(pClosestHit1, pClosestHit2)};
+            edges.emplace_back(pEdge);
+            hitToEdgesMap[pEdge->m_v0].emplace_back(pEdge);
+            hitToEdgesMap[pEdge->m_v1].emplace_back(pEdge);
             connectedGraphMap[idx1].emplace_back(idx2);
             connectedGraphMap[idx2].emplace_back(idx1);
-            std::cout << "Connecting " << idx1 << " and " << idx2 << std::endl;
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArGraphHelper::Walk(const CaloHit *const pRootCaloHit, const HitEdgeMap &hitToEdgesMap, CaloHitList &graph, HitUseMap &connectedHits)
-{
-    if (connectedHits.find(pRootCaloHit) != connectedHits.end())
-        return;
-    graph.emplace_back(pRootCaloHit);
-    connectedHits[pRootCaloHit] = true;
-    const EdgeVector &assocEdges{hitToEdgesMap.at(pRootCaloHit)};
-    for (const Edge *const edge : assocEdges)
-    {
-        if (pRootCaloHit == edge->m_v0)
-            LArGraphHelper::Walk(edge->m_v1, hitToEdgesMap, graph, connectedHits);
-        else
-            LArGraphHelper::Walk(edge->m_v0, hitToEdgesMap, graph, connectedHits);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArGraphHelper::IdentifyDisconnectedRegions(const HitEdgeMap &hitToEdgesMap, HitConnectionsMap &graphs, HitUseMap &connectedHits)
-{
-    for (const auto &[pCaloHit, assocEdges] : hitToEdgesMap)
-    {
-        if (connectedHits.find(pCaloHit) != connectedHits.end())
-            continue;
-        graphs[pCaloHit] = CaloHitList{pCaloHit};
-        connectedHits[pCaloHit] = true;
-        for (const Edge *const edge : assocEdges)
-        {
-            if (pCaloHit == edge->m_v0)
-                LArGraphHelper::Walk(edge->m_v1, hitToEdgesMap, graphs[pCaloHit], connectedHits);
-            else
-                LArGraphHelper::Walk(edge->m_v0, hitToEdgesMap, graphs[pCaloHit], connectedHits);
         }
     }
 }
