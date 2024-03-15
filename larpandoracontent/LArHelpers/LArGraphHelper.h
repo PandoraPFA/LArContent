@@ -10,6 +10,8 @@
 
 #include "Objects/Cluster.h"
 
+#include <Eigen/Dense>
+
 namespace lar_content
 {
 
@@ -52,6 +54,12 @@ public:
     };
     typedef std::vector<const Edge *> EdgeVector;
 
+private:
+    typedef std::map<const pandora::CaloHit *, EdgeVector> HitEdgeMap;
+    typedef std::map<const pandora::CaloHit *, pandora::CaloHitList> HitConnectionsMap;
+    typedef std::map<const pandora::CaloHit *, bool> HitUseMap;
+
+public:
     /**
      *  @brief  Construct a graph from a list of calo hits.
      *
@@ -59,6 +67,34 @@ public:
      *  @param  edges the output vector of edges to populate
      */
     static void MakeGraph(const pandora::CaloHitList &caloHitList, EdgeVector &edges);
+
+    /**
+     *  @brief  Walk along node edges to define a connected graph.
+     *
+     *  @param  pCaloHit the root calo hit of the current subgraph
+     *  @param  hitToEdgesMap the map of hits to the edges for which they are a vertex
+     *  @param  graph the current graph to be augmented
+     *  @param  connectedHits the map of hits in use
+     */
+    static void Walk(const pandora::CaloHit *const pCaloHit, const HitEdgeMap &hitToEdgesMap, pandora::CaloHitList &graph, HitUseMap &connectedHits);
+
+private:
+    /**
+     *  @brief  Identify the different disconnected sub graphs in a set of eges.
+     *
+     *  @param  hitToEdgesMap the input maps from calo hits to edges
+     *  @param  graphs the output map between a root calo hit and all connected hits
+     *  @param  connectedHits the map of hits in use
+     */
+    static void IdentifyDisconnectedRegions(const HitEdgeMap &hitToEdgesMap, HitConnectionsMap &graphs, HitUseMap &connectedHits);
+
+    /**
+     *  @brief  Convert a list of calo hits into an Eigen matrix.
+     *
+     *  @param  caloHitList the calo hit list containing the hits from which to construct a graph
+     *  @param  hitMatrix the output Eigen matrix
+     */
+    static void Vectorize(const pandora::CaloHitList &caloHitList, Eigen::MatrixXf &hitMatrix);
 };
 
 } // namespace lar_content
