@@ -1,13 +1,13 @@
 /**
- *  @file   larpandoracontent/LArHelpers/LArGraphHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArGraph.cc
  *
  *  @brief  Implementation of the cluster helper class.
  *
  *  $Log: $
  */
 
-#include "larpandoracontent/LArHelpers/LArGraphHelper.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
+#include "larpandoracontent/LArObjects/LArGraph.h"
 
 #include <cmath>
 #include <limits>
@@ -17,10 +17,25 @@ using namespace pandora;
 namespace lar_content
 {
 
-void LArGraphHelper::MakeGraph(const CaloHitList &caloHitList, EdgeVector &edges)
+LArGraph::~LArGraph()
+{
+    for (const Edge *pEdge : m_edges)
+        delete pEdge;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const LArGraph::EdgeVector &LArGraph::GetEdges() const
+{
+    return this->m_edges;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArGraph::MakeGraph(const CaloHitList &caloHitList)
 {
     Eigen::MatrixXf hitMatrix(caloHitList.size(), 2);
-    LArGraphHelper::Vectorize(caloHitList, hitMatrix);
+    this->Vectorize(caloHitList, hitMatrix);
     // Edges can be double-counted, so use map of maps to avoid this
     std::map<const CaloHit *, std::map<const CaloHit *, bool>> edgeMap;
     for (int r = 0; r < hitMatrix.rows(); ++r)
@@ -61,28 +76,28 @@ void LArGraphHelper::MakeGraph(const CaloHitList &caloHitList, EdgeVector &edges
             }
             usedEdges[pCaloHit1][pCaloHit2] = true;
             usedEdges[pCaloHit2][pCaloHit1] = true;
-            edges.emplace_back(new Edge(pCaloHit1, pCaloHit2));
+            this->m_edges.emplace_back(new Edge(pCaloHit1, pCaloHit2));
         }
     }
     HitEdgeMap hitToEdgesMap;
-    for (const Edge *const pEdge : edges)
+    for (const Edge *const pEdge : this->m_edges)
     {
         hitToEdgesMap[pEdge->m_v0].emplace_back(pEdge);
         hitToEdgesMap[pEdge->m_v1].emplace_back(pEdge);
     }
     HitConnectionsMap graphs;
-    LArGraphHelper::IdentifyDisconnectedRegions(hitToEdgesMap, graphs);
+    this->IdentifyDisconnectedRegions(hitToEdgesMap, graphs);
     while (graphs.size() > 1)
     {
-        LArGraphHelper::ConnectRegions(graphs, hitToEdgesMap, edges);
+        this->ConnectRegions(graphs, hitToEdgesMap);
         graphs.clear();
-        LArGraphHelper::IdentifyDisconnectedRegions(hitToEdgesMap, graphs);
+        this->IdentifyDisconnectedRegions(hitToEdgesMap, graphs);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArGraphHelper::Walk(const CaloHit *const pRootCaloHit, const HitEdgeMap &hitToEdgesMap, CaloHitList &graph, HitUseMap &connectedHits)
+void LArGraph::Walk(const CaloHit *const pRootCaloHit, const HitEdgeMap &hitToEdgesMap, CaloHitList &graph, HitUseMap &connectedHits) const
 {
     if (connectedHits.find(pRootCaloHit) != connectedHits.end())
         return;
@@ -92,15 +107,15 @@ void LArGraphHelper::Walk(const CaloHit *const pRootCaloHit, const HitEdgeMap &h
     for (const Edge *const edge : assocEdges)
     {
         if (pRootCaloHit == edge->m_v0)
-            LArGraphHelper::Walk(edge->m_v1, hitToEdgesMap, graph, connectedHits);
+            this->Walk(edge->m_v1, hitToEdgesMap, graph, connectedHits);
         else
-            LArGraphHelper::Walk(edge->m_v0, hitToEdgesMap, graph, connectedHits);
+            this->Walk(edge->m_v0, hitToEdgesMap, graph, connectedHits);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArGraphHelper::IdentifyDisconnectedRegions(const HitEdgeMap &hitToEdgesMap, HitConnectionsMap &graphs)
+void LArGraph::IdentifyDisconnectedRegions(const HitEdgeMap &hitToEdgesMap, HitConnectionsMap &graphs) const
 {
     HitUseMap connectedHits;
     for (const auto &[pCaloHit, assocEdges] : hitToEdgesMap)
@@ -112,16 +127,16 @@ void LArGraphHelper::IdentifyDisconnectedRegions(const HitEdgeMap &hitToEdgesMap
         for (const Edge *const edge : assocEdges)
         {
             if (pCaloHit == edge->m_v0)
-                LArGraphHelper::Walk(edge->m_v1, hitToEdgesMap, graphs[pCaloHit], connectedHits);
+                this->Walk(edge->m_v1, hitToEdgesMap, graphs[pCaloHit], connectedHits);
             else
-                LArGraphHelper::Walk(edge->m_v0, hitToEdgesMap, graphs[pCaloHit], connectedHits);
+                this->Walk(edge->m_v0, hitToEdgesMap, graphs[pCaloHit], connectedHits);
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArGraphHelper::ConnectRegions(const HitConnectionsMap &graphs, HitEdgeMap &hitToEdgesMap, EdgeVector &edges)
+void LArGraph::ConnectRegions(const HitConnectionsMap &graphs, HitEdgeMap &hitToEdgesMap)
 {
     std::map<int, std::vector<int>> connectedGraphMap;
     int i{0}, idx1{0}, idx2{0};
@@ -129,7 +144,7 @@ void LArGraphHelper::ConnectRegions(const HitConnectionsMap &graphs, HitEdgeMap 
     {
         ++i;
         Eigen::MatrixXf subGraphMatrix(caloHitList1.size(), 2);
-        LArGraphHelper::Vectorize(caloHitList1, subGraphMatrix);
+        this->Vectorize(caloHitList1, subGraphMatrix);
         float closestApproach{std::numeric_limits<float>::max()};
         const CaloHit *pClosestHit1{nullptr};
         const CaloHit *pClosestHit2{nullptr};
@@ -163,7 +178,7 @@ void LArGraphHelper::ConnectRegions(const HitConnectionsMap &graphs, HitEdgeMap 
         if (pClosestHit1 && pClosestHit2)
         {
             const Edge *pEdge{new Edge(pClosestHit1, pClosestHit2)};
-            edges.emplace_back(pEdge);
+            this->m_edges.emplace_back(pEdge);
             hitToEdgesMap[pEdge->m_v0].emplace_back(pEdge);
             hitToEdgesMap[pEdge->m_v1].emplace_back(pEdge);
             connectedGraphMap[idx1].emplace_back(idx2);
@@ -174,7 +189,7 @@ void LArGraphHelper::ConnectRegions(const HitConnectionsMap &graphs, HitEdgeMap 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArGraphHelper::Vectorize(const CaloHitList &caloHitList, Eigen::MatrixXf &hitMatrix)
+void LArGraph::Vectorize(const CaloHitList &caloHitList, Eigen::MatrixXf &hitMatrix) const
 {
     int i{0};
     for (const CaloHit *const pCaloHit : caloHitList)
@@ -189,7 +204,7 @@ void LArGraphHelper::Vectorize(const CaloHitList &caloHitList, Eigen::MatrixXf &
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArGraphHelper::Edge::Edge(const CaloHit *const pVertex0, const CaloHit *const pVertex1) :
+LArGraph::Edge::Edge(const CaloHit *const pVertex0, const CaloHit *const pVertex1) :
     m_v0{pVertex0},
     m_v1{pVertex1}
 {
@@ -197,7 +212,7 @@ LArGraphHelper::Edge::Edge(const CaloHit *const pVertex0, const CaloHit *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArGraphHelper::Edge::LengthSquared() const
+float LArGraph::Edge::LengthSquared() const
 {
     const CartesianVector &pos0{this->m_v0->GetPositionVector()}, &pos1{this->m_v1->GetPositionVector()};
     const float dx{pos0.GetX() - pos1.GetX()}, dz{pos0.GetZ() - pos1.GetZ()};

@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArHelpers/LArGraphHelper.h
+ *  @file   larpandoracontent/LArHelpers/LArGraph.h
  *
- *  @brief  Header file for the Delaunay triangulation helper class.
+ *  @brief  Header file for the LArGraph class.
  *
  *  $Log: $
  */
-#ifndef LAR_GRAPH_HELPER_H
-#define LAR_GRAPH_HELPER_H 1
+#ifndef LAR_GRAPH_H
+#define LAR_GRAPH_H 1
 
 #include "Objects/Cluster.h"
 
@@ -16,9 +16,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  LArGraphHelper class
+ *  @brief  LArGraph class
  */
-class LArGraphHelper
+class LArGraph
 {
 public:
     class Edge
@@ -61,12 +61,28 @@ private:
 
 public:
     /**
+     *  @brief  Constructor
+     */
+    LArGraph() = default;
+
+    /**
+     *  @brief  Destructor
+     */
+    ~LArGraph();
+
+    /**
+     *  @brief  Retrieve the edges for this graph
+     *
+     *  @return The edges for this graph
+     */
+    const EdgeVector &GetEdges() const;
+
+    /**
      *  @brief  Construct a graph from a list of calo hits.
      *
      *  @param  caloHitList the calo hit list containing the hits from which to construct a graph
-     *  @param  edges the output vector of edges to populate
      */
-    static void MakeGraph(const pandora::CaloHitList &caloHitList, EdgeVector &edges);
+    void MakeGraph(const pandora::CaloHitList &caloHitList);
 
     /**
      *  @brief  Walk along node edges to define a connected graph.
@@ -76,7 +92,7 @@ public:
      *  @param  graph the current graph to be augmented
      *  @param  connectedHits the map of hits in use
      */
-    static void Walk(const pandora::CaloHit *const pCaloHit, const HitEdgeMap &hitToEdgesMap, pandora::CaloHitList &graph, HitUseMap &connectedHits);
+    void Walk(const pandora::CaloHit *const pCaloHit, const HitEdgeMap &hitToEdgesMap, pandora::CaloHitList &graph, HitUseMap &connectedHits) const;
 
 private:
     /**
@@ -85,16 +101,15 @@ private:
      *  @param  hitToEdgesMap the input maps from calo hits to edges
      *  @param  graphs the output map between a root calo hit and all connected hits
      */
-    static void IdentifyDisconnectedRegions(const HitEdgeMap &hitToEdgesMap, HitConnectionsMap &graphs);
+    void IdentifyDisconnectedRegions(const HitEdgeMap &hitToEdgesMap, HitConnectionsMap &graphs) const;
 
     /**
      *  @brief  Identify the different disconnected sub graphs in a set of eges.
      *
      *  @param  graphs the map between a root calo hit and all connected hits
      *  @param  hitToEdgesMap the (updatable) map from calo hits to edges
-     *  @param  edges the (updatable) vector of edges describing the entire (set of) graph(s)
      */
-    static void ConnectRegions(const HitConnectionsMap &graphs, HitEdgeMap &hitToEdgesMap, EdgeVector &edges);
+    void ConnectRegions(const HitConnectionsMap &graphs, HitEdgeMap &hitToEdgesMap);
 
     /**
      *  @brief  Convert a list of calo hits into an Eigen matrix.
@@ -102,9 +117,11 @@ private:
      *  @param  caloHitList the calo hit list containing the hits from which to construct a graph
      *  @param  hitMatrix the output Eigen matrix
      */
-    static void Vectorize(const pandora::CaloHitList &caloHitList, Eigen::MatrixXf &hitMatrix);
+    void Vectorize(const pandora::CaloHitList &caloHitList, Eigen::MatrixXf &hitMatrix) const;
+
+    EdgeVector m_edges; ///< The edges defining the graph
 };
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_GRAPH_HELPER_H
+#endif // #ifndef LAR_GRAPH_H

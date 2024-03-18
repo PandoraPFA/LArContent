@@ -11,10 +11,10 @@
 #include "larpandoradlcontent/LArTwoDReco/DlClusterAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArGraphHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
+#include "larpandoracontent/LArObjects/LArGraph.h"
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
 #include <Eigen/Dense>
@@ -37,9 +37,10 @@ StatusCode DlClusterAlgorithm::Run()
         if (pCaloHitList->empty())
             continue;
         std::cout << "Num hits: " << pCaloHitList->size() << std::endl;
-        LArGraphHelper::EdgeVector edges;
-        LArGraphHelper::MakeGraph(*pCaloHitList, edges);
-        for (const LArGraphHelper::Edge *const edge : edges)
+        LArGraph graph;
+        graph.MakeGraph(*pCaloHitList);
+        const LArGraph::EdgeVector &edges{graph.GetEdges()};
+        for (const LArGraph::Edge *const edge : edges)
         {
             const CartesianVector &start{edge->m_v0->GetPositionVector()};
             const CartesianVector &end{edge->m_v1->GetPositionVector()};
