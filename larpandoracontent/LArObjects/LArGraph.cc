@@ -17,6 +17,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+LArGraph::LArGraph(const bool fullyConnect, const int nSourceEdges) :
+    m_fullyConnect{fullyConnect},
+    m_nSourceEdges{nSourceEdges}
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 LArGraph::~LArGraph()
 {
     for (const Edge *pEdge : m_edges)
@@ -79,19 +87,22 @@ void LArGraph::MakeGraph(const CaloHitList &caloHitList)
             this->m_edges.emplace_back(new Edge(pCaloHit1, pCaloHit2));
         }
     }
-    HitEdgeMap hitToEdgesMap;
-    for (const Edge *const pEdge : this->m_edges)
+    if (m_fullyConnect)
     {
-        hitToEdgesMap[pEdge->m_v0].emplace_back(pEdge);
-        hitToEdgesMap[pEdge->m_v1].emplace_back(pEdge);
-    }
-    HitConnectionsMap graphs;
-    this->IdentifyDisconnectedRegions(hitToEdgesMap, graphs);
-    while (graphs.size() > 1)
-    {
-        this->ConnectRegions(graphs, hitToEdgesMap);
-        graphs.clear();
+        HitEdgeMap hitToEdgesMap;
+        for (const Edge *const pEdge : this->m_edges)
+        {
+            hitToEdgesMap[pEdge->m_v0].emplace_back(pEdge);
+            hitToEdgesMap[pEdge->m_v1].emplace_back(pEdge);
+        }
+        HitConnectionsMap graphs;
         this->IdentifyDisconnectedRegions(hitToEdgesMap, graphs);
+        while (graphs.size() > 1)
+        {
+            this->ConnectRegions(graphs, hitToEdgesMap);
+            graphs.clear();
+            this->IdentifyDisconnectedRegions(hitToEdgesMap, graphs);
+        }
     }
 }
 

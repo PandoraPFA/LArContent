@@ -27,6 +27,14 @@ using namespace lar_content;
 namespace lar_dl_content
 {
 
+DlClusterAlgorithm::DlClusterAlgorithm() :
+    m_fullyConnect{true},
+    m_nSourceEdges{2}
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode DlClusterAlgorithm::Run()
 {
     PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
@@ -37,7 +45,7 @@ StatusCode DlClusterAlgorithm::Run()
         if (pCaloHitList->empty())
             continue;
         std::cout << "Num hits: " << pCaloHitList->size() << std::endl;
-        LArGraph graph;
+        LArGraph graph(m_fullyConnect, m_nSourceEdges);
         graph.MakeGraph(*pCaloHitList);
         const LArGraph::EdgeVector &edges{graph.GetEdges()};
         for (const LArGraph::Edge *const edge : edges)
@@ -107,11 +115,8 @@ StatusCode DlClusterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFilePrefix", m_outputFilePrefix));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MaxEdgeLength", m_maxEdgeLengthSquared));
-    m_maxEdgeLengthSquared *= m_maxEdgeLengthSquared;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MaxEdgeRatio", m_maxEdgeRatioSquared));
-    m_maxEdgeRatioSquared *= m_maxEdgeRatioSquared;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "Prune", m_prune));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FullyConnect", m_fullyConnect));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NumSourceEdges", m_nSourceEdges));
 
     return STATUS_CODE_SUCCESS;
 }

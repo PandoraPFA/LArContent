@@ -62,8 +62,11 @@ private:
 public:
     /**
      *  @brief  Constructor
+     *
+     *  @param  fullyConnect Whether or not to connect disconnected regions
+     *  @param  nSourceEdges The number of edges emerging from a source node
      */
-    LArGraph() = default;
+    LArGraph(const bool fullyConnect = true, const int nSourceEdges = 2);
 
     /**
      *  @brief  Destructor
@@ -119,7 +122,9 @@ private:
      */
     void Vectorize(const pandora::CaloHitList &caloHitList, Eigen::MatrixXf &hitMatrix) const;
 
-    EdgeVector m_edges; ///< The edges defining the graph
+    EdgeVector m_edges;     ///< The edges defining the graph
+    bool m_fullyConnect;    ///< Whether or not to connect any disconnected regions
+    int m_nSourceEdges;     ///< The number of edges to consider emerging from a source
 };
 
 } // namespace lar_content

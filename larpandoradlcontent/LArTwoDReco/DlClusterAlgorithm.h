@@ -22,7 +22,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    DlClusterAlgorithm() = default;
+    DlClusterAlgorithm();
 
     virtual ~DlClusterAlgorithm() = default;
 
@@ -39,9 +39,8 @@ private:
 
     pandora::StringVector m_caloHitListNames;  ///< The names of the calo hit lists
     std::string m_outputFilePrefix;            ///< The prefix to use for output CSV filenames
-    float m_maxEdgeLengthSquared;              ///< The maximum length of an edge
-    float m_maxEdgeRatioSquared;               ///< The maximum ratio of the longest to shortest edge of a triangle
-    bool m_prune;                              ///< Whether or not to prune the graph
+    bool m_fullyConnect;                       ///< Whether or not to connect disconnected regions
+    int m_nSourceEdges;                        ///< The number of edges to consider emerging from a source node
 };
 
 } // namespace lar_dl_content
