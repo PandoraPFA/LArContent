@@ -29,7 +29,9 @@ namespace lar_dl_content
 
 DlClusterAlgorithm::DlClusterAlgorithm() :
     m_fullyConnect{true},
-    m_nSourceEdges{2}
+    m_nSourceEdges{2},
+    m_maxSecondaryCosine{0.996f},
+    m_maxSecondaryDistance{3.f}
 {
 }
 
@@ -44,8 +46,7 @@ StatusCode DlClusterAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
         if (pCaloHitList->empty())
             continue;
-        std::cout << "Num hits: " << pCaloHitList->size() << std::endl;
-        LArGraph graph(m_fullyConnect, m_nSourceEdges);
+        LArGraph graph(m_fullyConnect, m_nSourceEdges, m_maxSecondaryCosine, m_maxSecondaryDistance);
         graph.MakeGraph(*pCaloHitList);
         const LArGraph::EdgeVector &edges{graph.GetEdges()};
         for (const LArGraph::Edge *const edge : edges)
@@ -117,6 +118,10 @@ StatusCode DlClusterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFilePrefix", m_outputFilePrefix));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FullyConnect", m_fullyConnect));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NumSourceEdges", m_nSourceEdges));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSecondaryCosine",
+        m_maxSecondaryCosine));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSecondaryDistance",
+        m_maxSecondaryDistance));
 
     return STATUS_CODE_SUCCESS;
 }

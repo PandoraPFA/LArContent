@@ -37,10 +37,12 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector m_caloHitListNames;  ///< The names of the calo hit lists
-    std::string m_outputFilePrefix;            ///< The prefix to use for output CSV filenames
-    bool m_fullyConnect;                       ///< Whether or not to connect disconnected regions
-    int m_nSourceEdges;                        ///< The number of edges to consider emerging from a source node
+    pandora::StringVector m_caloHitListNames;   ///< The names of the calo hit lists
+    std::string m_outputFilePrefix;             ///< The prefix to use for output CSV filenames
+    bool m_fullyConnect;                        ///< Whether or not to connect disconnected regions
+    int m_nSourceEdges;                         ///< The number of edges to consider emerging from a source node
+    float m_maxSecondaryCosine;                 ///< The number of edges to consider emerging from a source
+    float m_maxSecondaryDistance;               ///< The number of edges to consider emerging from a source
 };
 
 } // namespace lar_dl_content

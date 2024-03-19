@@ -17,9 +17,11 @@ using namespace pandora;
 namespace lar_content
 {
 
-LArGraph::LArGraph(const bool fullyConnect, const int nSourceEdges) :
+LArGraph::LArGraph(const bool fullyConnect, const int nSourceEdges, const float maxSecondaryCosine, const float maxSecondaryDistance) :
     m_fullyConnect{fullyConnect},
-    m_nSourceEdges{nSourceEdges}
+    m_nSourceEdges{nSourceEdges},
+    m_maxSecondaryCosine{maxSecondaryCosine},
+    m_maxSecondaryDistance{maxSecondaryDistance}
 {
 }
 
@@ -52,23 +54,45 @@ void LArGraph::MakeGraph(const CaloHitList &caloHitList)
         row << hitMatrix(r,0), hitMatrix(r,1);
         Eigen::MatrixXf norms((hitMatrix.rowwise() - row).array().pow(2).rowwise().sum());
         norms(r, 0) = std::numeric_limits<float>::max();
-        Eigen::Index index1, index2;
-        norms.col(0).minCoeff(&index1);
+        Eigen::Index index;
+        norms.col(0).minCoeff(&index);
         auto iter0{caloHitList.begin()};
         std::advance(iter0, r);
         auto iter1{caloHitList.begin()};
-        std::advance(iter1, index1);
+        std::advance(iter1, index);
         edgeMap[*iter0][*iter1] = true;
         edgeMap[*iter1][*iter0] = true;
-        norms(index1, 0) = std::numeric_limits<float>::max();
-        auto val2{norms.col(0).minCoeff(&index2)};
-        auto val3{(hitMatrix.row(index1) - hitMatrix.row(index2)).array().pow(2).rowwise().sum()};
-        if (val2 < val3(0))
+        norms(index, 0) = std::numeric_limits<float>::max();
+        // Create a limited number of additional edges within a maximum distance and avoiding colinearity with existing edges
+        int nEdges{1};
+        CartesianPointVector sourceEdges({((*iter1)->GetPositionVector() - (*iter0)->GetPositionVector()).GetUnitVector()});
+        for (int i = 1; i <= std::min(2 * this->m_nSourceEdges, 5 + this->m_nSourceEdges); ++i)
         {
+            if (nEdges >= this->m_nSourceEdges)
+                break;
+            auto val{norms.col(0).minCoeff(&index)};
+            if (val > this->m_maxSecondaryDistance)
+                continue;
             auto iter2{caloHitList.begin()};
-            std::advance(iter2, index2);
-            edgeMap[*iter0][*iter2] = true;
-            edgeMap[*iter2][*iter0] = true;
+            std::advance(iter2, index);
+            norms(index, 0) = std::numeric_limits<float>::max();
+            const CartesianVector &vec{((*iter2)->GetPositionVector() - (*iter0)->GetPositionVector()).GetUnitVector()};
+            bool notColinear{true};
+            for (const CartesianVector &other : sourceEdges)
+            {
+                if (vec.GetDotProduct(other) > m_maxSecondaryCosine)
+                {
+                    notColinear = false;
+                    break;
+                }
+            }
+            if (notColinear)
+            {
+                sourceEdges.emplace_back(vec);
+                edgeMap[*iter0][*iter2] = true;
+                edgeMap[*iter2][*iter0] = true;
+                ++nEdges;
+            }
         }
     }
     std::map<const CaloHit *, std::map<const CaloHit *, bool>> usedEdges;

@@ -65,8 +65,10 @@ public:
      *
      *  @param  fullyConnect Whether or not to connect disconnected regions
      *  @param  nSourceEdges The number of edges emerging from a source node
+     *  @param  maxSecondaryCosine The maximum cosine of the opening angle between non-primary edges with the same source hit
+     *  @param  maxSecondaryDistance The maximum distance for a non-primary edge between hits
      */
-    LArGraph(const bool fullyConnect = true, const int nSourceEdges = 2);
+    LArGraph(const bool fullyConnect = true, const int nSourceEdges = 2, const float maxSecondaryCosine = 0.996f, const float maxSecondaryDistance = 3.f);
 
     /**
      *  @brief  Destructor
@@ -122,9 +124,11 @@ private:
      */
     void Vectorize(const pandora::CaloHitList &caloHitList, Eigen::MatrixXf &hitMatrix) const;
 
-    EdgeVector m_edges;     ///< The edges defining the graph
-    bool m_fullyConnect;    ///< Whether or not to connect any disconnected regions
-    int m_nSourceEdges;     ///< The number of edges to consider emerging from a source
+    EdgeVector m_edges;             ///< The edges defining the graph
+    bool m_fullyConnect;            ///< Whether or not to connect any disconnected regions
+    int m_nSourceEdges;             ///< The number of edges to consider emerging from a source
+    float m_maxSecondaryCosine;     ///< The number of edges to consider emerging from a source
+    float m_maxSecondaryDistance;   ///< The number of edges to consider emerging from a source
 };
 
 } // namespace lar_content
