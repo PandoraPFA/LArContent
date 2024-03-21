@@ -41,7 +41,8 @@ DlSignalAlgorithm::DlSignalAlgorithm() :
     m_volumeType{"dune_fd_hd"},
     m_signalListNameU{""},
     m_signalListNameV{""},
-    m_signalListNameW{""}
+    m_signalListNameW{""},
+    m_signalListName2D{""}
 {
 }
 
@@ -64,6 +65,11 @@ DlSignalAlgorithm::~DlSignalAlgorithm()
 
 StatusCode DlSignalAlgorithm::Run()
 {
+    if (m_visualise)
+    {
+	PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+    }
+    
     if (m_trainingMode)
         return this->PrepareTrainingSample();
     else
@@ -194,8 +200,8 @@ StatusCode DlSignalAlgorithm::Infer()
             return STATUS_CODE_NOT_ALLOWED;
 
         LArDLHelper::TorchInput input;
-        PixelVector pixelVector;
-        this->MakeNetworkInputFromHits(*pCaloHitList, view, driftMin, driftMax, wireMin[view], wireMax[view], input, pixelVector);
+        PixelMap pixelMap;
+        this->MakeNetworkInputFromHits(*pCaloHitList, view, driftMin, driftMax, wireMin[view], wireMax[view], input, pixelMap);
 
         // Run the input through the trained model
         LArDLHelper::TorchInputVector inputs;
@@ -208,61 +214,66 @@ StatusCode DlSignalAlgorithm::Infer()
         else
             LArDLHelper::Forward(m_modelW, inputs, output);
 
-        int colOffset{0}, rowOffset{0}, canvasWidth{m_width}, canvasHeight{m_height};
-        this->GetCanvasParameters(output, pixelVector, colOffset, rowOffset, canvasWidth, canvasHeight);
-
-        float **canvas{new float *[canvasHeight]};
-        for (int row = 0; row < canvasHeight; ++row)
-            canvas[row] = new float[canvasWidth]{};
-
         // we want the maximum value in the num_classes dimension (1) for every pixel
         auto classes{torch::argmax(output, 1)};
         // the argmax result is a 1 x height x width tensor where each element is a class id
         auto classesAccessor{classes.accessor<long, 3>()};
         std::map<int, bool> haveSeenMap;
-        for (const auto &[row, col] : pixelVector)
+        CaloHitList signalCandidatesU, signalCandidatesV, signalCandidatesW, signalCandidates2D;
+	
+	for (const auto &[pCaloHit, pixel] : pixelMap)
         {
-            const auto cls{classesAccessor[0][row][col]};
+	    //The ordering of the pixel is x coordinate, z coordinate 
+            const auto cls{classesAccessor[0][pixel.second][pixel.first]};
             if (cls == 2)
             {
-		canvas[row + rowOffset][col + colOffset] += 1;
-            }
-        }
+		signalCandidates2D.emplace_back(pCaloHit);
 
-        CartesianPointVector positionVector;
-	CaloHitList signalCandidatesU, signalCandidatesV, signalCandidatesW;
-        this->MakeWirePlaneCoordinatesFromCanvas(
-            canvas, canvasWidth, canvasHeight, colOffset, rowOffset, view, driftMin, driftMax, wireMin[view], wireMax[view], positionVector);
-        if (isU)
-            signalCandidatesPositionU.emplace_back(positionVector.front());
-        else if (isV)
-            signalCandidatesPositionV.emplace_back(positionVector.front());
-        else
-            signalCandidatesPositionW.emplace_back(positionVector.front());
+		if (isU)
+	        {
+                    signalCandidatesU.emplace_back(pCaloHit);
+		}
+                else if (isV)
+		{ 
+	            signalCandidatesV.emplace_back(pCaloHit);
+		}
+                else
+                {
+		    signalCandidatesW.emplace_back(pCaloHit);
+		}
+            }
+	    else
+            {
+	       //add background list
+	    }
+
+
+        }
 
 	PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidatesU, m_signalListNameU));
 	PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidatesV, m_signalListNameV));
 	PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidatesW, m_signalListNameW));
+	PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidates2D, m_signalListName2D));
 
 	if (m_visualise)
         {
             if (isU)
-            {
-                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(),
-                                         &signalCandidatesU.front()->GetPositionVector(), "candidate signal", GREEN, 1));
+	    {
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                         &signalCandidatesU, "candidate signal U", GREEN));
             }
 
             if (isV)
             {
-                    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(),
-                                        &signalCandidatesV.front()->GetPositionVector(), "candidate signal", GREEN, 1));
-            }
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                         &signalCandidatesV, "candidate signal V", GREEN));
+	    }
 
             if (isW)
             {
-                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(),
-                                        &signalCandidatesW.front()->GetPositionVector(), "candidate signal", GREEN, 1));
-            }
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                         &signalCandidatesU, "candidate signal U", GREEN));
+	    }
 
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
@@ -301,9 +312,6 @@ StatusCode DlSignalAlgorithm::Infer()
         }
 #endif
 
-        for (int row = 0; row < canvasHeight; ++row)
-            delete[] canvas[row];
-        delete[] canvas;
     }
 
     return STATUS_CODE_SUCCESS;
@@ -312,7 +320,7 @@ StatusCode DlSignalAlgorithm::Infer()
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DlSignalAlgorithm::MakeNetworkInputFromHits(const CaloHitList &caloHits, const HitType view, const float xMin,
-    const float xMax, const float zMin, const float zMax, LArDLHelper::TorchInput &networkInput, PixelVector &pixelVector) const
+    const float xMax, const float zMin, const float zMax, LArDLHelper::TorchInput &networkInput, PixelMap &pixelMap) const
 {
     // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
     const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
@@ -346,86 +354,10 @@ StatusCode DlSignalAlgorithm::MakeNetworkInputFromHits(const CaloHitList &caloHi
         const int pixelX{static_cast<int>(std::floor((x - xBinEdges[0]) / dx))};
         const int pixelZ{static_cast<int>(std::floor((z - zBinEdges[0]) / dz))};
         accessor[0][0][pixelZ][pixelX] += adc;
-    }
-    for (int row = 0; row < m_height; ++row)
-    {
-        for (int col = 0; col < m_width; ++col)
-        {
-            const float value{accessor[0][0][row][col]};
-            if (value > 0)
-                pixelVector.emplace_back(std::make_pair(row, col));
-        }
+	pixelMap[pCaloHit] = std::make_pair(pixelX, pixelZ);
     }
 
     return STATUS_CODE_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode DlSignalAlgorithm::MakeWirePlaneCoordinatesFromCanvas(float **canvas, const int canvasWidth, const int canvasHeight,
-    const int columnOffset, const int rowOffset, const HitType view, const float xMin, const float xMax, const float zMin, const float zMax,
-    CartesianPointVector &positionVector) const
-{
-    // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
-    const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
-    const float pitch(view == TPC_VIEW_U ? pTPC->GetWirePitchU() : view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW());
-
-    const double dx = ((xMax + 0.5f * m_driftStep) - (xMin - 0.5f * m_driftStep)) / m_width;
-    const double dz = ((zMax + 0.5f * pitch) - (zMin - 0.5f * pitch)) / m_height;
-
-    float best{-1.f};
-    int rowBest{0}, colBest{0};
-    for (int row = 0; row < canvasHeight; ++row)
-        for (int col = 0; col < canvasWidth; ++col)
-            if (canvas[row][col] > 0 && canvas[row][col] > best)
-            {
-                best = canvas[row][col];
-                rowBest = row;
-                colBest = col;
-            }
-
-    const float x{static_cast<float>((colBest - columnOffset) * dx + xMin)};
-    const float z{static_cast<float>((rowBest - rowOffset) * dz + zMin)};
-
-    CartesianVector pt(x, 0.f, z);
-    positionVector.emplace_back(pt);
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-void DlSignalAlgorithm::GetCanvasParameters(const LArDLHelper::TorchOutput &networkOutput, const PixelVector &pixelVector,
-    int &colOffset, int &rowOffset, int &width, int &height) const
-{
-    const double scaleFactor{std::sqrt(m_height * m_height + m_width * m_width)};
-    // output is a 1 x num_classes x height x width tensor
-    // we want the maximum value in the num_classes dimension (1) for every pixel
-    auto classes{torch::argmax(networkOutput, 1)};
-    // the argmax result is a 1 x height x width tensor where each element is a class id
-    auto classesAccessor{classes.accessor<long, 3>()};
-    int colOffsetMin{0}, colOffsetMax{0}, rowOffsetMin{0}, rowOffsetMax{0};
-    for (const auto &[row, col] : pixelVector)
-    {
-        const auto cls{classesAccessor[0][row][col]};
-        const double threshold{m_thresholds[cls]};
-        if (threshold > 0. && threshold < 1.)
-        {
-            const int distance = static_cast<int>(std::round(std::ceil(scaleFactor * threshold)));
-            if ((row - distance) < rowOffsetMin)
-                rowOffsetMin = row - distance;
-            if ((row + distance) > rowOffsetMax)
-                rowOffsetMax = row + distance;
-            if ((col - distance) < colOffsetMin)
-                colOffsetMin = col - distance;
-            if ((col + distance) > colOffsetMax)
-                colOffsetMax = col + distance;
-        }
-    }
-    colOffset = colOffsetMin < 0 ? -colOffsetMin : 0;
-    rowOffset = rowOffsetMin < 0 ? -rowOffsetMin : 0;
-    width = std::max(colOffsetMax + colOffset + 1, m_width);
-    height = std::max(rowOffsetMax + rowOffset + 1, m_height);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -603,6 +535,7 @@ StatusCode DlSignalAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SignalListNameU", m_signalListNameU));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SignalListNameV", m_signalListNameV));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SignalListNameW", m_signalListNameW));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SignalListName2D", m_signalListName2D));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DistanceThresholds", m_thresholds));
     m_nClasses = m_thresholds.size() - 1;
    // if (m_pass > 1)
