@@ -6,8 +6,8 @@
  *  $Log: $
  */
 
-#include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArObjects/LArGraph.h"
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
 
 #include <cmath>
 #include <limits>
@@ -51,7 +51,7 @@ void LArGraph::MakeGraph(const CaloHitList &caloHitList)
     for (int r = 0; r < hitMatrix.rows(); ++r)
     {
         Eigen::RowVectorXf row(2);
-        row << hitMatrix(r,0), hitMatrix(r,1);
+        row << hitMatrix(r, 0), hitMatrix(r, 1);
         Eigen::MatrixXf norms((hitMatrix.rowwise() - row).array().pow(2).rowwise().sum());
         norms(r, 0) = std::numeric_limits<float>::max();
         Eigen::Index index;
@@ -252,7 +252,7 @@ float LArGraph::Edge::LengthSquared() const
     const CartesianVector &pos0{this->m_v0->GetPositionVector()}, &pos1{this->m_v1->GetPositionVector()};
     const float dx{pos0.GetX() - pos1.GetX()}, dz{pos0.GetZ() - pos1.GetZ()};
 
-    return dx*dx + dz*dz;
+    return dx * dx + dz * dz;
 };
 
 } // namespace lar_content

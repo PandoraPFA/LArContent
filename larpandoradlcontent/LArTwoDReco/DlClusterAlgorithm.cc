@@ -89,7 +89,7 @@ StatusCode DlClusterAlgorithm::PrepareTrainingSample()
 
         LArMvaHelper::MvaFeatureVector featureVector;
         featureVector.emplace_back(static_cast<double>(mcToHitsMap.size()));
-        for (const auto & [pMC, caloHitList] : mcToHitsMap)
+        for (const auto &[pMC, caloHitList] : mcToHitsMap)
         {
             (void)pMC;
             featureVector.emplace_back(static_cast<double>(caloHitList.size()));
@@ -118,10 +118,10 @@ StatusCode DlClusterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFilePrefix", m_outputFilePrefix));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FullyConnect", m_fullyConnect));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NumSourceEdges", m_nSourceEdges));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSecondaryCosine",
-        m_maxSecondaryCosine));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSecondaryDistance",
-        m_maxSecondaryDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSecondaryCosine", m_maxSecondaryCosine));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSecondaryDistance", m_maxSecondaryDistance));
 
     return STATUS_CODE_SUCCESS;
 }

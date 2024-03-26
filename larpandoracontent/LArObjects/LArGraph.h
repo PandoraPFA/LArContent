@@ -46,8 +46,10 @@ public:
          *
          *  @return true if the edges share the same endpoints, irrespective of direction
          **/
-        inline bool operator==(const Edge &other) const { return (this->m_v0 == other.m_v0 && this->m_v1 == other.m_v1) ||
-            (this->m_v0 == other.m_v1 && this->m_v1 == other.m_v0); };
+        inline bool operator==(const Edge &other) const
+        {
+            return (this->m_v0 == other.m_v0 && this->m_v1 == other.m_v1) || (this->m_v0 == other.m_v1 && this->m_v1 == other.m_v0);
+        };
 
         const pandora::CaloHit *const m_v0; ///< An endpoint of the edge
         const pandora::CaloHit *const m_v1; ///< An endpoint of the edge
@@ -124,11 +126,11 @@ private:
      */
     void Vectorize(const pandora::CaloHitList &caloHitList, Eigen::MatrixXf &hitMatrix) const;
 
-    EdgeVector m_edges;             ///< The edges defining the graph
-    bool m_fullyConnect;            ///< Whether or not to connect any disconnected regions
-    int m_nSourceEdges;             ///< The number of edges to consider emerging from a source
-    float m_maxSecondaryCosine;     ///< The number of edges to consider emerging from a source
-    float m_maxSecondaryDistance;   ///< The number of edges to consider emerging from a source
+    EdgeVector m_edges;           ///< The edges defining the graph
+    bool m_fullyConnect;          ///< Whether or not to connect any disconnected regions
+    int m_nSourceEdges;           ///< The number of edges to consider emerging from a source
+    float m_maxSecondaryCosine;   ///< The number of edges to consider emerging from a source
+    float m_maxSecondaryDistance; ///< The number of edges to consider emerging from a source
 };
 
 } // namespace lar_content
