@@ -248,7 +248,7 @@ fcldir	-
 ####################################
 product		version		qual	flags		<table_format=2>
 eigen		v23_08_01_66e8f		-
-pandora		v03_16_00k	-
+pandora		v03_16_00l	-
 cetmodules	v3_24_01	-	only_for_build
 libtorch	v2_1_1b	-	optional
 end_product_list
