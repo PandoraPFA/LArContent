@@ -253,6 +253,6 @@ float LArGraph::Edge::LengthSquared() const
     const float dx{pos0.GetX() - pos1.GetX()}, dz{pos0.GetZ() - pos1.GetZ()};
 
     return dx * dx + dz * dz;
-};
+}
 
 } // namespace lar_content
