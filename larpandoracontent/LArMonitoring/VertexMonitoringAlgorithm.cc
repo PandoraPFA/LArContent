@@ -15,6 +15,7 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArVertexHelper.h"
+#include "larpandoracontent/LArObjects/LArEventTopology.h"
 
 using namespace pandora;
 
@@ -24,6 +25,7 @@ namespace lar_content
 VertexMonitoringAlgorithm::VertexMonitoringAlgorithm() :
     m_visualise{true},
     m_writeFile{false},
+    m_useSecondaries{false},
     m_transparencyThresholdE{-1.f},
     m_energyScaleThresholdE{1.f},
     m_scalingFactor{1.f}
@@ -50,7 +52,10 @@ StatusCode VertexMonitoringAlgorithm::Run()
             this->GetPandora(), true, DETECTOR_VIEW_XZ, m_transparencyThresholdE, m_energyScaleThresholdE, m_scalingFactor));
     }
 
-    this->AssessVertices();
+    if (!m_useSecondaries)
+        this->AssessVertices();
+    else
+        this->AssessSecondaryVertices();
 
     if (m_visualise)
     {
@@ -221,14 +226,100 @@ StatusCode VertexMonitoringAlgorithm::AssessVertices() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+StatusCode VertexMonitoringAlgorithm::AssessSecondaryVertices() const
+{
+#ifdef MONITORING
+    const CaloHitList *pCaloHitList2D{nullptr};
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "CaloHitList2D", pCaloHitList2D));
+    LArEventTopology eventTopology(*pCaloHitList2D);
+    eventTopology.ConstructVisibleHierarchy();
+    //eventTopology.PruneHierarchy();
+    CartesianPointVector trueVertices;
+    eventTopology.GetVertices(trueVertices);
+    if (trueVertices.empty())
+        return STATUS_CODE_SUCCESS;
+
+    const VertexList *pRecoVertexList{nullptr};
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_secVertexListName, pRecoVertexList));
+    CartesianPointVector recoVertices;
+    for (const Vertex *const pVertex : *pRecoVertexList)
+        recoVertices.emplace_back(pVertex->GetPosition());
+
+    std::vector<std::pair<CartesianVector, CartesianVector>> matches;
+    for (const CartesianVector &recoVertex : recoVertices)
+    {
+        float best{std::numeric_limits<float>::max()};
+        matches.emplace_back(std::make_pair(recoVertex, trueVertices.front()));
+        for (const CartesianVector &trueVertex : trueVertices)
+        {
+            const float current{(recoVertex - trueVertex).GetMagnitudeSquared()};
+            if (current < best)
+            {
+                best = current;
+                matches.back().second = trueVertex;
+            }
+        }
+
+        if (m_writeFile)
+        {
+            const CartesianVector delta{recoVertex - matches.back().second};
+            const float dx{delta.GetX()}, dy{delta.GetY()}, dz{delta.GetZ()}, dr{delta.GetMagnitude()};
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "dx", dx));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "dy", dy));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "dz", dz));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "dr", dr));
+            PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
+        }
+
+        if (m_visualise)
+        {
+            std::cout << "(" << matches.back().first.GetX() << "," << matches.back().first.GetY() << "," << matches.back().first.GetZ() << ")" <<
+                " == " << matches.back().second.GetX() << "," << matches.back().second.GetY() << "," << matches.back().second.GetZ() << std::endl;
+            const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+            const CartesianVector ur(matches.back().first.GetX(), 0.f, static_cast<float>(transform->YZtoU(matches.back().first.GetY(),
+                matches.back().first.GetZ())));
+            const CartesianVector vr(matches.back().first.GetX(), 0.f, static_cast<float>(transform->YZtoV(matches.back().first.GetY(),
+                matches.back().first.GetZ())));
+            const CartesianVector wr(matches.back().first.GetX(), 0.f, static_cast<float>(transform->YZtoW(matches.back().second.GetY(),
+                matches.back().first.GetZ())));
+            const CartesianVector ut(matches.back().second.GetX(), 0.f, static_cast<float>(transform->YZtoU(matches.back().second.GetY(),
+                matches.back().second.GetZ())));
+            const CartesianVector vt(matches.back().second.GetX(), 0.f, static_cast<float>(transform->YZtoV(matches.back().second.GetY(),
+                matches.back().second.GetZ())));
+            const CartesianVector wt(matches.back().second.GetX(), 0.f, static_cast<float>(transform->YZtoW(matches.back().second.GetY(),
+                matches.back().second.GetZ())));
+
+            PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &ur, "Ur", RED, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vr, "Vr", RED, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &wr, "Wr", RED, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &ut, "Ut", BLUE, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vt, "Vt", BLUE, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &wt, "Wt", BLUE, 1));
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        }
+    }
+#endif
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode VertexMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualise));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WriteFile", m_writeFile));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseSecondaries", m_useSecondaries));
+
     if (m_writeFile)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "Filename", m_filename));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "Treename", m_treename));
+    }
+    if (m_useSecondaries)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SecondaryVertexListName", m_secVertexListName));
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
