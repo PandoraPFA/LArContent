@@ -22,6 +22,14 @@ public:
     typedef std::set<unsigned int> UIntSet;
 
     /**
+     *  @brief  Get all hits (ordered and isoltated) associated with a two dimensional cluster
+     *
+     *  @param  pCluster the address of the cluster
+     *  @param  caloHitList the output list of hits
+     */
+    static void GetAllHits(const pandora::Cluster *const pCluster, pandora::CaloHitList &caloHitList);
+
+    /**
      *  @brief  Get the hit type associated with a two dimensional cluster
      *
      *  @param  pCluster the address of the cluster

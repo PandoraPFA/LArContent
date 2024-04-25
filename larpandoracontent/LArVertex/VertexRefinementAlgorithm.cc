@@ -8,13 +8,13 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArEigenHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
 #include "larpandoracontent/LArVertex/VertexRefinementAlgorithm.h"
 
-#include <Eigen/Dense>
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 using namespace pandora;
 
@@ -22,10 +22,9 @@ namespace lar_content
 {
 
 VertexRefinementAlgorithm::VertexRefinementAlgorithm() :
-    m_chiSquaredCut(2.f),
-    m_distanceCut(5.f),
-    m_minimumHitsCut(5),
-    m_twoDDistanceCut(10.f)
+    m_caloHitListName{"CaloHitList2D"},
+    m_hitRadii(10.f),
+    m_vetoPrimaryRegion{true}
 {
 }
 
@@ -33,82 +32,100 @@ VertexRefinementAlgorithm::VertexRefinementAlgorithm() :
 
 StatusCode VertexRefinementAlgorithm::Run()
 {
-    const VertexList *pInputVertexList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputVertexList));
+    const VertexList *pOutputVertexList{nullptr};
+    std::string originalListName, temporaryListName;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Vertex>(*this, originalListName));
+
+    const VertexList *pInputVertexList{nullptr};
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pInputVertexList));
 
     if (!pInputVertexList || pInputVertexList->empty())
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "VertexRefinementAlgorithm: unable to find current vertex list " << std::endl;
+            std::cout << "VertexRefinementAlgorithm: unable to find input vertex list " << std::endl;
+
+        return STATUS_CODE_SUCCESS;
+    }
+    const CaloHitList *pCaloHitList{nullptr};
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+    if (!pCaloHitList || pCaloHitList->empty())
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "VertexRefinementAlgorithm: unable to find calo hit list \'" << m_caloHitListName << "\'" << std::endl;
 
         return STATUS_CODE_SUCCESS;
     }
 
-    const VertexList *pOutputVertexList(NULL);
-    std::string temporaryListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pOutputVertexList, temporaryListName));
 
-    ClusterList clusterListU, clusterListV, clusterListW;
-    this->GetClusterLists(m_inputClusterListNames, clusterListU, clusterListV, clusterListW);
-
-    this->RefineVertices(pInputVertexList, clusterListU, clusterListV, clusterListW);
+    this->RefineVertices(*pInputVertexList, *pCaloHitList);
 
     if (!pOutputVertexList->empty())
     {
+
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
     }
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, originalListName));
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexRefinementAlgorithm::GetClusterLists(
-    const StringVector &inputClusterListNames, ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
+void VertexRefinementAlgorithm::RefineVertices(const VertexList &vertexList, const CaloHitList &caloHitList) const
 {
-    for (const std::string &clusterListName : inputClusterListNames)
+    const VertexList *pPrimaryVertexList{nullptr};
+    PandoraContentApi::GetList(*this, m_primaryVertexListName, pPrimaryVertexList);
+
+    if (m_vetoPrimaryRegion && (!pPrimaryVertexList || pPrimaryVertexList->empty()))
     {
-        const ClusterList *pClusterList(nullptr);
-        PANDORA_THROW_RESULT_IF_AND_IF(
-            STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "VertexRefinementAlgorithm: unable to find primary vertex list " << std::endl;
 
-        if (!pClusterList || pClusterList->empty())
-        {
-            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "VertexRefinementAlgorithm: unable to find cluster list " << clusterListName << std::endl;
-
-            continue;
-        }
-
-        const HitType hitType(LArClusterHelper::GetClusterHitType(pClusterList->front()));
-
-        if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        ClusterList &outputClusterList((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
-        outputClusterList.insert(outputClusterList.end(), pClusterList->begin(), pClusterList->end());
+        return;
     }
-}
+    const CartesianVector &primaryVertex{pPrimaryVertexList->front()->GetPosition()};
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+    CaloHitVector caloHitVectorU, caloHitVectorV, caloHitVectorW;
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        switch (pCaloHit->GetHitType())
+        {
+            case TPC_VIEW_U:
+                caloHitVectorU.emplace_back(pCaloHit);
+                break;
+            case TPC_VIEW_V:
+                caloHitVectorV.emplace_back(pCaloHit);
+                break;
+            case TPC_VIEW_W:
+                caloHitVectorW.emplace_back(pCaloHit);
+                break;
+            default:
+                break;
+        }
+    }
 
-void VertexRefinementAlgorithm::RefineVertices(const VertexList *const pVertexList, const ClusterList &clusterListU,
-    const ClusterList &clusterListV, const ClusterList &clusterListW) const
-{
-    for (const Vertex *const pVertex : *pVertexList)
+    for (const Vertex *const pVertex : vertexList)
     {
         const CartesianVector originalPosition(pVertex->GetPosition());
+        if (m_vetoPrimaryRegion && ((originalPosition - primaryVertex).GetMagnitude() < m_hitRadii))
+            continue;
+        const CartesianVector &originalVtxU{LArGeometryHelper::ProjectPosition(this->GetPandora(), originalPosition, TPC_VIEW_U)};
+        const CartesianVector &originalVtxV{LArGeometryHelper::ProjectPosition(this->GetPandora(), originalPosition, TPC_VIEW_V)};
+        const CartesianVector &originalVtxW{LArGeometryHelper::ProjectPosition(this->GetPandora(), originalPosition, TPC_VIEW_W)};
 
-        const CartesianVector vtxU(
-            this->RefineVertexTwoD(clusterListU, LArGeometryHelper::ProjectPosition(this->GetPandora(), originalPosition, TPC_VIEW_U)));
-        const CartesianVector vtxV(
-            this->RefineVertexTwoD(clusterListV, LArGeometryHelper::ProjectPosition(this->GetPandora(), originalPosition, TPC_VIEW_V)));
-        const CartesianVector vtxW(
-            this->RefineVertexTwoD(clusterListW, LArGeometryHelper::ProjectPosition(this->GetPandora(), originalPosition, TPC_VIEW_W)));
+        CaloHitList nearbyHitListU;
+        this->GetNearbyHits(caloHitVectorU, originalVtxU, nearbyHitListU);
+        const CartesianVector vtxU(this->RefineVertexTwoD(nearbyHitListU, originalVtxU));
+        CaloHitList nearbyHitListV;
+        this->GetNearbyHits(caloHitVectorV, originalVtxV, nearbyHitListV);
+        const CartesianVector vtxV(this->RefineVertexTwoD(nearbyHitListV, originalVtxV));
+        CaloHitList nearbyHitListW;
+        this->GetNearbyHits(caloHitVectorW, originalVtxW, nearbyHitListW);
+        const CartesianVector vtxW(this->RefineVertexTwoD(nearbyHitListW, originalVtxW));
 
         CartesianVector vtxUV(0.f, 0.f, 0.f), vtxUW(0.f, 0.f, 0.f), vtxVW(0.f, 0.f, 0.f), vtx3D(0.f, 0.f, 0.f), position3D(0.f, 0.f, 0.f);
-        float chi2UV(0.f), chi2UW(0.f), chi2VW(0.f), chi23D(0.f), chi2(0.f);
+        float chi2UV(0.f), chi2UW(0.f), chi2VW(0.f), chi23D(0.f);
 
         LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, vtxU, vtxV, vtxUV, chi2UV);
         LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, vtxU, vtxW, vtxUW, chi2UW);
@@ -116,31 +133,13 @@ void VertexRefinementAlgorithm::RefineVertices(const VertexList *const pVertexLi
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, vtxU, vtxV, vtxW, vtx3D, chi23D);
 
         if (chi2UV < chi2UW && chi2UV < chi2VW && chi2UV < chi23D)
-        {
             position3D = vtxUV;
-            chi2 = chi2UV;
-        }
         else if (chi2UW < chi2VW && chi2UW < chi23D)
-        {
             position3D = vtxUW;
-            chi2 = chi2UW;
-        }
         else if (chi2VW < chi23D)
-        {
             position3D = vtxVW;
-            chi2 = chi2VW;
-        }
         else
-        {
             position3D = vtx3D;
-            chi2 = chi23D;
-        }
-
-        if (chi2 > m_chiSquaredCut)
-            position3D = originalPosition;
-
-        if ((position3D - originalPosition).GetMagnitude() > m_distanceCut)
-            position3D = originalPosition;
 
         PandoraContentApi::Vertex::Parameters parameters;
         parameters.m_position = position3D;
@@ -154,95 +153,111 @@ void VertexRefinementAlgorithm::RefineVertices(const VertexList *const pVertexLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector VertexRefinementAlgorithm::RefineVertexTwoD(const ClusterList &clusterList, const CartesianVector &originalVtxPos) const
+void VertexRefinementAlgorithm::GetNearbyHits(const CaloHitVector &hitVector, const CartesianVector &centroid, CaloHitList &nearbyHitList) const
 {
-    CartesianPointVector intercepts, directions;
-    FloatVector weights;
-
-    for (const Cluster *const pCluster : clusterList)
+    Eigen::MatrixXf hitMatrix(hitVector.size(), 2);
+    LArEigenHelper::Vectorize(hitVector, hitMatrix);
+    Eigen::RowVectorXf vertex(2);
+    vertex << centroid.GetX(), centroid.GetZ();
+    Eigen::MatrixXf norms((hitMatrix.rowwise() - vertex).array().pow(2).rowwise().sum());
+    for (int r = 0; r < hitMatrix.rows(); ++r)
     {
-        if (LArClusterHelper::GetClosestDistance(originalVtxPos, pCluster) > 10)
-            continue;
-
-        if (pCluster->GetNCaloHits() < m_minimumHitsCut)
-            continue;
-
-        CartesianVector centroid(0.f, 0.f, 0.f);
-        LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-        LArPcaHelper::EigenVectors eigenVectors;
-        CartesianPointVector pointVector;
-
-        LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
-        LArPcaHelper::RunPca(pointVector, centroid, eigenValues, eigenVectors);
-
-        intercepts.push_back(LArClusterHelper::GetClosestPosition(originalVtxPos, pCluster));
-        directions.push_back(eigenVectors.at(0).GetUnitVector());
-        weights.push_back(1.f / ((LArClusterHelper::GetClosestPosition(originalVtxPos, pCluster) - originalVtxPos).GetMagnitudeSquared() + 1));
+        if (norms(r, 0) < m_hitRadii * m_hitRadii)
+            nearbyHitList.emplace_back(hitVector.at(r));
     }
-
-    CartesianVector newVtxPos(originalVtxPos);
-    if (intercepts.size() > 1)
-        GetBestFitPoint(intercepts, directions, weights, newVtxPos);
-
-    if ((newVtxPos - originalVtxPos).GetMagnitude() > m_twoDDistanceCut)
-        return originalVtxPos;
-
-    return newVtxPos;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexRefinementAlgorithm::GetBestFitPoint(const CartesianPointVector &intercepts, const CartesianPointVector &directions,
-    const FloatVector &weights, CartesianVector &bestFitPoint) const
+CartesianVector VertexRefinementAlgorithm::RefineVertexTwoD(const CaloHitList &caloHitList, const CartesianVector &seedVertex) const
 {
-    const int n(intercepts.size());
-
-    Eigen::VectorXd d = Eigen::VectorXd::Zero(3 * n);
-    Eigen::MatrixXd G = Eigen::MatrixXd::Zero(3 * n, n + 3);
-
-    for (int i = 0; i < n; ++i)
+    if (caloHitList.empty())
+        return seedVertex;
+    const int nBins{72};
+    const float pi{static_cast<float>(M_PI)};
+    Eigen::MatrixXf hitMatrix(caloHitList.size(), 2);
+    Eigen::MatrixXf loMatrix(caloHitList.size(), 2);
+    Eigen::MatrixXf hiMatrix(caloHitList.size(), 2);
+    LArEigenHelper::Vectorize(caloHitList, hitMatrix, loMatrix, hiMatrix);
+    Eigen::RowVectorXf results{Eigen::RowVectorXf::Zero(hitMatrix.rows())};
+    float best{0.f};
+    for (int r = 0; r < hitMatrix.rows(); ++r)
     {
-        d(3 * i) = intercepts[i].GetX() * weights[i];
-        d(3 * i + 1) = intercepts[i].GetY() * weights[i];
-        d(3 * i + 2) = intercepts[i].GetZ() * weights[i];
+        Eigen::RowVectorXf row(2);
+        row << hitMatrix(r, 0), hitMatrix(r, 1);
+        // Compute dx, dz and angle between each hit and the candidate vertex hit
+        Eigen::RowVectorXf loPhis(loMatrix.rows());
+        Eigen::RowVectorXf hiPhis(hiMatrix.rows());
+        LArEigenHelper::GetAngles(loMatrix, row, loPhis);
+        LArEigenHelper::GetAngles(hiMatrix, row, hiPhis);
+        loPhis = loPhis.array() * nBins / (2 * pi);
+        hiPhis = hiPhis.array() * nBins / (2 * pi);
 
-        G(3 * i, 0) = weights[i];
-        G(3 * i + 1, 1) = weights[i];
-        G(3 * i + 2, 2) = weights[i];
+        Eigen::RowVectorXf counts{Eigen::RowVectorXf::Zero(nBins)};
+        Eigen::RowVectorXf counts2{Eigen::RowVectorXf::Zero(nBins)};
+        for (int i = 0; i < hitMatrix.rows(); ++i)
+        {
+            if (i == r)
+                continue;
+            const float lo{loPhis(i) < hiPhis(i) ? loPhis(i) : hiPhis(i)};
+            const float hi{loPhis(i) < hiPhis(i) ? hiPhis(i) : loPhis(i)};
+            const float arc{hi - lo};
+            const int bin0{loPhis(i) < hiPhis(i) ? static_cast<int>(loPhis(i)) : static_cast<int>(hiPhis(i))};
+            const int bin1{loPhis(i) < hiPhis(i) ? static_cast<int>(hiPhis(i)) : static_cast<int>(loPhis(i))};
+            for (int b = bin0; b <= bin1; ++b)
+            {
+                const float theta0{std::max(lo, static_cast<float>(b))}, theta1{std::min(hi, static_cast<float>(b + 1))};
+                const float frac{(theta1 - theta0) / arc};
+                counts(b) += frac;// * rWeightVector(i);
+                counts2(b > (nBins >> 1) ? b - (nBins >> 1) : b + (nBins >> 1)) -= frac; // * rWeightVector(i);
+            }
+        }
+        const CartesianVector centroid(hitMatrix(r, 0), 0, hitMatrix(r, 1));
+        const float shift{(centroid - seedVertex).GetMagnitude()};
+        if (shift > 3.f)
+            results(r) = (counts + counts2).array().pow(2).sum() / (shift / 3.f);
+        else
+            results(r) = (counts + counts2).array().pow(2).sum();
+        if (results(r) > best)
+        {
+            best = results(r);
+/*            std::cout << "Total: " << results(r) << std::endl;
 
-        G(3 * i, i + 3) = -directions[i].GetX() * weights[i];
-        G(3 * i + 1, i + 3) = -directions[i].GetY() * weights[i];
-        G(3 * i + 2, i + 3) = -directions[i].GetZ() * weights[i];
+            PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHitList, "near", BLACK));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &centroid, "vtx", RED, 3));
+            for (int i = 0; i < nBins; ++i)
+            {
+                const float theta{2.f * i * pi / nBins};
+                const CartesianVector b{CartesianVector(std::cos(theta), 0, std::sin(theta)) * 2 * m_hitRadii + centroid};
+                PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &centroid, &b, "bin " + std::to_string(i), GRAY, 1, 1));
+            }
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));*/
+        }
     }
+    Eigen::Index index;
+    results.maxCoeff(&index);
 
-    if ((G.transpose() * G).determinant() < std::numeric_limits<float>::epsilon())
-    {
-        bestFitPoint = CartesianVector(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-        return;
-    }
+    const CartesianVector centroid(hitMatrix(index, 0), 0, hitMatrix(index, 1));
+    /*PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &seedVertex, "seed", MAGENTA, 1));
+    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &centroid, "vtx", RED, 1));
+    PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHitList, "near", BLUE));
+    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));*/
 
-    Eigen::VectorXd m = (G.transpose() * G).inverse() * G.transpose() * d;
-
-    bestFitPoint = CartesianVector(m[0], m[1], m[2]);
+    return centroid;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode VertexRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
-
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_inputVertexListName));
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChiSquaredCut", m_chiSquaredCut));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DistanceCut", m_distanceCut));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinimumHitsCut", m_minimumHitsCut));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TwoDDistanceCut", m_twoDDistanceCut));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryVertexListName", m_primaryVertexListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "HitRadii", m_hitRadii));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VetoPrimaryRegion", m_vetoPrimaryRegion));
 
     return STATUS_CODE_SUCCESS;
 }
