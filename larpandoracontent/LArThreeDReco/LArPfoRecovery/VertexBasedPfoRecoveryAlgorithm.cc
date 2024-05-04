@@ -193,7 +193,6 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
         this->SelectClusters(TPC_VIEW_V, availableClusters, clustersV);
         this->SelectClusters(TPC_VIEW_W, availableClusters, clustersW);
 
-        std::cout << clustersU.size() << clustersV.size() << clustersW.size() << std::endl;
 
 	float chi2(m_threeViewChi2Cut);
        	const Cluster *pCluster1(NULL);

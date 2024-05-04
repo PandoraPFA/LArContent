@@ -110,10 +110,21 @@ public:
      */
     static bool IsCosmicRay(const pandora::MCParticle *const pMCParticle);
 
-    /**
+     /**
      *  @brief  Get the nuance code of an MCParticle
      */
     static unsigned int GetNuanceCode(const pandora::MCParticle *const pMCParticle);
+    
+    /**
+     *  @brief  Get the nuance code of an MCParticle for low energy use due to Nuance code incompatibility with MARLEY
+     *
+     *  @param  pMCParticle the input mc particle
+     *
+     *  @param boolean to use Nuance code
+     *
+     *  @return boolean
+     */
+    static bool IsNeutrino2(const pandora::MCParticle *const pMCParticle, const bool useNuance);
 
     /**
      *  @brief  Whether a mc particle is a neutrino or antineutrino

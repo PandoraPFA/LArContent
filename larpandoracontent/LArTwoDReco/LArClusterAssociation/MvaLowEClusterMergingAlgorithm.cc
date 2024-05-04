@@ -47,7 +47,8 @@ MvaLowEClusterMergingAlgorithm<T>::MvaLowEClusterMergingAlgorithm() :
     m_contactThreshold{2},
     m_proximityThreshold{5},
     m_divisions{8},
-    m_sectorTolerance{0.03}
+    m_sectorTolerance{0.03},
+    m_printOut{false}
 
 {
 }
@@ -139,6 +140,9 @@ template <typename T>
 bool MvaLowEClusterMergingAlgorithm<T>::IsValidToUse(const Cluster *const cluster, std::map<const Cluster*, bool> &clusterIsUsed) const
 {
     
+    if (!cluster->IsAvailable())
+    	return false;   
+ 	
     if (clusterIsUsed.count(cluster) > 0)
         return false;
 
@@ -158,26 +162,28 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
     std::map<const Cluster*, const MCParticle*> clusterToMCParticleMap;
     std::map<const Cluster*, bool> clusterIsUsed;
     std::map<const Cluster*, ClusterVector> clustersToMerge;
-    int sigBac{0};
     int countHits{0};
 
     for (const Cluster *const pCluster : *pClusterList)
     {
-	countHits = countHits + (pCluster->GetNCaloHits());
+	if (pCluster->GetNCaloHits() == 0)
+	    continue;	
+        countHits = countHits + (pCluster->GetNCaloHits());
     }
 
     for (auto iter = pClusterList->begin(); iter != pClusterList->end(); ++iter)
     {
        const Cluster *const cluster(*iter);
-       const MCParticle *clusterMC(this->GetMCForCluster(cluster, clusterToMCParticleMap));
        const int nClusters(pClusterList->size());
-       
-       if (!this->IsValidToUse(cluster, clusterIsUsed))
+
+        if (!this->IsValidToUse(cluster, clusterIsUsed))
             continue;
 
+       const MCParticle *clusterMC(this->GetMCForCluster(cluster, clusterToMCParticleMap));
+       
+
 	CaloHitList clusterEdgeHits;
-	CartesianVector centroid11(0.f, 0.f, 0.f);
-        CartesianVector centroid12(0.f, 0.f, 0.f);
+	CartesianVector centroid11(0.f, 0.f, 0.f), centroid12(0.f, 0.f, 0.f), centroid21(0.f, 0.f, 0.f), centroid22(0.f, 0.f, 0.f);
         try {
        	centroid11 = cluster->GetCentroid(cluster->GetInnerPseudoLayer());
         centroid12 = cluster->GetCentroid(cluster->GetOuterPseudoLayer());
@@ -199,17 +205,9 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	for (auto iter2 = std::next(iter) ; iter2 != pClusterList->end() ; ++iter2)
 	{
 	    const Cluster *const otherCluster(*iter2);
+ 
 	    const MCParticle *otherClusterMC(this->GetMCForCluster(otherCluster, clusterToMCParticleMap));
-            sigBac = 0;
 
-            if (clusterMC == otherClusterMC)
-            {
-                   sigBac = 1;
-            }
-
-	    CaloHitList otherClusterEdgeHits;
-	    CartesianVector centroid21(0.f, 0.f, 0.f);
-	    CartesianVector centroid22(0.f, 0.f, 0.f);
 	    try {
 	    centroid21 = otherCluster->GetCentroid(otherCluster->GetInnerPseudoLayer());
             centroid22 = otherCluster->GetCentroid(otherCluster->GetOuterPseudoLayer());
@@ -244,7 +242,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 		    vtxClusterAngle = (vtxToCluster.GetDotProduct(vtxToOtherCluster) / (D1 * D2));
 		}
 	    }
-
+            CaloHitList otherClusterEdgeHits;
 	    this->EdgeHitFinder(otherCluster, otherClusterEdgeHits);
 
 	    const unsigned int otherClusterNHits{otherCluster->GetNCaloHits()};
@@ -272,13 +270,15 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
 	    for ( const CaloHit *const caloHit1 : largestList)
             {
-                  CartesianVector hit1Position(caloHit1->GetPositionVector());
+
+		  CartesianVector hit1Position(caloHit1->GetPositionVector());
                   float nearestHit{-1};
 		  adc1 += caloHit1->GetInputEnergy();
 
 		  for (const CaloHit *const caloHit2 : smallestList)
                   {
-		      CartesianVector hit2Position(caloHit2->GetPositionVector());
+
+	              CartesianVector hit2Position(caloHit2->GetPositionVector());
                       float distance{std::sqrt(hit1Position.GetDistanceSquared(hit2Position))};
  		      CartesianVector vector1(hit2Position.GetX() - hit1Position.GetX(), 0.f, hit2Position.GetZ() - hit1Position.GetZ());
                       double smallestAngle{1000};
@@ -401,7 +401,6 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	    if (m_writeTree)
             {
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "EventNumber", m_event));
-                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "SignalvBackground", sigBac));
                 if (pVertexList &&  ! pVertexList->empty()){
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "VertexClusterAngle", vtxClusterAngle));}
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "maxEdgeHitSeparation", maxEdgeHitSeparation));
@@ -430,6 +429,12 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
         {
             if (! clusterToMerge->IsAvailable())
                 continue;
+            
+	    if (m_printOut)
+	    {
+	        std::cout << "Number of hits in clusters: " << currentCluster->GetNCaloHits() << " | " 
+			  << clusterToMerge->GetNCaloHits() << std::endl;
+	    }
 
             try
             {
@@ -463,12 +468,19 @@ bool MvaLowEClusterMergingAlgorithm<T>::ClusterTool(std::vector<std::string> fea
 template <typename T>
 const CaloHitList MvaLowEClusterMergingAlgorithm<T>::EdgeHitFinder(const pandora::Cluster *const cluster, pandora::CaloHitList &clusterEdgeHits) const
 {
-        CartesianVector vector1(0.f,0.f,0.f);
-        CartesianVector vector2(0.f,0.f,0.f);
+        CartesianVector vector1(0.f,0.f,0.f), vector2(0.f,0.f,0.f), clusterCentroid(0.f,0.f,0.f);
         CaloHitList clusterCaloHits;
-        CartesianVector clusterCentroid(0.f,0.f,0.f);
         std::map<const Cluster*, bool> clusterIsUsed;
-        cluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHits);
+        
+	try
+        {
+	    cluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHits);
+	}
+	catch (StatusCodeException &)
+	{
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "Couldn't fill cluster with CaloHits" << std::endl;
+	}  
         const CartesianVector centroid1(cluster->GetCentroid(cluster->GetInnerPseudoLayer()));
         const CartesianVector centroid2(cluster->GetCentroid(cluster->GetOuterPseudoLayer()));
         const CartesianVector centroid((centroid1 + centroid2) * 0.5f);
@@ -477,19 +489,18 @@ const CaloHitList MvaLowEClusterMergingAlgorithm<T>::EdgeHitFinder(const pandora
 
         for (int i = 0 ; i < m_divisions ; i++)
         {
-                float pi(3.14159265);
-                float phi((2 * pi * i) / m_divisions);
-                CartesianVector vec(std::cos(phi), std::sin(phi),0.f);
+                float pi(3.14159265), maxMag{0}; 
+		float phi((2 * pi * i) / m_divisions);
+                CartesianVector vec(std::cos(phi), std::sin(phi), 0.f);
                 CaloHitList sectorHits;
                 sectorHits.clear();
-                float maxMag{0};
 
                 for (const CaloHit *pCaloHit: clusterCaloHits)
                 {
-                                            if (hitIsUsed.count(pCaloHit) == 0)
+			
+			if (hitIsUsed.count(pCaloHit) == 0)
                         {
-                            const float x(pCaloHit->GetPositionVector().GetX());
-                            const float z(pCaloHit->GetPositionVector().GetZ());
+                            const float x(pCaloHit->GetPositionVector().GetX()), z(pCaloHit->GetPositionVector().GetZ());
                             CartesianVector centroidToHitVec(x - centroid.GetX(), 0.f, z - centroid.GetZ());
                             float mag(centroidToHitVec.GetMagnitude());
                             CartesianVector normCentroidVec((x - centroid.GetX()) / mag, 0.f , (z - centroid.GetZ()) / mag );
@@ -510,11 +521,22 @@ const CaloHitList MvaLowEClusterMergingAlgorithm<T>::EdgeHitFinder(const pandora
 
 
                 }
-                for (const CaloHit *pCaloHit: sectorHits)
+	        
+		if (m_printOut)
+		{	
+		    std::cout << "SectorHit size: " << sectorHits.size() << std::endl;
+		}    
+                
+		for (const CaloHit *pCaloHit: sectorHits)
                 {
-                       clusterEdgeHits.push_back(pCaloHit);
+  	            clusterEdgeHits.push_back(pCaloHit);
                 }
                 
+		if (m_printOut)
+		{
+		   std::cout << "Cluster Hit Size: " << clusterCaloHits.size() << " | Edge Hit Size: " << clusterEdgeHits.size() << std::endl;
+		}
+
 		if (clusterCaloHits.size() < clusterEdgeHits.size())
                 {
                         std::cout << "Error in Edge Hit Algorithm: Incorrect edge hit classification !!!!" << std::endl;
@@ -540,6 +562,8 @@ template <typename T>
 StatusCode MvaLowEClusterMergingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingSetMode", m_trainingSetMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrintOut", m_printOut));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
