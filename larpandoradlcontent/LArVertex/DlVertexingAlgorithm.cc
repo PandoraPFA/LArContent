@@ -137,7 +137,6 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
             continue;
 
         LArMvaHelper::MvaFeatureVector featureVector;
-        LArMvaHelper::MvaFeatureVector featureVector2;
       	featureVector.emplace_back(static_cast<double>(nuance));
         featureVector.emplace_back(static_cast<double>(nVertices));
         featureVector.emplace_back(xVtx);
@@ -148,12 +147,6 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
         featureVector.emplace_back(zMin);
         featureVector.emplace_back(zMax);
     
-    	//featureVector2.emplace_back(static_cast<double>(nuance));
-	featureVector2.emplace_back(xMin);
-        featureVector2.emplace_back(xMax);
-        featureVector2.emplace_back(zMin);
-        featureVector2.emplace_back(zMax);
-
 	for (const CaloHit *pCaloHit : *pCaloHitList)
         {
             const float x{pCaloHit->GetPositionVector().GetX()}, z{pCaloHit->GetPositionVector().GetZ()}, adc{pCaloHit->GetMipEquivalentEnergy()};
@@ -164,37 +157,9 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
             featureVector.emplace_back(static_cast<double>(z));
             featureVector.emplace_back(static_cast<double>(adc));
             ++nHits;
-            
-            featureVector2.emplace_back(static_cast<double>(x));
-            featureVector2.emplace_back(static_cast<double>(z));
-            featureVector2.emplace_back(static_cast<double>(adc));
-
   
-	    const MCParticle *pMainMCParticle(nullptr);
-	    try {pMainMCParticle = MCParticleHelper::GetMainMCParticle(pCaloHit);}
-	    catch (const StatusCodeException &) {}
-
-	    if (pMainMCParticle)
-            {
-                const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
-
-                if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
-                { 
-                    featureVector2.emplace_back(1);
-	        }
-                else
-                {
-                    featureVector2.emplace_back(0);
-                }
-            }
-	    else
-	    {
-	        featureVector2.emplace_back(0);
-	    }
 	}
         featureVector.insert(featureVector.begin() + 8, static_cast<double>(nHits));
-	featureVector2.insert(featureVector2.begin() + 4, static_cast<double>(nHits));
-        LArMvaHelper::ProduceTrainingExample("background_" + listname + ".csv", true, featureVector2);
 	// Only write out the feature vector if there were enough hits in the region of interest
         if (nHits > 10)
             LArMvaHelper::ProduceTrainingExample(trainingFilename, true, featureVector);
