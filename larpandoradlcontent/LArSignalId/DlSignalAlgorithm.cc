@@ -104,8 +104,19 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
 
         HitType view{pCaloHitList->front()->GetHitType()};
         float viewDriftMin{driftMin}, viewDriftMax{driftMax};
-        this->GetHitRegion(*pCaloHitList, viewDriftMin, viewDriftMax, wireMin[view], wireMax[view]);
-        driftMin = std::min(viewDriftMin, driftMin);
+        try
+        {
+            this->GetHitRegion(*pCaloHitList, viewDriftMin, viewDriftMax, wireMin[view], wireMax[view]);
+        }
+        catch (const StatusCodeException &e)
+        {
+            if (e.GetStatusCode() == STATUS_CODE_NOT_FOUND)
+	        continue;
+	    else
+                throw;
+        }
+
+	driftMin = std::min(viewDriftMin, driftMin);
         driftMax = std::max(viewDriftMax, driftMax);
     }
     for (const std::string &listname : m_caloHitListNames)
@@ -151,7 +162,7 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
             {
                 const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
+                if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
                 { 
                     if (pMainMCParticle->GetParticleId() == 11)
 	            {
@@ -187,17 +198,33 @@ StatusCode DlSignalAlgorithm::Infer()
         ++m_event;
 
     std::map<HitType, float> wireMin, wireMax;
+    std::map<HitType, bool> isEmpty;
     float driftMin{std::numeric_limits<float>::max()}, driftMax{-std::numeric_limits<float>::max()};
     for (const std::string &listname : m_inputCaloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
-        if (pCaloHitList->empty())
+        //const StatusCode code{PandoraContentApi::GetList(*this, listname, pCaloHitList};
+	PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
+        if (!pCaloHitList)
             continue;
 
         HitType view{pCaloHitList->front()->GetHitType()};
         float viewDriftMin{driftMin}, viewDriftMax{driftMax};
-        this->GetHitRegion(*pCaloHitList, viewDriftMin, viewDriftMax, wireMin[view], wireMax[view]);
+        try
+	{
+	    this->GetHitRegion(*pCaloHitList, viewDriftMin, viewDriftMax, wireMin[view], wireMax[view]);
+	    isEmpty[view] = false;
+	}
+	catch (const StatusCodeException &e)
+	{
+	    if (e.GetStatusCode() == STATUS_CODE_NOT_FOUND)
+            {
+		isEmpty[view] = true;
+                continue;
+	    }
+            else
+                throw;
+	}
         driftMin = std::min(viewDriftMin, driftMin);
         driftMax = std::max(viewDriftMax, driftMax);
     }
@@ -206,11 +233,23 @@ StatusCode DlSignalAlgorithm::Infer()
     for (const std::string &listName : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
-        if (pCaloHitList->empty())
+	PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
+	
+	if (!pCaloHitList || pCaloHitList->empty())
+   	    continue;
+	HitType view;
+	try
+	{
+	    view = pCaloHitList->front()->GetHitType();
+	}
+	catch (const StatusCodeException &)
+	{
+	    continue;
+	}
+
+	if (isEmpty[view] == true)
             continue;
 
-        HitType view{pCaloHitList->front()->GetHitType()};
         const bool isU{view == TPC_VIEW_U}, isV{view == TPC_VIEW_V}, isW{view == TPC_VIEW_W};
         if (!isU && !isV && !isW)
             return STATUS_CODE_NOT_ALLOWED;
@@ -322,7 +361,7 @@ StatusCode DlSignalAlgorithm::Infer()
                     {
                         const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                        if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
+                        if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
                         {
                              const CartesianVector signalHit(x, 0.f, z);
                              PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &signalHit, "true signal", YELLOW, 2));
@@ -370,7 +409,7 @@ StatusCode DlSignalAlgorithm::Infer()
     
     if (!backgroundCaloHitList.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, backgroundCaloHitList, m_backgroundListName));
-
+    
     return STATUS_CODE_SUCCESS;
 }
 
@@ -592,7 +631,7 @@ StatusCode DlSignalAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCC
 
     // Move the neutrino to the front of the list
     auto pivot =
-        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); });
+        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino2(mc, false); });
     (void)pivot;
     if (pivot != mcHierarchy.end())
         std::rotate(mcHierarchy.begin(), pivot, std::next(pivot));
