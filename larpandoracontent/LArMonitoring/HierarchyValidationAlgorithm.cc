@@ -292,9 +292,12 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
         for (const ParticleFlowObject *const pRoot : rootPfos)
         {
 	    LArHierarchyHelper::RecoHierarchy::NodeVector nodes;
-            recoHierarchy.GetFlattenedNodes(pRoot, nodes);
+	    recoHierarchy.GetFlattenedNodes(pRoot, nodes);
             for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : nodes)
+            {
+                // std::cout << "Node size: " << pNode->GetRecoParticles().size() << std::endl;
                 recoNodeToRootMap[pNode] = pRoot;
+	    }
         }
 
         for (const MCParticle *const pRoot : rootMCParticles)
@@ -306,6 +309,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
 		if (pMCNode->GetHierarchyTier() == 1)
                 {
+		    // std::cout << "Node size (MC): " << pMCNode->GetMCParticles().size() << std::endl;
 		    const MCParticle *const pLeadingMC{pMCNode->GetLeadingMCParticle()};
                     primaries.emplace_back(pLeadingMC);
                 }
@@ -320,7 +324,6 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
                 const int isCosmicRay{!isTestBeam && pMCNode->IsCosmicRay() ? 1 : 0};
                 const int isNeutrinoInt{!(isTestBeam || isCosmicRay) ? 1 : 0};
-		//const int mcEnergy{pLeadingMC->GetEnergy()};
                 const int mcId{pMCNode->GetId()};
                 const int pdg{pMCNode->GetParticleId()};
                 const int tier{pMCNode->GetHierarchyTier()};
@@ -333,6 +336,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const int hasMuonParent{parentList.size() == 1 && std::abs(parentList.front()->GetParticleId()) == MU_MINUS ? 1 : 0};
                 const int isMichel{isElectron && hasMuonParent && LArMCParticleHelper::IsDecay(pLeadingMC) ? 1 : 0};
                 const float mcMomentum{pLeadingMC->GetMomentum().GetMagnitude()};
+                const float mcEnergy{pLeadingMC->GetEnergy()};
 
                 const LArHierarchyHelper::RecoHierarchy::NodeVector &nodeVector{matches.GetRecoMatches()};
                 const int nMatches{static_cast<int>(nodeVector.size())};
@@ -393,7 +397,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
  
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interaction", interaction));
-                //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcEnergy", mcEnergy));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcEnergy", mcEnergy));
 		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcId", mcId));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcPDG", pdg));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcTier", tier));

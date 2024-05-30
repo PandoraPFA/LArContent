@@ -1222,9 +1222,10 @@ float LArHierarchyHelper::MCMatches::GetCompleteness(const RecoHierarchy::Node *
 	        //int pdgParent(std::abs(LArMCParticleHelper::GetParentMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit))->GetParticleId()));
 	        //std::cout << "Reco hit Pdg: " << pdgCheck << "Get Parent Id : " << pdgParent << std::endl;
 	        if (LArMCParticleHelper::IsNeutrino2(LArMCParticleHelper::GetParentMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit)), false))
-	        { 
+		{ 
 	           // std::cout << "Print Nuance Code: " << LArMCParticleHelper::GetNuanceCode(MCParticleHelper::GetMainMCParticle(pCaloHit)) << std::endl;
-                    recoHits.emplace_back(pCaloHit);
+                    if (m_pMCParticle->GetParticleId() == MCParticleHelper::GetMainMCParticle(pCaloHit)->GetParticleId())
+	                recoHits.emplace_back(pCaloHit);
 	        }
 	     }
 	     catch (const StatusCodeException &) 
