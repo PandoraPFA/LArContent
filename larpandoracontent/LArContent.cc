@@ -68,6 +68,8 @@
 #include "larpandoracontent/LArPersistency/EventWritingAlgorithm.h"
 
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
+#include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
+#include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
 
 #include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
 #include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
@@ -155,6 +157,7 @@
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewSimpleTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArReclustering/ThreeDReclusteringAlgorithm.h"
 
 #include "larpandoracontent/LArVertex/EnergyDepositionAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
@@ -334,9 +337,13 @@
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
     d("LArBdtVertexSelection",                  BdtVertexSelectionAlgorithm)                                                    \
     d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)                                                    \
-    d("LArVertexRefinement",                    VertexRefinementAlgorithm)
+    d("LArVertexRefinement",                    VertexRefinementAlgorithm)                                                      \
+    d("LArThreeDReclustering",                  ThreeDReclusteringAlgorithm)                                                    \
+
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
+    d("LArCheatedThreeDClusteringTool",         CheatedThreeDClusteringTool)                                                    \
+    d("LArSimplePCAThreeDClusteringTool",                 SimplePCAThreeDClusteringTool)                                        \
     d("LArConnectionRegionFeatureTool",         ConnectionRegionFeatureTool)                                                    \
     d("LArShowerRegionFeatureTool",             ShowerRegionFeatureTool)                                                        \
     d("LArAmbiguousRegionFeatureTool",          AmbiguousRegionFeatureTool)                                                     \
