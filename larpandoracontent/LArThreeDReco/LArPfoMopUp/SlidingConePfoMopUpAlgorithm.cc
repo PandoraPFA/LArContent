@@ -179,24 +179,12 @@ void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVerte
 
             for (const SimpleCone &simpleCone : simpleConeList)
             {
-                if (m_legacyMode)
-                {
-                    const float boundedFraction1(simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle1));
-                    const float boundedFraction2(simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle2));
-                    const ClusterMerge clusterMerge(pShowerCluster, boundedFraction1, boundedFraction2);
+                const float boundedFraction1(simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle1));
+                const float boundedFraction2(simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle2));
+                const ClusterMerge clusterMerge(pShowerCluster, boundedFraction1, boundedFraction2);
 
-                    if (clusterMerge < bestClusterMerge)
-                        bestClusterMerge = clusterMerge;
-                }
-                else
-                {
-                    const float boundedFraction1(simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle1));
-                    const float boundedFraction2(simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle2));
-                    const ClusterMerge clusterMerge(pShowerCluster, boundedFraction1, boundedFraction2);
-
-                    if (clusterMerge < bestClusterMerge)
-                        bestClusterMerge = clusterMerge;
-                }
+                if (clusterMerge < bestClusterMerge)
+                    bestClusterMerge = clusterMerge;
             }
 
             if (isShowerVertexAssociated && this->IsVertexAssociated(pNearbyCluster, pVertex, vertexAssociationMap))
