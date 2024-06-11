@@ -301,6 +301,8 @@ private:
     float m_coneBoundedFraction2;    ///< The minimum cluster bounded fraction for association 2
 
     bool m_use3DProjectionsInHitPickUp; ///< Whether to include 3D cluster projections when assigning remaining clusters to slices
+
+    float m_unassoc2DClusterMaxDist; ///< Maximum distance to attach unassociated 2D Clusters to 3D slices
 };
 
 } // namespace lar_content
