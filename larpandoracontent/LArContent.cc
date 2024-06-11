@@ -41,6 +41,7 @@
 #include "larpandoracontent/LArControlFlow/SlicingAlgorithm.h"
 #include "larpandoracontent/LArControlFlow/StitchingCosmicRayMergingTool.h"
 #include "larpandoracontent/LArControlFlow/StreamingAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/TestBeamCosmicRayTaggingTool.h"
 
 #include "larpandoracontent/LArCustomParticles/PcaShowerParticleBuildingAlgorithm.h"
 #include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
@@ -168,6 +169,7 @@
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/TrackShowerIdFeatureTool.h"
 
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/BoundedRegionClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsAssociationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsExtensionAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.h"
@@ -289,6 +291,7 @@
     d("LArShowerGrowing",                       ShowerGrowingAlgorithm)                                                         \
     d("LArBdtPfoCharacterisation",              BdtPfoCharacterisationAlgorithm)                                                \
     d("LArSvmPfoCharacterisation",              SvmPfoCharacterisationAlgorithm)                                                \
+    d("LArBoundedRegionClusterMerging",         BoundedRegionClusterMergingAlgorithm)                                           \
     d("LArCrossGapsAssociation",                CrossGapsAssociationAlgorithm)                                                  \
     d("LArCrossGapsExtension",                  CrossGapsExtensionAlgorithm)                                                    \
     d("LArHitWidthClusterMerging",              HitWidthClusterMergingAlgorithm)                                                \
@@ -345,6 +348,7 @@
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
     d("LArBeamParticleId",                      BeamParticleIdTool)                                                             \
     d("LArCosmicRayTagging",                    CosmicRayTaggingTool)                                                           \
+    d("LArTestBeamCosmicRayTagging",            TestBeamCosmicRayTaggingTool)                                                   \
     d("LArBdtNeutrinoId",                       BdtNeutrinoIdTool)                                                              \
     d("LArSvmNeutrinoId",                       SvmNeutrinoIdTool)                                                              \
     d("LArSimpleNeutrinoId",                    SimpleNeutrinoIdTool)                                                           \
