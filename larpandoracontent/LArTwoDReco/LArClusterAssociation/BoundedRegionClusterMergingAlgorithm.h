@@ -30,7 +30,22 @@ protected:
 
     typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterList> ClusterMergeMap;
 
+    /**
+     *  @brief Populate cluster vector with all clusters starting in the defined region
+     *
+     *  @param  pClusterList pointer to the list of all 2D clusters
+     *  @param  clusterVector to receive the clusters within the bounded region
+     */
     void GetListOfBoundedRegionClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
+
+    /**
+     *  @brief Compare two clusters and decide if they should be associated with eachother
+     *
+     *  @param pCluster1 pointer to the first cluster
+     *  @param pCluster2 pointer to the second cluster
+     *
+     *  @return whether the clusters should be associated or not
+     */
     bool AreClustersAssociated(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
 
     /**
@@ -49,52 +64,14 @@ protected:
      */
     void PopulateClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const;
 
-    /**
-     *  @brief  Merge associated clusters
-     *
-     *  @param  clusterVector the vector of clean clusters
-     *  @param  clusterMergeMap the matrix of cluster associations
-     */
-//    void MergeClusters(pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const;
-
-    /**
-     *  @brief  Collect up all clusters associations related to a given seed cluster
-     *
-     *  @param  pSeedCluster pointer to the initial cluster
-     *  @param  clusterMergeMap the map of cluster associations
-     *  @param  associatedClusterList the output list of associated clusters
-     */
-//    void CollectAssociatedClusters(const pandora::Cluster *const pSeedCluster, const ClusterMergeMap &clusterMergeMap,
-//        pandora::ClusterList &associatedClusterList) const;
-
-    /**
-     *  @brief  Collect up all clusters associations related to a given seed cluster
-     *
-     *  @param  pSeedCluster pointer to the initial cluster
-     *  @param  pCurrentCluster pointer to the current cluster
-     *  @param  clusterMergeMap the map of cluster associations
-     *  @param  clusterVetoList the list of clusters that have already been merged
-     *  @param  associatedClusterList the output list of associated clusters
-     */
-//    void CollectAssociatedClusters(const pandora::Cluster *const pSeedCluster, const pandora::Cluster *const pCurrentCluster,
-//        const ClusterMergeMap &clusterMergeMap, const pandora::ClusterSet &clusterVetoList, pandora::ClusterList &associatedClusterList) const;
-
-    /**
-     *  @brief  Sort the selected clusters, so that they have a well-defined ordering
-     *
-     *  @param  inputClusters the input vector of clusters
-     *  @param  outputClusters the output vector of clusters
-     */
-//    void GetSortedListOfCleanClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &outputClusters) const;
-
 private:
 
-    float m_xRegionMin;
-    float m_xRegionMax;
-    float m_zRegionMin;
-    float m_zRegionMax;
-    float m_maxDistance;
-    unsigned int m_minClusterHits;
+    float m_xRegionMin;               ///< Minimum x value of the bounded region box
+    float m_xRegionMax;               ///< Maximum x value of the bounded region box
+    float m_zRegionMin;               ///< Minimum z value (wire dimension) of the bounded region box
+    float m_zRegionMax;               ///< Maximum z value (wire dimension) of the bounded region box
+    float m_maxDistance;              ///< Maximum distance below which clusters can be associated
+    unsigned int m_minClusterHits;    ///< Threshold on the size of clusters to be considered for merging
 };
 
 } // namespace lar_content

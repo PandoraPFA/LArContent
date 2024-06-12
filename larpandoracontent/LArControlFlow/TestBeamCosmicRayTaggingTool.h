@@ -141,61 +141,37 @@ private:
     void CheckIfOutOfTime(const CRCandidateList &candidates, PfoToBoolMap &pfoToInTimeMap) const;
 
     /**
-     *  @brief  Check if each candidate is "contained" (contained = no associations to Y or Z detector faces, but the Pfo could still enter or exit by and X-face)
-     *
-     *  @param  candidates input list of candidates
-     *  @param  pfoToIsContainedMap output mapping between candidates Pfos and if they are contained
-     */
-    void CheckIfContained(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsContainedMap) const;
-
-    /**
      *  @brief  Check if each candidate is "top to bottom"
      *
      *  @param  candidates input list of candidates
-     *  @param  pfoToIsTopToBottomMap output mapping between candidates Pfos and if they are top to bottom
+     *  @param  pfoToIsCosmicRayMap output mapping between candidates Pfos and if they are top to bottom
      */
     void CheckIfTopToBottom(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsCosmicRayMap) const;
+
+    /**
+     *  @brief  Check if each candidate enters from the top of the detector
+     *
+     *  @param  candidates input list of candidates
+     *  @param  pfoToIsCosmicRayMap output mapping between candidates Pfos and if they are top entering
+     */
     void CheckIfTopEntering(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsCosmicRayMap) const;
+
+    /**
+     *  @brief  Check if each candidate has its highest value in one of the vetoed TPC volumes
+     *
+     *  @param  candidates input list of candidates
+     *  @param  pfoToIsCosmicRayMap output mapping between candidates Pfos and if they are in the vetoed TPCs
+     */
     void CheckIfInVetoedTPC(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsCosmicRayMap) const;
 
     typedef std::set<unsigned int> UIntSet;
     typedef std::unordered_map<int, bool> IntBoolMap;
-
-    /**
-     *  @brief  Get the slice indices which contain a likely neutrino Pfo
-     *
-     *  @param  candidates input list of candidates
-     *  @param  pfoToInTimeMap input map between Pfo and if in time
-     *  @param  pfoToIsContainedMap input map between Pfo and if contained
-     *  @param  neutrinoSliceSet output set of slice indices containing a likely neutrino Pfo
-     */
-//    void GetNeutrinoSlices(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap, const PfoToBoolMap &pfoToIsContainedMap,
-//        UIntSet &neutrinoSliceSet) const;
-
-    /**
-     *  @brief  Tag Pfos which are likely to be a CR muon
-     *
-     *  @param  candidates input list of candidates
-     *  @param  pfoToInTimeMap input map between Pfo and if in time
-     *  @param  pfoToIsTopToBottomMap input mapping between candidate Pfos and if they are top to bottom
-     *  @param  neutrinoSliceSet input set of slice indices containing a likely neutrino Pfo
-     *  @param  pfoToIsLikelyCRMuonMap to receive the output mapping between Pfos and a boolean deciding if they are likely a CR muon
-     */
-//    void TagCRMuons(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap, const PfoToBoolMap &pfoToIsTopToBottomMap,
-//        const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::pair<const ThreeDSlidingFitResult, const ThreeDSlidingFitResult> SlidingFitPair;
     typedef std::unordered_map<const pandora::ParticleFlowObject *, SlidingFitPair> PfoToSlidingFitsMap;
     typedef std::vector<pandora::PfoList> SliceList;
-
-    /**
-     *  @brief  Choose a set of cuts using a keyword - "cautious" = remove as few neutrinos as possible
-     *          "nominal" = optimised to maximise CR removal whilst preserving neutrinos
-     *          "aggressive" = remove CR muons and allow more neutrinos to be tagged
-     */
-    std::string m_cutMode;
 
     float m_angularUncertainty;    ///< The uncertainty in degrees for the angle of a Pfo
     float m_positionalUncertainty; ///< The uncertainty in cm for the position of Pfo endpoint in 3D
@@ -206,17 +182,13 @@ private:
     float m_inTimeMargin; ///< The maximum distance outside of the physical detector volume that a Pfo may be to still be considered in time
     float m_inTimeMaxX0;  ///< The maximum pfo x0 (determined from shifted vertex) to allow pfo to still be considered in time
     float m_marginY;      ///< The minimum distance from a detector Y-face for a Pfo to be associated
-    float m_marginZ;      ///< The minimum distance from a detector Z-face for a Pfo to be associated
-    float m_maxNeutrinoCosTheta; ///< The maximum cos(theta) that a Pfo can have to be classified as a likely neutrino
-    float m_minCosmicCosTheta;   ///< The minimum cos(theta) that a Pfo can have to be classified as a likely CR muon
-    float m_maxCosmicCurvature;  ///< The maximum curvature that a Pfo can have to be classified as a likely CR muon
 
-    bool m_tagTopEntering;
-    bool m_tagTopToBottom;
-    bool m_tagOutOfTime;
-    bool m_tagInVetoedTPCs;
+    bool m_tagTopEntering;   ///< Whether to tag all top entering particles as cosmic rays
+    bool m_tagTopToBottom;   ///< Whether to tag all top-to-bottom particles as cosmic rays
+    bool m_tagOutOfTime;     ///< Whether to tag all out-of-time particles as cosmic rays
 
-    std::vector<unsigned int> m_vetoedTPCs;
+    bool m_tagInVetoedTPCs;  ///< Whether to tag all particles with their highest position in vetoed TPCs as cosmic rays
+    std::vector<unsigned int> m_vetoedTPCs; ///< List of vetoed TPCs for tagging cosmic rays
 
     float m_face_Xa; ///< Anode      X face
     float m_face_Xc; ///< Cathode    X face

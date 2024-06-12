@@ -18,12 +18,12 @@ namespace lar_content
 {
 
 BoundedRegionClusterMergingAlgorithm::BoundedRegionClusterMergingAlgorithm() :
-m_xRegionMin(-100.f),
-m_xRegionMax(0.f),
-m_zRegionMin(235.f),
-m_zRegionMax(400.f),
-m_maxDistance(10.f),
-m_minClusterHits(2)
+    m_xRegionMin(-100.f),
+    m_xRegionMax(0.f),
+    m_zRegionMin(235.f),
+    m_zRegionMax(400.f),
+    m_maxDistance(10.f),
+    m_minClusterHits(2)
 {}
 
 StatusCode BoundedRegionClusterMergingAlgorithm::Run()
@@ -51,17 +51,13 @@ StatusCode BoundedRegionClusterMergingAlgorithm::Run()
     std::cout << "Running Bounded Region Clustering for cluster list " << m_inputClusterListName << std::endl;
     while (true)
     {
-//        ClusterVector unsortedVector, clusterVector;
-//        this->GetListOfCleanClusters(pClusterList, unsortedVector);
         ClusterVector clusterVector;
         ClusterMergeMap clusterMergeMap;
         this->GetListOfBoundedRegionClusters(pClusterList, clusterVector);
-//        std::cout << " - " << clusterVector.size() << " clusters to play with" << std::endl;
         if (clusterVector.size() < 2)
             break;
 
         this->PopulateClusterMergeMap(clusterVector, clusterMergeMap);
-
         if (clusterMergeMap.empty())
             break;
 
@@ -87,8 +83,7 @@ void BoundedRegionClusterMergingAlgorithm::GetListOfBoundedRegionClusters(const 
         LArClusterHelper::GetClusterBoundingBox(pCluster, minimumPos, maximumPos);
         (void)maximumPos; // To get rid of an unused variable warning
 
-//        std::cout << "Cluster position = " << minimumPos.GetX() << ", " << minimumPos.GetY() << ", " << minimumPos.GetZ() << std::endl;
-        if ( minimumPos.GetX() > m_xRegionMin && minimumPos.GetX() < m_xRegionMax && minimumPos.GetZ() > m_zRegionMin && minimumPos.GetZ() < m_zRegionMax)
+        if (minimumPos.GetX() > m_xRegionMin && minimumPos.GetX() < m_xRegionMax && minimumPos.GetZ() > m_zRegionMin && minimumPos.GetZ() < m_zRegionMax)
             clusterVector.emplace_back(pCluster);
     }
 
@@ -130,80 +125,11 @@ bool BoundedRegionClusterMergingAlgorithm::AreClustersAssociated(const Cluster *
 {
     const float distance = LArClusterHelper::GetClosestDistance(pCluster1, pCluster2);
     if (distance < m_maxDistance)
-    {
-//        std::cout << "Clusters " << pCluster1 << " and " << pCluster2 << " are set to be merged" << std::endl;
         return true;
-    }
 
     return false;
 }
 
-/*
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void BoundedRegionClusterMergingAlgorithm::CollectAssociatedClusters(
-    const Cluster *const pSeedCluster, const ClusterMergeMap &clusterMergeMap, ClusterList &associatedClusterList) const
-{
-    ClusterSet clusterVetoList;
-    this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoList, associatedClusterList);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void BoundedRegionClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const Cluster *const pCurrentCluster,
-    const ClusterMergeMap &clusterMergeMap, const ClusterSet &clusterVetoList, ClusterList &associatedClusterList) const
-{
-    if (clusterVetoList.count(pCurrentCluster))
-        return;
-
-    ClusterMergeMap::const_iterator iter1 = clusterMergeMap.find(pCurrentCluster);
-
-    if (iter1 == clusterMergeMap.end())
-        return;
-
-    ClusterVector associatedClusters(iter1->second.begin(), iter1->second.end());
-    std::sort(associatedClusters.begin(), associatedClusters.end(), LArClusterHelper::SortByNHits);
-
-    for (const Cluster *const pAssociatedCluster : associatedClusters)
-    {
-        if (pAssociatedCluster == pSeedCluster)
-            continue;
-
-        if (associatedClusterList.end() != std::find(associatedClusterList.begin(), associatedClusterList.end(), pAssociatedCluster))
-            continue;
-
-        associatedClusterList.push_back(pAssociatedCluster);
-        this->CollectAssociatedClusters(pSeedCluster, pAssociatedCluster, clusterMergeMap, clusterVetoList, associatedClusterList);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void BoundedRegionClusterMergingAlgorithm::GetSortedListOfCleanClusters(const ClusterVector &inputClusters, ClusterVector &outputClusters) const
-{
-    ClusterVector pfoClusters, availableClusters;
-
-    for (ClusterVector::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
-    {
-        const Cluster *const pCluster = *iter;
-
-        if (!pCluster->IsAvailable())
-        {
-            pfoClusters.push_back(pCluster);
-        }
-        else
-        {
-            availableClusters.push_back(pCluster);
-        }
-    }
-
-    std::sort(pfoClusters.begin(), pfoClusters.end(), LArClusterHelper::SortByNHits);
-    std::sort(availableClusters.begin(), availableClusters.end(), LArClusterHelper::SortByNHits);
-
-    outputClusters.insert(outputClusters.end(), pfoClusters.begin(), pfoClusters.end());
-    outputClusters.insert(outputClusters.end(), availableClusters.begin(), availableClusters.end());
-}
-*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode BoundedRegionClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)

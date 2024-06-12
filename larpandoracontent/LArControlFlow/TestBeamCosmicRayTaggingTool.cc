@@ -21,7 +21,6 @@ namespace lar_content
 {
 
 TestBeamCosmicRayTaggingTool::TestBeamCosmicRayTaggingTool() :
-    m_cutMode("nominal"),
     m_angularUncertainty(5.f),
     m_positionalUncertainty(3.f),
     m_maxAssociationDist(3.f * 18.f),
@@ -29,10 +28,6 @@ TestBeamCosmicRayTaggingTool::TestBeamCosmicRayTaggingTool() :
     m_inTimeMargin(5.f),
     m_inTimeMaxX0(1.f),
     m_marginY(20.f),
-    m_marginZ(10.f),
-    m_maxNeutrinoCosTheta(0.2f),
-    m_minCosmicCosTheta(0.6f),
-    m_maxCosmicCurvature(0.04f),
     m_tagTopEntering(true),
     m_tagTopToBottom(true),
     m_tagOutOfTime(true),
@@ -50,26 +45,6 @@ TestBeamCosmicRayTaggingTool::TestBeamCosmicRayTaggingTool() :
 
 StatusCode TestBeamCosmicRayTaggingTool::Initialize()
 {
-    if ("nominal" == m_cutMode)
-    {
-        // Nominal values set in constructor
-    }
-    else if ("cautious" == m_cutMode)
-    {
-        m_minCosmicCosTheta = std::numeric_limits<double>::max();
-        m_maxCosmicCurvature = -std::numeric_limits<double>::max();
-    }
-    else if ("aggressive" == m_cutMode)
-    {
-        m_minCosmicCosTheta = 0.6f;
-        m_maxCosmicCurvature = 0.1f;
-    }
-    else
-    {
-        std::cout << "TestBeamCosmicRayTaggingTool - invalid cut mode " << m_cutMode << std::endl;
-        return STATUS_CODE_INVALID_PARAMETER;
-    }
-
     return STATUS_CODE_SUCCESS;
 }
 
@@ -126,33 +101,20 @@ void TestBeamCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
     }
 
     // Tag all particles appearing to enter from the top
-    std::cout << "Running Top Entering? " << m_tagTopEntering << std::endl;
     if (m_tagTopEntering)
         this->CheckIfTopEntering(candidates, pfoToIsCosmicRayMap);
 
     // Tag particles going from top to bottom
-    std::cout << "Running Top To Bottom? " << m_tagTopToBottom << std::endl;
     if (m_tagTopToBottom)
         this->CheckIfTopToBottom(candidates, pfoToIsCosmicRayMap);
 
     // Tag particles with t0 != 0 or appears outside the detector with t0 = 0
-    std::cout << "Running Out of Time? " << m_tagOutOfTime << std::endl;
     if (m_tagOutOfTime)
         this->CheckIfOutOfTime(candidates, pfoToIsCosmicRayMap);
 
     // Tag particles with their highest point in a given list of TPCs
-    std::cout << "Running Veto TPC? " << m_tagInVetoedTPCs << std::endl;
     if (m_tagInVetoedTPCs)
         this->CheckIfInVetoedTPC(candidates, pfoToIsCosmicRayMap);
-
-//    PfoToBoolMap pfoToIsContainedMap;
-//    this->CheckIfContained(candidates, pfoToIsContainedMap);
-
-//    UIntSet neutrinoSliceSet;
-//    this->GetNeutrinoSlices(candidates, pfoToInTimeMap, pfoToIsContainedMap, neutrinoSliceSet);
-
-//    PfoToBoolMap pfoToIsLikelyCRMuonMap;
-//    this->TagCRMuons(candidates, pfoToInTimeMap, pfoToIsTopToBottomMap, neutrinoSliceSet, pfoToIsLikelyCRMuonMap);
 
     for (const ParticleFlowObject *const pPfo : parentCosmicRayPfos)
     {
@@ -454,31 +416,6 @@ void TestBeamCosmicRayTaggingTool::CheckIfOutOfTime(const CRCandidateList &candi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TestBeamCosmicRayTaggingTool::CheckIfContained(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsContainedMap) const
-{
-    for (const CRCandidate &candidate : candidates)
-    {
-        const float upperY(
-            (candidate.m_endPoint1.GetY() > candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetY() : candidate.m_endPoint2.GetY());
-        const float lowerY(
-            (candidate.m_endPoint1.GetY() < candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetY() : candidate.m_endPoint2.GetY());
-
-        const float zAtUpperY(
-            (candidate.m_endPoint1.GetY() > candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetZ() : candidate.m_endPoint2.GetZ());
-        const float zAtLowerY(
-            (candidate.m_endPoint1.GetY() < candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetZ() : candidate.m_endPoint2.GetZ());
-
-        const bool isContained((upperY < m_face_Yt - m_marginY) && (upperY > m_face_Yb + m_marginY) && (lowerY < m_face_Yt - m_marginY) &&
-                               (lowerY > m_face_Yb + m_marginY) && (zAtUpperY < m_face_Zd - m_marginZ) && (zAtUpperY > m_face_Zu + m_marginZ) &&
-                               (zAtLowerY < m_face_Zd - m_marginZ) && (zAtLowerY > m_face_Zu + m_marginZ));
-
-        if (!pfoToIsContainedMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isContained)).second)
-            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void TestBeamCosmicRayTaggingTool::CheckIfTopToBottom(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsCosmicRayMap) const
 {
     for (const CRCandidate &candidate : candidates)
@@ -550,53 +487,6 @@ void TestBeamCosmicRayTaggingTool::CheckIfInVetoedTPC(const CRCandidateList &can
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-//void TestBeamCosmicRayTaggingTool::GetNeutrinoSlices(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap,
-//    const PfoToBoolMap &pfoToIsContainedMap, UIntSet &neutrinoSliceSet) const
-//{
-//    IntBoolMap sliceIdToIsInTimeMap;
-//
-//    for (const CRCandidate &candidate : candidates)
-//    {
-//        if (sliceIdToIsInTimeMap.find(candidate.m_sliceId) == sliceIdToIsInTimeMap.end())
-//            sliceIdToIsInTimeMap.insert(std::make_pair(candidate.m_sliceId, true));
-//
-//        if (!pfoToInTimeMap.at(candidate.m_pPfo))
-//            sliceIdToIsInTimeMap.at(candidate.m_sliceId) = false;
-//    }
-//
-//    for (const CRCandidate &candidate : candidates)
-//    {
-//        if (neutrinoSliceSet.count(candidate.m_sliceId))
-//            continue;
-//
-//        const bool likelyNeutrino(candidate.m_canFit && sliceIdToIsInTimeMap.at(candidate.m_sliceId) &&
-//                                  (candidate.m_theta < m_maxNeutrinoCosTheta || pfoToIsContainedMap.at(candidate.m_pPfo)));
-//
-//        if (likelyNeutrino)
-//            (void)neutrinoSliceSet.insert(candidate.m_sliceId);
-//    }
-//}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-//void TestBeamCosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap,
-//    const PfoToBoolMap &pfoToIsTopToBottomMap, const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap) const
-//{
-//    for (const CRCandidate &candidate : candidates)
-//    {
-//        const bool likelyCRMuon(
-//            !neutrinoSliceSet.count(candidate.m_sliceId) &&
-//            (!pfoToInTimeMap.at(candidate.m_pPfo) ||
-//                (candidate.m_canFit && (pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
-//                                           ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature))))));
-//
-//        if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
-//            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
-//    }
-//}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TestBeamCosmicRayTaggingTool::CRCandidate::CRCandidate(const Pandora &pandora, const ParticleFlowObject *const pPfo, const unsigned int sliceId) :
@@ -661,9 +551,6 @@ void TestBeamCosmicRayTaggingTool::CRCandidate::CalculateFitVariables(const Thre
 
 StatusCode TestBeamCosmicRayTaggingTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CutMode", m_cutMode));
-    std::transform(m_cutMode.begin(), m_cutMode.end(), m_cutMode.begin(), ::tolower);
-
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "AngularUncertainty", m_angularUncertainty));
 
@@ -680,17 +567,6 @@ StatusCode TestBeamCosmicRayTaggingTool::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InTimeMaxX0", m_inTimeMaxX0));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MarginY", m_marginY));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MarginZ", m_marginZ));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxNeutrinoCosTheta", m_maxNeutrinoCosTheta));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosmicCosTheta", m_minCosmicCosTheta));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxCosmicCurvature", m_maxCosmicCurvature));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TagTopEntering", m_tagTopEntering));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TagTopToBottom", m_tagTopToBottom));
