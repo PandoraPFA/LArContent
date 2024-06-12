@@ -183,11 +183,11 @@ private:
     float m_inTimeMaxX0;  ///< The maximum pfo x0 (determined from shifted vertex) to allow pfo to still be considered in time
     float m_marginY;      ///< The minimum distance from a detector Y-face for a Pfo to be associated
 
-    bool m_tagTopEntering;   ///< Whether to tag all top entering particles as cosmic rays
-    bool m_tagTopToBottom;   ///< Whether to tag all top-to-bottom particles as cosmic rays
-    bool m_tagOutOfTime;     ///< Whether to tag all out-of-time particles as cosmic rays
+    bool m_tagTopEntering; ///< Whether to tag all top entering particles as cosmic rays
+    bool m_tagTopToBottom; ///< Whether to tag all top-to-bottom particles as cosmic rays
+    bool m_tagOutOfTime;   ///< Whether to tag all out-of-time particles as cosmic rays
 
-    bool m_tagInVetoedTPCs;  ///< Whether to tag all particles with their highest position in vetoed TPCs as cosmic rays
+    bool m_tagInVetoedTPCs;                 ///< Whether to tag all particles with their highest position in vetoed TPCs as cosmic rays
     std::vector<unsigned int> m_vetoedTPCs; ///< List of vetoed TPCs for tagging cosmic rays
 
     float m_face_Xa; ///< Anode      X face

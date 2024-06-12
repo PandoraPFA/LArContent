@@ -65,13 +65,12 @@ protected:
     void PopulateClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const;
 
 private:
-
-    float m_xRegionMin;               ///< Minimum x value of the bounded region box
-    float m_xRegionMax;               ///< Maximum x value of the bounded region box
-    float m_zRegionMin;               ///< Minimum z value (wire dimension) of the bounded region box
-    float m_zRegionMax;               ///< Maximum z value (wire dimension) of the bounded region box
-    float m_maxDistance;              ///< Maximum distance below which clusters can be associated
-    unsigned int m_minClusterHits;    ///< Threshold on the size of clusters to be considered for merging
+    float m_xRegionMin;            ///< Minimum x value of the bounded region box
+    float m_xRegionMax;            ///< Maximum x value of the bounded region box
+    float m_zRegionMin;            ///< Minimum z value (wire dimension) of the bounded region box
+    float m_zRegionMax;            ///< Maximum z value (wire dimension) of the bounded region box
+    float m_maxDistance;           ///< Maximum distance below which clusters can be associated
+    unsigned int m_minClusterHits; ///< Threshold on the size of clusters to be considered for merging
 };
 
 } // namespace lar_content

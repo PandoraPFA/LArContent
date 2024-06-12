@@ -24,7 +24,8 @@ BoundedRegionClusterMergingAlgorithm::BoundedRegionClusterMergingAlgorithm() :
     m_zRegionMax(400.f),
     m_maxDistance(10.f),
     m_minClusterHits(2)
-{}
+{
+}
 
 StatusCode BoundedRegionClusterMergingAlgorithm::Run()
 {
@@ -69,7 +70,8 @@ StatusCode BoundedRegionClusterMergingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BoundedRegionClusterMergingAlgorithm::GetListOfBoundedRegionClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const
+void BoundedRegionClusterMergingAlgorithm::GetListOfBoundedRegionClusters(
+    const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const
 {
     for (const Cluster *const pCluster : *pClusterList)
     {
@@ -107,7 +109,7 @@ void BoundedRegionClusterMergingAlgorithm::PopulateClusterMergeMap(const Cluster
             if (!pCluster2->IsAvailable())
                 continue;
 
-            if  (std::find(usedClusters.begin(), usedClusters.end(), pCluster2) != usedClusters.end())
+            if (std::find(usedClusters.begin(), usedClusters.end(), pCluster2) != usedClusters.end())
                 continue;
 
             if (this->AreClustersAssociated(pCluster1, pCluster2))
@@ -115,7 +117,7 @@ void BoundedRegionClusterMergingAlgorithm::PopulateClusterMergeMap(const Cluster
                 clusterMergeMap[pCluster1].push_back(pCluster2);
                 usedClusters.emplace_back(pCluster2);
             }
-        }   
+        }
     }
 }
 
@@ -134,20 +136,14 @@ bool BoundedRegionClusterMergingAlgorithm::AreClustersAssociated(const Cluster *
 
 StatusCode BoundedRegionClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinimumX", m_xRegionMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaximumX", m_xRegionMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinimumZ", m_zRegionMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaximumZ", m_zRegionMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinimumX", m_xRegionMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaximumX", m_xRegionMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinimumZ", m_zRegionMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaximumZ", m_zRegionMax));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxDistance", m_maxDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxDistance", m_maxDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterHits", m_minClusterHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterHits", m_minClusterHits));
     return ClusterMergingAlgorithm::ReadSettings(xmlHandle);
 }
 

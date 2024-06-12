@@ -253,7 +253,8 @@ bool TestBeamCosmicRayTaggingTool::CheckAssociation(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TestBeamCosmicRayTaggingTool::SliceEvent(const PfoList &parentCosmicRayPfos, const PfoToPfoListMap &pfoAssociationMap, PfoToSliceIdMap &pfoToSliceIdMap) const
+void TestBeamCosmicRayTaggingTool::SliceEvent(
+    const PfoList &parentCosmicRayPfos, const PfoToPfoListMap &pfoAssociationMap, PfoToSliceIdMap &pfoToSliceIdMap) const
 {
     SliceList sliceList;
 
@@ -310,7 +311,8 @@ void TestBeamCosmicRayTaggingTool::FillSlice(const ParticleFlowObject *const pPf
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TestBeamCosmicRayTaggingTool::GetCRCandidates(const PfoList &parentCosmicRayPfos, const PfoToSliceIdMap &pfoToSliceIdMap, CRCandidateList &candidates) const
+void TestBeamCosmicRayTaggingTool::GetCRCandidates(
+    const PfoList &parentCosmicRayPfos, const PfoToSliceIdMap &pfoToSliceIdMap, CRCandidateList &candidates) const
 {
     for (const ParticleFlowObject *const pPfo : parentCosmicRayPfos)
     {
@@ -463,7 +465,7 @@ void TestBeamCosmicRayTaggingTool::CheckIfInVetoedTPC(const CRCandidateList &can
         // We have to go via the hit volume id to get the TPC
         CaloHitList caloHitList3D;
         LArPfoHelper::GetCaloHits(candidate.m_pPfo, TPC_3D, caloHitList3D);
-        
+
         float maxYPosition{-1.f * std::numeric_limits<float>::max()};
         float maxYXPosition{-1.f * std::numeric_limits<float>::max()};
         unsigned int maxYTPCId{std::numeric_limits<unsigned int>::max()};
@@ -475,8 +477,9 @@ void TestBeamCosmicRayTaggingTool::CheckIfInVetoedTPC(const CRCandidateList &can
             {
                 maxYPosition = hitYPos;
                 maxYXPosition = hitXPos;
-                const unsigned int maxYDriftVol = reinterpret_cast<LArCaloHit*>(const_cast<void*>(pCaloHit->GetParentAddress()))->GetLArTPCVolumeId();
-                const unsigned int maxYAPA = reinterpret_cast<LArCaloHit*>(const_cast<void*>(pCaloHit->GetParentAddress()))->GetDaughterVolumeId();
+                const unsigned int maxYDriftVol =
+                    reinterpret_cast<LArCaloHit *>(const_cast<void *>(pCaloHit->GetParentAddress()))->GetLArTPCVolumeId();
+                const unsigned int maxYAPA = reinterpret_cast<LArCaloHit *>(const_cast<void *>(pCaloHit->GetParentAddress()))->GetDaughterVolumeId();
                 maxYTPCId = maxYDriftVol + maxYAPA * 4;
             }
         }
