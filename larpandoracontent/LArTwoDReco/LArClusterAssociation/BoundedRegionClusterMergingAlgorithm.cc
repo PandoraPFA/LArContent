@@ -49,7 +49,6 @@ StatusCode BoundedRegionClusterMergingAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
-    std::cout << "Running Bounded Region Clustering for cluster list " << m_inputClusterListName << std::endl;
     while (true)
     {
         ClusterVector clusterVector;

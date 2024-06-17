@@ -467,23 +467,19 @@ void TestBeamCosmicRayTaggingTool::CheckIfInVetoedTPC(const CRCandidateList &can
         LArPfoHelper::GetCaloHits(candidate.m_pPfo, TPC_3D, caloHitList3D);
 
         float maxYPosition{-1.f * std::numeric_limits<float>::max()};
-        float maxYXPosition{-1.f * std::numeric_limits<float>::max()};
         unsigned int maxYTPCId{std::numeric_limits<unsigned int>::max()};
         for (const CaloHit *const pCaloHit : caloHitList3D)
         {
             const float hitYPos(pCaloHit->GetPositionVector().GetY());
-            const float hitXPos(pCaloHit->GetPositionVector().GetX());
             if (maxYPosition < hitYPos)
             {
                 maxYPosition = hitYPos;
-                maxYXPosition = hitXPos;
                 const unsigned int maxYDriftVol =
                     reinterpret_cast<LArCaloHit *>(const_cast<void *>(pCaloHit->GetParentAddress()))->GetLArTPCVolumeId();
                 const unsigned int maxYAPA = reinterpret_cast<LArCaloHit *>(const_cast<void *>(pCaloHit->GetParentAddress()))->GetDaughterVolumeId();
                 maxYTPCId = maxYDriftVol + maxYAPA * 4;
             }
         }
-        std::cout << "Pfo " << candidate.m_pPfo << " starts in TPC " << maxYTPCId << " X " << maxYXPosition << std::endl;
         if (std::find(m_vetoedTPCs.begin(), m_vetoedTPCs.end(), maxYTPCId) != m_vetoedTPCs.end())
             pfoToIsCosmicRayMap[candidate.m_pPfo] = true;
     }

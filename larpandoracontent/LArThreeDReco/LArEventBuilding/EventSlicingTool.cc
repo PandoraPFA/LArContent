@@ -66,11 +66,9 @@ void EventSlicingTool::RunSlicing(const Algorithm *const pAlgorithm, const HitTy
 
     ClusterList trackClusters3D;
     this->GetThreeDClusters(pAlgorithm, m_trackPfoListName, trackClusters3D, clusterToPfoMap);
-    std::cout << "Read in " << trackClusters3D.size() << " 3D track clusters" << std::endl;
 
     ClusterList showerClusters3D;
     this->GetThreeDClusters(pAlgorithm, m_showerPfoListName, showerClusters3D, clusterToPfoMap);
-    std::cout << "Read in " << showerClusters3D.size() << " 3D shower clusters" << std::endl;
 
     ClusterSliceList clusterSliceList;
     this->GetClusterSliceList(trackClusters3D, showerClusters3D, clusterSliceList);
@@ -83,7 +81,6 @@ void EventSlicingTool::RunSlicing(const Algorithm *const pAlgorithm, const HitTy
     {
         ClusterToSliceIndexMap clusterToSliceIndexMap;
         this->CreateSlices(clusterSliceList, sliceList, clusterToSliceIndexMap);
-        std::cout << "We created " << sliceList.size() << " slices" << std::endl;
 
         ClusterSet assignedClusters;
         this->CopyPfoHitsToSlices(clusterToSliceIndexMap, clusterToPfoMap, sliceList, assignedClusters);
@@ -561,12 +558,9 @@ void EventSlicingTool::AssignRemainingHitsToSlices(
         ClusterVector sortedRemainingClusters(remainingClusters.begin(), remainingClusters.end());
         std::sort(sortedRemainingClusters.begin(), sortedRemainingClusters.end(), LArClusterHelper::SortByNHits);
 
-        std::cout << "How many left over 2D clusters do we have? " << sortedRemainingClusters.size() << std::endl;
-
         for (const Cluster *const pCluster2D : sortedRemainingClusters)
         {
             const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster2D));
-            //            std::cout << " - Cluster in view " << hitType << " has " << pCluster2D->GetNCaloHits() << " hits" << std::endl;
 
             if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
