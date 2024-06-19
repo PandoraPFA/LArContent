@@ -54,7 +54,7 @@ protected:
      *  @param  pClusterList address of the cluster list
      *  @param  clusterVector to receive the populated cluster vector
      */
-    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const {};
+    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
 
     /**
      *  @brief  Form associations between pointing clusters

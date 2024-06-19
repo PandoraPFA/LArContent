@@ -133,6 +133,12 @@ bool BoundedRegionClusterMergingAlgorithm::AreClustersAssociated(const Cluster *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void BoundedRegionClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *const /*pClusterList*/, pandora::ClusterVector & /*clusterVector*/) const
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode BoundedRegionClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinimumX", m_xRegionMin));
