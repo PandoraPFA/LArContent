@@ -125,6 +125,9 @@ private:
     pandora::StringVector m_inputCaloHitListNames; ///< Names of input calo hit lists, passed from Pass 1 of DLSignalAlg
     std::string m_backgroundListName;         ///< Input Background CaloHitList name
     bool m_applyCheatedSeparation;            ///< Whether cheating to separate background and signal hits 
+    bool m_simpleZoom;                        ///< Decide whethere to run a simple loop to find highest adc hit or run network
+    long unsigned int m_passOneTrustThreshold;///< Number of pixels in pass one required to trust the wire finding ability, below this                                                           threshold, the algorithm will use highest ADC within Drift Min/Max to set wire limits
+    
 };
 
 } // namespace lar_dl_content

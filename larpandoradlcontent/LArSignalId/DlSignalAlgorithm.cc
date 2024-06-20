@@ -12,6 +12,8 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
+#include "Pandora/Pandora.h"
+
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
@@ -44,7 +46,9 @@ DlSignalAlgorithm::DlSignalAlgorithm() :
     m_signalListName2D{""},
     m_caloHitListName2D{""},
     m_backgroundListName{""},
-    m_applyCheatedSeparation{false}
+    m_applyCheatedSeparation{false},
+    m_simpleZoom{false},
+    m_passOneTrustThreshold{0}
 {
 }
 
@@ -197,46 +201,125 @@ StatusCode DlSignalAlgorithm::Infer()
     if (m_pass == 1)
         ++m_event;
 
-    std::map<HitType, float> wireMin, wireMax;
-    std::map<HitType, bool> isEmpty;
+    std::map<int, float> wireMin, wireMax;
+    std::map<int, bool> viewCalculated;
     float driftMin{std::numeric_limits<float>::max()}, driftMax{-std::numeric_limits<float>::max()};
     for (const std::string &listname : m_inputCaloHitListNames)
     {
-        const CaloHitList *pCaloHitList{nullptr};
-        //const StatusCode code{PandoraContentApi::GetList(*this, listname, pCaloHitList};
-	PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
-        if (!pCaloHitList)
-            continue;
+	const CaloHitList *pCaloHitList{nullptr};
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
 
-        HitType view{pCaloHitList->front()->GetHitType()};
-        float viewDriftMin{driftMin}, viewDriftMax{driftMax};
+        if (!pCaloHitList)
+	    continue;
+
+        if (pCaloHitList->size() < m_passOneTrustThreshold)
+	    continue;
+
+       	HitType view{pCaloHitList->front()->GetHitType()};
+	float viewDriftMin{driftMin}, viewDriftMax{driftMax};
         try
 	{
 	    this->GetHitRegion(*pCaloHitList, viewDriftMin, viewDriftMax, wireMin[view], wireMax[view]);
-	    isEmpty[view] = false;
+	    viewCalculated[view] = true;
 	}
 	catch (const StatusCodeException &e)
 	{
 	    if (e.GetStatusCode() == STATUS_CODE_NOT_FOUND)
             {
-		isEmpty[view] = true;
                 continue;
 	    }
-            else
-                throw;
 	}
-        driftMin = std::min(viewDriftMin, driftMin);
+	driftMin = std::min(viewDriftMin, driftMin);
         driftMax = std::max(viewDriftMax, driftMax);
     }
 
-    CaloHitList signalCandidatesU, signalCandidatesV, signalCandidatesW, signalCandidates2D, backgroundCaloHitList;
     for (const std::string &listName : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
+
+	if (!pCaloHitList)
+	{
+	    std::cout << "ERR: Could not find full CaloHitList - DlSignalAlgorithm unable to proceed" << std::endl;
+            continue;
+	}
+	
+	HitType view{pCaloHitList->front()->GetHitType()};
+	float viewDriftMin{driftMin}, viewDriftMax{driftMax};
+	if (viewCalculated[view] != true)
+	{
+	    const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
+            const float pitch(view == TPC_VIEW_U ? pTPC->GetWirePitchU() : view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW());
+            const float zSpan{pitch * (m_height - 1)};
+	    bool projected{false};
+
+	    if (viewCalculated[6] == true && viewCalculated[4] == true) //Check W and U - Project to V
+            {
+                //float x{(viewDriftMax - viewDriftMin) * 0.5};
+		const double z1{(wireMax[6] - wireMin[6]) * 0.5};
+		const double z2{(wireMax[4] - wireMin[4]) * 0.5};
+                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->WUtoV(z1, z2)};
+		std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
+                wireMin[view] = m_projectedCoordinate - zSpan;
+                wireMax[view] = m_projectedCoordinate + zSpan;
+		projected = true;
+	    }
+            if (viewCalculated[6] == true && viewCalculated[5] == true) //Check W and V - Project to U
+	    {
+		const double z1{(wireMax[6] - wireMin[6]) * 0.5};
+                const double z2{(wireMax[5] - wireMin[5]) * 0.5};
+		this->GetPandora();
+                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->VWtoU(z1, z2)};
+		std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
+		wireMin[view] = m_projectedCoordinate - zSpan;
+                wireMax[view] = m_projectedCoordinate + zSpan;
+		projected = true;
+	    }
+	    if (viewCalculated[4] == true && viewCalculated[5] == true) //Check U and V - Project to W
+	    {
+		const double z1{(wireMax[4] - wireMin[4]) * 0.5};
+                const double z2{(wireMax[5] - wireMin[5]) * 0.5};
+                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->UVtoW(z1, z2)};
+		std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
+		wireMin[view] = m_projectedCoordinate - zSpan;
+                wireMax[view] = m_projectedCoordinate + zSpan;
+		projected = true;
+            }
+            
+	    if (projected == false)
+            {
+                try
+                {
+	            m_simpleZoom = true;
+                    this->GetHitRegion(*pCaloHitList, viewDriftMin, viewDriftMax, wireMin[view], wireMax[view]);
+	            m_simpleZoom = false;
+	        }
+                catch (const StatusCodeException &e)
+                {
+                    std::cout << "ERR: Could not calculate zoom region - DlSignalAlgorithm unable to proceed" << std::endl;
+	            if (e.GetStatusCode() == STATUS_CODE_NOT_FOUND)
+                    {
+                        continue;
+                    }
+                }
+            }
+
+	}
+	driftMin = std::min(viewDriftMin, driftMin);
+        driftMax = std::max(viewDriftMax, driftMax);
+    }
+ 
+	
+    
+    CaloHitList signalCandidatesU, signalCandidatesV, signalCandidatesW, signalCandidates2D, backgroundCaloHitList;
+    for (const std::string &listName : m_caloHitListNames)
+    {
+	const CaloHitList *pCaloHitList{nullptr};
 	PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
 	
 	if (!pCaloHitList || pCaloHitList->empty())
    	    continue;
+	
 	HitType view;
 	try
 	{
@@ -246,17 +329,14 @@ StatusCode DlSignalAlgorithm::Infer()
 	{
 	    continue;
 	}
-
-	if (isEmpty[view] == true)
-            continue;
-
+       
         const bool isU{view == TPC_VIEW_U}, isV{view == TPC_VIEW_V}, isW{view == TPC_VIEW_W};
         if (!isU && !isV && !isW)
             return STATUS_CODE_NOT_ALLOWED;
 
 	LArDLHelper::TorchInput input;
         PixelMap pixelMap;
-        this->MakeNetworkInputFromHits(*pCaloHitList, view, driftMin, driftMax, wireMin[view], wireMax[view], input, pixelMap);
+  	this->MakeNetworkInputFromHits(*pCaloHitList, view, driftMin, driftMax, wireMin[view], wireMax[view], input, pixelMap);
 
         // Run the input through the trained model
         LArDLHelper::TorchInputVector inputs;
@@ -645,11 +725,17 @@ StatusCode DlSignalAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCC
 
 void DlSignalAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax) const
 {
-    xMin = std::numeric_limits<float>::max();
-    xMax = -std::numeric_limits<float>::max();
-    zMin = std::numeric_limits<float>::max();
-    zMax = -std::numeric_limits<float>::max();
+    if (m_pass == 1)
+    {
+        xMin = std::numeric_limits<float>::max();
+        xMax = -std::numeric_limits<float>::max();
+        zMin = std::numeric_limits<float>::max();
+        zMax = -std::numeric_limits<float>::max();
+    }
     // Find the range of x and z values in the view
+    if (caloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
     for (const CaloHit *pCaloHit : caloHitList)
     {
         const float x{pCaloHit->GetPositionVector().GetX()};
@@ -662,8 +748,6 @@ void DlSignalAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin
 
 
     //std::cout << "Returning Image Span | Pre Scaling | x | z | " << xMax - xMin << " | " << zMax - zMin << std::endl; 
-    if (caloHitList.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     const HitType view{caloHitList.front()->GetHitType()};
     const bool isU{view == TPC_VIEW_U}, isV{view == TPC_VIEW_V}, isW{view == TPC_VIEW_W};
@@ -674,10 +758,8 @@ void DlSignalAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin
     const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
     const float pitch(view == TPC_VIEW_U ? pTPC->GetWirePitchU() : view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW());
 
-    if (m_pass > 1)
+    if (m_simpleZoom == false && m_pass > 1)
     {
-	if (caloHitList.empty())
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 	float xCount{0.f}, zCount{0.f};
 	float nCount{0.f};
 
@@ -733,6 +815,41 @@ void DlSignalAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin
         zMax = zMin + zSpan;
     }
 
+    if (m_simpleZoom == true && m_pass > 1 )
+    {
+        float xPos{-std::numeric_limits<float>::max()}, zPos{-std::numeric_limits<float>::max()}, adcMax{0.f};
+        int nCount{0}, tCount{0}, hCount{0}; 
+        for (const CaloHit *pCaloHit : caloHitList)
+        {
+            const float xC{pCaloHit->GetPositionVector().GetX()}, zC{pCaloHit->GetPositionVector().GetZ()}, adc{pCaloHit->GetMipEquivalentEnergy()};; 
+	    tCount += 1;
+	    if (xC >= xMin && xC < xMax)
+	    {
+                nCount += 1;
+                if (adc > adcMax)
+	        {
+                    hCount += 1;
+		    adcMax = adc;
+   		    xPos = xC;
+		    zPos = zC;
+                }
+	    }
+        }
+	std::cout << "Total Hit within Drift limits " << nCount << "Total Hits Searched " << tCount << std::endl;
+	std::cout << "Hits with greater Adc: " << hCount << std::endl;
+        if (nCount == 0)
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+	const float xSpan{m_driftStep * (m_width - 1)};
+        xMin = xPos - xSpan;
+        xMax = xPos + xSpan;
+	const float zSpan{pitch * (m_height - 1)};
+        zMin = zPos - zSpan;
+        zMax = zPos + zSpan;
+	std::cout << "It Worked! " << xPos << " " << zPos << "Max ADC: " << adcMax<< std::endl;
+    }
+
+    
     // Avoid unreasonable rescaling of very small hit regions, pixels are assumed to be 0.5cm in x and wire pitch in z
     // ATTN: Rescaling is to a size 1 pixel smaller than the intended image to ensure all hits fit within an imaged binned
     // to be one pixel wider than this
@@ -799,6 +916,7 @@ StatusCode DlSignalAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName2D", m_caloHitListName2D));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PassOneTrustThreshold", m_passOneTrustThreshold));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrintOut", m_printOut));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BackgroundListName", m_backgroundListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ApplyCheatedSeparation", m_applyCheatedSeparation));
