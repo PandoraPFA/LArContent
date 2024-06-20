@@ -54,7 +54,7 @@ StatusCode HierarchyValidationAlgorithm::Run()
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
     const PfoList *pPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
+    PandoraContentApi::GetList(*this, m_pfoListName, pPfoList);
 
     LArHierarchyHelper::FoldingParameters foldParameters;
     if (m_foldToPrimaries)
@@ -70,8 +70,8 @@ StatusCode HierarchyValidationAlgorithm::Run()
     LArHierarchyHelper::MCHierarchy mcHierarchy;
     LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
     LArHierarchyHelper::RecoHierarchy recoHierarchy;
-    LArHierarchyHelper::FillRecoHierarchy(*pPfoList, foldParameters, recoHierarchy);
-    StatusCode status{PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)};
+    if (pPfoList && !(pPfoList->empty()))
+        LArHierarchyHelper::FillRecoHierarchy(*pPfoList, foldParameters, recoHierarchy);
     LArHierarchyHelper::MatchInfo matchInfo(mcHierarchy, recoHierarchy, quality);
     LArHierarchyHelper::MatchHierarchies(matchInfo);
     matchInfo.Print(mcHierarchy);
@@ -82,8 +82,6 @@ StatusCode HierarchyValidationAlgorithm::Run()
     else if (m_validateMC)
         this->MCValidation(matchInfo);
 #endif
-    if (status != STATUS_CODE_SUCCESS)
-        delete pPfoList;
 
     return STATUS_CODE_SUCCESS;
 }
@@ -329,6 +327,12 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const int tier{pMCNode->GetHierarchyTier()};
                 const int mcHits{static_cast<int>(pMCNode->GetCaloHits().size())};
 		const int isLeadingLepton{pMCNode->IsLeadingLepton() ? 1 : 0};
+                const CaloHitList mcAllHits{pMCNode->GetCaloHits()};
+		float mcTotalAdc{0};
+		for (const CaloHit *pCaloHit : mcAllHits)
+		{
+		    mcTotalAdc += pCaloHit->GetMipEquivalentEnergy();
+		}
 
                 const MCParticle *const pLeadingMC{pMCNode->GetLeadingMCParticle()};
                 const MCParticleList &parentList{pLeadingMC->GetParentList()};
@@ -336,11 +340,13 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const int hasMuonParent{parentList.size() == 1 && std::abs(parentList.front()->GetParticleId()) == MU_MINUS ? 1 : 0};
                 const int isMichel{isElectron && hasMuonParent && LArMCParticleHelper::IsDecay(pLeadingMC) ? 1 : 0};
                 const float mcMomentum{pLeadingMC->GetMomentum().GetMagnitude()};
+
                 const float mcEnergy{pLeadingMC->GetEnergy()};
 
                 const LArHierarchyHelper::RecoHierarchy::NodeVector &nodeVector{matches.GetRecoMatches()};
                 const int nMatches{static_cast<int>(nodeVector.size())};
                 IntVector recoSliceIdVector, recoIdVector, nRecoHitsVector, nSharedHitsVector;
+		FloatVector recoTotalAdcVector;
                 FloatVector purityVector, completenessVector;
                 FloatVector purityAdcVector, completenessAdcVector;
                 FloatVector purityVectorU, purityVectorV, purityVectorW, completenessVectorU, completenessVectorV, completenessVectorW;
@@ -368,6 +374,13 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                     recoSliceIdVector.emplace_back(sliceId);
                     recoIdVector.emplace_back(pRecoNode->GetParticleId());
 		    nRecoHitsVector.emplace_back(static_cast<int>(pRecoNode->GetCaloHits().size()));
+		    const CaloHitList recoAllHits{pRecoNode->GetCaloHits()};
+                    float recoTotalAdc{0};
+                    for (const CaloHit *pCaloHit : recoAllHits)
+                    {
+                        recoTotalAdc += pCaloHit->GetMipEquivalentEnergy();
+                    }
+                    recoTotalAdcVector.emplace_back(recoTotalAdc);
                     nSharedHitsVector.emplace_back(static_cast<int>(matches.GetSharedHits(pRecoNode)));
                     purityVector.emplace_back(matches.GetPurity(pRecoNode));
                     completenessVector.emplace_back(matches.GetCompleteness(pRecoNode));
@@ -398,6 +411,8 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interaction", interaction));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcEnergy", mcEnergy));
+		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcTotalAdc", mcTotalAdc));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "recoTotalAdc", &recoTotalAdcVector));
 		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcId", mcId));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcPDG", pdg));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcTier", tier));
