@@ -132,8 +132,8 @@ void ThreeDSlidingConeFitResult::GetSimpleConeList(
     TrackStateLinkedList trackStateList;
     CartesianVector directionSum(0.f, 0.f, 0.f);
     const float clusterLength((trackStateMap.begin()->second.GetPosition() - trackStateMap.rbegin()->second.GetPosition()).GetMagnitude());
-    const float lengthStep{0.5f * clusterLength / (nCones - 1)};
-    const float angleStep{0.5f * tanHalfAngle / (nCones - 1)};
+    const float lengthStep{(nCones > 1) ? 0.5f * clusterLength / (nCones - 1) : 0.5f * clusterLength};
+    const float angleStep{(nCones > 1) ? 0.5f * tanHalfAngle / (nCones - 1) : 0.5f * tanHalfAngle};
 
     unsigned int nConeSamplingSteps(0);
 
