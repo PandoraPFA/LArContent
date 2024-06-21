@@ -24,6 +24,7 @@ namespace lar_content
 
 SlidingConePfoMopUpAlgorithm::SlidingConePfoMopUpAlgorithm() :
     m_useVertex(true),
+    m_legacyMode(true),
     m_maxIterations(1000),
     m_maxHitsToConsider3DTrack(100),
     m_minHitsToConsider3DShower(20),
@@ -160,7 +161,7 @@ void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVerte
                     : (vertexToMaxLayer > vertexToMinLayer) ? CONE_FORWARD_ONLY
                                                             : CONE_BACKWARD_ONLY);
 
-            slidingConeFitResult3D.GetSimpleConeList(m_nConeFitLayers, m_nConeFits, coneSelection, simpleConeList);
+            slidingConeFitResult3D.GetSimpleConeList(m_nConeFitLayers, m_nConeFits, coneSelection, simpleConeList, m_coneTanHalfAngle1, m_legacyMode);
             isShowerVertexAssociated =
                 this->IsVertexAssociated(pShowerCluster, pVertex, vertexAssociationMap, &(slidingConeFitResult3D.GetSlidingFitResult()));
         }
@@ -332,6 +333,8 @@ StatusCode SlidingConePfoMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseVertex", m_useVertex));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LegacyMode", m_legacyMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxIterations", m_maxIterations));
 
