@@ -49,7 +49,8 @@ EventSlicingTool::EventSlicingTool() :
     m_coneBoundedFraction1(0.5f),
     m_coneTanHalfAngle2(0.75f),
     m_coneBoundedFraction2(0.75f),
-    m_use3DProjectionsInHitPickUp(true)
+    m_use3DProjectionsInHitPickUp(true),
+    m_unassoc2DClusterMaxDist(std::numeric_limits<float>::max())
 {
 }
 
@@ -690,7 +691,7 @@ const EventSlicingTool::PointKDNode2D *EventSlicingTool::MatchClusterToSlice(con
             const PointKDNode2D targetPoint(pClusterPoint, pClusterPoint->GetX(), pClusterPoint->GetZ());
             kdTree.findNearestNeighbour(targetPoint, pResultPoint, resultDistance);
 
-            if (pResultPoint && (resultDistance < bestDistance))
+            if (pResultPoint && (resultDistance < bestDistance) && (resultDistance < m_unassoc2DClusterMaxDist))
             {
                 pBestResultPoint = pResultPoint;
                 bestDistance = resultDistance;
@@ -797,6 +798,9 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "Use3DProjectionsInHitPickUp", m_use3DProjectionsInHitPickUp));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "Unassoc2DClusterMaxDist", m_unassoc2DClusterMaxDist));
 
     return STATUS_CODE_SUCCESS;
 }
