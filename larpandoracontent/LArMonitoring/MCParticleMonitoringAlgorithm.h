@@ -52,6 +52,8 @@ private:
 
     bool m_useTrueNeutrinosOnly;      ///< Whether to consider only mc particles that were neutrino induced
     unsigned int m_minHitsForDisplay; ///< Min hits associated with mc particle to warrant display to terminal
+    unsigned int m_minPrimaryGoodHits;         ///< Minimum hits which are deemed useful
+    unsigned int m_minHitsForGoodView;         ///< Minimum hits for a view to be deemed good 
 };
 
 } // namespace lar_content

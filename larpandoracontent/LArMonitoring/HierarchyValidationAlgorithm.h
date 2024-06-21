@@ -64,6 +64,8 @@ private:
     bool m_validateMC;             ///< Whether to validate at the level of MC nodes
     float m_minPurity;             ///< Minimum purity to tag a node as being of good quality
     float m_minCompleteness;       ///< Minimum completeness to tag a node as being of good quality
+    float m_minHits;               ///< Minimum hits to be counted by reconstructability criteria
+    float m_minHitsForGoodView;    ///< Minimum hits per view to be counted by reconstructability criteria	    
 };
 
 } // namespace lar_content
