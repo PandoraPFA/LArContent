@@ -110,9 +110,8 @@ ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const T *const pT, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDSlidingConeFitResult::GetSimpleConeList(
-    const unsigned int nLayersForConeFit, const unsigned int nCones, const ConeSelection coneSelection, SimpleConeList &simpleConeList,
-    const float tanHalfAngle, const bool legacyMode) const
+void ThreeDSlidingConeFitResult::GetSimpleConeList(const unsigned int nLayersForConeFit, const unsigned int nCones,
+    const ConeSelection coneSelection, SimpleConeList &simpleConeList, const float tanHalfAngle, const bool legacyMode) const
 {
     const TrackStateMap &trackStateMap(this->GetTrackStateMap());
     const unsigned int nLayers(trackStateMap.size());
