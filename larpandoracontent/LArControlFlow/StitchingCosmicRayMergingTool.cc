@@ -258,10 +258,14 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
 
     const float minL((!LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex1.GetPosition(), TPC_3D) ||
                          !LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex2.GetPosition(), TPC_3D))
-                         ? -1.f
-                         : m_relaxMinLongitudinalDisplacement);
-    const float dXdL1(m_useXcoordinate ? pX1 : (1.f - pX1 * pX1 > std::numeric_limits<float>::epsilon()) ? pX1 / std::sqrt(1.f - pX1 * pX1) : minL);
-    const float dXdL2(m_useXcoordinate ? pX2 : (1.f - pX2 * pX2 > std::numeric_limits<float>::epsilon()) ? pX2 / std::sqrt(1.f - pX2 * pX2) : minL);
+            ? -1.f
+            : m_relaxMinLongitudinalDisplacement);
+    const float dXdL1(m_useXcoordinate                                  ? pX1
+            : (1.f - pX1 * pX1 > std::numeric_limits<float>::epsilon()) ? pX1 / std::sqrt(1.f - pX1 * pX1)
+                                                                        : minL);
+    const float dXdL2(m_useXcoordinate                                  ? pX2
+            : (1.f - pX2 * pX2 > std::numeric_limits<float>::epsilon()) ? pX2 / std::sqrt(1.f - pX2 * pX2)
+                                                                        : minL);
     const float maxL1(maxLongitudinalDisplacementX / dXdL1);
     const float maxL2(maxLongitudinalDisplacementX / dXdL2);
 

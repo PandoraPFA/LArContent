@@ -15,7 +15,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-PostProcessingAlgorithm::PostProcessingAlgorithm() : m_listCounter(0)
+PostProcessingAlgorithm::PostProcessingAlgorithm() :
+    m_listCounter(0)
 {
 }
 

@@ -20,7 +20,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-TrackHitsBaseTool::TrackHitsBaseTool() : m_minViews(2), m_slidingFitWindow(20)
+TrackHitsBaseTool::TrackHitsBaseTool() :
+    m_minViews(2),
+    m_slidingFitWindow(20)
 {
 }
 

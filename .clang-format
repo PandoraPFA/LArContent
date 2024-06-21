@@ -4,9 +4,10 @@ AccessModifierOffset: -4
 AlignAfterOpenBracket: DontAlign
 AlignConsecutiveAssignments: false
 AlignEscapedNewlines: Right
-AlignOperands: true
+AlignOperands: DontAlign
 AlignTrailingComments: true
 AllowShortFunctionsOnASingleLine: false
+AllowShortLambdasOnASingleLine: All
 AlwaysBreakTemplateDeclarations: true
 BinPackArguments: true
 BinPackParameters: true
@@ -14,13 +15,13 @@ BreakBeforeBraces: Allman
 BreakConstructorInitializers: AfterColon
 BreakStringLiterals: false
 ColumnLimit: 140
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ContinuationIndentWidth: 4
 Cpp11BracedListStyle: true
 IncludeBlocks: Preserve
 IndentCaseLabels: true
 IndentWidth: 4
 MaxEmptyLinesToKeep: 1
+PackConstructorInitializers: Never
 PenaltyBreakAssignment: 0
 PenaltyBreakBeforeFirstCallParameter: 100
 PenaltyBreakComment: 0

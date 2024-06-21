@@ -19,7 +19,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-NeutrinoHierarchyAlgorithm::NeutrinoHierarchyAlgorithm() : m_halfWindowLayers(20), m_displayPfoInfoMap(false)
+NeutrinoHierarchyAlgorithm::NeutrinoHierarchyAlgorithm() :
+    m_halfWindowLayers(20),
+    m_displayPfoInfoMap(false)
 {
 }
 

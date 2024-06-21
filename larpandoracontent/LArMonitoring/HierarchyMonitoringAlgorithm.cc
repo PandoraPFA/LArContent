@@ -238,7 +238,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMCProcess(const LArHierarchyHelper::
             CaloHitList uHits, vHits, wHits;
             this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
             std::string suffix{std::to_string(nodeIdx) + " (" + std::to_string(tier) + ") " + std::to_string(pdg) + " " + category + " " +
-                               std::to_string(process)};
+                std::to_string(process)};
             if (process == MC_PROC_DECAY)
             {
                 const MCParticleList &parentList{pMC->GetParentList()};

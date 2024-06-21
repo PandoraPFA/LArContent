@@ -16,7 +16,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-ShowerAsymmetryFeatureTool::ShowerAsymmetryFeatureTool() : AsymmetryFeatureBaseTool(), m_vertexClusterDistance(4.f)
+ShowerAsymmetryFeatureTool::ShowerAsymmetryFeatureTool() :
+    AsymmetryFeatureBaseTool(),
+    m_vertexClusterDistance(4.f)
 {
 }
 

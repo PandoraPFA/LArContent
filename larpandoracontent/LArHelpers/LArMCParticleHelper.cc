@@ -111,7 +111,7 @@ bool LArMCParticleHelper::IsCosmicRay(const MCParticle *const pMCParticle)
 {
     const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
     return (LArMCParticleHelper::IsPrimary(pMCParticle) &&
-            ((nuance == 3000) || ((nuance == 0) && !LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))));
+        ((nuance == 3000) || ((nuance == 0) && !LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -732,14 +732,18 @@ void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const PfoContributionMa
                     mcHitPairs.push_back(MCParticleCaloHitListPair(pMCParticle, sharedHits));
                     pfoHitPairs.push_back(PfoCaloHitListPair(pPfo, sharedHits));
 
-                    std::sort(mcHitPairs.begin(), mcHitPairs.end(), [](const MCParticleCaloHitListPair &a, const MCParticleCaloHitListPair &b) -> bool {
-                        return ((a.second.size() != b.second.size()) ? a.second.size() > b.second.size()
-                                                                     : LArMCParticleHelper::SortByMomentum(a.first, b.first));
-                    });
+                    std::sort(mcHitPairs.begin(), mcHitPairs.end(),
+                        [](const MCParticleCaloHitListPair &a, const MCParticleCaloHitListPair &b) -> bool
+                        {
+                            return ((a.second.size() != b.second.size()) ? a.second.size() > b.second.size()
+                                                                         : LArMCParticleHelper::SortByMomentum(a.first, b.first));
+                        });
 
-                    std::sort(pfoHitPairs.begin(), pfoHitPairs.end(), [](const PfoCaloHitListPair &a, const PfoCaloHitListPair &b) -> bool {
-                        return ((a.second.size() != b.second.size()) ? a.second.size() > b.second.size() : LArPfoHelper::SortByNHits(a.first, b.first));
-                    });
+                    std::sort(pfoHitPairs.begin(), pfoHitPairs.end(),
+                        [](const PfoCaloHitListPair &a, const PfoCaloHitListPair &b) -> bool {
+                            return ((a.second.size() != b.second.size()) ? a.second.size() > b.second.size()
+                                                                         : LArPfoHelper::SortByNHits(a.first, b.first));
+                        });
                 }
             }
         }

@@ -17,10 +17,6 @@ using namespace pandora;
 namespace lar_content
 {
 
-typedef SlicingAlgorithm::HitTypeToNameMap HitTypeToNameMap;
-typedef SlicingAlgorithm::SliceList SliceList;
-typedef SlicingAlgorithm::Slice Slice;
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CheatingEventSlicingTool::RunSlicing(const Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
@@ -105,7 +101,9 @@ void CheatingEventSlicingTool::FillSlices(const Algorithm *const pAlgorithm, con
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             Slice &slice(mapIter->second);
-            CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+            CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU
+                    : (TPC_VIEW_V == hitType)                ? slice.m_caloHitListV
+                                                             : slice.m_caloHitListW);
             caloHitList.push_back(pCaloHit);
         }
         catch (const StatusCodeException &statusCodeException)

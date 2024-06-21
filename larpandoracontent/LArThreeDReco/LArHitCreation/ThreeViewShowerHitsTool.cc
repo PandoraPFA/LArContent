@@ -17,7 +17,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-ThreeViewShowerHitsTool::ThreeViewShowerHitsTool() : m_zTolerance(1.f)
+ThreeViewShowerHitsTool::ThreeViewShowerHitsTool() :
+    m_zTolerance(1.f)
 {
 }
 

@@ -151,14 +151,18 @@ private:
 
 inline const DeltaRayMatchingContainers::ClusterProximityMap &DeltaRayMatchingContainers::GetClusterProximityMap(const pandora::HitType hitType) const
 {
-    return ((hitType == pandora::TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == pandora::TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
+    return ((hitType == pandora::TPC_VIEW_U)   ? m_clusterProximityMapU
+            : (hitType == pandora::TPC_VIEW_V) ? m_clusterProximityMapV
+                                               : m_clusterProximityMapW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const DeltaRayMatchingContainers::ClusterToPfoMap &DeltaRayMatchingContainers::GetClusterToPfoMap(const pandora::HitType hitType) const
 {
-    return ((hitType == pandora::TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == pandora::TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
+    return ((hitType == pandora::TPC_VIEW_U)   ? m_clusterToPfoMapU
+            : (hitType == pandora::TPC_VIEW_V) ? m_clusterToPfoMapV
+                                               : m_clusterToPfoMapW);
 }
 
 } // namespace lar_content

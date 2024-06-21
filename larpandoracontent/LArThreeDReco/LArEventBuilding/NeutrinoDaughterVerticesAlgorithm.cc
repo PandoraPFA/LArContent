@@ -19,7 +19,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-NeutrinoDaughterVerticesAlgorithm::NeutrinoDaughterVerticesAlgorithm() : m_useParentShowerVertex(false), m_halfWindowLayers(20)
+NeutrinoDaughterVerticesAlgorithm::NeutrinoDaughterVerticesAlgorithm() :
+    m_useParentShowerVertex(false),
+    m_halfWindowLayers(20)
 {
 }
 

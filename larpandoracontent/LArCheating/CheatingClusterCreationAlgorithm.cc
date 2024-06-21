@@ -15,7 +15,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingClusterCreationAlgorithm::CheatingClusterCreationAlgorithm() : m_collapseToPrimaryMCParticles(false)
+CheatingClusterCreationAlgorithm::CheatingClusterCreationAlgorithm() :
+    m_collapseToPrimaryMCParticles(false)
 {
 }
 

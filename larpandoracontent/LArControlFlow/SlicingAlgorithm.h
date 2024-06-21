@@ -11,8 +11,13 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
+#include "larpandoracontent/LArControlFlow/EventSlicingBaseTool.h"
+#include "larpandoracontent/LArObjects/LArSlice.h"
+
 namespace lar_content
 {
+
+typedef std::map<pandora::HitType, std::string> HitTypeToNameMap;
 
 class EventSlicingBaseTool;
 
@@ -24,20 +29,6 @@ class EventSlicingBaseTool;
 class SlicingAlgorithm : public pandora::Algorithm
 {
 public:
-    /**
-     *  @brief  Slice class
-     */
-    class Slice
-    {
-    public:
-        pandora::CaloHitList m_caloHitListU; ///< The u calo hit list
-        pandora::CaloHitList m_caloHitListV; ///< The v calo hit list
-        pandora::CaloHitList m_caloHitListW; ///< The w calo hit list
-    };
-
-    typedef std::vector<Slice> SliceList;
-    typedef std::map<pandora::HitType, std::string> HitTypeToNameMap;
-
     /**
      *  @brief  Default constructor
      */
@@ -55,27 +46,6 @@ private:
 
     std::string m_sliceClusterListName; ///< The name of the output slice cluster list
     std::string m_slicePfoListName;     ///< The name of the output slice pfo list
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/**
- *  @brief  EventSlicingBaseTool class
- */
-class EventSlicingBaseTool : public pandora::AlgorithmTool
-{
-public:
-    /**
-     *  @brief  Run the slicing tool
-     *
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  caloHitListNames the hit type to calo hit list name map
-     *  @param  clusterListNames the hit type to cluster list name map
-     *  @param  sliceList to receive the populated slice list
-     */
-    virtual void RunSlicing(const pandora::Algorithm *const pAlgorithm, const SlicingAlgorithm::HitTypeToNameMap &caloHitListNames,
-        const SlicingAlgorithm::HitTypeToNameMap &clusterListNames, SlicingAlgorithm::SliceList &sliceList) = 0;
 };
 
 } // namespace lar_content

@@ -15,7 +15,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-ListPruningAlgorithm::ListPruningAlgorithm() : m_warnIfObjectsUnavailable(true)
+ListPruningAlgorithm::ListPruningAlgorithm() :
+    m_warnIfObjectsUnavailable(true)
 {
 }
 

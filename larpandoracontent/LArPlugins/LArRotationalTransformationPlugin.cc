@@ -267,7 +267,7 @@ void LArRotationalTransformationPlugin::GetMinChiSquaredYZ(const double u, const
     const double deltaUFit(uFit - outputU), deltaVFit(vFit - outputV), deltaWFit(wFit - outputW);
 
     chiSquared = ((deltaU * deltaU) / sigmaU2) + ((deltaV * deltaV) / sigmaV2) + ((deltaW * deltaW) / sigmaW2) +
-                 ((deltaUFit * deltaUFit) / sigmaFit2) + ((deltaVFit * deltaVFit) / sigmaFit2) + ((deltaWFit * deltaWFit) / sigmaFit2);
+        ((deltaUFit * deltaUFit) / sigmaFit2) + ((deltaVFit * deltaVFit) / sigmaFit2) + ((deltaWFit * deltaWFit) / sigmaFit2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

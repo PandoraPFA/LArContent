@@ -104,8 +104,8 @@ void ThreeViewTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFi
                 const FitSegment &fitSegmentW(fitSegmentListW.at(indexW));
 
                 TransverseOverlapResult segmentOverlap;
-                if (STATUS_CODE_SUCCESS != this->GetSegmentOverlap(fitSegmentU, fitSegmentV, fitSegmentW, slidingFitResultU,
-                                               slidingFitResultV, slidingFitResultW, segmentOverlap))
+                if (STATUS_CODE_SUCCESS !=
+                    this->GetSegmentOverlap(fitSegmentU, fitSegmentV, fitSegmentW, slidingFitResultU, slidingFitResultV, slidingFitResultW, segmentOverlap))
                     continue;
 
                 if ((segmentOverlap.GetMatchedFraction() < m_minSegmentMatchedFraction) ||

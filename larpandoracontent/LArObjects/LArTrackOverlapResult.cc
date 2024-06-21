@@ -117,7 +117,9 @@ TrackOverlapResult &TrackOverlapResult::operator=(const TrackOverlapResult &rhs)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TransverseOverlapResult::TransverseOverlapResult() : TrackOverlapResult(), m_xOverlap(XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
+TransverseOverlapResult::TransverseOverlapResult() :
+    TrackOverlapResult(),
+    m_xOverlap(XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
 {
 }
 
@@ -183,7 +185,10 @@ TransverseOverlapResult operator+(const TransverseOverlapResult &lhs, const Tran
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LongitudinalOverlapResult::LongitudinalOverlapResult() : TrackOverlapResult(), m_innerChi2(0.f), m_outerChi2(0.f)
+LongitudinalOverlapResult::LongitudinalOverlapResult() :
+    TrackOverlapResult(),
+    m_innerChi2(0.f),
+    m_outerChi2(0.f)
 {
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -234,7 +239,10 @@ LongitudinalOverlapResult &LongitudinalOverlapResult::operator=(const Longitudin
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-FragmentOverlapResult::FragmentOverlapResult() : TrackOverlapResult(), m_caloHitList(), m_clusterList()
+FragmentOverlapResult::FragmentOverlapResult() :
+    TrackOverlapResult(),
+    m_caloHitList(),
+    m_clusterList()
 {
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -296,7 +304,9 @@ pandora::HitType FragmentOverlapResult::GetFragmentHitType() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-DeltaRayOverlapResult::DeltaRayOverlapResult() : TransverseOverlapResult(), m_commonMuonPfoList(PfoList())
+DeltaRayOverlapResult::DeltaRayOverlapResult() :
+    TransverseOverlapResult(),
+    m_commonMuonPfoList(PfoList())
 {
 }
 

@@ -14,15 +14,16 @@
 #include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 
+#include "larpandoracontent/LArControlFlow/CosmicRayTaggingBaseTool.h"
+#include "larpandoracontent/LArControlFlow/SliceIdBaseTool.h"
+#include "larpandoracontent/LArControlFlow/SliceSelectionBaseTool.h"
+#include "larpandoracontent/LArControlFlow/StitchingBaseTool.h"
+
 #include <unordered_map>
 
 namespace lar_content
 {
 
-class StitchingBaseTool;
-class CosmicRayTaggingBaseTool;
-class SliceIdBaseTool;
-class SliceSelectionBaseTool;
 class LArMCParticleFactory;
 
 typedef std::vector<pandora::CaloHitList> SliceVector;
@@ -353,87 +354,6 @@ protected:
 
     float m_inTimeMaxX0;                   ///< Cut on X0 to determine whether particle is clear cosmic ray
     LArCaloHitFactory m_larCaloHitFactory; ///< Factory for creating LArCaloHits during hit copying
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/**
- *  @brief  StitchingBaseTool class
- */
-class StitchingBaseTool : public pandora::AlgorithmTool
-{
-public:
-    /**
-     *  @brief  Run the algorithm tool
-     *
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  pMultiPfoList the list of pfos in multiple lar tpcs
-     *  @param  pfoToLArTPCMap the pfo to lar tpc map
-     *  @param  stitchedPfosToX0Map a map of cosmic-ray pfos that have been stitched between lar tpcs to the X0 shift
-     */
-    virtual void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap,
-        PfoToFloatMap &stitchedPfosToX0Map) = 0;
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/**
- *  @brief  CosmicRayTaggingBaseTool class
- */
-class CosmicRayTaggingBaseTool : public pandora::AlgorithmTool
-{
-public:
-    /**
-     *  @brief  Find the list of ambiguous pfos (could represent cosmic-ray muons or neutrinos)
-     *
-     *  @param  parentCosmicRayPfos the list of parent cosmic-ray pfos
-     *  @param  ambiguousPfos to receive the list of ambiguous pfos
-     *  @param  pAlgorithm the address of this master algorithm
-     */
-    virtual void FindAmbiguousPfos(
-        const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos, const MasterAlgorithm *const pAlgorithm) = 0;
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/**
- *  @brief  SliceIdBaseTool class
- */
-class SliceIdBaseTool : public pandora::AlgorithmTool
-{
-public:
-    /**
-     *  @brief  Select which reconstruction hypotheses to use; neutrino outcomes or cosmic-ray muon outcomes for each slice
-     *
-     *  @param  pAlgorithm the address of the master instance, used to access MCParticles when in training mode
-     *  @param  nuSliceHypotheses the parent pfos representing the neutrino outcome for each slice
-     *  @param  crSliceHypotheses the parent pfos representing the cosmic-ray muon outcome for each slice
-     *  @param  sliceNuPfos to receive the list of selected pfos
-     */
-    virtual void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses,
-        const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos) = 0;
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/**
- *  @brief  SliceSelectionBaseTool class
- */
-class SliceSelectionBaseTool : public pandora::AlgorithmTool
-{
-public:
-    /**
-     *  @brief  Select which slice(s) to use; neutrino or beam slices
-     *
-     *  @param  pAlgorithm the address of the master instance, used to access MCParticles when in training mode
-     *  @param  inputSliceVector the initial slice vector
-     *  @param  outputSliceVector the output slice vector
-     */
-    virtual void SelectSlices(const pandora::Algorithm *const pAlgorithm, const SliceVector &inputSliceVector, SliceVector &outputSliceVector) = 0;
 };
 
 } // namespace lar_content

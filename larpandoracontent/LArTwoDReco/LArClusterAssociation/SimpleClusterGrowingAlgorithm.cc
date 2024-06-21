@@ -17,7 +17,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-SimpleClusterGrowingAlgorithm::SimpleClusterGrowingAlgorithm() : m_minCaloHitsPerCluster(5)
+SimpleClusterGrowingAlgorithm::SimpleClusterGrowingAlgorithm() :
+    m_minCaloHitsPerCluster(5)
 {
 }
 

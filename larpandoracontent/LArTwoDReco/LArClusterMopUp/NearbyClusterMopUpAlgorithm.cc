@@ -61,8 +61,7 @@ void NearbyClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, c
             const float outerRV((vertexPosition2D - pClusterR->GetCentroid(pClusterR->GetOuterPseudoLayer())).GetMagnitude());
 
             // ATTN Could use pointing clusters here, for consistency with other vertex association mechanics
-            if (pVertex && (((innerPV < m_vertexProximity) || (outerPV < m_vertexProximity)) &&
-                               ((innerRV < m_vertexProximity) || (outerRV < m_vertexProximity))))
+            if (pVertex && (((innerPV < m_vertexProximity) || (outerPV < m_vertexProximity)) && ((innerRV < m_vertexProximity) || (outerRV < m_vertexProximity))))
                 continue;
 
             const float innerRP(LArClusterHelper::GetClosestDistance(pClusterR->GetCentroid(pClusterR->GetInnerPseudoLayer()), pClusterP));

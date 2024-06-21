@@ -55,7 +55,7 @@ void VertexAssociatedPfosTool::Run(const NeutrinoHierarchyAlgorithm *const pAlgo
 
         const LArPointingCluster pointingCluster(*(pPfoInfo->GetSlidingFitResult3D()));
         const bool useInner((pointingCluster.GetInnerVertex().GetPosition() - neutrinoVertex).GetMagnitudeSquared() <
-                            (pointingCluster.GetOuterVertex().GetPosition() - neutrinoVertex).GetMagnitudeSquared());
+            (pointingCluster.GetOuterVertex().GetPosition() - neutrinoVertex).GetMagnitudeSquared());
 
         const LArPointingCluster::Vertex &daughterVertex(useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
 

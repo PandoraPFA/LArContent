@@ -18,7 +18,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-VertexSplittingAlgorithm::VertexSplittingAlgorithm() : m_splitDisplacementSquared(4.f * 4.f), m_vertexDisplacementSquared(1.f * 1.f)
+VertexSplittingAlgorithm::VertexSplittingAlgorithm() :
+    m_splitDisplacementSquared(4.f * 4.f),
+    m_vertexDisplacementSquared(1.f * 1.f)
 {
     // ATTN Some default values differ from base class
     m_minClusterLength = 1.f;

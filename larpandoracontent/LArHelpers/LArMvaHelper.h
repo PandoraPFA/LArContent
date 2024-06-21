@@ -168,7 +168,7 @@ public:
      *  @return the vector of features
      */
     template <typename... Ts, typename... TARGS>
-    static MvaFeatureVector CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
+    static MvaFeatureVector CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&...args);
 
     /**
      *  @brief  Calculate the features in a given feature tool map, and fill an MvaFeatureMap and vector with feature order
@@ -182,7 +182,7 @@ public:
      */
     template <typename... Ts, typename... TARGS>
     static MvaFeatureMap CalculateFeatures(const pandora::StringVector &featureToolOrder, const MvaFeatureToolMap<Ts...> &featureToolMap,
-        pandora::StringVector &featureOrder, TARGS &&... args);
+        pandora::StringVector &featureOrder, TARGS &&...args);
 
     /**
      *  @brief  Calculate the features of a given derived feature tool type in a feature tool vector
@@ -193,7 +193,7 @@ public:
      *  @return the vector of features
      */
     template <typename T, typename... Ts, typename... TARGS>
-    static MvaFeatureVector CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
+    static MvaFeatureVector CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&...args);
 
     /**
      *  @brief  Add a feature tool to a vector of feature tools
@@ -239,7 +239,7 @@ public:
      *  @return the concatenated vector of features
      */
     template <typename TLIST, typename... TLISTS>
-    static MvaFeatureVector ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists);
+    static MvaFeatureVector ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&...featureLists);
 
     /**
      *  @brief  Recursively concatenate vectors of features (terminating method)
@@ -396,7 +396,7 @@ double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename... Ts, typename... TARGS>
-LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
+LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&...args)
 {
     LArMvaHelper::MvaFeatureVector featureVector;
 
@@ -410,7 +410,7 @@ LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeatures(const MvaFeatureT
 
 template <typename... Ts, typename... TARGS>
 LArMvaHelper::MvaFeatureMap LArMvaHelper::CalculateFeatures(const pandora::StringVector &featureToolOrder,
-    const MvaFeatureToolMap<Ts...> &featureToolMap, pandora::StringVector &featureOrder, TARGS &&... args)
+    const MvaFeatureToolMap<Ts...> &featureToolMap, pandora::StringVector &featureOrder, TARGS &&...args)
 {
     LArMvaHelper::MvaFeatureMap featureMap;
 
@@ -431,7 +431,7 @@ LArMvaHelper::MvaFeatureMap LArMvaHelper::CalculateFeatures(const pandora::Strin
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T, typename... Ts, typename... TARGS>
-LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
+LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&...args)
 {
     using TD = typename std::decay<T>::type;
     LArMvaHelper::MvaFeatureVector featureVector;
@@ -520,7 +520,7 @@ pandora::StatusCode LArMvaHelper::WriteFeaturesToFileImpl(std::ofstream &outfile
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TLIST, typename... TLISTS>
-LArMvaHelper::MvaFeatureVector LArMvaHelper::ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists)
+LArMvaHelper::MvaFeatureVector LArMvaHelper::ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&...featureLists)
 {
     static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureVector>::value,
         "LArMvaHelper: Could not concatenate feature lists because one or more lists was not a vector of MvaFeatures");

@@ -26,7 +26,7 @@ else() # Configure for standalone build.
 endif()
 
 # Single project() call with/without Cetmodules (CMake >=3.0, CMP0048).
-project(${LAR_PROJECT_NAME} VERSION 04.06.02)
+project(${LAR_PROJECT_NAME} VERSION 04.08.01)
 
 # Build options.
 #option(PANDORA_LIBTORCH "Flag for building against LibTorch" ${PANDORA_LIBTORCH_DEF})

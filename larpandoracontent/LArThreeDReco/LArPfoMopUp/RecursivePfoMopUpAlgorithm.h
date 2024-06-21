@@ -75,7 +75,8 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline RecursivePfoMopUpAlgorithm::RecursivePfoMopUpAlgorithm() : m_maxIterations(10)
+inline RecursivePfoMopUpAlgorithm::RecursivePfoMopUpAlgorithm() :
+    m_maxIterations(10)
 {
 }
 

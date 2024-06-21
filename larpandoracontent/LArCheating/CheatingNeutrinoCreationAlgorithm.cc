@@ -18,7 +18,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingNeutrinoCreationAlgorithm::CheatingNeutrinoCreationAlgorithm() : m_collapseToPrimaryMCParticles(false), m_vertexTolerance(0.5f)
+CheatingNeutrinoCreationAlgorithm::CheatingNeutrinoCreationAlgorithm() :
+    m_collapseToPrimaryMCParticles(false),
+    m_vertexTolerance(0.5f)
 {
 }
 

@@ -304,8 +304,9 @@ void OverlapTensor<T>::ExploreConnections(const Cluster *const pCluster, const b
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     ClusterList &clusterList((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
-    const ClusterNavigationMap &navigationMap(
-        (TPC_VIEW_U == hitType) ? m_clusterNavigationMapUV : (TPC_VIEW_V == hitType) ? m_clusterNavigationMapVW : m_clusterNavigationMapWU);
+    const ClusterNavigationMap &navigationMap((TPC_VIEW_U == hitType) ? m_clusterNavigationMapUV
+            : (TPC_VIEW_V == hitType)                                 ? m_clusterNavigationMapVW
+                                                                      : m_clusterNavigationMapWU);
 
     if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pCluster))
         return;

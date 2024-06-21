@@ -643,7 +643,9 @@ float DeltaRayMatchingAlgorithm::GetDistanceSquaredToPfo(const Cluster *const pC
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     ClusterList comparisonList;
-    const ClusterToClustersMap &nearbyClusters((TPC_VIEW_U == hitType) ? m_nearbyClustersU : (TPC_VIEW_V == hitType) ? m_nearbyClustersV : m_nearbyClustersW);
+    const ClusterToClustersMap &nearbyClusters((TPC_VIEW_U == hitType) ? m_nearbyClustersU
+            : (TPC_VIEW_V == hitType)                                  ? m_nearbyClustersV
+                                                                       : m_nearbyClustersW);
 
     if (!nearbyClusters.count(pCluster))
         return std::numeric_limits<float>::max();
@@ -702,8 +704,9 @@ void DeltaRayMatchingAlgorithm::AddToDaughterPfo(const ClusterList &clusterList,
     for (const Cluster *const pDaughterCluster : clusterList)
     {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
-        const std::string clusterListName(
-            (TPC_VIEW_U == hitType) ? m_inputClusterListNameU : (TPC_VIEW_V == hitType) ? m_inputClusterListNameV : m_inputClusterListNameW);
+        const std::string clusterListName((TPC_VIEW_U == hitType) ? m_inputClusterListNameU
+                : (TPC_VIEW_V == hitType)                         ? m_inputClusterListNameV
+                                                                  : m_inputClusterListNameW);
 
         ClusterList pfoClusters;
         LArPfoHelper::GetClusters(pParentPfo, hitType, pfoClusters);
@@ -732,9 +735,18 @@ DeltaRayMatchingAlgorithm::Particle::Particle(
     const HitType hitType2(NULL != pCluster2 ? LArClusterHelper::GetClusterHitType(pCluster2) : HIT_CUSTOM);
     const HitType hitType3(NULL != pCluster3 ? LArClusterHelper::GetClusterHitType(pCluster3) : HIT_CUSTOM);
 
-    m_pClusterU = ((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
-    m_pClusterV = ((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);
-    m_pClusterW = ((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : (TPC_VIEW_W == hitType3) ? pCluster3 : NULL);
+    m_pClusterU = ((TPC_VIEW_U == hitType1) ? pCluster1
+            : (TPC_VIEW_U == hitType2)      ? pCluster2
+            : (TPC_VIEW_U == hitType3)      ? pCluster3
+                                            : NULL);
+    m_pClusterV = ((TPC_VIEW_V == hitType1) ? pCluster1
+            : (TPC_VIEW_V == hitType2)      ? pCluster2
+            : (TPC_VIEW_V == hitType3)      ? pCluster3
+                                            : NULL);
+    m_pClusterW = ((TPC_VIEW_W == hitType1) ? pCluster1
+            : (TPC_VIEW_W == hitType2)      ? pCluster2
+            : (TPC_VIEW_W == hitType3)      ? pCluster3
+                                            : NULL);
     m_pParentPfo = pPfo;
 
     if (NULL == m_pClusterU && NULL == m_pClusterV && NULL == m_pClusterW)

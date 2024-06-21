@@ -15,7 +15,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-AdaBoostDecisionTree::AdaBoostDecisionTree() : m_pStrongClassifier(nullptr)
+AdaBoostDecisionTree::AdaBoostDecisionTree() :
+    m_pStrongClassifier(nullptr)
 {
 }
 
@@ -260,7 +261,9 @@ AdaBoostDecisionTree::Node::~Node()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const TiXmlHandle *const pXmlHandle) : m_weight(0.), m_treeId(0)
+AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const TiXmlHandle *const pXmlHandle) :
+    m_weight(0.),
+    m_treeId(0)
 {
     for (TiXmlElement *pHeadTiXmlElement = pXmlHandle->FirstChildElement().ToElement(); pHeadTiXmlElement != NULL;
          pHeadTiXmlElement = pHeadTiXmlElement->NextSiblingElement())
@@ -284,7 +287,9 @@ AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const TiXmlHandle *const pX
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const WeakClassifier &rhs) : m_weight(rhs.m_weight), m_treeId(rhs.m_treeId)
+AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const WeakClassifier &rhs) :
+    m_weight(rhs.m_weight),
+    m_treeId(rhs.m_treeId)
 {
     for (const auto &mapEntry : rhs.m_idToNodeMap)
     {

@@ -15,7 +15,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoDParticleCreationAlgorithm::TwoDParticleCreationAlgorithm() : m_minHitsInCluster(5), m_minClusterEnergy(0.f)
+TwoDParticleCreationAlgorithm::TwoDParticleCreationAlgorithm() :
+    m_minHitsInCluster(5),
+    m_minClusterEnergy(0.f)
 {
 }
 

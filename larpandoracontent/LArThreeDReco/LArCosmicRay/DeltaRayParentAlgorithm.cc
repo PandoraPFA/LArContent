@@ -18,7 +18,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-DeltaRayParentAlgorithm::DeltaRayParentAlgorithm() : m_distanceForMatching(5.f)
+DeltaRayParentAlgorithm::DeltaRayParentAlgorithm() :
+    m_distanceForMatching(5.f)
 {
 }
 

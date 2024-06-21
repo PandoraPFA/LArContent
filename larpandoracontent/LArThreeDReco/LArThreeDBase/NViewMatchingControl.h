@@ -107,7 +107,8 @@ protected:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline NViewMatchingControl::NViewMatchingControl(MatchingBaseAlgorithm *const pAlgorithm) : m_pAlgorithm(pAlgorithm)
+inline NViewMatchingControl::NViewMatchingControl(MatchingBaseAlgorithm *const pAlgorithm) :
+    m_pAlgorithm(pAlgorithm)
 {
 }
 

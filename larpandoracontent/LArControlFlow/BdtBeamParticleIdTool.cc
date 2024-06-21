@@ -551,8 +551,7 @@ void BdtBeamParticleIdTool::SliceFeatures::GetLeadingCaloHits(
     closestHitToFaceDistance = std::sqrt(hitDistanceVector.front().second);
 
     const unsigned int nInputHits(inputCaloHitList.size());
-    const unsigned int nSelectedCaloHits(
-        nInputHits < m_sliceFeatureParameters.GetNSelectedHits()
+    const unsigned int nSelectedCaloHits(nInputHits < m_sliceFeatureParameters.GetNSelectedHits()
             ? nInputHits
             : static_cast<unsigned int>(std::ceil(static_cast<float>(nInputHits) * m_sliceFeatureParameters.GetSelectedFraction() / 100.f)));
 

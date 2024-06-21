@@ -18,7 +18,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-UnambiguousDeltaRayTool::UnambiguousDeltaRayTool() : m_maxSeparation(2.f), m_minNConnectedClusters(1)
+UnambiguousDeltaRayTool::UnambiguousDeltaRayTool() :
+    m_maxSeparation(2.f),
+    m_minNConnectedClusters(1)
 {
 }
 

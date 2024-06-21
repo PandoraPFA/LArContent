@@ -188,8 +188,8 @@ void PeakDirectionFinderTool::SmoothAngularDecompositionMap(AngularDecomposition
         {
             const int contributingBin = currentBin + binOffset;
             total += (angularDecompositionMapTemp.find(contributingBin) == angularDecompositionMapTemp.end())
-                         ? 0.f
-                         : angularDecompositionMapTemp.at(contributingBin);
+                ? 0.f
+                : angularDecompositionMapTemp.at(contributingBin);
         }
 
         angularDecompositionMap[currentBin] = total / static_cast<float>((2.0 * m_smoothingWindow) + 1);
@@ -207,15 +207,17 @@ void PeakDirectionFinderTool::RetrievePeakDirections(const AngularDecompositionM
 
     // Order peak bin vector from highest to lowest bin height
     // Tie-break: highest index wins
-    std::sort(orderedBinIndexVector.begin(), orderedBinIndexVector.end(), [&angularDecompositionMap](const int a, const int b) -> bool {
-        const float aWeight(angularDecompositionMap.at(a));
-        const float bWeight(angularDecompositionMap.at(b));
+    std::sort(orderedBinIndexVector.begin(), orderedBinIndexVector.end(),
+        [&angularDecompositionMap](const int a, const int b) -> bool
+        {
+            const float aWeight(angularDecompositionMap.at(a));
+            const float bWeight(angularDecompositionMap.at(b));
 
-        if (std::fabs(aWeight - bWeight) < std::numeric_limits<float>::epsilon())
-            return a > b;
-        else
-            return aWeight > bWeight;
-    });
+            if (std::fabs(aWeight - bWeight) < std::numeric_limits<float>::epsilon())
+                return a > b;
+            else
+                return aWeight > bWeight;
+        });
 
     for (int binIndex : orderedBinIndexVector)
     {

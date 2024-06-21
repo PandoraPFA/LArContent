@@ -24,10 +24,11 @@ namespace lar_content
 {
 
 MCParticleMonitoringAlgorithm::MCParticleMonitoringAlgorithm() : 
-	m_useTrueNeutrinosOnly(false), 
-	m_minHitsForDisplay(1), 
-	m_minPrimaryGoodHits(3), 
-	m_minHitsForGoodView(2)
+	  m_useTrueNeutrinosOnly(false), 
+  	m_minHitsForDisplay(1), 
+  	m_minPrimaryGoodHits(3), 
+	  m_minHitsForGoodView(2)
+
 {
 }
 
