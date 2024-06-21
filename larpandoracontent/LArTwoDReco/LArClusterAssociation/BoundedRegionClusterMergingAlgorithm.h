@@ -39,7 +39,7 @@ protected:
     void GetListOfBoundedRegionClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
 
     /**
-     *  @brief Compare two clusters and decide if they should be associated with eachother
+     *  @brief Compare two clusters and decide if they should be associated with each other
      *
      *  @param pCluster1 pointer to the first cluster
      *  @param pCluster2 pointer to the second cluster

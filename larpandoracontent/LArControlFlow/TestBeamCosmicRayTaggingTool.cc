@@ -155,7 +155,7 @@ void TestBeamCosmicRayTaggingTool::GetPfoAssociations(const PfoList &parentCosmi
         if (!this->GetValid3DCluster(pPfo, pCluster) || !pCluster)
             continue;
 
-        (void)pfoToSlidingFitsMap.insert(PfoToSlidingFitsMap::value_type(pPfo,
+        pfoToSlidingFitsMap.insert(PfoToSlidingFitsMap::value_type(pPfo,
             std::make_pair(ThreeDSlidingFitResult(pCluster, 5, layerPitch), ThreeDSlidingFitResult(pCluster, 100, layerPitch)))); // TODO Configurable
     }
 
@@ -298,7 +298,7 @@ void TestBeamCosmicRayTaggingTool::FillSlice(const ParticleFlowObject *const pPf
     if (std::find(slice.begin(), slice.end(), pPfo) != slice.end())
         return;
 
-    slice.push_back(pPfo);
+    slice.emplace_back(pPfo);
 
     PfoToPfoListMap::const_iterator iter(pfoAssociationMap.find(pPfo));
 
@@ -319,7 +319,7 @@ void TestBeamCosmicRayTaggingTool::GetCRCandidates(
         if (!LArPfoHelper::IsFinalState(pPfo))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        candidates.push_back(CRCandidate(this->GetPandora(), pPfo, pfoToSliceIdMap.at(pPfo)));
+        candidates.emplace_back(CRCandidate(this->GetPandora(), pPfo, pfoToSliceIdMap.at(pPfo)));
     }
 }
 
@@ -474,9 +474,9 @@ void TestBeamCosmicRayTaggingTool::CheckIfInVetoedTPC(const CRCandidateList &can
             if (maxYPosition < hitYPos)
             {
                 maxYPosition = hitYPos;
-                const unsigned int maxYDriftVol =
-                    reinterpret_cast<LArCaloHit *>(const_cast<void *>(pCaloHit->GetParentAddress()))->GetLArTPCVolumeId();
-                const unsigned int maxYAPA = reinterpret_cast<LArCaloHit *>(const_cast<void *>(pCaloHit->GetParentAddress()))->GetDaughterVolumeId();
+                const LArCaloHit *const pLArCaloHit{reinterpret_cast<LArCaloHit *>(const_cast<void *>(pCaloHit->GetParentAddress()))};
+                const unsigned int maxYDriftVol = pLArCaloHit->GetLArTPCVolumeId();
+                const unsigned int maxYAPA = pLArCaloHit->GetDaughterVolumeId();
                 maxYTPCId = maxYDriftVol + maxYAPA * 4;
             }
         }

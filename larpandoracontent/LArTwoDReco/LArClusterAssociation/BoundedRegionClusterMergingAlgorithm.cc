@@ -29,7 +29,7 @@ BoundedRegionClusterMergingAlgorithm::BoundedRegionClusterMergingAlgorithm() :
 
 StatusCode BoundedRegionClusterMergingAlgorithm::Run()
 {
-    const ClusterList *pClusterList = NULL;
+    const ClusterList *pClusterList{nullptr};
 
     if (m_inputClusterListName.empty())
     {
@@ -100,11 +100,11 @@ void BoundedRegionClusterMergingAlgorithm::PopulateClusterMergeMap(const Cluster
 
     for (unsigned int i = 0; i < clusterVector.size() - 1; ++i)
     {
-        const Cluster *const pCluster1 = clusterVector.at(i);
+        const Cluster *const pCluster1{clusterVector.at(i)};
 
         for (unsigned int j = i + 1; j < clusterVector.size(); ++j)
         {
-            const Cluster *const pCluster2 = clusterVector.at(j);
+            const Cluster *const pCluster2{clusterVector.at(j)};
             if (!pCluster2->IsAvailable())
                 continue;
 
@@ -113,7 +113,7 @@ void BoundedRegionClusterMergingAlgorithm::PopulateClusterMergeMap(const Cluster
 
             if (this->AreClustersAssociated(pCluster1, pCluster2))
             {
-                clusterMergeMap[pCluster1].push_back(pCluster2);
+                clusterMergeMap[pCluster1].emplace_back(pCluster2);
                 usedClusters.emplace_back(pCluster2);
             }
         }
@@ -124,11 +124,8 @@ void BoundedRegionClusterMergingAlgorithm::PopulateClusterMergeMap(const Cluster
 
 bool BoundedRegionClusterMergingAlgorithm::AreClustersAssociated(const Cluster *const pCluster1, const Cluster *const pCluster2) const
 {
-    const float distance = LArClusterHelper::GetClosestDistance(pCluster1, pCluster2);
-    if (distance < m_maxDistance)
-        return true;
-
-    return false;
+    const float distance{LArClusterHelper::GetClosestDistance(pCluster1, pCluster2)};
+    return distance < m_maxDistance;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

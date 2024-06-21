@@ -30,6 +30,13 @@ public:
     TestBeamCosmicRayTaggingTool();
 
     pandora::StatusCode Initialize();
+    /**
+     *  @brief  Find the list of ambiguous pfos (could represent cosmic-ray muons or neutrinos)
+     *
+     *  @param  parentCosmicRayPfos the list of parent cosmic-ray pfos
+     *  @param  ambiguousPfos to receive the list of ambiguous pfos
+     *  @param  pAlgorithm the address of this master algorithm
+     */
     void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos, const MasterAlgorithm *const pAlgorithm);
 
 private:
@@ -81,7 +88,7 @@ private:
     typedef std::unordered_map<const pandora::ParticleFlowObject *, pandora::PfoList> PfoToPfoListMap;
 
     /**
-     *  @brief  Get mapping between Pfos that are associated with it other by pointing
+     *  @brief  Get mapping between Pfos that are associated with each other by pointing
      *
      *  @param  parentCosmicRayPfos input list of Pfos
      *  @param  pfoAssociationsMap to receive the output mapping between associated Pfos
@@ -136,9 +143,9 @@ private:
      *  @brief  Check if each candidate is "in time"
      *
      *  @param  candidates input list of candidates
-     *  @param  pfoToInTimeMap output mapping between candidates Pfos and if they are in time
+     *  @param  pfoToIsCosmicRayMap output mapping between candidates Pfos and if they are in time
      */
-    void CheckIfOutOfTime(const CRCandidateList &candidates, PfoToBoolMap &pfoToInTimeMap) const;
+    void CheckIfOutOfTime(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsCosmicRayMap) const;
 
     /**
      *  @brief  Check if each candidate is "top to bottom"
