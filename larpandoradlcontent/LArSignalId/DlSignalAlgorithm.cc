@@ -253,7 +253,7 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
             {
                 const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
                 { 
                     if (pMainMCParticle->GetParticleId() == 11)
 	            {
@@ -528,7 +528,7 @@ StatusCode DlSignalAlgorithm::Infer()
                     {
                         const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                        if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                        if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
                         {
                              const CartesianVector signalHit(x, 0.f, z);
                              PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &signalHit, "true signal", YELLOW, 2));
@@ -608,7 +608,7 @@ StatusCode DlSignalAlgorithm::CheatedSeparation()
             {
                 const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
                 {
                     if (std::abs(pMainMCParticle->GetParticleId()) == 11 || std::abs(pMainMCParticle->GetParticleId()) == 22)
                     {
@@ -672,7 +672,7 @@ StatusCode DlSignalAlgorithm::CheatedSeparation()
                         {
                             const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                            if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                            if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
                             {
                                 const CartesianVector signalHit(x, 0.f, z);
                                 PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &signalHit, "true signal", YELLOW, 2));
@@ -798,7 +798,7 @@ StatusCode DlSignalAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCC
 
     // Move the neutrino to the front of the list
     auto pivot =
-        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino2(mc, false); });
+        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); });
     (void)pivot;
     if (pivot != mcHierarchy.end())
         std::rotate(mcHierarchy.begin(), pivot, std::next(pivot));

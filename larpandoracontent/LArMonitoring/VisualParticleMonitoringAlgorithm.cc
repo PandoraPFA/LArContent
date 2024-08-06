@@ -456,7 +456,7 @@ void VisualParticleMonitoringAlgorithm::MakeSelection(const CaloHitList *pCaloHi
 	{
 	    const MCParticle *pMC{MCParticleHelper::GetMainMCParticle(pCaloHit)};
             const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMC));
-            if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false)) 
+            if (LArMCParticleHelper::IsNeutrino(pParentMCParticle)) 
             {
 	        mcMap[pMC].emplace_back(pCaloHit);
             }

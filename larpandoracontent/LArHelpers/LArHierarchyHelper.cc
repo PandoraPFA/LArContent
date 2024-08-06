@@ -1119,18 +1119,7 @@ float LArHierarchyHelper::MCMatches::GetPurity(const RecoHierarchy::Node *pReco,
     if (iter == m_recoNodes.end())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    CaloHitList recoHits;
-    for (const CaloHit *pCaloHit : pReco->GetCaloHits())
-        try
-        {
-            if (LArMCParticleHelper::IsNeutrino2(LArMCParticleHelper::GetParentMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit)), false))
-            {
-                recoHits.emplace_back(pCaloHit);
-            }
-        } 
-        catch (const StatusCodeException &)
-        {
-	}
+    const CaloHitList &recoHits{pReco->GetCaloHits()};
     const CaloHitList &mcHits{m_pMCParticle->GetCaloHits()};
     CaloHitVector intersection;
     std::set_intersection(mcHits.begin(), mcHits.end(), recoHits.begin(), recoHits.end(), std::back_inserter(intersection));
@@ -1149,17 +1138,8 @@ float LArHierarchyHelper::MCMatches::GetPurity(const RecoHierarchy::Node *pReco,
     CaloHitList recoHits;
     for (const CaloHit *pCaloHit : pReco->GetCaloHits())
         if (pCaloHit->GetHitType() == view)
-	    try
-            {
-                if (LArMCParticleHelper::IsNeutrino2(LArMCParticleHelper::GetParentMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit)), false))
-                {
-                    recoHits.emplace_back(pCaloHit);
-                }
-             }
-             catch (const StatusCodeException &)
-             {
-                 
-             }
+            recoHits.emplace_back(pCaloHit);
+    
     CaloHitList mcHits;
     for (const CaloHit *pCaloHit : m_pMCParticle->GetCaloHits())
         if (pCaloHit->GetHitType() == view)
@@ -1179,21 +1159,7 @@ float LArHierarchyHelper::MCMatches::GetCompleteness(const RecoHierarchy::Node *
     if (iter == m_recoNodes.end())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    //const CaloHitList &recoHits{pReco->GetCaloHits()};
-    CaloHitList recoHits;
-    for (const CaloHit *pCaloHit : pReco->GetCaloHits())
-        try
-        {
-            if (LArMCParticleHelper::IsNeutrino2(LArMCParticleHelper::GetParentMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit)), false))
-            {
-                recoHits.emplace_back(pCaloHit);
-            }
-        }
-        catch (const StatusCodeException &)
-        {
-      
-        } 
-    
+    const CaloHitList &recoHits{pReco->GetCaloHits()};
     const CaloHitList &mcHits{m_pMCParticle->GetCaloHits()};
     CaloHitVector intersection;
     std::set_intersection(mcHits.begin(), mcHits.end(), recoHits.begin(), recoHits.end(), std::back_inserter(intersection));
@@ -1206,33 +1172,14 @@ float LArHierarchyHelper::MCMatches::GetCompleteness(const RecoHierarchy::Node *
 float LArHierarchyHelper::MCMatches::GetCompleteness(const RecoHierarchy::Node *pReco, const HitType view, const bool adcWeighted) const
 {
     auto iter{std::find(m_recoNodes.begin(), m_recoNodes.end(), pReco)};
-    //std::cout << "Node length : " << pReco->GetCaloHits().size() << std::endl;
     if (iter == m_recoNodes.end())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     CaloHitList recoHits;
     for (const CaloHit *pCaloHit : pReco->GetCaloHits())
-    {	
-	//std::cout << "Hit Type : " << pCaloHit->GetHitType() << std::endl;
         if (pCaloHit->GetHitType() == view)
-	{
-	    try
-            {
-	        //int pdgCheck(std::abs( MCParticleHelper::GetMainMCParticle(pCaloHit)->GetParticleId()));
-	        //int pdgParent(std::abs(LArMCParticleHelper::GetParentMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit))->GetParticleId()));
-	        //std::cout << "Reco hit Pdg: " << pdgCheck << "Get Parent Id : " << pdgParent << std::endl;
-	        if (LArMCParticleHelper::IsNeutrino2(LArMCParticleHelper::GetParentMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit)), false))
-		{ 
-	           // std::cout << "Print Nuance Code: " << LArMCParticleHelper::GetNuanceCode(MCParticleHelper::GetMainMCParticle(pCaloHit)) << std::endl;
-                    if (m_pMCParticle->GetParticleId() == MCParticleHelper::GetMainMCParticle(pCaloHit)->GetParticleId())
-	                recoHits.emplace_back(pCaloHit);
-	        }
-	     }
-	     catch (const StatusCodeException &) 
-             {
-             }
-	}
-    }
+	    recoHits.emplace_back(pCaloHit);
+    
     CaloHitList mcHits;
     for (const CaloHit *pCaloHit : m_pMCParticle->GetCaloHits())
         if (pCaloHit->GetHitType() == view)
@@ -1522,7 +1469,6 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
     (void)mcHierarchy;
     MCParticleList rootMCParticles;
     mcHierarchy.GetRootMCParticles(rootMCParticles);
-    //std::cout << rootMCParticles.size() << std::endl;
 
     for (const MCParticle *const pRootMC : rootMCParticles)
     {
@@ -1596,7 +1542,7 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
             }
         }
 
-        if (LArMCParticleHelper::IsNeutrino2(pRootMC, false))
+        if (LArMCParticleHelper::IsNeutrino(pRootMC))
         {
             std::cout << "   Neutrino Interaction Summary:" << std::endl;
             if (nNeutrinoMCParticles)
