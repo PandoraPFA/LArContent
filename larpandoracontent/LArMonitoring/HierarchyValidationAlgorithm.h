@@ -50,20 +50,27 @@ private:
 
 #endif
 
-    int m_event;                   ///< The current event
-    std::string m_caloHitListName; ///< Name of input calo hit list
-    std::string m_pfoListName;     ///< Name of input PFO list
-    std::string m_detector;        ///< Name of the detector
-    bool m_writeTree;              ///< Whether or not to output validation information to a ROOT file
-    std::string m_filename;        ///< The name of the ROOT file to write
-    std::string m_treename;        ///< The name of the ROOT tree to write
-    bool m_foldToPrimaries;        ///< Whether or not to fold the hierarchy back to primary particles
-    bool m_foldDynamic;            ///< Whether or not to fold the hierarchy dynamically
-    bool m_foldToLeadingShowers;   ///< Whether or not to fold the hierarchy back to leading shower particles
-    bool m_validateEvent;          ///< Whether to validate at the level of an event
-    bool m_validateMC;             ///< Whether to validate at the level of MC nodes
-    float m_minPurity;             ///< Minimum purity to tag a node as being of good quality
-    float m_minCompleteness;       ///< Minimum completeness to tag a node as being of good quality
+    int m_event;                       ///< The current event
+    std::string m_caloHitListName;     ///< Name of input calo hit list
+    std::string m_pfoListName;         ///< Name of input PFO list
+    std::string m_detector;            ///< Name of the detector
+    bool m_writeEventTree;             ///< Whether or not to output event validation information to a ROOT file
+    bool m_writeMCTree;                ///< Whether or not to output MC validation information to a ROOT file
+    std::string m_eventFileName;       ///< The name of the event ROOT file to write
+    std::string m_eventTreeName;       ///< The name of the event ROOT tree to write
+    std::string m_MCFileName;          ///< The name of the MC ROOT file to write
+    std::string m_MCTreeName;          ///< The name of the MC ROOT tree to write
+    bool m_foldToPrimaries;            ///< Whether or not to fold the hierarchy back to primary particles
+    bool m_foldDynamic;                ///< Whether or not to fold the hierarchy dynamically
+    bool m_foldToLeadingShowers;       ///< Whether or not to fold the hierarchy back to leading shower particles
+    bool m_validateEvent;              ///< Whether to validate at the level of an event
+    bool m_validateMC;                 ///< Whether to validate at the level of MC nodes
+    float m_minPurity;                 ///< Minimum purity to tag a node as being of good quality
+    float m_minCompleteness;           ///< Minimum completeness to tag a node as being of good quality
+    unsigned int m_minRecoHits;        ///< Minimum number of reconstructed primary good hits
+    unsigned int m_minRecoHitsPerView; ///< Minimum number of reconstructed hits for a good view
+    unsigned int m_minRecoGoodViews;   ///< Minimum number of reconstructed primary good views
+    bool m_removeRecoNeutrons;         ///< Whether to remove reconstructed neutrons and their downstream particles
 };
 
 } // namespace lar_content

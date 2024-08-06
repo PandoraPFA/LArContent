@@ -1306,11 +1306,9 @@ void LArHierarchyHelper::MatchInfo::Match()
             RecoHierarchy::NodeVector recoNodes;
             m_recoHierarchy.GetFlattenedNodes(pRootPfo, recoNodes);
 
-            std::sort(mcNodes.begin(), mcNodes.end(),
-                [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs)
+            std::sort(mcNodes.begin(), mcNodes.end(), [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs)
                 { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
-            std::sort(recoNodes.begin(), recoNodes.end(),
-                [](const RecoHierarchy::Node *lhs, const RecoHierarchy::Node *rhs)
+            std::sort(recoNodes.begin(), recoNodes.end(), [](const RecoHierarchy::Node *lhs, const RecoHierarchy::Node *rhs)
                 { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
 
             for (const RecoHierarchy::Node *pRecoNode : recoNodes)
@@ -1463,7 +1461,6 @@ unsigned int LArHierarchyHelper::MatchInfo::GetNTestBeamMCNodes(const MCParticle
 
 void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
 {
-    (void)mcHierarchy;
     MCParticleList rootMCParticles;
     mcHierarchy.GetRootMCParticles(rootMCParticles);
 
@@ -1481,6 +1478,8 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
                 primaries.emplace_back(pLeadingMC);
             }
         }
+        if (primaries.size() == 0)
+            continue;
         primaries.sort(LArMCParticleHelper::SortByMomentum);
         const InteractionDescriptor descriptor{LArInteractionTypeHelper::GetInteractionDescriptor(primaries)};
 
