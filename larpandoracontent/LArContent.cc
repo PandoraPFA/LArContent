@@ -176,7 +176,6 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
-#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/LowEClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/MvaLowEClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/SimpleClusterGrowingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/SimpleClusterMergingAlgorithm.h"
@@ -301,7 +300,6 @@
     d("LArHitWidthClusterMerging",              HitWidthClusterMergingAlgorithm)                                                \
     d("LArLongitudinalAssociation",             LongitudinalAssociationAlgorithm)                                               \
     d("LArLongitudinalExtension",               LongitudinalExtensionAlgorithm)                                                 \
-    d("LArLowEClusterMerging",                  LowEClusterMergingAlgorithm)                                                    \
     d("LArBdtLowEClusterMerging",               BdtLowEClusterMergingAlgorithm)                                                 \
     d("LArSimpleClusterGrowing",                SimpleClusterGrowingAlgorithm)                                                  \
     d("LArSimpleClusterMerging",                SimpleClusterMergingAlgorithm)                                                  \
