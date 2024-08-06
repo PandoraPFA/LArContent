@@ -153,9 +153,10 @@ public:
      *  @param  nCones the number of cones to extract from the cluster (spaced uniformly along the cluster)
      *  @param  coneSelection whether to receive forwards or backwards (or both) cones
      *  @param  simpleConeList to receive the simple cone list
+     *  @param  legacyMode Whether to run the legacy cone generation
      */
     void GetSimpleConeList(const unsigned int nLayersForConeFit, const unsigned int nCones, const ConeSelection coneSelection,
-        SimpleConeList &simpleConeList) const;
+        SimpleConeList &simpleConeList, const float tanHalfAngle = 0.5f, const bool legacyMode = true) const;
 
 private:
     typedef std::list<pandora::TrackState> TrackStateLinkedList; ///< The track state linked list typedef

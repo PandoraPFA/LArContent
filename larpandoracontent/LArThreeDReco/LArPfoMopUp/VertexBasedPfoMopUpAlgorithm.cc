@@ -81,7 +81,7 @@ StatusCode VertexBasedPfoMopUpAlgorithm::Run()
 bool VertexBasedPfoMopUpAlgorithm::IsVertexAssociated(const CartesianVector &vertex2D, const LArPointingCluster &pointingCluster) const
 {
     return (LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-            LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance));
+        LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -333,7 +333,7 @@ float VertexBasedPfoMopUpAlgorithm::PfoAssociation::GetMeanBoundedFraction() con
 {
     return ((this->GetClusterAssociationU().GetBoundedFraction() + this->GetClusterAssociationV().GetBoundedFraction() +
                 this->GetClusterAssociationW().GetBoundedFraction()) /
-            3.f);
+        3.f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -15,7 +15,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-MatchedEndPointsTool::MatchedEndPointsTool() : m_minMatchedFraction(0.8f), m_maxEndPointChi2(3.f)
+MatchedEndPointsTool::MatchedEndPointsTool() :
+    m_minMatchedFraction(0.8f),
+    m_maxEndPointChi2(3.f)
 {
 }
 
@@ -84,7 +86,7 @@ void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, Pr
 bool MatchedEndPointsTool::SortByChiSquared(const TensorType::Element &lhs, const TensorType::Element &rhs)
 {
     return (lhs.GetOverlapResult().GetInnerChi2() + lhs.GetOverlapResult().GetOuterChi2() <
-            rhs.GetOverlapResult().GetInnerChi2() + rhs.GetOverlapResult().GetOuterChi2());
+        rhs.GetOverlapResult().GetInnerChi2() + rhs.GetOverlapResult().GetOuterChi2());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

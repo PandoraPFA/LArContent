@@ -51,8 +51,8 @@ void BeamParticleIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, con
         for (unsigned int sliceIndex = 0, nSlices = beamSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
         {
             const PfoList &sliceOutput((m_selectAllBeamParticles || (m_selectOnlyFirstSliceBeamParticles && (0 == sliceIndex)))
-                                           ? beamSliceHypotheses.at(sliceIndex)
-                                           : crSliceHypotheses.at(sliceIndex));
+                    ? beamSliceHypotheses.at(sliceIndex)
+                    : crSliceHypotheses.at(sliceIndex));
 
             const float score(m_selectAllBeamParticles || (m_selectOnlyFirstSliceBeamParticles && (0 == sliceIndex)) ? 1.f : -1.f);
 
@@ -194,9 +194,9 @@ void BeamParticleIdTool::GetSelectedCaloHits(const CaloHitList &inputCaloHitList
     closestHitToFaceDistance = std::sqrt(hitDistanceVector.front().second);
 
     const unsigned int nInputHits(inputCaloHitList.size());
-    const unsigned int nSelectedCaloHits(
-        nInputHits < m_nSelectedHits ? nInputHits
-                                     : static_cast<unsigned int>(std::round(static_cast<float>(nInputHits) * m_selectedFraction / 100.f + 0.5f)));
+    const unsigned int nSelectedCaloHits(nInputHits < m_nSelectedHits
+            ? nInputHits
+            : static_cast<unsigned int>(std::round(static_cast<float>(nInputHits) * m_selectedFraction / 100.f + 0.5f)));
 
     for (const HitDistancePair &hitDistancePair : hitDistanceVector)
     {

@@ -442,8 +442,8 @@ void CosmicRayTaggingTool::CheckIfContained(const CRCandidateList &candidates, P
             (candidate.m_endPoint1.GetY() < candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetZ() : candidate.m_endPoint2.GetZ());
 
         const bool isContained((upperY < m_face_Yt - m_marginY) && (upperY > m_face_Yb + m_marginY) && (lowerY < m_face_Yt - m_marginY) &&
-                               (lowerY > m_face_Yb + m_marginY) && (zAtUpperY < m_face_Zd - m_marginZ) && (zAtUpperY > m_face_Zu + m_marginZ) &&
-                               (zAtLowerY < m_face_Zd - m_marginZ) && (zAtLowerY > m_face_Zu + m_marginZ));
+            (lowerY > m_face_Yb + m_marginY) && (zAtUpperY < m_face_Zd - m_marginZ) && (zAtUpperY > m_face_Zu + m_marginZ) &&
+            (zAtLowerY < m_face_Zd - m_marginZ) && (zAtLowerY > m_face_Zu + m_marginZ));
 
         if (!pfoToIsContainedMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isContained)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -490,7 +490,7 @@ void CosmicRayTaggingTool::GetNeutrinoSlices(const CRCandidateList &candidates, 
             continue;
 
         const bool likelyNeutrino(candidate.m_canFit && sliceIdToIsInTimeMap.at(candidate.m_sliceId) &&
-                                  (candidate.m_theta < m_maxNeutrinoCosTheta || pfoToIsContainedMap.at(candidate.m_pPfo)));
+            (candidate.m_theta < m_maxNeutrinoCosTheta || pfoToIsContainedMap.at(candidate.m_pPfo)));
 
         if (likelyNeutrino)
             (void)neutrinoSliceSet.insert(candidate.m_sliceId);
@@ -504,11 +504,11 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
 {
     for (const CRCandidate &candidate : candidates)
     {
-        const bool likelyCRMuon(
-            !neutrinoSliceSet.count(candidate.m_sliceId) &&
+        const bool likelyCRMuon(!neutrinoSliceSet.count(candidate.m_sliceId) &&
             (!pfoToInTimeMap.at(candidate.m_pPfo) ||
-                (candidate.m_canFit && (pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
-                                           ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature))))));
+                (candidate.m_canFit &&
+                    (pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
+                        ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature))))));
 
         if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);

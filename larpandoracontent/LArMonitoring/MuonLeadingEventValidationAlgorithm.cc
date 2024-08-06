@@ -243,10 +243,10 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
     const LArMCParticleHelper::MCContributionMap &foldedAllMCToHitsMap(validationInfo.GetAllMCParticleToHitsMap());
     const LArMCParticleHelper::MCContributionMap &foldedTargetMCToHitsMap(validationInfo.GetTargetMCParticleToHitsMap());
     const LArMCParticleHelper::PfoContributionMap &foldedPfoToHitsMap(validationInfo.GetPfoToHitsMap());
-    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &foldedMCToPfoHitSharingMap(
-        (fillTree && m_writeRawMatchesToTree)
+    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &foldedMCToPfoHitSharingMap((fillTree && m_writeRawMatchesToTree)
             ? validationInfo.GetMCToPfoHitSharingMap()
-            : useInterpretedMatching ? validationInfo.GetInterpretedMCToPfoHitSharingMap() : validationInfo.GetMCToPfoHitSharingMap());
+            : useInterpretedMatching ? validationInfo.GetInterpretedMCToPfoHitSharingMap()
+                                     : validationInfo.GetMCToPfoHitSharingMap());
 
     // Consider only delta rays from reconstructable CR muons
     MCParticleVector mcCRVector;

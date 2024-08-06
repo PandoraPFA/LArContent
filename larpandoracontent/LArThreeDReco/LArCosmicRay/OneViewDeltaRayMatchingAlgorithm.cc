@@ -20,7 +20,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-OneViewDeltaRayMatchingAlgorithm::OneViewDeltaRayMatchingAlgorithm() : m_overlapExtension(1.f), m_minClusterHits(3)
+OneViewDeltaRayMatchingAlgorithm::OneViewDeltaRayMatchingAlgorithm() :
+    m_overlapExtension(1.f),
+    m_minClusterHits(3)
 {
 }
 
@@ -51,8 +53,9 @@ StatusCode OneViewDeltaRayMatchingAlgorithm::Run()
 
 const ClusterList OneViewDeltaRayMatchingAlgorithm::GetInputClusterList(const HitType hitType)
 {
-    const std::string inputClusterListName(
-        (hitType == TPC_VIEW_U) ? m_inputClusterListNameU : (hitType == TPC_VIEW_V) ? m_inputClusterListNameV : m_inputClusterListNameW);
+    const std::string inputClusterListName((hitType == TPC_VIEW_U) ? m_inputClusterListNameU
+            : (hitType == TPC_VIEW_V)                              ? m_inputClusterListNameV
+                                                                   : m_inputClusterListNameW);
 
     const ClusterList *pInputClusterList(nullptr);
 
@@ -192,7 +195,9 @@ bool OneViewDeltaRayMatchingAlgorithm::AddIntoExistingDeltaRay(const Cluster *co
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pAvailableCluster));
     const HitType projectedHitType1((hitType == TPC_VIEW_U) ? TPC_VIEW_V : (hitType == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
-    const HitType projectedHitType2((projectedHitType1 == TPC_VIEW_U) ? TPC_VIEW_V : (projectedHitType1 == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
+    const HitType projectedHitType2((projectedHitType1 == TPC_VIEW_U) ? TPC_VIEW_V
+            : (projectedHitType1 == TPC_VIEW_V)                       ? TPC_VIEW_W
+                                                                      : TPC_VIEW_U);
     const DeltaRayMatchingContainers::ClusterToPfoMap &clusterToPfoMap1(m_deltaRayMatchingContainers.GetClusterToPfoMap(projectedHitType1));
     const DeltaRayMatchingContainers::ClusterToPfoMap &clusterToPfoMap2(m_deltaRayMatchingContainers.GetClusterToPfoMap(projectedHitType2));
 
@@ -317,7 +322,9 @@ void OneViewDeltaRayMatchingAlgorithm::CreateDeltaRay(const Cluster *const pAvai
 
     const HitType hitType(LArClusterHelper::GetClusterHitType(pAvailableCluster));
     const HitType projectedHitType1((hitType == TPC_VIEW_U) ? TPC_VIEW_V : (hitType == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
-    const HitType projectedHitType2((projectedHitType1 == TPC_VIEW_U) ? TPC_VIEW_V : (projectedHitType1 == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
+    const HitType projectedHitType2((projectedHitType1 == TPC_VIEW_U) ? TPC_VIEW_V
+            : (projectedHitType1 == TPC_VIEW_V)                       ? TPC_VIEW_W
+                                                                      : TPC_VIEW_U);
     ClusterList projectedClusters1, projectedClusters2;
 
     for (const ParticleFlowObject *const pNearbyMuonPfo : nearbyMuonPfoVector)
@@ -392,8 +399,9 @@ const Cluster *OneViewDeltaRayMatchingAlgorithm::MergeClusterGroup(const Cluster
         return pClusterToEnlarge;
 
     const HitType hitType(LArClusterHelper::GetClusterHitType(pClusterToEnlarge));
-    const std::string inputClusterListName(
-        (hitType == TPC_VIEW_U) ? m_inputClusterListNameU : (hitType == TPC_VIEW_V) ? m_inputClusterListNameV : m_inputClusterListNameW);
+    const std::string inputClusterListName((hitType == TPC_VIEW_U) ? m_inputClusterListNameU
+            : (hitType == TPC_VIEW_V)                              ? m_inputClusterListNameV
+                                                                   : m_inputClusterListNameW);
 
     for (const Cluster *const pClusterToDelete : clusterGroup)
     {

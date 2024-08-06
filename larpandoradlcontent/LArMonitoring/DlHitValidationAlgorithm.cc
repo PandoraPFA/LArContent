@@ -21,7 +21,10 @@ using namespace lar_content;
 namespace lar_dl_content
 {
 
-DlHitValidationAlgorithm::DlHitValidationAlgorithm() : m_confusionU(), m_confusionV(), m_confusionW()
+DlHitValidationAlgorithm::DlHitValidationAlgorithm() :
+    m_confusionU(),
+    m_confusionV(),
+    m_confusionW()
 {
 }
 

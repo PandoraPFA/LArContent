@@ -9,6 +9,7 @@
 #define LAR_BEAM_PARTICLE_ID_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/SliceIdBaseTool.h"
 
 namespace lar_content
 {

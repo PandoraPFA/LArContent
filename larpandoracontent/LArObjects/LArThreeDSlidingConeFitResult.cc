@@ -110,8 +110,8 @@ ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const T *const pT, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDSlidingConeFitResult::GetSimpleConeList(
-    const unsigned int nLayersForConeFit, const unsigned int nCones, const ConeSelection coneSelection, SimpleConeList &simpleConeList) const
+void ThreeDSlidingConeFitResult::GetSimpleConeList(const unsigned int nLayersForConeFit, const unsigned int nCones,
+    const ConeSelection coneSelection, SimpleConeList &simpleConeList, const float tanHalfAngle, const bool legacyMode) const
 {
     const TrackStateMap &trackStateMap(this->GetTrackStateMap());
     const unsigned int nLayers(trackStateMap.size());
@@ -131,6 +131,8 @@ void ThreeDSlidingConeFitResult::GetSimpleConeList(
     TrackStateLinkedList trackStateList;
     CartesianVector directionSum(0.f, 0.f, 0.f);
     const float clusterLength((trackStateMap.begin()->second.GetPosition() - trackStateMap.rbegin()->second.GetPosition()).GetMagnitude());
+    const float lengthStep{(nCones > 1) ? 0.5f * clusterLength / (nCones - 1) : 0.5f * clusterLength};
+    const float angleStep{(nCones > 1) ? 0.5f * tanHalfAngle / (nCones - 1) : 0.5f * tanHalfAngle};
 
     unsigned int nConeSamplingSteps(0);
 
@@ -160,13 +162,34 @@ void ThreeDSlidingConeFitResult::GetSimpleConeList(
 
             // TODO Estimate cone length and angle here too, maybe by projecting positions onto direction and looking at rT distribution?
             ++nConeSamplingSteps;
-            const float placeHolderTanHalfAngle(0.5f);
 
             if ((CONE_FORWARD_ONLY == coneSelection) || (CONE_BOTH_DIRECTIONS == coneSelection))
-                simpleConeList.push_back(SimpleCone(minLayerApex, minLayerDirection, clusterLength, placeHolderTanHalfAngle));
+            {
+                if (legacyMode)
+                {
+                    simpleConeList.push_back(SimpleCone(minLayerApex, minLayerDirection, clusterLength, tanHalfAngle));
+                }
+                else
+                {
+                    const float stepConeLength{clusterLength - (nConeSamplingSteps - 1) * lengthStep};
+                    const float stepTanHalfAngle{tanHalfAngle - (nCones - nConeSamplingSteps) * angleStep};
+                    simpleConeList.push_back(SimpleCone(minLayerApex, minLayerDirection, stepConeLength, stepTanHalfAngle));
+                }
+            }
 
             if ((CONE_BACKWARD_ONLY == coneSelection) || (CONE_BOTH_DIRECTIONS == coneSelection))
-                simpleConeList.push_back(SimpleCone(maxLayerApex, maxLayerDirection, clusterLength, placeHolderTanHalfAngle));
+            {
+                if (legacyMode)
+                {
+                    simpleConeList.push_back(SimpleCone(maxLayerApex, maxLayerDirection, clusterLength, tanHalfAngle));
+                }
+                else
+                {
+                    const float stepConeLength{clusterLength - (nCones - nConeSamplingSteps) * lengthStep};
+                    const float stepTanHalfAngle{tanHalfAngle - (nConeSamplingSteps - 1) * angleStep};
+                    simpleConeList.push_back(SimpleCone(maxLayerApex, maxLayerDirection, stepConeLength, stepTanHalfAngle));
+                }
+            }
         }
 
         directionSum -= minLayerTrackState.GetMomentum();

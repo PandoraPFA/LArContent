@@ -15,7 +15,10 @@ using namespace pandora;
 namespace lar_content
 {
 
-KinkSplittingAlgorithm::KinkSplittingAlgorithm() : m_maxScatterRms(0.2f), m_maxScatterCosTheta(0.905f), m_maxSlidingCosTheta(0.985f)
+KinkSplittingAlgorithm::KinkSplittingAlgorithm() :
+    m_maxScatterRms(0.2f),
+    m_maxScatterCosTheta(0.905f),
+    m_maxSlidingCosTheta(0.985f)
 {
 }
 

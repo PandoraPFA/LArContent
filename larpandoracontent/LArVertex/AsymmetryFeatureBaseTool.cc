@@ -16,7 +16,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-AsymmetryFeatureBaseTool::AsymmetryFeatureBaseTool() : m_maxAsymmetryDistance(5.f)
+AsymmetryFeatureBaseTool::AsymmetryFeatureBaseTool() :
+    m_maxAsymmetryDistance(5.f)
 {
 }
 

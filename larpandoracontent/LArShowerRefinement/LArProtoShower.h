@@ -64,7 +64,9 @@ inline ShowerCore::ShowerCore(const pandora::CartesianVector &startPosition, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ShowerCore::ShowerCore() : m_startPosition(0.f, 0.f, 0.f), m_startDirection(0.f, 0.f, 0.f)
+inline ShowerCore::ShowerCore() :
+    m_startPosition(0.f, 0.f, 0.f),
+    m_startDirection(0.f, 0.f, 0.f)
 {
 }
 
@@ -135,7 +137,9 @@ inline ConnectionPathway::ConnectionPathway(const pandora::CartesianVector &star
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ConnectionPathway::ConnectionPathway() : m_startPosition(0.f, 0.f, 0.f), m_startDirection(0.f, 0.f, 0.f)
+inline ConnectionPathway::ConnectionPathway() :
+    m_startPosition(0.f, 0.f, 0.f),
+    m_startDirection(0.f, 0.f, 0.f)
 {
 }
 

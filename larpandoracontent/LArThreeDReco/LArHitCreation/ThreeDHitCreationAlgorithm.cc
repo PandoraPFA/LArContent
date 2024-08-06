@@ -222,7 +222,7 @@ double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &s
 
         const double deltaUFit(uFit - outputU), deltaVFit(vFit - outputV), deltaWFit(wFit - outputW);
         chi2WrtFit += ((deltaUFit * deltaUFit) / (sigma3DFit * sigma3DFit)) + ((deltaVFit * deltaVFit) / (sigma3DFit * sigma3DFit)) +
-                      ((deltaWFit * deltaWFit) / (sigma3DFit * sigma3DFit));
+            ((deltaWFit * deltaWFit) / (sigma3DFit * sigma3DFit));
     }
 
     return chi2WrtFit;
@@ -284,17 +284,14 @@ void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult
         if (protoHit.GetNTrajectorySamples() == 2)
         {
             u = (TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                        : (TPC_VIEW_U == protoHit.GetFirstTrajectorySample().GetHitType())
-                                              ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
-                                              : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+                : (TPC_VIEW_U == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
+                                                                                   : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
             v = (TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                        : (TPC_VIEW_V == protoHit.GetFirstTrajectorySample().GetHitType())
-                                              ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
-                                              : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+                : (TPC_VIEW_V == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
+                                                                                   : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
             w = (TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                        : (TPC_VIEW_W == protoHit.GetFirstTrajectorySample().GetHitType())
-                                              ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
-                                              : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+                : (TPC_VIEW_W == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
+                                                                                   : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
         }
         else if (protoHit.GetNTrajectorySamples() == 1)
         {

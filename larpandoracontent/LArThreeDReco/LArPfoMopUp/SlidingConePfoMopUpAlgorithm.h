@@ -155,6 +155,7 @@ private:
 
     pandora::StringVector m_inputPfoListNames; ///< The input pfo list names
     bool m_useVertex;                          ///< Whether to use the interaction vertex to select useful cone directions
+    bool m_legacyMode;                         ///< Whether to use the legacy cone generation
     unsigned int m_maxIterations;              ///< The maximum allowed number of algorithm iterations
     unsigned int m_maxHitsToConsider3DTrack;   ///< The maximum number of hits in a 3d track cluster to warrant inclusion in algorithm
     unsigned int m_minHitsToConsider3DShower;  ///< The minimum number of hits in a 3d shower cluster to attempt cone fits

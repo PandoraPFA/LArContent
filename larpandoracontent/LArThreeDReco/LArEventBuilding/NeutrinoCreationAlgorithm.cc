@@ -19,7 +19,8 @@ namespace lar_content
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-NeutrinoCreationAlgorithm::NeutrinoCreationAlgorithm() : m_forceSingleEmptyNeutrino(false)
+NeutrinoCreationAlgorithm::NeutrinoCreationAlgorithm() :
+    m_forceSingleEmptyNeutrino(false)
 {
 }
 

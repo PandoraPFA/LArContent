@@ -415,7 +415,9 @@ inline SupportVectorMachine::FeatureInfo::FeatureInfo(const double muValue, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SupportVectorMachine::FeatureInfo::FeatureInfo() : m_muValue(0.), m_sigmaValue(0.)
+inline SupportVectorMachine::FeatureInfo::FeatureInfo() :
+    m_muValue(0.),
+    m_sigmaValue(0.)
 {
 }
 

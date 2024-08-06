@@ -299,7 +299,7 @@ bool TracksCrossingGapsTool::CheckXPositionInGap(const float xSample, const TwoD
 bool TracksCrossingGapsTool::IsEndOfCluster(const float xSample, const TwoDSlidingFitResult &slidingFitResult) const
 {
     return ((std::fabs(slidingFitResult.GetGlobalMinLayerPosition().GetX() - xSample) < slidingFitResult.GetLayerPitch()) ||
-            (std::fabs(slidingFitResult.GetGlobalMaxLayerPosition().GetX() - xSample) < slidingFitResult.GetLayerPitch()));
+        (std::fabs(slidingFitResult.GetGlobalMaxLayerPosition().GetX() - xSample) < slidingFitResult.GetLayerPitch()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

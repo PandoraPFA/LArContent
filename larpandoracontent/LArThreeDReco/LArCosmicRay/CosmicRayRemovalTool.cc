@@ -281,8 +281,8 @@ void CosmicRayRemovalTool::CollectHitsFromDeltaRay(const CartesianVector &positi
                 continue;
 
             const float distanceToCollectedHits(collectedHits.empty()
-                                                    ? std::numeric_limits<float>::max()
-                                                    : LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), collectedHits));
+                    ? std::numeric_limits<float>::max()
+                    : LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), collectedHits));
             const float distanceToMuonHits(muonDirection.GetCrossProduct(pCaloHit->GetPositionVector() - positionOnMuon).GetMagnitude());
 
             if ((distanceToMuonHits < minDistanceFromMuon) || (demandCloserToCollected && (distanceToCollectedHits > distanceToMuonHits)))

@@ -527,9 +527,9 @@ void NeutrinoIdTool<T>::SliceFeatures::GetSpacePoints(const ParticleFlowObject *
 template <typename T>
 CartesianVector NeutrinoIdTool<T>::SliceFeatures::GetDirectionFromVertex(const CartesianPointVector &spacePoints, const CartesianVector &vertex) const
 {
-    return this->GetDirection(spacePoints, [&](const CartesianVector &pointA, const CartesianVector &pointB) {
-        return ((pointA - vertex).GetMagnitude() < (pointB - vertex).GetMagnitude());
-    });
+    return this->GetDirection(spacePoints,
+        [&](const CartesianVector &pointA, const CartesianVector &pointB)
+        { return ((pointA - vertex).GetMagnitude() < (pointB - vertex).GetMagnitude()); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

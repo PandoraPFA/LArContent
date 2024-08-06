@@ -229,7 +229,7 @@ private:
      *  @param minCharge: minimum charge requirement at start and end of pfo to calculate conicalness
      *  @param conFracRange: conincal fractional range to determine start/end of pfo
      *  @param MoliereRadius: 10.1 cm to determine halo/core of pfo
-     *  @param MoliereRadiusFrac: fraction of Moliere radius, default = 0.2 
+     *  @param MoliereRadiusFrac: fraction of Moliere radius, default = 0.2
      */
     unsigned int m_conMinHits;
     float m_minCharge;

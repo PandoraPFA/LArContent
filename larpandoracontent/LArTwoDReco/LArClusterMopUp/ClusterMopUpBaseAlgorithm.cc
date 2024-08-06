@@ -18,7 +18,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClusterMopUpBaseAlgorithm::ClusterMopUpBaseAlgorithm() : m_excludePfosContainingTracks(true)
+ClusterMopUpBaseAlgorithm::ClusterMopUpBaseAlgorithm() :
+    m_excludePfosContainingTracks(true)
 {
 }
 

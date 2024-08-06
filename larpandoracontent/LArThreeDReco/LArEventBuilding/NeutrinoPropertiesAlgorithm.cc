@@ -18,7 +18,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-NeutrinoPropertiesAlgorithm::NeutrinoPropertiesAlgorithm() : m_includeIsolatedHits(false)
+NeutrinoPropertiesAlgorithm::NeutrinoPropertiesAlgorithm() :
+    m_includeIsolatedHits(false)
 {
 }
 

@@ -17,7 +17,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingNeutrinoDaughterVerticesAlgorithm::CheatingNeutrinoDaughterVerticesAlgorithm() : m_collapseToPrimaryMCParticles(false)
+CheatingNeutrinoDaughterVerticesAlgorithm::CheatingNeutrinoDaughterVerticesAlgorithm() :
+    m_collapseToPrimaryMCParticles(false)
 {
 }
 

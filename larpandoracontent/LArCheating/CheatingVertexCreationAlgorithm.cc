@@ -18,7 +18,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingVertexCreationAlgorithm::CheatingVertexCreationAlgorithm() : m_replaceCurrentVertexList(true), m_vertexXCorrection(0.f)
+CheatingVertexCreationAlgorithm::CheatingVertexCreationAlgorithm() :
+    m_replaceCurrentVertexList(true),
+    m_vertexXCorrection(0.f)
 {
 }
 

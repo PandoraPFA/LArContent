@@ -15,7 +15,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClusteringParentAlgorithm::ClusteringParentAlgorithm() : m_replaceCurrentCaloHitList(false), m_replaceCurrentClusterList(true)
+ClusteringParentAlgorithm::ClusteringParentAlgorithm() :
+    m_replaceCurrentCaloHitList(false),
+    m_replaceCurrentClusterList(true)
 {
 }
 

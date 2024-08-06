@@ -177,9 +177,9 @@ inline ClusterAssociation::ClusterAssociation(const pandora::CartesianVector &up
 inline bool ClusterAssociation::operator==(const ClusterAssociation &clusterAssociation) const
 {
     return (m_upstreamMergePoint == clusterAssociation.GetUpstreamMergePoint() &&
-            m_upstreamMergeDirection == clusterAssociation.GetUpstreamMergeDirection() &&
-            m_downstreamMergePoint == clusterAssociation.GetDownstreamMergePoint() &&
-            m_downstreamMergeDirection == clusterAssociation.GetDownstreamMergeDirection());
+        m_upstreamMergeDirection == clusterAssociation.GetUpstreamMergeDirection() &&
+        m_downstreamMergePoint == clusterAssociation.GetDownstreamMergePoint() &&
+        m_downstreamMergeDirection == clusterAssociation.GetDownstreamMergeDirection());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -263,7 +263,10 @@ inline ClusterPairAssociation::ClusterPairAssociation(const pandora::CartesianVe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ClusterPairAssociation::ClusterPairAssociation() : ClusterAssociation(), m_pUpstreamCluster(nullptr), m_pDownstreamCluster(nullptr)
+inline ClusterPairAssociation::ClusterPairAssociation() :
+    ClusterAssociation(),
+    m_pUpstreamCluster(nullptr),
+    m_pDownstreamCluster(nullptr)
 {
 }
 

@@ -126,13 +126,17 @@ protected:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline BranchGrowingAlgorithm::Association::Association() : m_order(std::numeric_limits<unsigned int>::max()), m_type(NONE)
+inline BranchGrowingAlgorithm::Association::Association() :
+    m_order(std::numeric_limits<unsigned int>::max()),
+    m_type(NONE)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline BranchGrowingAlgorithm::Association::Association(const unsigned int order, const AssociationType type) : m_order(order), m_type(type)
+inline BranchGrowingAlgorithm::Association::Association(const unsigned int order, const AssociationType type) :
+    m_order(order),
+    m_type(type)
 {
 }
 

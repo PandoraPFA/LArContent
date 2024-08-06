@@ -274,8 +274,8 @@ double SupportVectorMachine::CalculateClassificationScoreImpl(const LArMvaHelper
     double classScore(0.);
     for (const SupportVectorInfo &supportVectorInfo : m_svInfoList)
     {
-        classScore += supportVectorInfo.m_yAlpha * m_kernelFunction(supportVectorInfo.m_supportVector,
-                                                       (m_standardizeFeatures ? standardizedFeatures : features), m_scaleFactor);
+        classScore += supportVectorInfo.m_yAlpha *
+            m_kernelFunction(supportVectorInfo.m_supportVector, (m_standardizeFeatures ? standardizedFeatures : features), m_scaleFactor);
     }
 
     return classScore + m_bias;

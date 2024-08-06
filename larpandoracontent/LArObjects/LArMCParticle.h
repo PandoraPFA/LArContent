@@ -220,7 +220,8 @@ inline MCProcess LArMCParticle::GetProcess() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArMCParticleFactory::LArMCParticleFactory(const unsigned int version) : m_version(version)
+inline LArMCParticleFactory::LArMCParticleFactory(const unsigned int version) :
+    m_version(version)
 {
 }
 

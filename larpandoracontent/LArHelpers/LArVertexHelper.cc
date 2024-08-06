@@ -98,7 +98,7 @@ bool LArVertexHelper::IsInFiducialVolume(const Pandora &pandora, const Cartesian
         const float y{vertex.GetY()};
         const float z{vertex.GetZ()};
         return (tpcMinX + 50.f) < x && x < (tpcMaxX - 50.f) && (tpcMinY + 50.f) < y && y < (tpcMaxY - 50.f) && (tpcMinZ + 50.f) < z &&
-               z < (tpcMaxZ - 150.f);
+            z < (tpcMaxZ - 150.f);
     }
     else if (detector == "dune_nd")
     {

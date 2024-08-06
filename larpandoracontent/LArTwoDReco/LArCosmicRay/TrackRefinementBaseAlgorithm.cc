@@ -531,7 +531,7 @@ const Cluster *TrackRefinementBaseAlgorithm::RemoveOffAxisHitsFromTrack(const Cl
 
             if (extrapolatedCaloHitIter != clusterToCaloHitListMap.end())
                 isAnExtrapolatedHit = std::find(extrapolatedCaloHitIter->second.begin(), extrapolatedCaloHitIter->second.end(), pCaloHit) !=
-                                      extrapolatedCaloHitIter->second.end();
+                    extrapolatedCaloHitIter->second.end();
 
             const bool isAbove(((clusterGradient * hitPosition.GetX()) + clusterIntercept) < (isVertical ? hitPosition.GetX() : hitPosition.GetZ()));
             const bool isToRemove(!isAnExtrapolatedHit && (((thisL < rL) && isEndUpstream) || ((thisL > rL) && !isEndUpstream)));
@@ -594,9 +594,9 @@ void TrackRefinementBaseAlgorithm::AddHitsToMainTrack(const Cluster *const pMain
     const bool isVertical(std::fabs(clusterAssociation.GetConnectingLineDirection().GetX()) < std::numeric_limits<float>::epsilon());
     const float connectingLineGradient(
         isVertical ? 0.f : clusterAssociation.GetConnectingLineDirection().GetZ() / clusterAssociation.GetConnectingLineDirection().GetX());
-    const float connectingLineIntercept(isVertical ? clusterAssociation.GetUpstreamMergePoint().GetX()
-                                                   : clusterAssociation.GetUpstreamMergePoint().GetZ() -
-                                                         (connectingLineGradient * clusterAssociation.GetUpstreamMergePoint().GetX()));
+    const float connectingLineIntercept(isVertical
+            ? clusterAssociation.GetUpstreamMergePoint().GetX()
+            : clusterAssociation.GetUpstreamMergePoint().GetZ() - (connectingLineGradient * clusterAssociation.GetUpstreamMergePoint().GetX()));
 
     const OrderedCaloHitList orderedCaloHitList(pShowerCluster->GetOrderedCaloHitList());
     for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
@@ -613,7 +613,7 @@ void TrackRefinementBaseAlgorithm::AddHitsToMainTrack(const Cluster *const pMain
             {
                 const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
                 const bool isAbove(((connectingLineGradient * hitPosition.GetX()) + connectingLineIntercept) <
-                                   (isVertical ? hitPosition.GetX() : hitPosition.GetZ()));
+                    (isVertical ? hitPosition.GetX() : hitPosition.GetZ()));
                 const Cluster *&pClusterToModify(isAbove ? pAboveCluster : pBelowCluster);
 
                 if (pClusterToModify)
