@@ -331,7 +331,13 @@ inline double LayerFitResult::GetRms() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LayerFitContribution::LayerFitContribution() : m_sumT(0.), m_sumL(0.), m_sumTT(0.), m_sumLT(0.), m_sumLL(0.), m_nPoints(0)
+inline LayerFitContribution::LayerFitContribution() :
+    m_sumT(0.),
+    m_sumL(0.),
+    m_sumTT(0.),
+    m_sumLT(0.),
+    m_sumLL(0.),
+    m_nPoints(0)
 {
 }
 
@@ -395,7 +401,10 @@ inline unsigned int LayerFitContribution::GetNPoints() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LayerInterpolation::LayerInterpolation() : m_isInitialized(false), m_startLayerWeight(0.f), m_endLayerWeight(0.f)
+inline LayerInterpolation::LayerInterpolation() :
+    m_isInitialized(false),
+    m_startLayerWeight(0.f),
+    m_endLayerWeight(0.f)
 {
 }
 

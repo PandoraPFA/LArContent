@@ -113,13 +113,17 @@ bool TwoViewDeltaRayOverlapResult::operator<(const TwoViewDeltaRayOverlapResult 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackTwoViewOverlapResult::TrackTwoViewOverlapResult() : m_isInitialized(false), m_matchingScore(0)
+TrackTwoViewOverlapResult::TrackTwoViewOverlapResult() :
+    m_isInitialized(false),
+    m_matchingScore(0)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackTwoViewOverlapResult::TrackTwoViewOverlapResult(const float matchingScore) : m_isInitialized(true), m_matchingScore(matchingScore)
+TrackTwoViewOverlapResult::TrackTwoViewOverlapResult(const float matchingScore) :
+    m_isInitialized(true),
+    m_matchingScore(matchingScore)
 {
 }
 

@@ -17,7 +17,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-RemovalBaseTool::RemovalBaseTool() : m_minSeparation(1.f), m_distanceToLine(0.5f)
+RemovalBaseTool::RemovalBaseTool() :
+    m_minSeparation(1.f),
+    m_distanceToLine(0.5f)
 {
 }
 

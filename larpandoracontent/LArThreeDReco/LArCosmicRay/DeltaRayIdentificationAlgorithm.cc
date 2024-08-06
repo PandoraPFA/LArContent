@@ -162,8 +162,8 @@ bool DeltaRayIdentificationAlgorithm::IsAssociated(
 
     const float transitionLengthSquared(125.f);
     const float displacementCut((daughterLengthSquared > transitionLengthSquared)
-                                    ? m_distanceForMatching
-                                    : m_distanceForMatching * (2.f - daughterLengthSquared / transitionLengthSquared));
+            ? m_distanceForMatching
+            : m_distanceForMatching * (2.f - daughterLengthSquared / transitionLengthSquared));
 
     try
     {

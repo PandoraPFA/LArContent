@@ -15,7 +15,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-SimpleNeutrinoIdTool::SimpleNeutrinoIdTool() : m_selectAllNeutrinos(true), m_selectOnlyFirstSliceNeutrinos(false)
+SimpleNeutrinoIdTool::SimpleNeutrinoIdTool() :
+    m_selectAllNeutrinos(true),
+    m_selectOnlyFirstSliceNeutrinos(false)
 {
 }
 
@@ -30,8 +32,8 @@ void SimpleNeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, c
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
         const PfoList &sliceOutput((m_selectAllNeutrinos || (m_selectOnlyFirstSliceNeutrinos && (0 == sliceIndex)))
-                                       ? nuSliceHypotheses.at(sliceIndex)
-                                       : crSliceHypotheses.at(sliceIndex));
+                ? nuSliceHypotheses.at(sliceIndex)
+                : crSliceHypotheses.at(sliceIndex));
 
         const float score(m_selectAllNeutrinos || (m_selectOnlyFirstSliceNeutrinos && (0 == sliceIndex)) ? 1.f : -1.f);
 

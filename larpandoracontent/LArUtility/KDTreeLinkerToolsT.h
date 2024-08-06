@@ -246,7 +246,8 @@ inline KDTreeBoxT<DIM>::KDTreeBoxT(Ts... dimargs)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename DATA, unsigned DIM>
-inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT() : data()
+inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT() :
+    data()
 {
 }
 
@@ -254,7 +255,9 @@ inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT() : data()
 
 template <typename DATA, unsigned DIM>
 template <typename... Ts>
-inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT(const DATA &d, Ts... dimargs) : data(d), dims{{dimargs...}}
+inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT(const DATA &d, Ts... dimargs) :
+    data(d),
+    dims{{dimargs...}}
 {
 }
 
@@ -262,7 +265,9 @@ inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT(const DATA &d, Ts... dimargs)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename DATA, unsigned DIM>
-inline KDTreeNodeT<DATA, DIM>::KDTreeNodeT() : left(nullptr), right(nullptr)
+inline KDTreeNodeT<DATA, DIM>::KDTreeNodeT() :
+    left(nullptr),
+    right(nullptr)
 {
 }
 

@@ -59,7 +59,9 @@ LArHierarchyHelper::FoldingParameters::FoldingParameters(const int foldingTier) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArHierarchyHelper::QualityCuts::QualityCuts() : m_minPurity{0.8f}, m_minCompleteness{0.65f}
+LArHierarchyHelper::QualityCuts::QualityCuts() :
+    m_minPurity{0.8f},
+    m_minCompleteness{0.65f}
 {
 }
 
@@ -74,13 +76,16 @@ LArHierarchyHelper::QualityCuts::QualityCuts(const float minPurity, const float 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArHierarchyHelper::MCHierarchy::MCHierarchy() : m_nextNodeId{1}
+LArHierarchyHelper::MCHierarchy::MCHierarchy() :
+    m_nextNodeId{1}
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArHierarchyHelper::MCHierarchy::MCHierarchy(const ReconstructabilityCriteria &recoCriteria) : m_recoCriteria(recoCriteria), m_nextNodeId{1}
+LArHierarchyHelper::MCHierarchy::MCHierarchy(const ReconstructabilityCriteria &recoCriteria) :
+    m_recoCriteria(recoCriteria),
+    m_nextNodeId{1}
 {
 }
 
@@ -473,7 +478,7 @@ const std::string LArHierarchyHelper::MCHierarchy::ToString() const
         const LArMCParticle *const pLArRoot{dynamic_cast<const LArMCParticle *const>(pRoot)};
         if (pLArRoot)
             str += "=== MC Interaction : PDG " + std::to_string(pLArRoot->GetParticleId()) +
-                   " Energy: " + std::to_string(pLArRoot->GetEnergy()) + " Nuance: " + std::to_string(pLArRoot->GetNuanceCode()) + "\n";
+                " Energy: " + std::to_string(pLArRoot->GetEnergy()) + " Nuance: " + std::to_string(pLArRoot->GetNuanceCode()) + "\n";
         else
             str += "=== MC Interaction : PDG " + std::to_string(pRoot->GetParticleId()) + " Energy: " + std::to_string(pRoot->GetEnergy()) + "\n";
         for (const Node *pNode : nodeVector)
@@ -638,8 +643,8 @@ void LArHierarchyHelper::MCHierarchy::Node::FillHierarchy(const MCParticle *pRoo
         if (!allParticles.empty())
         {
             const bool hasChildren{(foldParameters.m_foldToTier && LArMCParticleHelper::GetHierarchyTier(pRoot) < foldParameters.m_tier) ||
-                                   (!foldParameters.m_foldToTier && !foldParameters.m_foldToLeadingShowers) ||
-                                   (foldParameters.m_foldToLeadingShowers && !(isShower || isNeutron))};
+                (!foldParameters.m_foldToTier && !foldParameters.m_foldToLeadingShowers) ||
+                (foldParameters.m_foldToLeadingShowers && !(isShower || isNeutron))};
             // Only add the node if it either has children, or is a leaf node with hits
             if (hasChildren || (!hasChildren && !allHits.empty()))
             {
@@ -762,7 +767,7 @@ bool LArHierarchyHelper::MCHierarchy::Node::IsCosmicRay() const
 const std::string LArHierarchyHelper::MCHierarchy::Node::ToString(const std::string &prefix) const
 {
     std::string str(prefix + "PDG: " + std::to_string(m_pdg) + " Energy: " + std::to_string(m_mainParticle ? m_mainParticle->GetEnergy() : 0) +
-                    " Hits: " + std::to_string(m_caloHits.size()) + "\n");
+        " Hits: " + std::to_string(m_caloHits.size()) + "\n");
     for (const Node *pChild : m_children)
         str += pChild->ToString(prefix + "   ");
 
@@ -1017,8 +1022,7 @@ void LArHierarchyHelper::RecoHierarchy::Node::FillHierarchy(const ParticleFlowOb
     for (const ParticleFlowObject *pPfo : allParticles)
         LArPfoHelper::GetAllCaloHits(pPfo, allHits);
     const bool hasChildren{(foldParameters.m_foldToTier && LArPfoHelper::GetHierarchyTier(pRoot) < foldParameters.m_tier) ||
-                           (!foldParameters.m_foldToTier && !foldParameters.m_foldToLeadingShowers) ||
-                           (foldParameters.m_foldToLeadingShowers && !isShower)};
+        (!foldParameters.m_foldToTier && !foldParameters.m_foldToLeadingShowers) || (foldParameters.m_foldToLeadingShowers && !isShower)};
 
     if (hasChildren || (!hasChildren && !allHits.empty()))
     {
@@ -1082,7 +1086,8 @@ const std::string LArHierarchyHelper::RecoHierarchy::Node::ToString(const std::s
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArHierarchyHelper::MCMatches::MCMatches(const MCHierarchy::Node *pMCParticle) : m_pMCParticle{pMCParticle}
+LArHierarchyHelper::MCMatches::MCMatches(const MCHierarchy::Node *pMCParticle) :
+    m_pMCParticle{pMCParticle}
 {
 }
 
@@ -1304,12 +1309,12 @@ void LArHierarchyHelper::MatchInfo::Match()
             RecoHierarchy::NodeVector recoNodes;
             m_recoHierarchy.GetFlattenedNodes(pRootPfo, recoNodes);
 
-            std::sort(mcNodes.begin(), mcNodes.end(), [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs) {
-                return lhs->GetCaloHits().size() > rhs->GetCaloHits().size();
-            });
-            std::sort(recoNodes.begin(), recoNodes.end(), [](const RecoHierarchy::Node *lhs, const RecoHierarchy::Node *rhs) {
-                return lhs->GetCaloHits().size() > rhs->GetCaloHits().size();
-            });
+            std::sort(mcNodes.begin(), mcNodes.end(),
+                [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs)
+                { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
+            std::sort(recoNodes.begin(), recoNodes.end(),
+                [](const RecoHierarchy::Node *lhs, const RecoHierarchy::Node *rhs)
+                { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
 
             for (const RecoHierarchy::Node *pRecoNode : recoNodes)
             {
@@ -1372,9 +1377,8 @@ void LArHierarchyHelper::MatchInfo::Match()
         }
     }
 
-    const auto predicate = [](const MCMatches &lhs, const MCMatches &rhs) {
-        return lhs.GetMC()->GetCaloHits().size() > rhs.GetMC()->GetCaloHits().size();
-    };
+    const auto predicate = [](const MCMatches &lhs, const MCMatches &rhs)
+    { return lhs.GetMC()->GetCaloHits().size() > rhs.GetMC()->GetCaloHits().size(); };
 
     for (const MCParticle *const pRootMC : rootMCParticles)
     {

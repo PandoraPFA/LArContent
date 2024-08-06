@@ -24,7 +24,8 @@ namespace lar_content
 {
 
 template <typename T>
-NViewMatchingAlgorithm<T>::NViewMatchingAlgorithm() : m_matchingControl(this)
+NViewMatchingAlgorithm<T>::NViewMatchingAlgorithm() :
+    m_matchingControl(this)
 {
 }
 

@@ -24,6 +24,7 @@ namespace lar_content
 
 SlidingConePfoMopUpAlgorithm::SlidingConePfoMopUpAlgorithm() :
     m_useVertex(true),
+    m_legacyMode(true),
     m_maxIterations(1000),
     m_maxHitsToConsider3DTrack(100),
     m_minHitsToConsider3DShower(20),
@@ -156,10 +157,11 @@ void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVerte
 
             const float vertexToMinLayer(!pVertex ? 0.f : (pVertex->GetPosition() - minLayerPosition).GetMagnitude());
             const float vertexToMaxLayer(!pVertex ? 0.f : (pVertex->GetPosition() - maxLayerPosition).GetMagnitude());
-            const ConeSelection coneSelection(
-                !pVertex ? CONE_BOTH_DIRECTIONS : (vertexToMaxLayer > vertexToMinLayer) ? CONE_FORWARD_ONLY : CONE_BACKWARD_ONLY);
+            const ConeSelection coneSelection(!pVertex      ? CONE_BOTH_DIRECTIONS
+                    : (vertexToMaxLayer > vertexToMinLayer) ? CONE_FORWARD_ONLY
+                                                            : CONE_BACKWARD_ONLY);
 
-            slidingConeFitResult3D.GetSimpleConeList(m_nConeFitLayers, m_nConeFits, coneSelection, simpleConeList);
+            slidingConeFitResult3D.GetSimpleConeList(m_nConeFitLayers, m_nConeFits, coneSelection, simpleConeList, m_coneTanHalfAngle1, m_legacyMode);
             isShowerVertexAssociated =
                 this->IsVertexAssociated(pShowerCluster, pVertex, vertexAssociationMap, &(slidingConeFitResult3D.GetSlidingFitResult()));
         }
@@ -240,7 +242,7 @@ bool SlidingConePfoMopUpAlgorithm::IsVertexAssociated(
             pSlidingFitResult ? LArPointingCluster(*pSlidingFitResult) : LArPointingCluster(pCluster, m_halfWindowLayers, layerPitch));
 
         const bool useInner((pointingCluster.GetInnerVertex().GetPosition() - vertexPosition).GetMagnitudeSquared() <
-                            (pointingCluster.GetOuterVertex().GetPosition() - vertexPosition).GetMagnitudeSquared());
+            (pointingCluster.GetOuterVertex().GetPosition() - vertexPosition).GetMagnitudeSquared());
 
         const LArPointingCluster::Vertex &daughterVertex(useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
         return LArPointingClusterHelper::IsNode(vertexPosition, daughterVertex, m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance);
@@ -331,6 +333,8 @@ StatusCode SlidingConePfoMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseVertex", m_useVertex));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LegacyMode", m_legacyMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxIterations", m_maxIterations));
 

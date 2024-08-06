@@ -24,7 +24,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() : m_slidingShowerFitWindow(3), m_slidingLinearFitWindow(10000)
+TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() :
+    m_slidingShowerFitWindow(3),
+    m_slidingLinearFitWindow(10000)
 {
 }
 
@@ -85,7 +87,9 @@ StatusCode TwoDShowerFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoDLinearFitFeatureTool::TwoDLinearFitFeatureTool() : m_slidingLinearFitWindow(3), m_slidingLinearFitWindowLarge(10000)
+TwoDLinearFitFeatureTool::TwoDLinearFitFeatureTool() :
+    m_slidingLinearFitWindow(3),
+    m_slidingLinearFitWindowLarge(10000)
 {
 }
 
@@ -256,7 +260,8 @@ StatusCode TwoDLinearFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoDVertexDistanceFeatureTool::TwoDVertexDistanceFeatureTool() : m_slidingLinearFitWindow(10000)
+TwoDVertexDistanceFeatureTool::TwoDVertexDistanceFeatureTool() :
+    m_slidingLinearFitWindow(10000)
 {
 }
 
@@ -433,8 +438,8 @@ void ConeChargeFeatureTool::Run(
         concentration = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeCon / (chargeCore + chargeHalo) : -1.f;
         const float pfoLength(std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo)));
         conicalness = (pfoLength > std::numeric_limits<float>::epsilon())
-                          ? this->CalculateConicalness(clusterCaloHitList, pfoStart, eigenVecs[0], pfoLength)
-                          : 1.f;
+            ? this->CalculateConicalness(clusterCaloHitList, pfoStart, eigenVecs[0], pfoLength)
+            : 1.f;
     }
 
     featureVector.push_back(haloTotalRatio);
@@ -539,7 +544,9 @@ StatusCode ConeChargeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() : m_slidingLinearFitWindow(3), m_slidingLinearFitWindowLarge(10000)
+ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() :
+    m_slidingLinearFitWindow(3),
+    m_slidingLinearFitWindowLarge(10000)
 {
 }
 
@@ -801,7 +808,9 @@ StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle /*xml
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDOpeningAngleFeatureTool::ThreeDOpeningAngleFeatureTool() : m_hitFraction(0.5f), m_defaultValue(0.1f)
+ThreeDOpeningAngleFeatureTool::ThreeDOpeningAngleFeatureTool() :
+    m_hitFraction(0.5f),
+    m_defaultValue(0.1f)
 {
 }
 
@@ -1054,7 +1063,8 @@ StatusCode ThreeDPCAFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() : m_endChargeFraction(0.1f)
+ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() :
+    m_endChargeFraction(0.1f)
 {
 }
 
@@ -1199,7 +1209,8 @@ StatusCode ThreeDChargeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDChargeFeatureTool::VertexComparator::VertexComparator(const CartesianVector vertexPosition2D) : m_neutrinoVertex(vertexPosition2D)
+ThreeDChargeFeatureTool::VertexComparator::VertexComparator(const CartesianVector vertexPosition2D) :
+    m_neutrinoVertex(vertexPosition2D)
 {
 }
 

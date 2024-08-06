@@ -17,7 +17,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-ConnectedRemnantsTool::ConnectedRemnantsTool() : m_maxClusterSeparation(10.f)
+ConnectedRemnantsTool::ConnectedRemnantsTool() :
+    m_maxClusterSeparation(10.f)
 {
 }
 

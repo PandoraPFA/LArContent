@@ -109,7 +109,9 @@ void CandidateVertexCreationAlgorithm::SelectClusters(ClusterVector &clusterVect
         if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        ClusterVector &selectedClusterVector((TPC_VIEW_U == hitType) ? clusterVectorU : (TPC_VIEW_V == hitType) ? clusterVectorV : clusterVectorW);
+        ClusterVector &selectedClusterVector((TPC_VIEW_U == hitType) ? clusterVectorU
+                : (TPC_VIEW_V == hitType)                            ? clusterVectorV
+                                                                     : clusterVectorW);
 
         if (!selectedClusterVector.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -144,8 +146,7 @@ void CandidateVertexCreationAlgorithm::SelectClusters(ClusterVector &clusterVect
             if (pCluster->GetParticleId() == E_MINUS && m_reducedCandidates)
             {
                 selectionCutFactor = (m_selectionCutFactorMax + 1.f) * 0.5f +
-                                     (m_selectionCutFactorMax - 1.f) * 0.5f *
-                                         std::tanh(static_cast<float>(nClustersPassingMaxCuts) - m_nClustersPassingMaxCutsPar);
+                    (m_selectionCutFactorMax - 1.f) * 0.5f * std::tanh(static_cast<float>(nClustersPassingMaxCuts) - m_nClustersPassingMaxCutsPar);
             }
 
             if (pCluster->GetNCaloHits() < m_minClusterCaloHits * selectionCutFactor)

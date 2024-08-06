@@ -15,7 +15,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-AmbiguousDeltaRayTool::AmbiguousDeltaRayTool() : m_maxGoodMatchReducedChiSquared(1.f)
+AmbiguousDeltaRayTool::AmbiguousDeltaRayTool() :
+    m_maxGoodMatchReducedChiSquared(1.f)
 {
 }
 

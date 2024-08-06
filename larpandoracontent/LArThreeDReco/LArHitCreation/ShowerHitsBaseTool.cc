@@ -18,7 +18,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-ShowerHitsBaseTool::ShowerHitsBaseTool() : m_xTolerance(1.f)
+ShowerHitsBaseTool::ShowerHitsBaseTool() :
+    m_xTolerance(1.f)
 {
 }
 

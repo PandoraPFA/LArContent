@@ -17,7 +17,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClearTrackFragmentsTool::ClearTrackFragmentsTool() : m_minMatchedSamplingPointFraction(0.5f), m_minMatchedHits(5)
+ClearTrackFragmentsTool::ClearTrackFragmentsTool() :
+    m_minMatchedSamplingPointFraction(0.5f),
+    m_minMatchedHits(5)
 {
 }
 

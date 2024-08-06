@@ -17,7 +17,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-HitCreationBaseTool::HitCreationBaseTool() : m_sigmaX2(1.), m_chiSquaredCut(1.)
+HitCreationBaseTool::HitCreationBaseTool() :
+    m_sigmaX2(1.),
+    m_chiSquaredCut(1.)
 {
 }
 
@@ -84,11 +86,14 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
     double chi2(std::numeric_limits<double>::max());
 
     const double u((TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                           : (TPC_VIEW_U == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+            : (TPC_VIEW_U == hitType1)     ? fitPosition1.GetZ()
+                                           : fitPosition2.GetZ());
     const double v((TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                           : (TPC_VIEW_V == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+            : (TPC_VIEW_V == hitType1)     ? fitPosition1.GetZ()
+                                           : fitPosition2.GetZ());
     const double w((TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
-                                           : (TPC_VIEW_W == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+            : (TPC_VIEW_W == hitType1)     ? fitPosition1.GetZ()
+                                           : fitPosition2.GetZ());
 
     const double sigmaU((TPC_VIEW_U == hitType) ? sigmaHit : sigmaFit);
     const double sigmaV((TPC_VIEW_V == hitType) ? sigmaHit : sigmaFit);

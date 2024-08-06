@@ -17,7 +17,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-SimpleClusterMergingAlgorithm::SimpleClusterMergingAlgorithm() : m_minCaloHitsPerCluster(5), m_maxClusterSeparation(2.5f)
+SimpleClusterMergingAlgorithm::SimpleClusterMergingAlgorithm() :
+    m_minCaloHitsPerCluster(5),
+    m_maxClusterSeparation(2.5f)
 {
 }
 

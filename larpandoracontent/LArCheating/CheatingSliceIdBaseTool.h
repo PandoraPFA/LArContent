@@ -9,6 +9,7 @@
 #define LAR_CHEATING_SLICE_ID_BASE_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/SliceIdBaseTool.h"
 
 #include <functional>
 

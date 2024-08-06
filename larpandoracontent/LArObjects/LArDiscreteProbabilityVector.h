@@ -49,7 +49,7 @@ public:
      *  @brief  Constructor
      *
      *  @param  discreteProbabilityVector a discrete probability vector to resample from
-     *  @param  resamplingPoints the points to resample the discrete probability vector with 
+     *  @param  resamplingPoints the points to resample the discrete probability vector with
      */
     DiscreteProbabilityVector(const DiscreteProbabilityVector &discreteProbabilityVector, const ResamplingPoints &resamplingPoints);
 
@@ -209,11 +209,11 @@ private:
         const DiscreteProbabilityVector &discreteProbabilityVector, const ResamplingPoints &resamplingPoints) const;
 
     /**
-     *  @brief  Get a randomised probability data vector in which the x values are unchanged, the probability density is 
+     *  @brief  Get a randomised probability data vector in which the x values are unchanged, the probability density is
      *          randomised and the cumulative probability is recalculated
      *
      *  @param  discreteProbabilityVector another discrete probability vector
-     *  @param  randomNumberGenerator the random number generator for the random reshuffling 
+     *  @param  randomNumberGenerator the random number generator for the random reshuffling
      *
      *  @return a resampled probability data vector
      */

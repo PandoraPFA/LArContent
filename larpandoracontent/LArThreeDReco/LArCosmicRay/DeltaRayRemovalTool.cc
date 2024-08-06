@@ -138,7 +138,7 @@ bool DeltaRayRemovalTool::IsContaminated(const TensorType::Element &element, con
 
     const CartesianVector xAxis(1.f, 0.f, 0.f);
     const bool isTransverse((muonDirection.GetOpeningAngle(xAxis) < m_minDeviationFromTransverse) ||
-                            ((M_PI - muonDirection.GetOpeningAngle(xAxis)) < m_minDeviationFromTransverse));
+        ((M_PI - muonDirection.GetOpeningAngle(xAxis)) < m_minDeviationFromTransverse));
 
     if (isTransverse)
         return false;

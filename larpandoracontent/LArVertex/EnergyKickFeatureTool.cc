@@ -17,7 +17,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-EnergyKickFeatureTool::EnergyKickFeatureTool() : m_rOffset(10.f), m_xOffset(0.06f)
+EnergyKickFeatureTool::EnergyKickFeatureTool() :
+    m_rOffset(10.f),
+    m_xOffset(0.06f)
 {
 }
 

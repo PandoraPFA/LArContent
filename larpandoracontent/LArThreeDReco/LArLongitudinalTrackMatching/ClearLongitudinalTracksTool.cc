@@ -15,7 +15,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClearLongitudinalTracksTool::ClearLongitudinalTracksTool() : m_minMatchedFraction(0.8f)
+ClearLongitudinalTracksTool::ClearLongitudinalTracksTool() :
+    m_minMatchedFraction(0.8f)
 {
 }
 
