@@ -41,7 +41,6 @@ StatusCode CheatingPfoCreationAlgorithm::Run()
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
         LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
-	std::cout << "CHEATING PFO** mcPrimaryMap: " << mcPrimaryMap.size() << std::endl;
     }
 
     MCParticleToClusterListMap mcParticleToClusterListMap;
@@ -61,7 +60,6 @@ StatusCode CheatingPfoCreationAlgorithm::Run()
         this->GetMCParticleToClusterListMap(pClusterList, mcPrimaryMap, mcParticleToClusterListMap);
     }
 
-    std::cout << "CHEATING** Particle To Cluster List Map : " << mcParticleToClusterListMap.size() << std::endl;
     this->CreatePfos(mcParticleToClusterListMap);
     return STATUS_CODE_SUCCESS;
 }
@@ -73,7 +71,6 @@ void CheatingPfoCreationAlgorithm::GetMCParticleToClusterListMap(const ClusterLi
 {
     for (const Cluster *const pCluster : *pClusterList)
     {
-	std::cout << "CHEATING PFO ** : Cluster Size: " << pCluster->GetNCaloHits() << std::endl;
 	try
         {
             if (m_useOnlyAvailableClusters && !PandoraContentApi::IsAvailable(*this, pCluster))
