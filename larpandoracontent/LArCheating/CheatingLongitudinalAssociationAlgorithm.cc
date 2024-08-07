@@ -53,13 +53,13 @@ void CheatingLongitudinalAssociationAlgorithm::GetListOfCleanClusters(const Clus
 void CheatingLongitudinalAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const
 {
     // ATTN This method assumes that clusters have been sorted by layer
-    for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterIEnd = clusterVector.end(); iterI != iterIEnd; ++iterI)
+    for (ClusterVector::const_iterator it1 = clusterVector.begin(), it1End = clusterVector.end(); it1 != it1End; ++it1)
     {
-        const Cluster *const pInnerCluster = *iterI;
+        const Cluster *const pInnerCluster = *it1;
 
-        for (ClusterVector::const_iterator iterJ = iterI, iterJEnd = clusterVector.end(); iterJ != iterJEnd; ++iterJ)
+        for (ClusterVector::const_iterator it2 = it1, it2End = clusterVector.end(); it2 != it2End; ++it2)
         {
-            const Cluster *const pOuterCluster = *iterJ;
+            const Cluster *const pOuterCluster = *it2;
 
             if (pInnerCluster == pOuterCluster)
                 continue;

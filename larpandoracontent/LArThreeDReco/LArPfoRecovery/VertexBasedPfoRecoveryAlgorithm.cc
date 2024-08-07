@@ -24,7 +24,8 @@ VertexBasedPfoRecoveryAlgorithm::VertexBasedPfoRecoveryAlgorithm() :
     m_maxLongitudinalDisplacement(5.f),
     m_maxTransverseDisplacement(2.f),
     m_twoViewChi2Cut(5.f),
-    m_threeViewChi2Cut(5.f)
+    m_threeViewChi2Cut(5.f),
+    m_lowEnergyWorkflow(false)
 {
 }
 
@@ -110,9 +111,10 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::GetAvailableClusters(const StringVec
 
 void VertexBasedPfoRecoveryAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
-    //const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-    //add in modified FitPitch value of 0.68
-    const float slidingFitPitch{0.68};
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    
+    if (m_lowEnergyWorkflow)
+        const float slidingFitPitch{0.68};
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
@@ -563,6 +565,9 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ThreeViewChi2Cut", m_threeViewChi2Cut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LowEnergyWorkflow", m_lowEnergyWorkflow));
 
     return STATUS_CODE_SUCCESS;
 }
