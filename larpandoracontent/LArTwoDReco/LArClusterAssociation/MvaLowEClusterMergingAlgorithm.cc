@@ -229,10 +229,10 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	    }
 	    const CartesianVector centroid2((centroid21 + centroid22) * 0.5f);
 	    const float centroidSeparation{std::sqrt(centroid1.GetDistanceSquared(centroid2))};
-	    const CartesianVector centroidVector(centroid2.GetX() - centroid1.GetX(), 0.f, centroid2.GetZ() - centroid1.GetZ());
+	    const CartesianVector centroidVector(centroid2 - centroid1);
 	    
 	    const VertexList *pVertexList{nullptr};
-            float vtxClusterAngle{-1};
+            float vtxClusterAngle{std::numeric_limits<float>::lowest()};
 	    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,                       m_vertexListName, pVertexList));
 	    
 	    if (pVertexList && !pVertexList->empty())
@@ -242,8 +242,8 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	        const HitType hitType(LArClusterHelper::GetClusterHitType(cluster));
                 CartesianVector vertexPosition(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition() , hitType));
 
-		const CartesianVector vtxToCluster(centroid1.GetX() - vertexPosition.GetX(), 0.f, centroid1.GetZ() - vertexPosition.GetZ());
-                const CartesianVector vtxToOtherCluster(centroid2.GetX() - vertexPosition.GetX(), 0.f, centroid2.GetZ() - vertexPosition.GetZ());
+		const CartesianVector vtxToCluster(centroid1 - vertexPosition);
+                const CartesianVector vtxToOtherCluster(centroid2 - vertexPosition);
 		const float D1(vtxToCluster.GetMagnitude());
 		const float D2(vtxToOtherCluster.GetMagnitude());
 	        if ( D1*D2 != 0)
@@ -281,7 +281,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
             {
 
 		  CartesianVector hit1Position(caloHit1->GetPositionVector());
-                  float nearestHit{-1};
+                  float nearestHit{std::numeric_limits<float>::lowest()};
 		  adc1 += caloHit1->GetInputEnergy();
 
 		  for (const CaloHit *const caloHit2 : smallestList)
@@ -289,7 +289,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
 	              CartesianVector hit2Position(caloHit2->GetPositionVector());
                       float distance{std::sqrt(hit1Position.GetDistanceSquared(hit2Position))};
- 		      CartesianVector vector1(hit2Position.GetX() - hit1Position.GetX(), 0.f, hit2Position.GetZ() - hit1Position.GetZ());
+ 		      CartesianVector vector1(hit2Position - hit1Position);
                       double smallestAngle{std::numeric_limits<float>::max()};
                       CartesianVector tangent(centroidVector.GetZ(), 0.f, -centroidVector.GetX());
 		      const float c(tangent.GetX() * vectorTool.GetX() + tangent.GetZ() * vectorTool.GetZ());
@@ -312,7 +312,6 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 		      if ( distance < nearestHit )
 		      {
 		          nearestHit = distance;
-
 		      }
 		      
 		      if (std::abs( vector1.GetDotProduct(centroidVector) ) > smallestAngle)
@@ -331,7 +330,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 		               }
 
 	              }
-		      smallestAngle = std::abs( vector1.GetDotProduct(centroidVector));
+		      smallestAngle = std::abs(vector1.GetDotProduct(centroidVector));
 		      finalDistance = distance;
                   }
 		  distanceDistribution.push_back(finalDistance);
@@ -409,8 +408,11 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	    if (m_writeTree)
             {
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "EventNumber", m_event));
-                if (pVertexList &&  ! pVertexList->empty()){
-                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "VertexClusterAngle", vtxClusterAngle));}
+                if (pVertexList &&  !pVertexList->empty())
+		{
+                    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "VertexClusterAngle", vtxClusterAngle));
+		}
+
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "maxEdgeHitSeparation", maxEdgeHitSeparation));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "NHitsInContact", contact));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "NHitsInProximity", proximity));
@@ -422,9 +424,8 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "TotalNClusterHits", (int) combinedNClusterHits));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "TotalNClusterEdgeHits",(int) combinedNClusterEdgeHits));
                 PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
-                
+	    
 	    }
-	     
         }
     }
 
@@ -446,8 +447,12 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
             try
             {
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, currentCluster, clusterToMerge, listName, listName));
-            } catch (StatusCodeException) {}
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, 
+				      PandoraContentApi::MergeAndDeleteClusters(*this, currentCluster, clusterToMerge, listName, listName));
+            } 
+	    catch (StatusCodeException)
+	    {
+	    }
         }
     }
 
@@ -508,24 +513,22 @@ const CaloHitList MvaLowEClusterMergingAlgorithm<T>::EdgeHitFinder(const pandora
 
         for (int i = 0 ; i < m_divisions ; i++)
         {
-            float pi(3.14159265), maxMag{0};
-	    float phi((2 * pi * i) / m_divisions);
-            CartesianVector vec(std::cos(phi), std::sin(phi), 0.f);
+            float maxMag{0}, phi((6.28318 * i) / m_divisions);
+            CartesianVector vec(std::cos(phi), 0.f,  std::sin(phi));
             CaloHitList sectorHits;
             sectorHits.clear();
 
             for (const CaloHit *pCaloHit: clusterCaloHits)
-            {
-			
+            {		
                 if (hitIsUsed.count(pCaloHit) == 0)
                 {
-                    const float x(pCaloHit->GetPositionVector().GetX()), z(pCaloHit->GetPositionVector().GetZ());
-                    CartesianVector centroidToHitVec(x - centroid.GetX(), 0.f, z - centroid.GetZ());
-                    float mag(centroidToHitVec.GetMagnitude());
-                    CartesianVector normCentroidVec((x - centroid.GetX()) / mag, 0.f , (z - centroid.GetZ()) / mag );
-                    float dotProduct(vec.GetDotProduct(normCentroidVec));
+                    const CartesianVector hitPosition(pCaloHit->GetPositionVector().GetX()), 0.f, pCaloHit->GetPositionVector().GetZ());
+                    const CartesianVector centroidToHitVec(hitPosition - centroid);
+                    const float mag(centroidToHitVec.GetMagnitude());
+                    const CartesianVector normCentroidVec(centroidToHitVec / mag);
+                    const float dotProduct(vec.GetDotProduct(normCentroidVec));
 
-                    if (std::abs(dotProduct) < m_sectorTolerance )
+                    if (std::abs(dotProduct) < m_sectorTolerance)
                     {
                         if (maxMag < mag)
                         {
