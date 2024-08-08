@@ -408,11 +408,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	    if (m_writeTree)
             {
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "EventNumber", m_event));
-                if (pVertexList &&  !pVertexList->empty())
-		{
-                    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "VertexClusterAngle", vtxClusterAngle));
-		}
-
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "VertexClusterAngle", vtxClusterAngle));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "maxEdgeHitSeparation", maxEdgeHitSeparation));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "NHitsInContact", contact));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "NHitsInProximity", proximity));
