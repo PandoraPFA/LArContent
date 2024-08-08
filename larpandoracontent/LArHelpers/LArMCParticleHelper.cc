@@ -29,8 +29,8 @@ namespace lar_content
 using namespace pandora;
 
 LArMCParticleHelper::PrimaryParameters::PrimaryParameters() :
-    m_minPrimaryGoodHits(15),
-    m_minHitsForGoodView(5),
+    m_minPrimaryGoodHits(30),
+    m_minHitsForGoodView(10),
     m_minPrimaryGoodViews(2),
     m_selectInputHits(true),
     m_maxPhotonPropagation(2.5f),
@@ -131,12 +131,14 @@ unsigned int LArMCParticleHelper::GetNuanceCode(const MCParticle *const pMCParti
 bool LArMCParticleHelper::IsNeutrino(const MCParticle *const pMCParticle)
 {
     const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
-    if ((nuance == 0) || (nuance == 2000) || (nuance == 2001) || (nuance == 3000))
+    if ((nuance == 0) || (nuance == 2000) || (nuance == 2001) || (nuance == 3000))  
         return false;
 
     const int absoluteParticleId(std::abs(pMCParticle->GetParticleId()));
     return ((NU_E == absoluteParticleId) || (NU_MU == absoluteParticleId) || (NU_TAU == absoluteParticleId));
 }
+
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

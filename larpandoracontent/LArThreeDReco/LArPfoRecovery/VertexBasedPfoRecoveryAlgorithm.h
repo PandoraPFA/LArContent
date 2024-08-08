@@ -206,6 +206,7 @@ private:
     float m_maxTransverseDisplacement;   ///<
     float m_twoViewChi2Cut;              ///<
     float m_threeViewChi2Cut;            ///<
+    bool m_lowEnergyWorkflow;            ///<
 };
 
 } // namespace lar_content

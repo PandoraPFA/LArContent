@@ -24,7 +24,8 @@ VertexBasedPfoRecoveryAlgorithm::VertexBasedPfoRecoveryAlgorithm() :
     m_maxLongitudinalDisplacement(5.f),
     m_maxTransverseDisplacement(2.f),
     m_twoViewChi2Cut(5.f),
-    m_threeViewChi2Cut(5.f)
+    m_threeViewChi2Cut(5.f),
+    m_lowEnergyWorkflow(false)
 {
 }
 
@@ -57,12 +58,12 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::Run()
     // Select seed clusters (adjacent to vertex)
     ClusterVector selectedClusters;
     this->SelectVertexClusters(pSelectedVertex, slidingFitResultMap, availableClusters, selectedClusters);
-
+   
     // Match the cluster end points
     ClusterSet vetoList;
     ParticleList particleList;
-    this->MatchThreeViews(pSelectedVertex, slidingFitResultMap, selectedClusters, vetoList, particleList);
-    this->MatchTwoViews(pSelectedVertex, slidingFitResultMap, selectedClusters, vetoList, particleList);
+    this->MatchThreeViews(pSelectedVertex, slidingFitResultMap, availableClusters, vetoList, particleList);
+    this->MatchTwoViews(pSelectedVertex, slidingFitResultMap, availableClusters, vetoList, particleList);
 
     // Build new particles
     this->BuildParticles(particleList);
@@ -79,7 +80,7 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::GetAvailableClusters(const StringVec
         const ClusterList *pClusterList(NULL);
         PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, *iter, pClusterList));
 
-        if (NULL == pClusterList)
+	if (NULL == pClusterList)
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "VertexBasedPfoRecoveryAlgorithm: could not find cluster list " << *iter << std::endl;
@@ -89,8 +90,7 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::GetAvailableClusters(const StringVec
         for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
         {
             const Cluster *const pCluster = *cIter;
-
-            if (!pCluster->IsAvailable())
+	    if (!pCluster->IsAvailable())
                 continue;
 
             if (pCluster->GetNCaloHits() <= 1)
@@ -99,7 +99,7 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::GetAvailableClusters(const StringVec
             if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
                 continue;
 
-            clusterVector.push_back(pCluster);
+	    clusterVector.push_back(pCluster);
         }
     }
 
@@ -111,14 +111,18 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::GetAvailableClusters(const StringVec
 
 void VertexBasedPfoRecoveryAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    
+    if (m_lowEnergyWorkflow)
+        const float slidingFitPitch{0.68};
+
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
         if (slidingFitResultMap.end() == slidingFitResultMap.find(*iter))
         {
             try
             {
-                const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(*iter)));
-                const TwoDSlidingFitResult slidingFitResult(*iter, m_slidingFitHalfWindow, slidingFitPitch);
+		const TwoDSlidingFitResult slidingFitResult(*iter, m_slidingFitHalfWindow, slidingFitPitch);
                 const LArPointingCluster pointingCluster(slidingFitResult);
 
                 if (pointingCluster.GetLengthSquared() < std::numeric_limits<float>::epsilon())
@@ -152,7 +156,7 @@ void VertexBasedPfoRecoveryAlgorithm::SelectVertexClusters(const Vertex *const p
 
         if (TPC_3D == hitType)
             continue;
-
+	 
         const CartesianVector vertexPosition((TPC_VIEW_U == hitType) ? vertexU : (TPC_VIEW_V == hitType) ? vertexV : vertexW);
 
         TwoDSlidingFitResultMap::const_iterator sIter = slidingFitResultMap.find(pCluster);
@@ -171,7 +175,7 @@ void VertexBasedPfoRecoveryAlgorithm::SelectVertexClusters(const Vertex *const p
 
             if (rL > -1.f && rL < m_maxLongitudinalDisplacement && rT < m_maxTransverseDisplacement)
             {
-                outputClusters.push_back(pCluster);
+		outputClusters.push_back(pCluster);
                 break;
             }
         }
@@ -191,13 +195,14 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
         this->SelectClusters(TPC_VIEW_V, availableClusters, clustersV);
         this->SelectClusters(TPC_VIEW_W, availableClusters, clustersW);
 
-        float chi2(m_threeViewChi2Cut);
-        const Cluster *pCluster1(NULL);
+
+	float chi2(m_threeViewChi2Cut);
+       	const Cluster *pCluster1(NULL);
         const Cluster *pCluster2(NULL);
         const Cluster *pCluster3(NULL);
 
         this->GetBestChi2(pVertex, slidingFitResultMap, clustersU, clustersV, clustersW, pCluster1, pCluster2, pCluster3, chi2);
-
+        
         if (NULL == pCluster1 || NULL == pCluster2 || NULL == pCluster3)
             return;
 
@@ -218,7 +223,7 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
                 : (TPC_VIEW_W == hitType3)                      ? pCluster3
                                                                 : NULL);
 
-        particleList.push_back(Particle(pClusterU, pClusterV, pClusterW));
+	particleList.push_back(Particle(pClusterU, pClusterV, pClusterW));
 
         vetoList.insert(pCluster1);
         vetoList.insert(pCluster2);
@@ -239,7 +244,8 @@ void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex,
         this->SelectClusters(TPC_VIEW_V, availableClusters, clustersV);
         this->SelectClusters(TPC_VIEW_W, availableClusters, clustersW);
 
-        float chi2(m_twoViewChi2Cut);
+
+	float chi2(m_twoViewChi2Cut);
         const Cluster *pCluster1(NULL);
         const Cluster *pCluster2(NULL);
 
@@ -247,7 +253,7 @@ void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex,
         this->GetBestChi2(pVertex, slidingFitResultMap, clustersV, clustersW, pCluster1, pCluster2, chi2);
         this->GetBestChi2(pVertex, slidingFitResultMap, clustersW, clustersU, pCluster1, pCluster2, chi2);
 
-        if (NULL == pCluster1 || NULL == pCluster2)
+       	if (NULL == pCluster1 || NULL == pCluster2)
             return;
 
         const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
@@ -258,7 +264,7 @@ void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex,
         const Cluster *const pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : NULL);
 
         particleList.push_back(Particle(pClusterU, pClusterV, pClusterW));
-
+        
         vetoList.insert(pCluster1);
         vetoList.insert(pCluster2);
     }
@@ -343,14 +349,13 @@ void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, c
 
         const TwoDSlidingFitResult &slidingFitResult1 = sIter1->second;
         const LArPointingCluster pointingCluster1(slidingFitResult1);
-
         // Second loop
         for (ClusterVector::const_iterator cIter2 = clusters2.begin(), cIterEnd2 = clusters2.end(); cIter2 != cIterEnd2; ++cIter2)
         {
             const Cluster *const pCluster2 = *cIter2;
 
             TwoDSlidingFitResultMap::const_iterator sIter2 = slidingFitResultMap.find(pCluster2);
-            if (slidingFitResultMap.end() == sIter2)
+	    if (slidingFitResultMap.end() == sIter2)
                 continue;
 
             const TwoDSlidingFitResult &slidingFitResult2 = sIter2->second;
@@ -429,7 +434,7 @@ void VertexBasedPfoRecoveryAlgorithm::SelectAvailableClusters(const ClusterSet &
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
         if (0 == vetoList.count(*iter))
-            outputVector.push_back(*iter);
+	    outputVector.push_back(*iter);
     }
 }
 
@@ -473,9 +478,10 @@ const LArPointingCluster::Vertex &VertexBasedPfoRecoveryAlgorithm::GetOuterVerte
 
 void VertexBasedPfoRecoveryAlgorithm::BuildParticles(const ParticleList &particleList)
 {
+     
     if (particleList.empty())
         return;
-
+   
     const PfoList *pPfoList = NULL;
     std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
@@ -559,6 +565,9 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ThreeViewChi2Cut", m_threeViewChi2Cut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LowEnergyWorkflow", m_lowEnergyWorkflow));
 
     return STATUS_CODE_SUCCESS;
 }

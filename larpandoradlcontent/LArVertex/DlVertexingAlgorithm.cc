@@ -16,6 +16,7 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArHelpers/LArVertexHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 #include "larpandoradlcontent/LArVertex/DlVertexingAlgorithm.h"
 
@@ -81,7 +82,7 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
     for (const std::string &listname : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
         if (pCaloHitList->empty())
             continue;
 
@@ -94,7 +95,7 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
     for (const std::string &listname : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
         if (pCaloHitList->empty())
             continue;
 
@@ -136,7 +137,7 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
             continue;
 
         LArMvaHelper::MvaFeatureVector featureVector;
-        featureVector.emplace_back(static_cast<double>(nuance));
+      	featureVector.emplace_back(static_cast<double>(nuance));
         featureVector.emplace_back(static_cast<double>(nVertices));
         featureVector.emplace_back(xVtx);
         featureVector.emplace_back(zVtx);
@@ -145,8 +146,8 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
         featureVector.emplace_back(xMax);
         featureVector.emplace_back(zMin);
         featureVector.emplace_back(zMax);
-
-        for (const CaloHit *pCaloHit : *pCaloHitList)
+    
+	for (const CaloHit *pCaloHit : *pCaloHitList)
         {
             const float x{pCaloHit->GetPositionVector().GetX()}, z{pCaloHit->GetPositionVector().GetZ()}, adc{pCaloHit->GetMipEquivalentEnergy()};
             // If on a refinement pass, drop hits outside the region of interest
@@ -156,9 +157,10 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
             featureVector.emplace_back(static_cast<double>(z));
             featureVector.emplace_back(static_cast<double>(adc));
             ++nHits;
-        }
+  
+	}
         featureVector.insert(featureVector.begin() + 8, static_cast<double>(nHits));
-        // Only write out the feature vector if there were enough hits in the region of interest
+	// Only write out the feature vector if there were enough hits in the region of interest
         if (nHits > 10)
             LArMvaHelper::ProduceTrainingExample(trainingFilename, true, featureVector);
     }
@@ -178,8 +180,8 @@ StatusCode DlVertexingAlgorithm::Infer()
     for (const std::string &listname : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
-        if (pCaloHitList->empty())
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
+        if (!pCaloHitList || pCaloHitList->empty())
             continue;
 
         HitType view{pCaloHitList->front()->GetHitType()};
@@ -193,8 +195,10 @@ StatusCode DlVertexingAlgorithm::Infer()
     for (const std::string &listName : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
-
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
+        if (!pCaloHitList || pCaloHitList->empty())
+            continue;
+	
         HitType view{pCaloHitList->front()->GetHitType()};
         const bool isU{view == TPC_VIEW_U}, isV{view == TPC_VIEW_V}, isW{view == TPC_VIEW_W};
         if (!isU && !isV && !isW)
@@ -632,8 +636,8 @@ void DlVertexingAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &x
         for (const std::string &listname : m_caloHitListNames)
         {
             const CaloHitList *pCaloHitList(nullptr);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
-            if (pCaloHitList->empty())
+            PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
+            if (!pCaloHitList || pCaloHitList->empty())
                 continue;
             for (const CaloHit *const pCaloHit : *pCaloHitList)
             {

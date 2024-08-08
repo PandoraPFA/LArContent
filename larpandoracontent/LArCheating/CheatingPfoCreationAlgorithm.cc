@@ -11,6 +11,8 @@
 #include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+
 
 using namespace pandora;
 
@@ -69,7 +71,7 @@ void CheatingPfoCreationAlgorithm::GetMCParticleToClusterListMap(const ClusterLi
 {
     for (const Cluster *const pCluster : *pClusterList)
     {
-        try
+	try
         {
             if (m_useOnlyAvailableClusters && !PandoraContentApi::IsAvailable(*this, pCluster))
                 continue;
@@ -130,26 +132,35 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const MCParticleToClusterListMap &
         try
         {
             PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-            pfoParameters.m_particleId = (this->IsShower(pMCParticle) ? E_MINUS : MU_MINUS);
+            pfoParameters.m_particleId = pMCParticle->GetParticleId();
             pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
             pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
             pfoParameters.m_energy = pMCParticle->GetEnergy();
             pfoParameters.m_momentum = pMCParticle->GetMomentum();
             pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), clusterList.begin(), clusterList.end());
 
-            const ParticleFlowObject *pPfo(nullptr);
+	    const ParticleFlowObject *pPfo(nullptr);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
-
-            if (m_addVertices)
+            
+            
+            if (m_addVertices && pMCParticle->GetEnergy() > 0)
             {
-                PandoraContentApi::Vertex::Parameters parameters;
-                parameters.m_position = pMCParticle->GetVertex();
-                parameters.m_vertexLabel = VERTEX_START;
-                parameters.m_vertexType = VERTEX_3D;
+		try
+		{
+                    PandoraContentApi::Vertex::Parameters parameters;
+	            parameters.m_position = pMCParticle->GetVertex();
+                    parameters.m_vertexLabel = VERTEX_START;
+                    parameters.m_vertexType = VERTEX_3D;
 
-                const Vertex *pVertex(nullptr);
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo<Vertex>(*this, pPfo, pVertex));
+		    const Vertex *pVertex(nullptr);
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo<Vertex>(*this, pPfo, pVertex));
+		}
+		catch (StatusCodeException &)
+		{
+	            std::cout << "Background - Has no vertex" << std::endl;
+		}
+
             }
         }
         catch (const StatusCodeException &)
@@ -194,24 +205,6 @@ unsigned int CheatingPfoCreationAlgorithm::GetNHitTypesAboveThreshold(const Clus
     }
 
     return nGoodViews;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool CheatingPfoCreationAlgorithm::IsTrack(const MCParticle *const pMCParticle) const
-{
-    const int pdg(pMCParticle->GetParticleId());
-
-    return ((MU_MINUS == std::abs(pdg)) || (PI_PLUS == std::abs(pdg)) || (PROTON == std::abs(pdg)) || (K_PLUS == std::abs(pdg)));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool CheatingPfoCreationAlgorithm::IsShower(const MCParticle *const pMCParticle) const
-{
-    const int pdg(pMCParticle->GetParticleId());
-
-    return ((E_MINUS == std::abs(pdg)) || (PHOTON == std::abs(pdg)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

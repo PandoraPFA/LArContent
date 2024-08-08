@@ -110,7 +110,7 @@ public:
      */
     static bool IsCosmicRay(const pandora::MCParticle *const pMCParticle);
 
-    /**
+     /**
      *  @brief  Get the nuance code of an MCParticle
      */
     static unsigned int GetNuanceCode(const pandora::MCParticle *const pMCParticle);

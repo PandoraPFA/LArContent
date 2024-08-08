@@ -23,9 +23,12 @@ using namespace pandora;
 namespace lar_content
 {
 
-MCParticleMonitoringAlgorithm::MCParticleMonitoringAlgorithm() :
-    m_useTrueNeutrinosOnly(false),
-    m_minHitsForDisplay(1)
+
+MCParticleMonitoringAlgorithm::MCParticleMonitoringAlgorithm() : 
+    m_useTrueNeutrinosOnly(false), 
+    m_minHitsForDisplay(1), 
+    m_minPrimaryGoodHits(3), 
+    m_minHitsForGoodView(2)
 {
 }
 
@@ -41,6 +44,8 @@ StatusCode MCParticleMonitoringAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
     LArMCParticleHelper::PrimaryParameters parameters;
+    parameters.m_minPrimaryGoodHits = m_minPrimaryGoodHits;
+    parameters.m_minHitsForGoodView = m_minHitsForGoodView;
     parameters.m_minHitSharingFraction = 0.f;
 
     LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
@@ -92,7 +97,7 @@ void MCParticleMonitoringAlgorithm::PrintPrimaryMCParticles(const LArMCParticleH
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
         const CaloHitList &caloHitList(mcContributionMap.at(pMCPrimary));
-
+        const LArMCParticle *pLArMC{dynamic_cast<const LArMCParticle *>(pMCPrimary)};
         if (caloHitList.size() >= m_minHitsForDisplay)
         {
             std::cout << std::endl
@@ -100,9 +105,9 @@ void MCParticleMonitoringAlgorithm::PrintPrimaryMCParticles(const LArMCParticleH
                       << ", Dist. " << (pMCPrimary->GetEndpoint() - pMCPrimary->GetVertex()).GetMagnitude() << ", nMCHits "
                       << caloHitList.size() << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, caloHitList) << ", "
                       << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList) << ", "
-                      << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList) << ")" << std::endl;
+                      << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList) << " , Process: " << pLArMC->GetProcess() << ")" << std::endl;
 
-            LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
+	    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
             LArMCParticleHelper::CaloHitToMCMap caloHitToPrimaryMCMap;
             LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
             LArMCParticleHelper::GetMCParticleToCaloHitMatches(&caloHitList, mcToPrimaryMCMap, caloHitToPrimaryMCMap, mcToTrueHitListMap);
@@ -152,6 +157,12 @@ StatusCode MCParticleMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinHitsForDisplay", m_minHitsForDisplay));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinPrimaryGoodHits", m_minPrimaryGoodHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinHitsForGoodView", m_minHitsForGoodView));
 
     return STATUS_CODE_SUCCESS;
 }
