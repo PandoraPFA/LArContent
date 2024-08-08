@@ -181,9 +181,6 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
         if (!this->IsValidToUse(cluster, clusterIsUsed))
             continue;
 
-       const MCParticle *clusterMC(this->GetMCForCluster(cluster, clusterToMCParticleMap));
-       
-
 	CaloHitList clusterEdgeHits;
 	CartesianVector centroid11(0.f, 0.f, 0.f), centroid12(0.f, 0.f, 0.f), centroid21(0.f, 0.f, 0.f), centroid22(0.f, 0.f, 0.f);
         try 
@@ -212,8 +209,6 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
             if (!this->IsValidToUse(otherCluster, clusterIsUsed))
             continue;
-
-	    const MCParticle *otherClusterMC(this->GetMCForCluster(otherCluster, clusterToMCParticleMap));
 
 	    try 
 	    {
@@ -342,8 +337,6 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
             const double avgDistance{!distanceDistribution.empty() ? std::accumulate(distanceDistribution.begin(), distanceDistribution.end(), 0.0) / distanceDistribution.size() : -1.0};
 
 	    std::vector<std::string> featureOrder;
-	    const bool mcMatch(clusterMC == otherClusterMC);
-
 	    featureOrder.emplace_back("VertexClusterAngle");
             featureOrder.emplace_back("MinEdgeHitSeparation");
             featureOrder.emplace_back("Cluster1NHits");
@@ -359,7 +352,9 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
 	    if (m_trainingSetMode)
             {
-                            
+                const MCParticle *clusterMC(this->GetMCForCluster(cluster, clusterToMCParticleMap)), 
+		                 *otherClusterMC(this->GetMCForCluster(otherCluster, clusterToMCParticleMap));
+		const bool mcMatch(clusterMC == otherClusterMC);	    
                 LArMvaHelper::MvaFeatureVector featureVector;
                 
 		featureVector.emplace_back(static_cast<double>(vtxClusterAngle));
