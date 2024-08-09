@@ -111,10 +111,10 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::GetAvailableClusters(const StringVec
 
 void VertexBasedPfoRecoveryAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     
     if (m_lowEnergyWorkflow)
-        const float slidingFitPitch{0.68};
+        slidingFitPitch = 0.68;
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
