@@ -122,6 +122,15 @@ public:
      *
      *  @return boolean
      */
+    static bool IsNeutrino2(const pandora::MCParticle *const pMCParticle, bool useNuance = true);
+
+    /**
+     *  @brief  Whether a mc particle is a neutrino or antineutrino
+     *
+     *  @param  pMCParticle the input mc particle
+     *
+     *  @return boolean
+     */
     static bool IsNeutrino(const pandora::MCParticle *const pMCParticle);
 
     /**
