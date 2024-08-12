@@ -265,6 +265,10 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
                     else
                         featureVector.emplace_back(0);
 		}
+		else
+                {
+                    featureVector.emplace_back(0);
+                }
             }
 	    else
 	    {
