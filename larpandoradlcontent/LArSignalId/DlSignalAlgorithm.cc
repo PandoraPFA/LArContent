@@ -38,7 +38,6 @@ DlSignalAlgorithm::DlSignalAlgorithm() :
     m_driftStep{0.5f},
     m_visualise{false},
     m_writeTree{false},
-    m_rng(static_cast<std::mt19937::result_type>(std::chrono::high_resolution_clock::now().time_since_epoch().count())),
     m_printOut{false},
     m_signalListNameU{""},
     m_signalListNameV{""},
@@ -146,46 +145,48 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
 
         HitType view{pCaloHitList->front()->GetHitType()};
         float viewDriftMin{driftMin}, viewDriftMax{driftMax};
-        if (viewCalculated[view] != true)
+        if (!viewCalculated[view])
         {
             const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
             const float pitch(view == TPC_VIEW_U ? pTPC->GetWirePitchU() : view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW());
             const float zSpan{pitch * (m_height - 1)};
             bool projected{false};
 
-            if (viewCalculated[6] == true && viewCalculated[4] == true) //Check W and U - Project to V
+	    //Check W and U - Project to V
+            if (viewCalculated[TPC_VIEW_W] && viewCalculated[TPC_VIEW_U])
             {
-                //float x{(viewDriftMax - viewDriftMin) * 0.5};
-                const double z1{(wireMax[6] - wireMin[6]) * 0.5};
-                const double z2{(wireMax[4] - wireMin[4]) * 0.5};
-                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->WUtoV(z1, z2)};
-                std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
+                const float z1{(wireMax[TPC_VIEW_W] - wireMin[TPC_VIEW_W]) * 0.5f};
+                const float z2{(wireMax[TPC_VIEW_U] - wireMin[TPC_VIEW_U]) * 0.5f};
+                const float m_projectedCoordinate{static_cast<float>(
+				this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->WUtoV(z1, z2))};
                 wireMin[view] = m_projectedCoordinate - zSpan;
                 wireMax[view] = m_projectedCoordinate + zSpan;
                 projected = true;
             }
-            if (viewCalculated[6] == true && viewCalculated[5] == true) //Check W and V - Project to U
+            //Check W and V - Project to U
+  	    if (viewCalculated[TPC_VIEW_W] && viewCalculated[TPC_VIEW_V])
             {
-                const double z1{(wireMax[6] - wireMin[6]) * 0.5};
-                const double z2{(wireMax[5] - wireMin[5]) * 0.5};
+                const float z1{(wireMax[TPC_VIEW_W] - wireMin[TPC_VIEW_W]) * 0.5f};
+                const float z2{(wireMax[TPC_VIEW_V] - wireMin[TPC_VIEW_V]) * 0.5f};
                 this->GetPandora();
-                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->VWtoU(z1, z2)};
-                std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
+                const float m_projectedCoordinate{static_cast<float>(
+				this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->VWtoU(z1, z2))};
                 wireMin[view] = m_projectedCoordinate - zSpan;
                 wireMax[view] = m_projectedCoordinate + zSpan;
                 projected = true;
             }
-            if (viewCalculated[4] == true && viewCalculated[5] == true) //Check U and V - Project to W
+            //Check U and V - Project to W
+	    if (viewCalculated[TPC_VIEW_U] && viewCalculated[TPC_VIEW_V])
             {
-                const double z1{(wireMax[4] - wireMin[4]) * 0.5};
-                const double z2{(wireMax[5] - wireMin[5]) * 0.5};
-                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->UVtoW(z1, z2)};
-                std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
+                const float z1{(wireMax[TPC_VIEW_U] - wireMin[TPC_VIEW_U]) * 0.5f};
+                const float z2{(wireMax[TPC_VIEW_V] - wireMin[TPC_VIEW_V]) * 0.5f};
+                const float m_projectedCoordinate{static_cast<float>(
+				this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->UVtoW(z1, z2))};
                 wireMin[view] = m_projectedCoordinate - zSpan;
                 wireMax[view] = m_projectedCoordinate + zSpan;
                 projected = true;
             }
-            if (projected == false)
+            if (!projected)
             {
                 try
                 {
@@ -195,10 +196,10 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
                 }
                 catch (const StatusCodeException &e)
                 {
-                    std::cout << "ERR: Could not calculate zoom region - DlSignalAlgorithm unable to proceed" << std::endl;
                     if (e.GetStatusCode() == STATUS_CODE_NOT_FOUND)
                     {
-                        continue;
+                        std::cout << "ERR: Could not calculate zoom region - DlSignalAlgorithm unable to proceed" << std::endl;
+			continue;
                     }
                 }
             }
@@ -207,8 +208,6 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
         driftMin = std::min(viewDriftMin, driftMin);
         driftMax = std::max(viewDriftMax, driftMax);
     }
-
-    
     
     for (const std::string &listname : m_caloHitListNames)
     {
@@ -246,28 +245,26 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
 	    ++nHits;
   
 	    const MCParticle *pMainMCParticle(nullptr);
-	    try {pMainMCParticle = MCParticleHelper::GetMainMCParticle(pCaloHit);}
-	    catch (const StatusCodeException &) {}
+	    try 
+	    {
+                pMainMCParticle = MCParticleHelper::GetMainMCParticle(pCaloHit);
+	    }
+	    catch (const StatusCodeException &)
+	    {
+	    }
 
 	    if (pMainMCParticle)
             {
                 const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
+                if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
                 { 
-                    if (pMainMCParticle->GetParticleId() == 11)
-	            {
-		        featureVector.emplace_back(11);
-		    }
-		    else if (pMainMCParticle->GetParticleId() == 22)
-		    {
-	                featureVector.emplace_back(22);
-		    }
-	        }
-                else
-                {
-                    featureVector.emplace_back(0);
-                }
+                    const int pdg{pMainMCParticle->GetParticleId()};
+	            if (pdg == E_MINUS || pdg == PHOTON)
+	                featureVector.emplace_back(pdg);
+                    else
+                        featureVector.emplace_back(0);
+		}
             }
 	    else
 	    {
@@ -340,40 +337,42 @@ StatusCode DlSignalAlgorithm::Infer()
             const float zSpan{pitch * (m_height - 1)};
 	    bool projected{false};
 
-	    if (viewCalculated[6] == true && viewCalculated[4] == true) //Check W and U - Project to V
+            //Check W and U - Project to V
+            if (viewCalculated[TPC_VIEW_W] && viewCalculated[TPC_VIEW_U])
             {
-                //float x{(viewDriftMax - viewDriftMin) * 0.5};
-		const double z1{(wireMax[6] - wireMin[6]) * 0.5};
-		const double z2{(wireMax[4] - wireMin[4]) * 0.5};
-                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->WUtoV(z1, z2)};
-		std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
+                const float z1{(wireMax[TPC_VIEW_W] - wireMin[TPC_VIEW_W]) * 0.5f};
+                const float z2{(wireMax[TPC_VIEW_U] - wireMin[TPC_VIEW_U]) * 0.5f};
+                const float m_projectedCoordinate{static_cast<float>(
+				this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->WUtoV(z1, z2))};
                 wireMin[view] = m_projectedCoordinate - zSpan;
                 wireMax[view] = m_projectedCoordinate + zSpan;
-		projected = true;
-	    }
-            if (viewCalculated[6] == true && viewCalculated[5] == true) //Check W and V - Project to U
-	    {
-		const double z1{(wireMax[6] - wireMin[6]) * 0.5};
-                const double z2{(wireMax[5] - wireMin[5]) * 0.5};
-		this->GetPandora();
-                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->VWtoU(z1, z2)};
-		std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
-		wireMin[view] = m_projectedCoordinate - zSpan;
-                wireMax[view] = m_projectedCoordinate + zSpan;
-		projected = true;
-	    }
-	    if (viewCalculated[4] == true && viewCalculated[5] == true) //Check U and V - Project to W
-	    {
-		const double z1{(wireMax[4] - wireMin[4]) * 0.5};
-                const double z2{(wireMax[5] - wireMin[5]) * 0.5};
-                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->UVtoW(z1, z2)};
-		std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
-		wireMin[view] = m_projectedCoordinate - zSpan;
-                wireMax[view] = m_projectedCoordinate + zSpan;
-		projected = true;
+                projected = true;
             }
-            
-	    if (projected == false)
+            //Check W and V - Project to U
+            if (viewCalculated[TPC_VIEW_W] && viewCalculated[TPC_VIEW_V])
+            {
+                const float z1{(wireMax[TPC_VIEW_W] - wireMin[TPC_VIEW_W]) * 0.5f};
+                const float z2{(wireMax[TPC_VIEW_V] - wireMin[TPC_VIEW_V]) * 0.5f};
+                this->GetPandora();
+                const float m_projectedCoordinate{static_cast<float>(
+			this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->VWtoU(z1, z2))};
+                wireMin[view] = m_projectedCoordinate - zSpan;
+                wireMax[view] = m_projectedCoordinate + zSpan;
+                projected = true;
+            }
+            //Check U and V - Project to W
+            if (viewCalculated[TPC_VIEW_U] && viewCalculated[TPC_VIEW_V])
+            {
+                const float z1{(wireMax[TPC_VIEW_U] - wireMin[TPC_VIEW_U]) * 0.5f};
+                const float z2{(wireMax[TPC_VIEW_V] - wireMin[TPC_VIEW_V]) * 0.5f};
+                const float m_projectedCoordinate{static_cast<float>(
+				this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->UVtoW(z1, z2))};
+                wireMin[view] = m_projectedCoordinate - zSpan;
+                wireMax[view] = m_projectedCoordinate + zSpan;
+                projected = true;
+            }
+	    
+	    if (!projected)
             {
                 try
                 {
@@ -383,10 +382,10 @@ StatusCode DlSignalAlgorithm::Infer()
 	        }
                 catch (const StatusCodeException &e)
                 {
-                    std::cout << "ERR: Could not calculate zoom region - DlSignalAlgorithm unable to proceed" << std::endl;
 	            if (e.GetStatusCode() == STATUS_CODE_NOT_FOUND)
                     {
-                        continue;
+                        std::cout << "ERR: Could not calculate zoom region - DlSignalAlgorithm unable to proceed" << std::endl;
+			continue;
                     }
                 }
             }
@@ -395,9 +394,7 @@ StatusCode DlSignalAlgorithm::Infer()
 	driftMin = std::min(viewDriftMin, driftMin);
         driftMax = std::max(viewDriftMax, driftMax);
     }
- 
-	
-    
+  
     CaloHitList signalCandidatesU, signalCandidatesV, signalCandidatesW, signalCandidates2D, backgroundCaloHitList;
     for (const std::string &listName : m_caloHitListNames)
     {
@@ -528,7 +525,7 @@ StatusCode DlSignalAlgorithm::Infer()
                     {
                         const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                        if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
+                        if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
                         {
                              const CartesianVector signalHit(x, 0.f, z);
                              PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &signalHit, "true signal", YELLOW, 2));
@@ -608,7 +605,7 @@ StatusCode DlSignalAlgorithm::CheatedSeparation()
             {
                 const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
+                if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
                 {
                     if (std::abs(pMainMCParticle->GetParticleId()) == 11 || std::abs(pMainMCParticle->GetParticleId()) == 22)
                     {
@@ -672,7 +669,7 @@ StatusCode DlSignalAlgorithm::CheatedSeparation()
                         {
                             const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                            if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
+                            if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
                             {
                                 const CartesianVector signalHit(x, 0.f, z);
                                 PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &signalHit, "true signal", YELLOW, 2));
@@ -798,7 +795,7 @@ StatusCode DlSignalAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCC
 
     // Move the neutrino to the front of the list
     auto pivot =
-        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); });
+        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino2(mc, false); });
     (void)pivot;
     if (pivot != mcHierarchy.end())
         std::rotate(mcHierarchy.begin(), pivot, std::next(pivot));

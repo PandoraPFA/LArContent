@@ -12,6 +12,7 @@
 
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 #include "larpandoracontent/LArHelpers/LArVertexHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 using namespace pandora;
 
@@ -75,6 +76,7 @@ StatusCode HierarchyValidationAlgorithm::Run()
     LArHierarchyHelper::MatchInfo matchInfo(mcHierarchy, recoHierarchy, quality);
     LArHierarchyHelper::MatchHierarchies(matchInfo);
     matchInfo.Print(mcHierarchy);
+    std::cout << "Hierarchy Validation ***" << std::endl;
 
 #ifdef MONITORING
     if (m_validateEvent)
@@ -293,7 +295,6 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
 	    recoHierarchy.GetFlattenedNodes(pRoot, nodes);
             for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : nodes)
             {
-                // std::cout << "Node size: " << pNode->GetRecoParticles().size() << std::endl;
                 recoNodeToRootMap[pNode] = pRoot;
 	    }
         }
@@ -307,11 +308,9 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
 		if (pMCNode->GetHierarchyTier() == 1)
                 {
-		    // std::cout << "Node size (MC): " << pMCNode->GetMCParticles().size() << std::endl;
 		    const MCParticle *const pLeadingMC{pMCNode->GetLeadingMCParticle()};
                     primaries.emplace_back(pLeadingMC);
                 }
-		//allHits.emplace_back(pMCNode->GetCaloHits());
             }
             primaries.sort(LArMCParticleHelper::SortByMomentum);
             //const InteractionDescriptor descriptor{LArInteractionTypeHelper::GetInteractionDescriptor(primaries)};
@@ -319,7 +318,8 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
             for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
             {
 		const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
-                const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
+                const int isSignal{LArMCParticleHelper::IsNeutrino2(LArMCParticleHelper::GetParentMCParticle(pMCNode->GetLeadingMCParticle()), false) ? 1 : 0};
+		const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
                 const int isCosmicRay{!isTestBeam && pMCNode->IsCosmicRay() ? 1 : 0};
                 const int isNeutrinoInt{!(isTestBeam || isCosmicRay) ? 1 : 0};
                 const int mcId{pMCNode->GetId()};
@@ -351,8 +351,9 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 FloatVector purityAdcVector, completenessAdcVector;
                 FloatVector purityVectorU, purityVectorV, purityVectorW, completenessVectorU, completenessVectorV, completenessVectorW;
                 FloatVector purityAdcVectorU, purityAdcVectorV, purityAdcVectorW, completenessAdcVectorU, completenessAdcVectorV, completenessAdcVectorW;
-                //const CartesianVector &trueVertex{pLeadingMC->GetVertex()};
-                //float vtxDx{0.f}, vtxDy{0.f}, vtxDz{0.f}, vtxDr{0.f};
+                const CartesianVector null{0.f, 0.f, 0.f};
+		const CartesianVector &trueVertex{isSignal == 1 ? pLeadingMC->GetVertex() : null};
+                float vtxDx{0.f}, vtxDy{0.f}, vtxDz{0.f}, vtxDr{0.f};
 
                 //const int isCC{descriptor.IsCC()};
                 //const int isQE{descriptor.IsQE()};
@@ -398,18 +399,19 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                     completenessAdcVectorU.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_U, true));
                     completenessAdcVectorV.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_V, true));
                     completenessAdcVectorW.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_W, true));
-                    //if (nMatches > 0)
-                    //{
-                    //    const CartesianVector recoVertex{LArPfoHelper::GetVertex(pRecoNode->GetLeadingPfo())->GetPosition()};
-                    //    vtxDx = recoVertex.GetX() - trueVertex.GetX();
-                    //    vtxDy = recoVertex.GetY() - trueVertex.GetY();
-                    //    vtxDz = recoVertex.GetZ() - trueVertex.GetZ();
-                    //    vtxDr = std::sqrt(vtxDx * vtxDx + vtxDy * vtxDy + vtxDz * vtxDz);
-                    //}
+                    if (nMatches > 0)
+                    {
+                        const CartesianVector recoVertex{isSignal == 1 ? LArPfoHelper::GetVertex(pRecoNode->GetLeadingPfo())->GetPosition() : null};
+                       	vtxDx = recoVertex.GetX() - trueVertex.GetX();
+                        vtxDy = recoVertex.GetY() - trueVertex.GetY();
+                        vtxDz = recoVertex.GetZ() - trueVertex.GetZ();
+                        vtxDr = std::sqrt(vtxDx * vtxDx + vtxDy * vtxDy + vtxDz * vtxDz);
+                    }
                 }
  
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interaction", interaction));
+		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isSignal", isSignal));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcEnergy", mcEnergy));
 		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcTotalAdc", mcTotalAdc));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "recoTotalAdc", &recoTotalAdcVector));
@@ -444,10 +446,10 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorU", &completenessAdcVectorU));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorV", &completenessAdcVectorV));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorW", &completenessAdcVectorW));
-                //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
-                //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
-                //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDz", vtxDz));
-                //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDz", vtxDz));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
                 //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCC", isCC));
                 //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isQE", isQE));
                 //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isResonant", isResonant));

@@ -142,6 +142,24 @@ bool LArMCParticleHelper::IsNeutrino(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArMCParticleHelper::IsNeutrino2(const MCParticle *const pMCParticle, bool useNuance)
+{
+    if (useNuance)
+    {
+        const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
+        if ((nuance == 0) || (nuance == 2000) || (nuance == 2001) || (nuance == 3000))
+            return false;
+    }
+
+    const int absoluteParticleId(std::abs(pMCParticle->GetParticleId()));
+    return ((NU_E == absoluteParticleId) || (NU_MU == absoluteParticleId) || (NU_TAU == absoluteParticleId));
+}
+
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+
 bool LArMCParticleHelper::IsPrimary(const pandora::MCParticle *const pMCParticle)
 {
     try
