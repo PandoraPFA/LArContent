@@ -127,7 +127,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(
     MCParticleList associatedMCPrimaries;
 
     int nCorrectTB(0), nTotalTB(0), nCorrectCR(0), nTotalCR(0), nFakeTB(0), nFakeCR(0), nSplitTB(0), nSplitCR(0), nLost(0);
-    int mcPrimaryIndex(0), nTargetMatches(0), nTargetTBMatches(0), nTargetCRMatches(0);
+    int mcPrimaryIndex(0), nTargetMatches(0), nTargetTBMatches(0), nTargetCRMatches(0), nTargetGoodTBMatches(0);
     IntVector mcPrimaryId, mcPrimaryPdg, nMCHitsTotal, nMCHitsU, nMCHitsV, nMCHitsW;
     FloatVector mcPrimaryE, mcPrimaryPX, mcPrimaryPY, mcPrimaryPZ;
     FloatVector mcPrimaryVtxX, mcPrimaryVtxY, mcPrimaryVtxZ, mcPrimaryEndX, mcPrimaryEndY, mcPrimaryEndZ;
@@ -184,7 +184,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(
         nMCHitsV.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, mcPrimaryHitList));
         nMCHitsW.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, mcPrimaryHitList));
 
-        int matchIndex(0), nPrimaryMatches(0), nPrimaryTBMatches(0), nPrimaryCRMatches(0);
+        int matchIndex(0), nPrimaryMatches(0), nPrimaryTBMatches(0), nPrimaryCRMatches(0), nPrimaryGoodNuMatches(0);
 #ifdef MONITORING
         float recoVertexX(std::numeric_limits<float>::max()), recoVertexY(std::numeric_limits<float>::max()),
             recoVertexZ(std::numeric_limits<float>::max());
@@ -270,6 +270,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(
         nTargetMatches += nPrimaryMatches;
         nTargetTBMatches += nPrimaryTBMatches;
         nTargetCRMatches += nPrimaryCRMatches;
+        nTargetGoodTBMatches += nPrimaryGoodNuMatches;
 
         if (fillTree)
         {
@@ -399,6 +400,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(
             nTargetMatches = 0;
             nTargetTBMatches = 0;
             nTargetCRMatches = 0;
+            nTargetGoodTBMatches = 0;
             mcPrimaryId.clear();
             mcPrimaryPdg.clear();
             nMCHitsTotal.clear();
