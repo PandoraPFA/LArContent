@@ -97,8 +97,6 @@ private:
      */
     void GetHitRegion(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax) const;
 
-
-
     bool m_trainingMode;                      ///< Training mode
     std::string m_trainingOutputFile;         ///< Output file name for training examples
     std::string m_inputSignalListName;        ///< Input vertex list name if 2nd pass
@@ -127,7 +125,9 @@ private:
     bool m_applyCheatedSeparation;            ///< Whether cheating to separate background and signal hits 
     bool m_simpleZoom;                        ///< Decide whethere to run a simple loop to find highest adc hit or run network
     long unsigned int m_passOneTrustThreshold;///< Number of pixels in pass one required to trust the wire finding ability, below this                                                           threshold, the algorithm will use highest ADC within Drift Min/Max to set wire limits
-    
+    const int PHOTON_CLASS{2};                ///< Constant for network classification for photons
+    const int ELECTRON_CLASS{3};                ///< Constant for network classification for electrons
+    const int SIGNAL_CLASS{2};                ///< Constant for network classification for signal
 };
 
 } // namespace lar_dl_content
