@@ -83,9 +83,6 @@ protected:
     float                  m_divisions;             ///< Number of sectors to search in with Edge Hit Finder Function
     float                  m_sectorTolerance;       ///< Tolerance in radians for dot product between sector and centroid to CaloHit vector
     bool                   m_printOut;              ///< Whether the algorithm outputs cluster size information
-
-
-
 };
 
 typedef MvaLowEClusterMergingAlgorithm<AdaBoostDecisionTree> BdtLowEClusterMergingAlgorithm;
