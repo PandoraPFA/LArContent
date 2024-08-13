@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoradlcontent/LArSignalID/DlSignalAlgorithm.cc
+ *  @file   larpandoradlcontent/LArSignalID/DlSNSignalAlgorithm.cc
  *
  *  @brief  Implementation of the deep learning signal algorithm.
  *
@@ -20,7 +20,7 @@
 #include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
-#include "larpandoradlcontent/LArSignalId/DlSignalAlgorithm.h"
+#include "larpandoradlcontent/LArSignalId/DlSNSignalAlgorithm.h"
 
 using namespace pandora;
 using namespace lar_content;
@@ -28,7 +28,7 @@ using namespace lar_content;
 namespace lar_dl_content
 {
 
-DlSignalAlgorithm::DlSignalAlgorithm() :
+DlSNSignalAlgorithm::DlSNSignalAlgorithm() :
     m_trainingMode{false},
     m_trainingOutputFile{""},
     m_event{-1},
@@ -51,7 +51,7 @@ DlSignalAlgorithm::DlSignalAlgorithm() :
 {
 }
 
-DlSignalAlgorithm::~DlSignalAlgorithm()
+DlSNSignalAlgorithm::~DlSNSignalAlgorithm()
 {
     if (m_writeTree)
     {
@@ -68,7 +68,7 @@ DlSignalAlgorithm::~DlSignalAlgorithm()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlSignalAlgorithm::Run()
+StatusCode DlSNSignalAlgorithm::Run()
 {
     if (m_visualise)
     {
@@ -88,7 +88,7 @@ StatusCode DlSignalAlgorithm::Run()
     return STATUS_CODE_SUCCESS;
 }
 
-StatusCode DlSignalAlgorithm::PrepareTrainingSample()
+StatusCode DlSNSignalAlgorithm::PrepareTrainingSample()
 {
     LArMCParticleHelper::MCContributionMap mcToHitsMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetMCToHitsMap(mcToHitsMap));
@@ -139,7 +139,7 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
 
         if (!pCaloHitList)
         {
-            std::cout << "ERR: Could not find full CaloHitList - DlSignalAlgorithm unable to proceed" << std::endl;
+            std::cout << "ERR: Could not find full CaloHitList - DlSNSignalAlgorithm unable to proceed" << std::endl;
             continue;
         }
 
@@ -198,7 +198,7 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
                 {
                     if (e.GetStatusCode() == STATUS_CODE_NOT_FOUND)
                     {
-                        std::cout << "ERR: Could not calculate zoom region - DlSignalAlgorithm unable to proceed" << std::endl;
+                        std::cout << "ERR: Could not calculate zoom region - DlSNSignalAlgorithm unable to proceed" << std::endl;
 			continue;
                     }
                 }
@@ -284,7 +284,7 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlSignalAlgorithm::Infer()
+StatusCode DlSNSignalAlgorithm::Infer()
 {
     if (m_pass == 1)
         ++m_event;
@@ -328,7 +328,7 @@ StatusCode DlSignalAlgorithm::Infer()
 
 	if (!pCaloHitList)
 	{
-	    std::cout << "ERR: Could not find full CaloHitList - DlSignalAlgorithm unable to proceed" << std::endl;
+	    std::cout << "ERR: Could not find full CaloHitList - DlSNSignalAlgorithm unable to proceed" << std::endl;
             continue;
 	}
 	
@@ -388,7 +388,7 @@ StatusCode DlSignalAlgorithm::Infer()
                 {
 	            if (e.GetStatusCode() == STATUS_CODE_NOT_FOUND)
                     {
-                        std::cout << "ERR: Could not calculate zoom region - DlSignalAlgorithm unable to proceed" << std::endl;
+                        std::cout << "ERR: Could not calculate zoom region - DlSNSignalAlgorithm unable to proceed" << std::endl;
 			continue;
                     }
                 }
@@ -581,7 +581,7 @@ StatusCode DlSignalAlgorithm::Infer()
             }
             catch (StatusCodeException &e)
             {
-                std::cerr << "DlSignalAlgorithm: Warning. Couldn't find signal hits." << std::endl;
+                std::cerr << "DlSNSignalAlgorithm: Warning. Couldn't find signal hits." << std::endl;
             }
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
@@ -624,7 +624,7 @@ StatusCode DlSignalAlgorithm::Infer()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlSignalAlgorithm::CheatedSeparation()
+StatusCode DlSNSignalAlgorithm::CheatedSeparation()
 {
     CaloHitList signalCandidatesU, signalCandidatesV, signalCandidatesW, signalCandidates2D, backgroundCaloHitList, photonCandidatesU,
                 photonCandidatesV, photonCandidatesW, electronCandidatesU, electronCandidatesV, electronCandidatesW;
@@ -770,7 +770,7 @@ StatusCode DlSignalAlgorithm::CheatedSeparation()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlSignalAlgorithm::MakeNetworkInputFromHits(const CaloHitList &caloHits, const HitType view, const float xMin,
+StatusCode DlSNSignalAlgorithm::MakeNetworkInputFromHits(const CaloHitList &caloHits, const HitType view, const float xMin,
     const float xMax, const float zMin, const float zMax, LArDLHelper::TorchInput &networkInput, PixelMap &pixelMap) const
 {
     // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
@@ -813,7 +813,7 @@ StatusCode DlSignalAlgorithm::MakeNetworkInputFromHits(const CaloHitList &caloHi
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlSignalAlgorithm::GetMCToHitsMap(LArMCParticleHelper::MCContributionMap &mcToHitsMap) const
+StatusCode DlSNSignalAlgorithm::GetMCToHitsMap(LArMCParticleHelper::MCContributionMap &mcToHitsMap) const
 {
     const CaloHitList *pCaloHitList2D(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName2D, pCaloHitList2D));
@@ -835,7 +835,7 @@ StatusCode DlSignalAlgorithm::GetMCToHitsMap(LArMCParticleHelper::MCContribution
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlSignalAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, MCParticleList &mcHierarchy) const
+StatusCode DlSNSignalAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, MCParticleList &mcHierarchy) const
 {
     try
     {
@@ -864,7 +864,7 @@ StatusCode DlSignalAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCC
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void DlSignalAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax) const
+void DlSNSignalAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax) const
 {
     if (m_pass == 1)
     {
@@ -1005,7 +1005,7 @@ void DlSignalAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlSignalAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode DlSNSignalAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualise", m_visualise));
