@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoradlcontent/LArSignalID/DlSignalAlgorithm.h
+ *  @file   larpandoradlcontent/LArSignalID/DlSNSignalAlgorithm.h
  *
  *  @brief  Header file for the deep learning signal algorithm.
  *
@@ -24,7 +24,7 @@ namespace lar_dl_content
 /**
  *  @brief  DeepLearningSignalIdAlgorithm class
  */
-class DlSignalAlgorithm : public pandora::Algorithm
+class DlSNSignalAlgorithm : public pandora::Algorithm
 {
 public:
     typedef std::map<std::pair<int, int>, std::vector<const pandora::CaloHit *>> PixelToCaloHitsMap;
@@ -32,9 +32,9 @@ public:
     /**
      *  @brief Default constructor
      */
-    DlSignalAlgorithm();
+    DlSNSignalAlgorithm();
 
-    virtual ~DlSignalAlgorithm();
+    virtual ~DlSNSignalAlgorithm();
 
 private:
 
