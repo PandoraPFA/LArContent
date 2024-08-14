@@ -674,8 +674,9 @@ StatusCode DlSNSignalAlgorithm::CheatedSeparation()
                         else
                         {
                             signalCandidatesW.emplace_back(pCaloHit);
-                            photonCandidatesU.emplace_back(pCaloHit);
+                            photonCandidatesW.emplace_back(pCaloHit);
                         }
+		    }
 	            if (std::abs(pMainMCParticle->GetParticleId()) == E_MINUS)
 	            {
 	                if (isU)
@@ -709,42 +710,41 @@ StatusCode DlSNSignalAlgorithm::CheatedSeparation()
                 backgroundCaloHitList.emplace_back(pCaloHit);
             }
 	}
-    }
-    if (m_visualise)
-    {
-        if (isU)
-        {
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &signalCandidatesU, "true signal U", BLUE));
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &photonCandidatesU, "true photon U", BLACK));
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &electronCandidatesU, "true electron U", RED));
-        }
-        if (isV)
-        {
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &signalCandidatesV, "true signal V", BLUE));
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &photonCandidatesV, "true photon V", BLACK));
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &electronCandidatesV, "true electron V", RED));
-        }
-        if (isW)
-        {
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &signalCandidatesW, "true signal W", BLUE));
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &photonCandidatesW, "true photon W", BLACK));
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &electronCandidatesW, "true electron W", RED));
-         }
 
-         PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
-         PANDORA_MONITORING_API(ViewEvent(this->GetPandora())); 	    
+        if (m_visualise)
+        {
+	    if (isU)
+            {
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &signalCandidatesU, "true signal U", BLUE));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &photonCandidatesU, "true photon U", BLACK));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &electronCandidatesU, "true electron U", RED));
+            }
+            if (isV)
+            {
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &signalCandidatesV, "true signal V", BLUE));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &photonCandidatesV, "true photon V", BLACK));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &electronCandidatesV, "true electron V", RED));
+            }
+            if (isW)
+            {
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &signalCandidatesW, "true signal W", BLUE));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &photonCandidatesW, "true photon W", BLACK));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &electronCandidatesW, "true electron W", RED));
+             }  
+
+             PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+             PANDORA_MONITORING_API(ViewEvent(this->GetPandora())); 	    
+        }
     }
-    }
-    
 
     if (signalCandidatesU.empty() || signalCandidatesV.empty() || signalCandidatesW.empty() || signalCandidates2D.empty())
     {
