@@ -53,15 +53,10 @@ private:
      */
     bool IsValidToUse(const pandora::Cluster *const cluster, std::map<const pandora::Cluster*, bool> &clusterIsUsed) const;
 
-    float Distance(const pandora::CartesianVector vector1, const pandora::CartesianVector vector2) const;
-
-    double Angle(const pandora::CartesianVector vector1, const pandora::CartesianVector vector2) const;
-
     pandora::StringVector  m_inputClusterListNames; ///< The names of the input cluster lists.
     std::string            m_mcParticleListName;    ///< Input MC particle list name.
     std::string            m_treeName;              ///< Input tree name for ROOT.
     std::string            m_fileName;              ///< Input file name for ROOT.
-    float                  m_maxClusterFraction;    ///< The maximum fraction a cluster can be contaminated by to be considered clean.
     float                  m_minNCaloHits;          ///< The minimum number of hits for a cluster to be deemed true for IsAvailableToUse.
     bool                   m_writeTree;             ///< Whether a tree should be output with recorded parameters.
     
