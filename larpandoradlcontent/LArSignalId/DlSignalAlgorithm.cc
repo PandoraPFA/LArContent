@@ -97,13 +97,21 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
         throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
     // Get boundaries for hits and make x dimension common
-    std::map<HitType, float> wireMin, wireMax;
+    std::map<int, float> wireMin, wireMax;
+    std::map<int, bool> viewCalculated;
     float driftMin{std::numeric_limits<float>::max()}, driftMax{-std::numeric_limits<float>::max()};
     for (const std::string &listname : m_inputCaloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
-        if (pCaloHitList->empty())
+	try
+        {
+            PandoraContentApi::GetList(*this, listname, pCaloHitList);
+	}
+	catch (const StatusCodeException &e)
+	{
+            continue;
+	}
+        if (!pCaloHitList || pCaloHitList->empty())
             continue;
 
         HitType view{pCaloHitList->front()->GetHitType()};
@@ -111,6 +119,7 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
         try
         {
             this->GetHitRegion(*pCaloHitList, viewDriftMin, viewDriftMax, wireMin[view], wireMax[view]);
+	    viewCalculated[view] = true;
         }
         catch (const StatusCodeException &e)
         {
@@ -123,6 +132,84 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
 	driftMin = std::min(viewDriftMin, driftMin);
         driftMax = std::max(viewDriftMax, driftMax);
     }
+
+    for (const std::string &listName : m_caloHitListNames)
+    {
+        const CaloHitList *pCaloHitList{nullptr};
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
+
+        if (!pCaloHitList)
+        {
+            std::cout << "ERR: Could not find full CaloHitList - DlSignalAlgorithm unable to proceed" << std::endl;
+            continue;
+        }
+
+        HitType view{pCaloHitList->front()->GetHitType()};
+        float viewDriftMin{driftMin}, viewDriftMax{driftMax};
+        if (viewCalculated[view] != true)
+        {
+            const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
+            const float pitch(view == TPC_VIEW_U ? pTPC->GetWirePitchU() : view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW());
+            const float zSpan{pitch * (m_height - 1)};
+            bool projected{false};
+
+            if (viewCalculated[6] == true && viewCalculated[4] == true) //Check W and U - Project to V
+            {
+                //float x{(viewDriftMax - viewDriftMin) * 0.5};
+                const double z1{(wireMax[6] - wireMin[6]) * 0.5};
+                const double z2{(wireMax[4] - wireMin[4]) * 0.5};
+                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->WUtoV(z1, z2)};
+                std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
+                wireMin[view] = m_projectedCoordinate - zSpan;
+                wireMax[view] = m_projectedCoordinate + zSpan;
+                projected = true;
+            }
+            if (viewCalculated[6] == true && viewCalculated[5] == true) //Check W and V - Project to U
+            {
+                const double z1{(wireMax[6] - wireMin[6]) * 0.5};
+                const double z2{(wireMax[5] - wireMin[5]) * 0.5};
+                this->GetPandora();
+                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->VWtoU(z1, z2)};
+                std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
+                wireMin[view] = m_projectedCoordinate - zSpan;
+                wireMax[view] = m_projectedCoordinate + zSpan;
+                projected = true;
+            }
+            if (viewCalculated[4] == true && viewCalculated[5] == true) //Check U and V - Project to W
+            {
+                const double z1{(wireMax[4] - wireMin[4]) * 0.5};
+                const double z2{(wireMax[5] - wireMin[5]) * 0.5};
+                const double m_projectedCoordinate{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->UVtoW(z1, z2)};
+                std::cout << "Projected Coordinated: " << m_projectedCoordinate <<std::endl;
+                wireMin[view] = m_projectedCoordinate - zSpan;
+                wireMax[view] = m_projectedCoordinate + zSpan;
+                projected = true;
+            }
+            if (projected == false)
+            {
+                try
+                {
+                    m_simpleZoom = true;
+                    this->GetHitRegion(*pCaloHitList, viewDriftMin, viewDriftMax, wireMin[view], wireMax[view]);
+                    m_simpleZoom = false;
+                }
+                catch (const StatusCodeException &e)
+                {
+                    std::cout << "ERR: Could not calculate zoom region - DlSignalAlgorithm unable to proceed" << std::endl;
+                    if (e.GetStatusCode() == STATUS_CODE_NOT_FOUND)
+                    {
+                        continue;
+                    }
+                }
+            }
+
+        }
+        driftMin = std::min(viewDriftMin, driftMin);
+        driftMax = std::max(viewDriftMax, driftMax);
+    }
+
+    
+    
     for (const std::string &listname : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList(nullptr);
@@ -166,15 +253,15 @@ StatusCode DlSignalAlgorithm::PrepareTrainingSample()
             {
                 const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
                 { 
                     if (pMainMCParticle->GetParticleId() == 11)
 	            {
-		        featureVector.emplace_back(2);
+		        featureVector.emplace_back(11);
 		    }
 		    else if (pMainMCParticle->GetParticleId() == 22)
 		    {
-	                featureVector.emplace_back(1);
+	                featureVector.emplace_back(22);
 		    }
 	        }
                 else
@@ -441,7 +528,7 @@ StatusCode DlSignalAlgorithm::Infer()
                     {
                         const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                        if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                        if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
                         {
                              const CartesianVector signalHit(x, 0.f, z);
                              PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &signalHit, "true signal", YELLOW, 2));
@@ -476,19 +563,19 @@ StatusCode DlSignalAlgorithm::Infer()
         std::cout << "Error: A CaloHitList is empty" << std::endl;
     }
     if (!signalCandidatesU.empty())    
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidatesU, m_signalListNameU));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidatesU, m_signalListNameU));
     
     if (!signalCandidatesV.empty())
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidatesV, m_signalListNameV));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidatesV, m_signalListNameV));
     
     if (!signalCandidatesW.empty())
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidatesW, m_signalListNameW));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidatesW, m_signalListNameW));
     
     if (!signalCandidates2D.empty())
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidates2D, m_signalListName2D));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidates2D, m_signalListName2D));
     
     if (!backgroundCaloHitList.empty())
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, backgroundCaloHitList, m_backgroundListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, backgroundCaloHitList, m_backgroundListName));
     
     return STATUS_CODE_SUCCESS;
 }
@@ -521,7 +608,7 @@ StatusCode DlSignalAlgorithm::CheatedSeparation()
             {
                 const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
                 {
                     if (std::abs(pMainMCParticle->GetParticleId()) == 11 || std::abs(pMainMCParticle->GetParticleId()) == 22)
                     {
@@ -585,7 +672,7 @@ StatusCode DlSignalAlgorithm::CheatedSeparation()
                         {
                             const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                            if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                            if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
                             {
                                 const CartesianVector signalHit(x, 0.f, z);
                                 PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &signalHit, "true signal", YELLOW, 2));
@@ -711,7 +798,7 @@ StatusCode DlSignalAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCC
 
     // Move the neutrino to the front of the list
     auto pivot =
-        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino2(mc, false); });
+        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); });
     (void)pivot;
     if (pivot != mcHierarchy.end())
         std::rotate(mcHierarchy.begin(), pivot, std::next(pivot));
