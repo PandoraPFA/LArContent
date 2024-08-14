@@ -472,9 +472,10 @@ bool MvaLowEClusterMergingAlgorithm<T>::ClusterTool(std::vector<std::string> fea
 template <typename T>
 const CaloHitList MvaLowEClusterMergingAlgorithm<T>::EdgeHitFinder(const pandora::Cluster *const cluster, pandora::CaloHitList &clusterEdgeHits) const
 {
-        CartesianVector vector1(0.f,0.f,0.f), vector2(0.f,0.f,0.f), clusterCentroid(0.f,0.f,0.f);
+        CartesianVector vector1(0.f,0.f,0.f), vector2(0.f,0.f,0.f), clusterCentroid(0.f,0.f,0.f), centroid1(0.f,0.f,0.f), centroid2(0.f,0.f,0.f);
         CaloHitList clusterCaloHits;
         std::map<const Cluster*, bool> clusterIsUsed;
+
         
 	try
         {
@@ -487,15 +488,15 @@ const CaloHitList MvaLowEClusterMergingAlgorithm<T>::EdgeHitFinder(const pandora
 	}
         try
         {
-            const CartesianVector centroid1(cluster->GetCentroid(cluster->GetInnerPseudoLayer()));
-            const CartesianVector centroid2(cluster->GetCentroid(cluster->GetOuterPseudoLayer()));
+            centroid1 = cluster->GetCentroid(cluster->GetInnerPseudoLayer());
+            centroid2 = cluster->GetCentroid(cluster->GetOuterPseudoLayer());
         }
         catch (...)
         {
             CaloHitList hits;
             cluster->GetOrderedCaloHitList().FillCaloHitList(hits);
-            const CartesianVector centroid1(hits.front()->GetPositionVector());
-            const CartesianVector centroid2(hits.front()->GetPositionVector());
+            centroid1 = hits.front()->GetPositionVector();
+            centroid2 = hits.front()->GetPositionVector();
         }
 	
         const CartesianVector centroid((centroid1 + centroid2) * 0.5f);
@@ -513,10 +514,10 @@ const CaloHitList MvaLowEClusterMergingAlgorithm<T>::EdgeHitFinder(const pandora
             {		
                 if (hitIsUsed.count(pCaloHit) == 0)
                 {
-                    const CartesianVector hitPosition(pCaloHit->GetPositionVector().GetX()), 0.f, pCaloHit->GetPositionVector().GetZ());
+                    const CartesianVector hitPosition(pCaloHit->GetPositionVector().GetX(), 0.f, pCaloHit->GetPositionVector().GetZ());
                     const CartesianVector centroidToHitVec(hitPosition - centroid);
                     const float mag(centroidToHitVec.GetMagnitude());
-                    const CartesianVector normCentroidVec(centroidToHitVec / mag);
+                    const CartesianVector normCentroidVec(centroidToHitVec * (1/mag));
                     const float dotProduct(vec.GetDotProduct(normCentroidVec));
 
                     if (std::abs(dotProduct) < m_sectorTolerance)

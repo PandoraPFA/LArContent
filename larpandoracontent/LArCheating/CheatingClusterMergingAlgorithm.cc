@@ -24,7 +24,7 @@ namespace lar_content
 {
 
 CheatingClusterMergingAlgorithm::CheatingClusterMergingAlgorithm() :
-    m_minNCaloHits(1),
+    m_minNCaloHits(1)
 {
 }
 //------------------------------------------------------------------------------------------//
@@ -166,6 +166,7 @@ StatusCode CheatingClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinNCaloHits", m_minNCaloHits));
 
+    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar_content
