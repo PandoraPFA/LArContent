@@ -45,6 +45,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode PrepareTrainingSample();
     pandora::StatusCode Infer();
+    pandora::StatusCode CheatedSeparation();
 
     /*
      *  @brief  Create input for the network from a calo hit list
@@ -97,6 +98,7 @@ private:
     void GetHitRegion(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax) const;
 
 
+
     bool m_trainingMode;                      ///< Training mode
     std::string m_trainingOutputFile;         ///< Output file name for training examples
     std::string m_inputSignalListName;        ///< Input vertex list name if 2nd pass
@@ -106,7 +108,6 @@ private:
     LArDLHelper::TorchModel m_modelW;         ///< The model for the W view
     int m_event;                              ///< The current event number
     int m_pass;                               ///< The pass of the train/infer step
-    int m_nClasses;                           ///< The number of distance classes
     int m_height;                             ///< The height of the images
     int m_width;                              ///< The width of the images
     float m_driftStep;                        ///< The size of a pixel in the drift direction in cm (most relevant in pass 2)
@@ -115,12 +116,15 @@ private:
     std::string m_rootTreeName;               ///< The ROOT tree name
     std::string m_rootFileName;               ///< The ROOT file name
     std::mt19937 m_rng;                       ///< The random number generator
-    std::vector<double> m_thresholds;         ///< Distance class thresholds
-    std::string m_volumeType;                 ///< The name of the fiducial volume type for the monitoring output
+    bool m_printOut;                          ///< Whether or not to print out network outputs of CaloHitList names and sizes
     std::string m_signalListNameU;            ///< Output signal CaloHitListU name
     std::string m_signalListNameV;            ///< Output signal CaloHitListV name
     std::string m_signalListNameW;            ///< Output signal CaloHitListW name
-    std::string m_signalListName2D;            ///< Output signal CaloHitList2D name
+    std::string m_signalListName2D;           ///< Output signal CaloHitList2D name
+    std::string m_caloHitListName2D;          ///< Input CaloHitList2D name
+    pandora::StringVector m_inputCaloHitListNames; ///< Names of input calo hit lists, passed from Pass 1 of DLSignalAlg
+    std::string m_backgroundListName;         ///< Input Background CaloHitList name
+    bool m_applyCheatedSeparation;            ///< Whether cheating to separate background and signal hits 
 };
 
 } // namespace lar_dl_content
