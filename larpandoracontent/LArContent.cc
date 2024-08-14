@@ -59,7 +59,6 @@
 #include "larpandoracontent/LArMonitoring/ShowerTensorVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/TestBeamEventValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/TestBeamHierarchyEventValidationAlgorithm.h"
-#include "larpandoracontent/LArMonitoring/TopologyCalorimetryMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/TransverseMatrixVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/VertexMonitoringAlgorithm.h"
@@ -177,6 +176,8 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/LowEClusterMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/MvaLowEClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/SimpleClusterGrowingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/SimpleClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
@@ -232,7 +233,6 @@
     d("LArTestBeamEventValidation",             TestBeamEventValidationAlgorithm)                                               \
     d("LArTestBeamHierarchyEventValidation",    TestBeamHierarchyEventValidationAlgorithm)                                      \
     d("LArHierarchyMonitoring",                 HierarchyMonitoringAlgorithm)                                                   \
-    d("LArTopologyCalorimetryMonitoring",       TopologyCalorimetryMonitoringAlgorithm)                                         \
     d("LArHierarchyValidation",                 HierarchyValidationAlgorithm)                                                   \
     d("LArPfoValidation",                       PfoValidationAlgorithm)                                                         \
     d("LArMCParticleMonitoring",                MCParticleMonitoringAlgorithm)                                                  \
@@ -301,6 +301,8 @@
     d("LArHitWidthClusterMerging",              HitWidthClusterMergingAlgorithm)                                                \
     d("LArLongitudinalAssociation",             LongitudinalAssociationAlgorithm)                                               \
     d("LArLongitudinalExtension",               LongitudinalExtensionAlgorithm)                                                 \
+    d("LArLowEClusterMerging",                  LowEClusterMergingAlgorithm)                                                    \
+    d("LArBdtLowEClusterMerging",               BdtLowEClusterMergingAlgorithm)                                                 \
     d("LArSimpleClusterGrowing",                SimpleClusterGrowingAlgorithm)                                                  \
     d("LArSimpleClusterMerging",                SimpleClusterMergingAlgorithm)                                                  \
     d("LArTransverseAssociation",               TransverseAssociationAlgorithm)                                                 \
