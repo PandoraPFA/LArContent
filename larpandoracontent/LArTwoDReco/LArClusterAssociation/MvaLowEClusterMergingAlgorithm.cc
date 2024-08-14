@@ -166,9 +166,10 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
     for (const Cluster *const pCluster : *pClusterList)
     {
-	if (pCluster->GetNCaloHits() == 0)
-	    continue;	
-        countHits = countHits + (pCluster->GetNCaloHits());
+	try{ 
+	    countHits = countHits + (pCluster->GetNCaloHits());
+	}
+	catch (StatusCodeException) {}
     }
 
     for (auto iter = pClusterList->begin(); iter != pClusterList->end(); ++iter)
@@ -205,7 +206,10 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	for (auto iter2 = std::next(iter) ; iter2 != pClusterList->end() ; ++iter2)
 	{
 	    const Cluster *const otherCluster(*iter2);
- 
+
+            if (!this->IsValidToUse(otherCluster, clusterIsUsed))
+            continue;
+
 	    const MCParticle *otherClusterMC(this->GetMCForCluster(otherCluster, clusterToMCParticleMap));
 
 	    try {
@@ -389,7 +393,6 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 		featureMap["Cluster2ADC"] = adc2;
            
 	        const bool areClustersToMerge(this->ClusterTool(featureOrder, featureMap));
-
                 if (areClustersToMerge && countHits > m_countHitsThreshold)
                 {
                    clusterIsUsed[cluster] = true;
