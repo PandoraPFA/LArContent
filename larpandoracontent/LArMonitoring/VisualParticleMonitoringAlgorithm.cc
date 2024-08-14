@@ -11,6 +11,7 @@
 #include "larpandoracontent/LArMonitoring/VisualParticleMonitoringAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
 
@@ -454,7 +455,11 @@ void VisualParticleMonitoringAlgorithm::MakeSelection(const CaloHitList *pCaloHi
 	try
 	{
 	    const MCParticle *pMC{MCParticleHelper::GetMainMCParticle(pCaloHit)};
-	    mcMap[pMC].emplace_back(pCaloHit);
+            const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMC));
+            if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false)) 
+            {
+	        mcMap[pMC].emplace_back(pCaloHit);
+            }
 	}
 	catch (const StatusCodeException &)
         {
