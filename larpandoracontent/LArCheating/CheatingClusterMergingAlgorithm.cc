@@ -25,7 +25,6 @@ namespace lar_content
 
 CheatingClusterMergingAlgorithm::CheatingClusterMergingAlgorithm() :
     m_minNCaloHits(1),
-    m_writeTree{true}
 {
 }
 //------------------------------------------------------------------------------------------//
@@ -48,8 +47,6 @@ StatusCode CheatingClusterMergingAlgorithm::Run()
             }
 
             this->CheatedClusterMerging(pClusterList, clusterListName);
-            std::cout << "---------------------------------------------------------------------------------" << std::endl;   
-     
         }
         
         catch (StatusCodeException &statusCodeException)
@@ -57,11 +54,6 @@ StatusCode CheatingClusterMergingAlgorithm::Run()
             throw statusCodeException;
         }
         
-        if (m_writeTree)
-        {
-            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "RECREATE"))
-         }
-
     }
 
     return STATUS_CODE_SUCCESS;
@@ -174,15 +166,6 @@ StatusCode CheatingClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinNCaloHits", m_minNCaloHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WriteTree", m_writeTree));
-
-    if (m_writeTree == true)
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TreeName", m_treeName));
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FileName", m_fileName));
-    }
-    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar_content
