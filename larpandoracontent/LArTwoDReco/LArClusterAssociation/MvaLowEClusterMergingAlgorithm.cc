@@ -166,8 +166,9 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
     for (const Cluster *const pCluster : *pClusterList)
     {
-	try{ 
-	    countHits = countHits + (pCluster->GetNCaloHits());
+	try
+	{ 
+	    countHits += pCluster->GetNCaloHits();
 	}
 	catch (StatusCodeException) {}
     }
@@ -185,15 +186,17 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
 	CaloHitList clusterEdgeHits;
 	CartesianVector centroid11(0.f, 0.f, 0.f), centroid12(0.f, 0.f, 0.f), centroid21(0.f, 0.f, 0.f), centroid22(0.f, 0.f, 0.f);
-        try {
-       	centroid11 = cluster->GetCentroid(cluster->GetInnerPseudoLayer());
-        centroid12 = cluster->GetCentroid(cluster->GetOuterPseudoLayer());
+        try 
+	{
+       	    centroid11 = cluster->GetCentroid(cluster->GetInnerPseudoLayer());
+            centroid12 = cluster->GetCentroid(cluster->GetOuterPseudoLayer());
         }
-        catch (...) {
-        CaloHitList hits;
-        cluster->GetOrderedCaloHitList().FillCaloHitList(hits);
-        centroid11 = hits.front()->GetPositionVector();
-        centroid12 = hits.front()->GetPositionVector();
+        catch (...) 
+	{
+            CaloHitList hits;
+            cluster->GetOrderedCaloHitList().FillCaloHitList(hits);
+            centroid11 = hits.front()->GetPositionVector();
+            centroid12 = hits.front()->GetPositionVector();
         }
 
         const CartesianVector centroid1((centroid11 + centroid12) * 0.5f);
@@ -212,15 +215,17 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
 	    const MCParticle *otherClusterMC(this->GetMCForCluster(otherCluster, clusterToMCParticleMap));
 
-	    try {
-	    centroid21 = otherCluster->GetCentroid(otherCluster->GetInnerPseudoLayer());
-            centroid22 = otherCluster->GetCentroid(otherCluster->GetOuterPseudoLayer());
+	    try 
+	    {
+	        centroid21 = otherCluster->GetCentroid(otherCluster->GetInnerPseudoLayer());
+                centroid22 = otherCluster->GetCentroid(otherCluster->GetOuterPseudoLayer());
 	    }
-	    catch (...) {
-	    CaloHitList hits;
-            cluster->GetOrderedCaloHitList().FillCaloHitList(hits);
-            centroid21 = hits.front()->GetPositionVector();
-            centroid22 = hits.front()->GetPositionVector();
+	    catch (...) 
+	    {
+	        CaloHitList hits;
+                otherCluster->GetOrderedCaloHitList().FillCaloHitList(hits);
+                centroid21 = hits.front()->GetPositionVector();
+                centroid22 = hits.front()->GetPositionVector();
 	    }
 	    const CartesianVector centroid2((centroid21 + centroid22) * 0.5f);
 	    const float centroidSeparation{std::sqrt(centroid1.GetDistanceSquared(centroid2))};
@@ -269,7 +274,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
             std::vector<float> distanceDistribution;
 
-	    float finalDistance{0}, maxEdgeHitSeparation{-std::numeric_limits<float>::max()}, minEdgeHitSeparation{std::numeric_limits<float>::max()}, adc1{0}, adc2{0};
+	    float finalDistance{0}, maxEdgeHitSeparation{std::numeric_limits<float>::lowest()}, minEdgeHitSeparation{std::numeric_limits<float>::max()}, adc1{0}, adc2{0};
             int contact{0}, proximity{0};;
 
 	    for ( const CaloHit *const caloHit1 : largestList)
@@ -285,7 +290,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	              CartesianVector hit2Position(caloHit2->GetPositionVector());
                       float distance{std::sqrt(hit1Position.GetDistanceSquared(hit2Position))};
  		      CartesianVector vector1(hit2Position.GetX() - hit1Position.GetX(), 0.f, hit2Position.GetZ() - hit1Position.GetZ());
-                      double smallestAngle{1000};
+                      double smallestAngle{std::numeric_limits<float>::max()};
                       CartesianVector tangent(centroidVector.GetZ(), 0.f, -centroidVector.GetX());
 		      const float c(tangent.GetX() * vectorTool.GetX() + tangent.GetZ() * vectorTool.GetZ());
 		      const float intercept(tangent.GetX() * hit2Position.GetX() + tangent.GetZ() * hit2Position.GetZ());
@@ -483,67 +488,75 @@ const CaloHitList MvaLowEClusterMergingAlgorithm<T>::EdgeHitFinder(const pandora
 	{
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "Couldn't fill cluster with CaloHits" << std::endl;
-	}  
-        const CartesianVector centroid1(cluster->GetCentroid(cluster->GetInnerPseudoLayer()));
-        const CartesianVector centroid2(cluster->GetCentroid(cluster->GetOuterPseudoLayer()));
+	}
+        try
+        {
+            const CartesianVector centroid1(cluster->GetCentroid(cluster->GetInnerPseudoLayer()));
+            const CartesianVector centroid2(cluster->GetCentroid(cluster->GetOuterPseudoLayer()));
+        }
+        catch (...)
+        {
+            CaloHitList hits;
+            cluster->GetOrderedCaloHitList().FillCaloHitList(hits);
+            const CartesianVector centroid1(hits.front()->GetPositionVector());
+            const CartesianVector centroid2(hits.front()->GetPositionVector());
+        }
+	
         const CartesianVector centroid((centroid1 + centroid2) * 0.5f);
         std::map<const CaloHit*, bool> hitIsUsed;
 
 
         for (int i = 0 ; i < m_divisions ; i++)
         {
-                float pi(3.14159265), maxMag{0}; 
-		float phi((2 * pi * i) / m_divisions);
-                CartesianVector vec(std::cos(phi), std::sin(phi), 0.f);
-                CaloHitList sectorHits;
-                sectorHits.clear();
+            float pi(3.14159265), maxMag{0};
+	    float phi((2 * pi * i) / m_divisions);
+            CartesianVector vec(std::cos(phi), std::sin(phi), 0.f);
+            CaloHitList sectorHits;
+            sectorHits.clear();
 
-                for (const CaloHit *pCaloHit: clusterCaloHits)
-                {
+            for (const CaloHit *pCaloHit: clusterCaloHits)
+            {
 			
-			if (hitIsUsed.count(pCaloHit) == 0)
+                if (hitIsUsed.count(pCaloHit) == 0)
+                {
+                    const float x(pCaloHit->GetPositionVector().GetX()), z(pCaloHit->GetPositionVector().GetZ());
+                    CartesianVector centroidToHitVec(x - centroid.GetX(), 0.f, z - centroid.GetZ());
+                    float mag(centroidToHitVec.GetMagnitude());
+                    CartesianVector normCentroidVec((x - centroid.GetX()) / mag, 0.f , (z - centroid.GetZ()) / mag );
+                    float dotProduct(vec.GetDotProduct(normCentroidVec));
+
+                    if (std::abs(dotProduct) < m_sectorTolerance )
+                    {
+                        if (maxMag < mag)
                         {
-                            const float x(pCaloHit->GetPositionVector().GetX()), z(pCaloHit->GetPositionVector().GetZ());
-                            CartesianVector centroidToHitVec(x - centroid.GetX(), 0.f, z - centroid.GetZ());
-                            float mag(centroidToHitVec.GetMagnitude());
-                            CartesianVector normCentroidVec((x - centroid.GetX()) / mag, 0.f , (z - centroid.GetZ()) / mag );
-                            float dotProduct(vec.GetDotProduct(normCentroidVec));
-
-                            if (std::abs(dotProduct) < m_sectorTolerance )
-                            {
-                                if (maxMag < mag)
-                                {
-                                        maxMag = mag;
-                                        sectorHits.clear();
-                                        hitIsUsed[pCaloHit] = true;
-                                        sectorHits.push_back(pCaloHit);
-                                }
-                            }
-                         }
-
-
-
+                            maxMag = mag;
+                            sectorHits.clear();
+                            hitIsUsed[pCaloHit] = true;
+                            sectorHits.push_back(pCaloHit);
+                        }
+                    }
                 }
+            }
 	        
-		if (m_printOut)
-		{	
-		    std::cout << "SectorHit size: " << sectorHits.size() << std::endl;
-		}    
-                
-		for (const CaloHit *pCaloHit: sectorHits)
-                {
-  	            clusterEdgeHits.push_back(pCaloHit);
-                }
-                
-		if (m_printOut)
-		{
-		   std::cout << "Cluster Hit Size: " << clusterCaloHits.size() << " | Edge Hit Size: " << clusterEdgeHits.size() << std::endl;
-		}
+            if (m_printOut)
+    	    {	
+		std::cout << "SectorHit size: " << sectorHits.size() << std::endl;
+	    }    
+               
+	    for (const CaloHit *pCaloHit: sectorHits)
+            {
+                clusterEdgeHits.push_back(pCaloHit);
+            }
+               
+            if (m_printOut)
+            {
+                std::cout << "Cluster Hit Size: " << clusterCaloHits.size() << " | Edge Hit Size: " << clusterEdgeHits.size() << std::endl;
+	    }
 
-		if (clusterCaloHits.size() < clusterEdgeHits.size())
-                {
-                        std::cout << "Error in Edge Hit Algorithm: Incorrect edge hit classification !!!!" << std::endl;
-                }
+	    if (clusterCaloHits.size() < clusterEdgeHits.size())
+            {
+                std::cout << "Error in Edge Hit Algorithm: Incorrect edge hit classification !!!!" << std::endl;
+            }
         }
         return clusterEdgeHits;
 }
