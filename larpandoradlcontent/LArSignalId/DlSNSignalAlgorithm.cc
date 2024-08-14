@@ -257,7 +257,7 @@ StatusCode DlSNSignalAlgorithm::PrepareTrainingSample()
             {
                 const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
                 { 
                     const int pdg{pMainMCParticle->GetParticleId()};
 	            if (pdg == E_MINUS || pdg == PHOTON)
@@ -560,7 +560,7 @@ StatusCode DlSNSignalAlgorithm::Infer()
                     {
                         const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                        if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                        if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
                         {
                              const CartesianVector signalHit(x, 0.f, z);
 			     const int pdg{pMainMCParticle->GetParticleId()};
@@ -655,7 +655,7 @@ StatusCode DlSNSignalAlgorithm::CheatedSeparation()
             {
                 const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
-                if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
                 {
                     if (std::abs(pMainMCParticle->GetParticleId()) == PHOTON)
                     {
@@ -853,7 +853,7 @@ StatusCode DlSNSignalAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::M
 
     // Move the neutrino to the front of the list
     auto pivot =
-        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino2(mc, false); });
+        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); });
     if (pivot != mcHierarchy.end())
         std::rotate(mcHierarchy.begin(), pivot, std::next(pivot));
     else
