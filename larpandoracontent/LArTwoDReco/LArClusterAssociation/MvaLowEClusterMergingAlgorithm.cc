@@ -174,8 +174,13 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
     {
 
        const Cluster *const cluster(*iter);
-       
-       if (!cluster || cluster->empty())
+       CaloHitList hits;
+       cluster->GetOrderedCaloHitList().FillCaloHitList(hits);
+       const CaloHitList &isoHits{cluster->GetIsolatedCaloHitList()};
+       hits.insert(hits.end(), isoHits.begin(), isoHits.end());
+
+
+       if (!cluster || hits.empty())
            continue;
 
        const int nClusters(pClusterList->size());
@@ -192,10 +197,12 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
         }
         catch (...) 
 	{
-            CaloHitList hits;
-            cluster->GetOrderedCaloHitList().FillCaloHitList(hits);
-            centroid11 = hits.front()->GetPositionVector();
-            centroid12 = hits.back()->GetPositionVector();
+            CaloHitList tempHits;
+            cluster->GetOrderedCaloHitList().FillCaloHitList(tempHits);
+	    const CaloHitList &tempIsoHits{cluster->GetIsolatedCaloHitList()};
+	    tempHits.insert(tempHits.end(), tempIsoHits.begin(), tempIsoHits.end());
+            centroid11 = tempHits.front()->GetPositionVector();
+            centroid12 = tempHits.back()->GetPositionVector();
         }
 
         const CartesianVector centroid1((centroid11 + centroid12) * 0.5f);
@@ -208,8 +215,12 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	for (auto iter2 = std::next(iter) ; iter2 != pClusterList->end() ; ++iter2)
 	{
 	    const Cluster *const otherCluster(*iter2);
+	    CaloHitList otherHits;
+            otherCluster->GetOrderedCaloHitList().FillCaloHitList(otherHits);
+            const CaloHitList &otherIsoHits{otherCluster->GetIsolatedCaloHitList()};
+            otherHits.insert(otherHits.end(), otherIsoHits.begin(), otherIsoHits.end());
 
-            if (!otherCluster || otherCluster->empty())
+            if (!otherCluster || otherHits.empty())
                 continue;
 
 	    if (!this->IsValidToUse(otherCluster, clusterIsUsed))
@@ -222,10 +233,12 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 	    }
 	    catch (...) 
 	    {
-	        CaloHitList hits;
-                otherCluster->GetOrderedCaloHitList().FillCaloHitList(hits);
-                centroid21 = hits.front()->GetPositionVector();
-                centroid22 = hits.back()->GetPositionVector();
+	        CaloHitList tempHits;
+                cluster->GetOrderedCaloHitList().FillCaloHitList(tempHits);
+                const CaloHitList &tempIsoHits{cluster->GetIsolatedCaloHitList()};
+                tempHits.insert(tempHits.end(), tempIsoHits.begin(), tempIsoHits.end());
+                centroid21 = tempHits.front()->GetPositionVector();
+                centroid22 = tempHits.back()->GetPositionVector();
 	    }
 
 	    const CartesianVector centroid2((centroid21 + centroid22) * 0.5f);
@@ -294,7 +307,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 		      if (intercept < c)
                           continue;
 
-		      if (distance > maxEdgeHitSeparation 
+		      if (distance > maxEdgeHitSeparation) 
 		      {
 		          maxEdgeHitSeparation = distance;
 		      }
@@ -470,13 +483,15 @@ template <typename T>
 const CaloHitList MvaLowEClusterMergingAlgorithm<T>::EdgeHitFinder(const pandora::Cluster *const cluster, pandora::CaloHitList &clusterEdgeHits) const
 {
         CartesianVector vector1(0.f,0.f,0.f), vector2(0.f,0.f,0.f),
-			clusterCentroid(0.f,0.f,0.f), centroid1(0.f,0.f,0.f), centroid2(0.f,0.f,0.f);
+			clusterCentroid(0.f,0.f,0.f), centroidI(0.f,0.f,0.f), centroidJ(0.f,0.f,0.f);
         CaloHitList clusterCaloHits;
         std::map<const Cluster*, bool> clusterIsUsed;
 
 	try
         {
-	    cluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHits);
+            cluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHits);
+            const CaloHitList &clusterIsoHits{cluster->GetIsolatedCaloHitList()};
+            clusterCaloHits.insert(clusterCaloHits.end(), clusterIsoHits.begin(), clusterIsoHits.end());
 	}
 	catch (StatusCodeException &)
 	{
@@ -485,18 +500,20 @@ const CaloHitList MvaLowEClusterMergingAlgorithm<T>::EdgeHitFinder(const pandora
 	}
         try
         {
-            centroid1 = cluster->GetCentroid(cluster->GetInnerPseudoLayer());
-            centroid2 = cluster->GetCentroid(cluster->GetOuterPseudoLayer());
+            centroidI = cluster->GetCentroid(cluster->GetInnerPseudoLayer());
+            centroidJ = cluster->GetCentroid(cluster->GetOuterPseudoLayer());
         }
         catch (...)
         {
-            CaloHitList hits;
-            cluster->GetOrderedCaloHitList().FillCaloHitList(hits);
-            centroid1 = hits.front()->GetPositionVector();
-            centroid2 = hits.back()->GetPositionVector();
+            CaloHitList tempHits;
+            cluster->GetOrderedCaloHitList().FillCaloHitList(tempHits);
+            const CaloHitList &tempIsoHits{cluster->GetIsolatedCaloHitList()};
+            tempHits.insert(tempHits.end(), tempIsoHits.begin(), tempIsoHits.end());
+            centroidI = tempHits.front()->GetPositionVector();
+            centroidJ = tempHits.back()->GetPositionVector();    
         }
 	
-        const CartesianVector centroid((centroid1 + centroid2) * 0.5f);
+        const CartesianVector centroid((centroidI + centroidJ) * 0.5f);
         std::map<const CaloHit*, bool> hitIsUsed;
 
         for (int i = 0 ; i < m_divisions ; i++)
