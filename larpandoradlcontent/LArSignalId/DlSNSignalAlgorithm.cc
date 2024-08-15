@@ -84,7 +84,10 @@ StatusCode DlSNSignalAlgorithm::Run()
         if (m_trainingMode)	    
 	    return this->PrepareTrainingSample();
         else
-            return this->Infer();
+	{    
+	    std::cout << "running Network ****" << std::endl;
+	    return this->Infer();
+	}
     }
     if (m_applyCheatedSeparation)
         return this->CheatedSeparation();
@@ -735,7 +738,7 @@ StatusCode DlSNSignalAlgorithm::SignalZoomRandomised()
                                 photonCandidatesW.emplace_back(pCaloHit);
                             }
                         }
-                        if (std::abs(pMainMCParticle->GetParticleId()) == E_MINUS)
+			else if (std::abs(pMainMCParticle->GetParticleId()) == E_MINUS)
                         {
                             if (isU)
                             {
@@ -760,7 +763,7 @@ StatusCode DlSNSignalAlgorithm::SignalZoomRandomised()
 			    if (isV)
                                 candidatesV.emplace_back(pCaloHit);
 			    if (isW)
-                                candidatesW.emplace_back(pCaloHit);
+                               candidatesW.emplace_back(pCaloHit);
                         }
                     }
                     else
@@ -839,8 +842,8 @@ StatusCode DlSNSignalAlgorithm::SignalZoomRandomised()
 
 StatusCode DlSNSignalAlgorithm::CheatedSeparation()
 {
-    CaloHitList signalCandidatesU, signalCandidatesV, signalCandidatesW, signalCandidates2D, backgroundCaloHitList, photonCandidatesU,
-                photonCandidatesV, photonCandidatesW, electronCandidatesU, electronCandidatesV, electronCandidatesW;
+    CaloHitList signalCandidatesU, signalCandidatesV, signalCandidatesW, signalCandidates2D, backgroundCaloHitList, photonTrueU,
+                photonTrueV, photonTrueW, electronTrueU, electronTrueV, electronTrueW;
     for (const std::string &listname : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList(nullptr);
@@ -877,35 +880,35 @@ StatusCode DlSNSignalAlgorithm::CheatedSeparation()
                         if (isU)
                         {
                             signalCandidatesU.emplace_back(pCaloHit);
-                            photonCandidatesU.emplace_back(pCaloHit);
+                            photonTrueU.emplace_back(pCaloHit);
                         }
                         else if (isV)
                         {
                              signalCandidatesV.emplace_back(pCaloHit);
-                             photonCandidatesV.emplace_back(pCaloHit);
+                             photonTrueV.emplace_back(pCaloHit);
                         }
                         else
                         {
                             signalCandidatesW.emplace_back(pCaloHit);
-                            photonCandidatesW.emplace_back(pCaloHit);
+                            photonTrueW.emplace_back(pCaloHit);
                         }
 		    }
-	            if (std::abs(pMainMCParticle->GetParticleId()) == E_MINUS)
+		    else if (std::abs(pMainMCParticle->GetParticleId()) == E_MINUS)
 	            {
 	                if (isU)
                         {
                             signalCandidatesU.emplace_back(pCaloHit);
-                            electronCandidatesU.emplace_back(pCaloHit);
+                            electronTrueU.emplace_back(pCaloHit);
                         }
                         else if (isV)
                         {
                             signalCandidatesV.emplace_back(pCaloHit);
-                            electronCandidatesV.emplace_back(pCaloHit);
+                            electronTrueV.emplace_back(pCaloHit);
                         }
                         else
                         {
                             signalCandidatesW.emplace_back(pCaloHit);
-                            electronCandidatesW.emplace_back(pCaloHit);
+                            electronTrueW.emplace_back(pCaloHit);
 			}                  
 		    }
 		    else
@@ -931,30 +934,29 @@ StatusCode DlSNSignalAlgorithm::CheatedSeparation()
                 PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
                                      &signalCandidatesU, "true signal U", BLUE));
                 PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &photonCandidatesU, "true photon U", BLACK));
+                                     &photonTrueU, "true photon U", BLACK));
                 PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &electronCandidatesU, "true electron U", RED));
+                                     &electronTrueU, "true electron U", RED));
             }
             if (isV)
             {
                 PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
                                      &signalCandidatesV, "true signal V", BLUE));
                 PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &photonCandidatesV, "true photon V", BLACK));
+                                     &photonTrueV, "true photon V", BLACK));
                 PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &electronCandidatesV, "true electron V", RED));
+                                     &electronTrueV, "true electron V", RED));
             }
             if (isW)
             {
                 PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
                                      &signalCandidatesW, "true signal W", BLUE));
                 PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &photonCandidatesW, "true photon W", BLACK));
+                                     &photonTrueW, "true photon W", BLACK));
                 PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
-                                     &electronCandidatesW, "true electron W", RED));
+                                     &electronTrueW, "true electron W", RED));
              }  
 
-             PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
              PANDORA_MONITORING_API(ViewEvent(this->GetPandora())); 	    
         }
     }
@@ -971,24 +973,6 @@ StatusCode DlSNSignalAlgorithm::CheatedSeparation()
     
     if (!signalCandidatesW.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidatesW, m_signalListNameW));
-
-    //if (!electronCandidatesU.empty())
-    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, electronCandidatesU, "electronCandidateU"));
-
-    //if (!electronCandidatesV.empty())
-    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, electronCandidatesV, "electronCandidateV"));
-
-    //if (!electronCandidatesW.empty())
-    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, electronCandidatesW, "electronCandidateW"));
-
-    //if (!photonCandidatesU.empty())
-    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, photonCandidatesU, "photonCandidateU"));
-
-    //if (!photonCandidatesV.empty())
-    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, photonCandidatesV, "photonCandidateV"));
-
-    //if (!photonCandidatesW.empty())
-    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, photonCandidatesW, "photonCandidateW"));
     
     if (!signalCandidates2D.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidates2D, m_signalListName2D));
