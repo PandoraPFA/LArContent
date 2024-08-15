@@ -46,6 +46,7 @@ private:
     pandora::StatusCode PrepareTrainingSample();
     pandora::StatusCode Infer();
     pandora::StatusCode CheatedSeparation();
+    pandora::StatusCode SignalZoomRandomised();
 
     /*
      *  @brief  Create input for the network from a calo hit list
@@ -110,6 +111,7 @@ private:
     int m_width;                              ///< The width of the images
     float m_driftStep;                        ///< The size of a pixel in the drift direction in cm (most relevant in pass 2)
     bool m_visualise;                         ///< Whether or not to visualise the candidate vertices
+    bool m_visualiseZoom;                     ///< Whether or not to visulaise the zoomed version of detector
     bool m_writeTree;                         ///< Whether or not to write validation details to a ROOT tree
     std::string m_rootTreeName;               ///< The ROOT tree name
     std::string m_rootFileName;               ///< The ROOT file name
@@ -120,13 +122,17 @@ private:
     std::string m_signalListNameW;            ///< Output signal CaloHitListW name
     std::string m_signalListName2D;           ///< Output signal CaloHitList2D name
     std::string m_caloHitListName2D;          ///< Input CaloHitList2D name
+    std::string m_zoomListNameU;              ///< Output zoom CaloHitListU name
+    std::string m_zoomListNameV;              ///< Output zoom CaloHitListV name
+    std::string m_zoomListNameW ;             ///< Output zoom CaloHitListW name    
     pandora::StringVector m_inputCaloHitListNames; ///< Names of input calo hit lists, passed from Pass 1 of DLSignalAlg
     std::string m_backgroundListName;         ///< Input Background CaloHitList name
     bool m_applyCheatedSeparation;            ///< Whether cheating to separate background and signal hits 
     bool m_simpleZoom;                        ///< Decide whethere to run a simple loop to find highest adc hit or run network
     long unsigned int m_passOneTrustThreshold;///< Number of pixels in pass one required to trust the wire finding ability, below this                                                           threshold, the algorithm will use highest ADC within Drift Min/Max to set wire limits
+    bool m_applySignalZoomRandomised;         ///< Whether to apply a function which reduced combinatorics of background, by reducing size of 							 detctor volume and just containing signal in a smaller, randomised region.
     const int PHOTON_CLASS{2};                ///< Constant for network classification for photons
-    const int ELECTRON_CLASS{3};                ///< Constant for network classification for electrons
+    const int ELECTRON_CLASS{3};              ///< Constant for network classification for electrons
     const int SIGNAL_CLASS{2};                ///< Constant for network classification for signal
 };
 

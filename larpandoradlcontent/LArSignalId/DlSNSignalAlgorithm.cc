@@ -37,6 +37,7 @@ DlSNSignalAlgorithm::DlSNSignalAlgorithm() :
     m_width{256},
     m_driftStep{0.5f},
     m_visualise{false},
+    m_visualiseZoom{false},
     m_writeTree{false},
     m_printOut{false},
     m_signalListNameU{""},
@@ -44,10 +45,14 @@ DlSNSignalAlgorithm::DlSNSignalAlgorithm() :
     m_signalListNameW{""},
     m_signalListName2D{""},
     m_caloHitListName2D{""},
+    m_zoomListNameU{""},
+    m_zoomListNameV{""},
+    m_zoomListNameW{""},
     m_backgroundListName{""},
     m_applyCheatedSeparation{false},
     m_simpleZoom{false},
-    m_passOneTrustThreshold{0}
+    m_passOneTrustThreshold{0},
+    m_applySignalZoomRandomised{false}
 {
 }
 
@@ -70,23 +75,29 @@ DlSNSignalAlgorithm::~DlSNSignalAlgorithm()
 
 StatusCode DlSNSignalAlgorithm::Run()
 {
-    if (m_visualise)
+    if (m_visualise || m_visualiseZoom)
     {
 	PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
     }
-    
-    if (!m_applyCheatedSeparation)
+    if (!m_applyCheatedSeparation && !m_applySignalZoomRandomised)
     {    
         if (m_trainingMode)	    
 	    return this->PrepareTrainingSample();
         else
             return this->Infer();
     }
-    else
+    if (m_applyCheatedSeparation)
         return this->CheatedSeparation();
+    if (m_applySignalZoomRandomised)
+    {
+	CheatedSeparation();
+	return this->SignalZoomRandomised();
+    }
 
     return STATUS_CODE_SUCCESS;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DlSNSignalAlgorithm::PrepareTrainingSample()
 {
@@ -623,6 +634,208 @@ StatusCode DlSNSignalAlgorithm::Infer()
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
+StatusCode DlSNSignalAlgorithm::SignalZoomRandomised()
+{
+    StringVector lists{m_signalListNameU, m_signalListNameV, m_signalListNameW};
+    CaloHitList candidatesU, candidatesV, candidatesW, photonCandidatesU, photonCandidatesV, photonCandidatesW, 
+		electronCandidatesU, electronCandidatesV, electronCandidatesW;
+
+    std::map<int, float> xMinVec, xMaxVec, zMinVec, zMaxVec;
+    float xGlobalMin{std::numeric_limits<float>::max()}, xGlobalMax{std::numeric_limits<float>::lowest()};
+    for (const std::string &listname : lists)
+    {
+        const CaloHitList *pCaloHitList(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
+        if (!pCaloHitList || pCaloHitList->empty())
+            continue;
+
+	HitType view{pCaloHitList->front()->GetHitType()};
+        const bool isU{view == TPC_VIEW_U}, isV{view == TPC_VIEW_V}, isW{view == TPC_VIEW_W};
+        if (!isU && !isV && !isW)
+            return STATUS_CODE_NOT_ALLOWED;
+
+	float xMin{std::numeric_limits<float>::max()}, xMax{std::numeric_limits<float>::lowest()},
+              zMin{std::numeric_limits<float>::max()}, zMax{std::numeric_limits<float>::lowest()};
+
+	for (const CaloHit *pCaloHit : *pCaloHitList)
+        {
+            const float x{pCaloHit->GetPositionVector().GetX()};
+            const float z{pCaloHit->GetPositionVector().GetZ()};
+            xMin = std::min(x, xMin);
+            xMax = std::max(x, xMax);
+            zMin = std::min(z, zMin);
+            zMax = std::max(z, zMax);
+	}
+       
+        xGlobalMin = std::min(xMin, xGlobalMin);
+        xGlobalMax = std::max(xMax, xGlobalMax);
+
+
+	float zRemainder{m_height - (zMax - zMin)}, xRemainder{m_height - (xMax - xMin)};
+        int zRan{std::rand() % static_cast<int>((zRemainder + 1))}, xRan{std::rand() % static_cast<int>((xRemainder + 1))};
+        zMinVec[view] = zMin - static_cast<float>(zRan);
+        zMaxVec[view] = zMax + (zRemainder - static_cast<float>(zRan));
+	xMinVec[view] = xMin - static_cast<float>(xRan);
+        xMaxVec[view] = xMax + (xRemainder - static_cast<float>(xRan));
+    }
+    
+    float xRemainder{m_width - (xGlobalMax - xGlobalMin)};
+    int xRan{std::rand() % static_cast<int>((xRemainder + 1))};
+    xGlobalMin = xGlobalMin - static_cast<float>(xRan);
+    xGlobalMax = xGlobalMax + (xRemainder - static_cast<float>(xRan));
+
+    for (const std::string &listname : m_caloHitListNames)
+    {
+        const CaloHitList *pCaloHitList(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
+        if (!pCaloHitList || pCaloHitList->empty())
+            continue;
+
+        HitType view{pCaloHitList->front()->GetHitType()};
+        const bool isU{view == TPC_VIEW_U}, isV{view == TPC_VIEW_V}, isW{view == TPC_VIEW_W};
+        if (!isU && !isV && !isW)
+            return STATUS_CODE_NOT_ALLOWED;
+
+	for (const CaloHit *pCaloHit : *pCaloHitList)
+        {
+            const float x{pCaloHit->GetPositionVector().GetX()};
+            const float z{pCaloHit->GetPositionVector().GetZ()};
+            if (x > xGlobalMin && x < xGlobalMax && z > zMinVec[view] && z < zMaxVec[view])
+            {
+                const MCParticle *pMainMCParticle(nullptr);
+                try
+                {
+                    pMainMCParticle = MCParticleHelper::GetMainMCParticle(pCaloHit);
+                }
+                catch (const StatusCodeException &)
+                {
+                }
+  
+                if (pMainMCParticle)
+                {
+                    const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
+
+                    if (LArMCParticleHelper::IsNeutrino2(pParentMCParticle, false))
+                    {
+                        if (std::abs(pMainMCParticle->GetParticleId()) == PHOTON)
+                        {
+                            if (isU)
+                            {
+                                candidatesU.emplace_back(pCaloHit);
+                                photonCandidatesU.emplace_back(pCaloHit);
+                            }
+                            else if (isV)
+                            {   
+	           	        candidatesV.emplace_back(pCaloHit);
+                                photonCandidatesV.emplace_back(pCaloHit);
+                            }
+                            else
+                            {
+                                candidatesW.emplace_back(pCaloHit);
+                                photonCandidatesW.emplace_back(pCaloHit);
+                            }
+                        }
+                        if (std::abs(pMainMCParticle->GetParticleId()) == E_MINUS)
+                        {
+                            if (isU)
+                            {
+                                candidatesU.emplace_back(pCaloHit);
+                                electronCandidatesU.emplace_back(pCaloHit);
+                            }
+                            else if (isV)
+                            {
+                                candidatesV.emplace_back(pCaloHit);
+                                electronCandidatesV.emplace_back(pCaloHit);
+                            }
+                            else
+                            {
+                                candidatesW.emplace_back(pCaloHit);
+                                electronCandidatesW.emplace_back(pCaloHit);
+                            }
+                        }
+                        else
+                        {
+                            if (isU)
+				candidatesU.emplace_back(pCaloHit);
+			    if (isV)
+                                candidatesV.emplace_back(pCaloHit);
+			    if (isW)
+                                candidatesW.emplace_back(pCaloHit);
+                        }
+                    }
+                    else
+                    {
+                        if (isU)
+                           candidatesU.emplace_back(pCaloHit);
+                        if (isV)
+                            candidatesV.emplace_back(pCaloHit);
+                        if (isW)
+                            candidatesW.emplace_back(pCaloHit);
+	    	    }
+                }
+                else
+                {
+                    if (isU)
+                        candidatesU.emplace_back(pCaloHit);
+                    if (isV)
+                        candidatesV.emplace_back(pCaloHit);
+                    if (isW)
+                        candidatesW.emplace_back(pCaloHit);
+	         }
+            }
+	}
+    
+        if (m_visualiseZoom)
+        {
+	    if (isU)
+            {
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &candidatesU, "candidates U", BLUE));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &photonCandidatesU, "true photon U", BLACK));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &electronCandidatesU, "true electron U", RED));
+            }
+            if (isV)
+            {
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &candidatesV, "candidates V", BLUE));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &photonCandidatesV, "true photon V", BLACK));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &electronCandidatesV, "true electron V", RED));
+            }
+            if (isW)
+            {
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &candidatesW, "candidates W", BLUE));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &photonCandidatesW, "true photon W", BLACK));
+                PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(),
+                                     &electronCandidatesW, "true electron W", RED));
+             }
+      
+             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        }
+    }
+   
+    if (candidatesU.empty() || candidatesV.empty() || candidatesW.empty())
+    {
+        std::cout << "Error: a CaloHitList is empty, but this should not happen" << std::endl;
+    }
+    if (!candidatesU.empty())
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, candidatesU, m_zoomListNameU));
+
+    if (!candidatesV.empty())
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, candidatesV, m_zoomListNameV));
+
+    if (!candidatesW.empty())
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, candidatesW, m_zoomListNameW));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DlSNSignalAlgorithm::CheatedSeparation()
 {
@@ -758,6 +971,24 @@ StatusCode DlSNSignalAlgorithm::CheatedSeparation()
     
     if (!signalCandidatesW.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidatesW, m_signalListNameW));
+
+    //if (!electronCandidatesU.empty())
+    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, electronCandidatesU, "electronCandidateU"));
+
+    //if (!electronCandidatesV.empty())
+    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, electronCandidatesV, "electronCandidateV"));
+
+    //if (!electronCandidatesW.empty())
+    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, electronCandidatesW, "electronCandidateW"));
+
+    //if (!photonCandidatesU.empty())
+    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, photonCandidatesU, "photonCandidateU"));
+
+    //if (!photonCandidatesV.empty())
+    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, photonCandidatesV, "photonCandidateV"));
+
+    //if (!photonCandidatesW.empty())
+    //    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, photonCandidatesW, "photonCandidateW"));
     
     if (!signalCandidates2D.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, signalCandidates2D, m_signalListName2D));
@@ -1009,6 +1240,7 @@ StatusCode DlSNSignalAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualise", m_visualise));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualiseZoom", m_visualiseZoom));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Pass", m_pass));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageHeight", m_height));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageWidth", m_width));
@@ -1051,6 +1283,12 @@ StatusCode DlSNSignalAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrintOut", m_printOut));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BackgroundListName", m_backgroundListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ApplyCheatedSeparation", m_applyCheatedSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ApplySignalZoomRandomised", m_applySignalZoomRandomised));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ZoomCaloHitListU", m_zoomListNameU));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ZoomCaloHitListV", m_zoomListNameV));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ZoomCaloHitListW", m_zoomListNameW));
+
+
 
     return STATUS_CODE_SUCCESS;
 }
