@@ -678,7 +678,7 @@ StatusCode DlSNSignalAlgorithm::SignalZoomRandomised()
 	if (zRemainder > 0)
             zRan = std::rand() % static_cast<int>((zRemainder + 1));
 	zMinVec[view] = zMin - zRan;
-        zMaxVec[view] = zMax + (zRemainder - zRan);
+        zMaxVec[view] = zMin + m_height;
 	float zSpan{zMaxVec[view] - zMinVec[view]};
 	if (zSpan > m_height)
         {
@@ -693,7 +693,7 @@ StatusCode DlSNSignalAlgorithm::SignalZoomRandomised()
     if (xRan > 0)
         xRan = std::rand() % static_cast<int>((xRemainder + 1));
     xGlobalMin = xGlobalMin - xRan;
-    xGlobalMax = xGlobalMax + (xRemainder - xRan);
+    xGlobalMax = xGlobalMin + m_width;
     float xSpan{xGlobalMax - xGlobalMin};
     if (xSpan > m_width)
     {
