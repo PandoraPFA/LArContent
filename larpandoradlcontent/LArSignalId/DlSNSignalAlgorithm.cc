@@ -673,19 +673,34 @@ StatusCode DlSNSignalAlgorithm::SignalZoomRandomised()
         xGlobalMin = std::min(xMin, xGlobalMin);
         xGlobalMax = std::max(xMax, xGlobalMax);
 
-
-	float zRemainder{m_height - (zMax - zMin)}, xRemainder{m_height - (xMax - xMin)};
-        int zRan{std::rand() % static_cast<int>((zRemainder + 1))}, xRan{std::rand() % static_cast<int>((xRemainder + 1))};
-        zMinVec[view] = zMin - static_cast<float>(zRan);
-        zMaxVec[view] = zMax + (zRemainder - static_cast<float>(zRan));
-	xMinVec[view] = xMin - static_cast<float>(xRan);
-        xMaxVec[view] = xMax + (xRemainder - static_cast<float>(xRan));
+	float zRemainder{m_height - (zMax - zMin)};
+        int zRan{0};
+	if (zRemainder > 0)
+            zRan = std::rand() % static_cast<int>((zRemainder + 1));
+	zMinVec[view] = zMin - zRan;
+        zMaxVec[view] = zMax + (zRemainder - zRan);
+	float zSpan{zMaxVec[view] - zMinVec[view]};
+	if (zSpan > m_height)
+        {
+	    zRan = std::rand() / RAND_MAX;
+	    zMinVec[view] = zMinVec[view] + ((zSpan - m_height) * zRan);
+            zMaxVec[view] = zMinVec[view] + m_height;
+	}
     }
     
     float xRemainder{m_width - (xGlobalMax - xGlobalMin)};
-    int xRan{std::rand() % static_cast<int>((xRemainder + 1))};
-    xGlobalMin = xGlobalMin - static_cast<float>(xRan);
-    xGlobalMax = xGlobalMax + (xRemainder - static_cast<float>(xRan));
+    int xRan{0};
+    if (xRan > 0)
+        xRan = std::rand() % static_cast<int>((xRemainder + 1));
+    xGlobalMin = xGlobalMin - xRan;
+    xGlobalMax = xGlobalMax + (xRemainder - xRan);
+    float xSpan{xGlobalMax - xGlobalMin};
+    if (xSpan > m_width)
+    {
+        xRan = std::rand() / RAND_MAX;
+        xGlobalMin = xGlobalMin + ((xSpan - m_width) * xRan);
+	xGlobalMax = xGlobalMin + m_width;
+    }
 
     for (const std::string &listname : m_caloHitListNames)
     {
