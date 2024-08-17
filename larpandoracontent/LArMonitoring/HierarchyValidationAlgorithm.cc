@@ -33,7 +33,8 @@ HierarchyValidationAlgorithm::HierarchyValidationAlgorithm() :
     m_minRecoHits{30},
     m_minRecoHitsPerView{10},
     m_minRecoGoodViews{2},
-    m_removeRecoNeutrons{true}
+    m_removeRecoNeutrons{true},
+    m_selectRecoHits{false}
 {
 }
 
@@ -72,11 +73,12 @@ StatusCode HierarchyValidationAlgorithm::Run()
         foldParameters.m_foldToLeadingShowers = true;
     const LArHierarchyHelper::MCHierarchy::ReconstructabilityCriteria recoCriteria(
         m_minRecoHits, m_minRecoHitsPerView, m_minRecoGoodViews, m_removeRecoNeutrons);
+
     LArHierarchyHelper::MCHierarchy mcHierarchy(recoCriteria);
     LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
     LArHierarchyHelper::RecoHierarchy recoHierarchy;
     LArHierarchyHelper::FillRecoHierarchy(*pPfoList, foldParameters, recoHierarchy);
-    const LArHierarchyHelper::QualityCuts quality(m_minPurity, m_minCompleteness);
+    const LArHierarchyHelper::QualityCuts quality(m_minPurity, m_minCompleteness, m_selectRecoHits);
     LArHierarchyHelper::MatchInfo matchInfo(mcHierarchy, recoHierarchy, quality);
     LArHierarchyHelper::MatchHierarchies(matchInfo);
     matchInfo.Print(mcHierarchy);
@@ -409,7 +411,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                         std::distance(rootPfos.begin(), std::find(rootPfos.begin(), rootPfos.end(), recoNodeToRootMap[pRecoNode])))};
                     recoSliceIdVector.emplace_back(sliceId);
                     recoIdVector.emplace_back(pRecoNode->GetParticleId());
-                    nRecoHitsVector.emplace_back(static_cast<int>(pRecoNode->GetCaloHits().size()));
+                    nRecoHitsVector.emplace_back(static_cast<int>(matches.GetSelectedRecoHits(pRecoNode).size()));
                     nSharedHitsVector.emplace_back(static_cast<int>(matches.GetSharedHits(pRecoNode)));
                     purityVector.emplace_back(matches.GetPurity(pRecoNode));
                     completenessVector.emplace_back(matches.GetCompleteness(pRecoNode));
@@ -559,6 +561,7 @@ StatusCode HierarchyValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinRecoGoodViews", m_minRecoGoodViews));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "RemoveRecoNeutrons", m_removeRecoNeutrons));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SelectRecoHits", m_selectRecoHits));
 
     return STATUS_CODE_SUCCESS;
 }
