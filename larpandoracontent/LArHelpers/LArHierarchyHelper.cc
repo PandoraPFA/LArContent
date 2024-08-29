@@ -1316,7 +1316,7 @@ void LArHierarchyHelper::MatchInfo::Match()
         MCHierarchy::NodeVector mcNodes;
         m_mcHierarchy.GetFlattenedNodes(pRootMC, mcNodes);
 
-	// Get all of the hits from the MC nodes (for selecting reco hits)
+        // Get all of the hits from the MC nodes (for selecting reco hits)
         CaloHitList allMCHits;
         for (const MCHierarchy::Node *pMCNode : mcNodes)
         {
@@ -1329,17 +1329,15 @@ void LArHierarchyHelper::MatchInfo::Match()
             RecoHierarchy::NodeVector recoNodes;
             m_recoHierarchy.GetFlattenedNodes(pRootPfo, recoNodes);
 
-            std::sort(mcNodes.begin(), mcNodes.end(),
-	        [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs)
+            std::sort(mcNodes.begin(), mcNodes.end(), [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs)
                 { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
-            std::sort(recoNodes.begin(), recoNodes.end(),
-		[](const RecoHierarchy::Node *lhs, const RecoHierarchy::Node *rhs)
+            std::sort(recoNodes.begin(), recoNodes.end(), [](const RecoHierarchy::Node *lhs, const RecoHierarchy::Node *rhs)
                 { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
 
             for (const RecoHierarchy::Node *pRecoNode : recoNodes)
             {
-		// Get the selected list of reco hits that overlap with all of the MC hits
-		// or just use all of the hits in the reco node
+                // Get the selected list of reco hits that overlap with all of the MC hits
+                // or just use all of the hits in the reco node
                 const CaloHitList selectedRecoHits = (m_qualityCuts.m_selectRecoHits == true)
                     ? LArHierarchyHelper::MatchInfo::GetSelectedRecoHits(pRecoNode, allMCHits)
                     : pRecoNode->GetCaloHits();
