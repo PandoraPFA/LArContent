@@ -352,7 +352,9 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
             for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
             {
                 const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
-                const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
+                const int isSignal{LArMCParticleHelper::IsNeutrino(
+				LArMCParticleHelper::GetParentMCParticle(pMCNode->GetLeadingMCParticle) ? 1 : 0};
+		const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
                 const int isCosmicRay{!isTestBeam && pMCNode->IsCosmicRay() ? 1 : 0};
                 const int isNeutrinoInt{!(isTestBeam || isCosmicRay) ? 1 : 0};
                 const int mcId{pMCNode->GetId()};
@@ -380,7 +382,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 FloatVector purityAdcVector, completenessAdcVector;
                 FloatVector purityVectorU, purityVectorV, purityVectorW, completenessVectorU, completenessVectorV, completenessVectorW;
                 FloatVector purityAdcVectorU, purityAdcVectorV, purityAdcVectorW, completenessAdcVectorU, completenessAdcVectorV, completenessAdcVectorW;
-                const CartesianVector &trueVertex{pLeadingMC->GetVertex()};
+                const CartesianVector &trueVertex{isSignal == 1 ? pLeadingMC->GetVertex() : null};
                 const float trueVtxX{trueVertex.GetX()};
                 const float trueVtxY{trueVertex.GetY()};
                 const float trueVtxZ{trueVertex.GetZ()};
@@ -433,7 +435,8 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                     {
                         try
                         {
-                            const CartesianVector recoVertex{LArPfoHelper::GetVertex(pRecoNode->GetLeadingPfo())->GetPosition()};
+                            const CartesianVector recoVertex{isSignal == 1 ? 
+				    LArPfoHelper::GetVertex(pRecoNode->GetLeadingPfo())->GetPosition() : null};
                             recoVtxX = recoVertex.GetX();
                             recoVtxY = recoVertex.GetY();
                             recoVtxZ = recoVertex.GetZ();
@@ -461,7 +464,8 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "mcMtmY", mcMtmY));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "mcMtmZ", mcMtmZ));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "mcEnergy", mcEnergy));
-                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isNuInteraction", isNeutrinoInt));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isSignal", isSignal));       
+	       	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isNuInteraction", isNeutrinoInt));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isCosmicRay", isCosmicRay));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isTestBeam", isTestBeam));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isLeadingLepton", isLeadingLepton));
