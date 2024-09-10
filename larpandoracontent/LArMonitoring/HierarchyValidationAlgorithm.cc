@@ -135,45 +135,40 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
             if (primaries.size() == 0)
                 continue;
             primaries.sort(LArMCParticleHelper::SortByMomentum);
-            const InteractionDescriptor descriptor{NULL};
-	    try
-	    {
-	        descriptor = LArInteractionTypeHelper::GetInteractionDescriptor(primaries);
-	    }
-	    catch
-	    {
-            }
-	    if (descriptor != NULL)
-            {
-                const int isCC{descriptor.IsCC()};
-                const int isQE{descriptor.IsQE()};
-                const int isResonant{descriptor.IsResonant()};
-                const int isDIS{descriptor.IsDIS()};
-                const int isCoherent{descriptor.IsCoherent()};
-                const int isNuMu{descriptor.IsMuonNeutrino()};
-                const int isNuE{descriptor.IsElectronNeutrino()};
-                const int nPiZero{static_cast<int>(descriptor.GetNumPiZero())};
-                const int nPiPlus{static_cast<int>(descriptor.GetNumPiPlus())};
-                const int nPiMinus{static_cast<int>(descriptor.GetNumPiMinus())};
-                const int nPhotons{static_cast<int>(descriptor.GetNumPhotons())};
-                const int nProtons{static_cast<int>(descriptor.GetNumProtons())};
-	    }
-            else
-            {
-                const int isCC{0};
-                const int isQE{0};
-                const int isResonant{0};
-                const int isDIS{0};
-                const int isCoherent{0};
-                const int isNuMu{0};
-                const int isNuE{0};
-                const int nPiZero{0};
-                const int nPiPlus{0};
-                const int nPiMinus{0};
-                const int nPhotons{0};
-                const int nProtons{0};
-            }
+	    
+	    int isCC{0};
+            int isQE{0};
+            int isResonant{0};
+            int isDIS{0};
+            int isCoherent{0};
+            int isNuMu{0};
+            int isNuE{0};
+            int nPiZero{0};
+            int nPiPlus{0};
+            int nPiMinus{0};
+            int nPhotons{0};
+            int nProtons{0};
 
+	    try
+            {
+                const InteractionDescriptor descriptor{LArInteractionTypeHelper::GetInteractionDescriptor(primaries)};
+                isCC = descriptor.IsCC();
+                isQE = descriptor.IsQE();
+                isResonant = descriptor.IsResonant();
+                isDIS = descriptor.IsDIS();
+                isCoherent = descriptor.IsCoherent();
+                isNuMu = descriptor.IsMuonNeutrino();
+                isNuE = descriptor.IsElectronNeutrino();
+                nPiZero = static_cast<int>(descriptor.GetNumPiZero());
+                nPiPlus = static_cast<int>(descriptor.GetNumPiPlus());
+                nPiMinus = static_cast<int>(descriptor.GetNumPiMinus());
+                nPhotons = static_cast<int>(descriptor.GetNumPhotons());
+                nProtons = static_cast<int>(descriptor.GetNumProtons());
+
+            }
+            catch (...)
+            {
+            }
 
             std::set<const LArHierarchyHelper::MCHierarchy::Node *> trackNodeSet, showerNodeSet;
             int nGoodTrackMatches{0}, nGoodShowerMatches{0};
@@ -372,20 +367,11 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
             if (primaries.size() == 0)
                 continue;
             primaries.sort(LArMCParticleHelper::SortByMomentum);
-	    const InteractionDescriptor descriptor{NULL};
-	    try
-	    {
-                descriptor = LArInteractionTypeHelper::GetInteractionDescriptor(primaries);
-	    }
-            catch
-	    {
-            }
 
             for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
             {
                 const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
-                const int isSignal{LArMCParticleHelper::IsNeutrino(
-				LArMCParticleHelper::GetParentMCParticle(pMCNode->GetLeadingMCParticle) ? 1 : 0};
+                const int isSignal{LArMCParticleHelper::IsNeutrino(LArMCParticleHelper::GetParentMCParticle(pMCNode->GetLeadingMCParticle())) ? 1 : 0};
 		const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
                 const int isCosmicRay{!isTestBeam && pMCNode->IsCosmicRay() ? 1 : 0};
                 const int isNeutrinoInt{!(isTestBeam || isCosmicRay) ? 1 : 0};
@@ -395,8 +381,8 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const int mcHits{static_cast<int>(pMCNode->GetCaloHits().size())};
                 const int isLeadingLepton{pMCNode->IsLeadingLepton() ? 1 : 0};
 		const CaloHitList mcCaloHits{pMCNode->GetCaloHits()};
-		float mcTotalMIPEnergy;
-		for (const CaloHit *pCaloHit : mcCaloHits};
+		float mcTotalMipEnergy{0};
+		for (const CaloHit *pCaloHit : mcCaloHits)
 		{
 		    mcTotalMipEnergy += pCaloHit->GetMipEquivalentEnergy();
 		}
@@ -416,11 +402,13 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const LArHierarchyHelper::RecoHierarchy::NodeVector &nodeVector{matches.GetRecoMatches()};
                 const int nMatches{static_cast<int>(nodeVector.size())};
                 IntVector recoSliceIdVector, recoIdVector, nRecoHitsVector, nSharedHitsVector;
+		FloatVector recoTotalAdcVector;
                 FloatVector purityVector, completenessVector;
                 FloatVector purityAdcVector, completenessAdcVector;
                 FloatVector purityVectorU, purityVectorV, purityVectorW, completenessVectorU, completenessVectorV, completenessVectorW;
                 FloatVector purityAdcVectorU, purityAdcVectorV, purityAdcVectorW, completenessAdcVectorU, completenessAdcVectorV, completenessAdcVectorW;
-                const CartesianVector &trueVertex{isSignal == 1 ? pLeadingMC->GetVertex() : null};
+                const CartesianVector null(0.f,0.f,0.f);
+		const CartesianVector &trueVertex{isSignal == 1 ? pLeadingMC->GetVertex() : null};
                 const float trueVtxX{trueVertex.GetX()};
                 const float trueVtxY{trueVertex.GetY()};
                 const float trueVtxZ{trueVertex.GetZ()};
@@ -432,36 +420,39 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 float vtxDz{std::numeric_limits<float>::max()};
                 float vtxDr{std::numeric_limits<float>::max()};
 
-                if (descriptor != NULL)
-		{
-  		    const int isCC{descriptor.IsCC()};
-                    const int isQE{descriptor.IsQE()};
-                    const int isResonant{descriptor.IsResonant()};
-                    const int isDIS{descriptor.IsDIS()};
-                    const int isCoherent{descriptor.IsCoherent()};
-                    const int isNuMu{descriptor.IsMuonNeutrino()};
-                    const int isNuE{descriptor.IsElectronNeutrino()};
-                    const int nPiZero{static_cast<int>(descriptor.GetNumPiZero())};
-                    const int nPiPlus{static_cast<int>(descriptor.GetNumPiPlus())};
-                    const int nPiMinus{static_cast<int>(descriptor.GetNumPiMinus())};
-                    const int nPhotons{static_cast<int>(descriptor.GetNumPhotons())};
-                    const int nProtons{static_cast<int>(descriptor.GetNumProtons())};
-		}
-		else
-		{
-		    const int isCC{0};
-                    const int isQE{0};
-                    const int isResonant{0};
-                    const int isDIS{0};
-                    const int isCoherent{0};
-                    const int isNuMu{0};
-                    const int isNuE{0};
- 		    const int nPiZero{0};
-                    const int nPiPlus{0};
-                    const int nPiMinus{0};
-                    const int nPhotons{0};
-                    const int nProtons{0};
-		}
+                int isCC{0};
+                int isQE{0};
+                int isResonant{0};
+                int isDIS{0};
+                int isCoherent{0};
+                int isNuMu{0};
+                int isNuE{0};
+                int nPiZero{0};
+                int nPiPlus{0};
+                int nPiMinus{0};
+                int nPhotons{0};
+		int nProtons{0}; 
+
+                try
+                {
+                    const InteractionDescriptor descriptor{LArInteractionTypeHelper::GetInteractionDescriptor(primaries)};
+                    isCC = descriptor.IsCC();
+                    isQE = descriptor.IsQE();
+                    isResonant = descriptor.IsResonant();
+                    isDIS = descriptor.IsDIS();
+                    isCoherent = descriptor.IsCoherent();
+                    isNuMu = descriptor.IsMuonNeutrino();
+                    isNuE = descriptor.IsElectronNeutrino();
+                    nPiZero = static_cast<int>(descriptor.GetNumPiZero());
+                    nPiPlus = static_cast<int>(descriptor.GetNumPiPlus());
+                    nPiMinus = static_cast<int>(descriptor.GetNumPiMinus());
+                    nPhotons = static_cast<int>(descriptor.GetNumPhotons());
+                    nProtons = static_cast<int>(descriptor.GetNumProtons());
+
+                }
+                catch (...)
+                {
+                }
 
                 for (const LArHierarchyHelper::RecoHierarchy::Node *pRecoNode : nodeVector)
                 {
@@ -471,12 +462,13 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                     recoIdVector.emplace_back(pRecoNode->GetParticleId());
                     nRecoHitsVector.emplace_back(static_cast<int>(matches.GetSelectedRecoHits(pRecoNode).size()));
 		    const CaloHitList recoCaloHits{pRecoNode->GetCaloHits()};
-                    float recoTotalMIPEnergy;
-                    for (const CaloHit *pCaloHit : recoCaloHits};
+                    float recoTotalMipEnergy{0};
+                    for (const CaloHit *pCaloHit : recoCaloHits)
                     {
                         recoTotalMipEnergy += pCaloHit->GetMipEquivalentEnergy();
                     }
-                    nSharedHitsVector.emplace_back(static_cast<int>(matches.GetSharedHits(pRecoNode)));
+                    recoTotalAdcVector.emplace_back(recoTotalMipEnergy);
+		    nSharedHitsVector.emplace_back(static_cast<int>(matches.GetSharedHits(pRecoNode)));
                     purityVector.emplace_back(matches.GetPurity(pRecoNode));
                     completenessVector.emplace_back(matches.GetCompleteness(pRecoNode));
                     purityAdcVector.emplace_back(matches.GetPurity(pRecoNode, true));
@@ -526,7 +518,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "mcMtmY", mcMtmY));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "mcMtmZ", mcMtmZ));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "mcEnergy", mcEnergy));
-		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "recoTotalAdc", recoTotalMipEnergy));
+		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "recoTotalAdc", &recoTotalAdcVector));
 		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "mcTotalAdc", mcTotalMipEnergy));
 		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isSignal", isSignal));       
 	       	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isNuInteraction", isNeutrinoInt));
