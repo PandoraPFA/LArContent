@@ -135,20 +135,45 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
             if (primaries.size() == 0)
                 continue;
             primaries.sort(LArMCParticleHelper::SortByMomentum);
-            const InteractionDescriptor descriptor{LArInteractionTypeHelper::GetInteractionDescriptor(primaries)};
+            const InteractionDescriptor descriptor{NULL};
+	    try
+	    {
+	        descriptor = LArInteractionTypeHelper::GetInteractionDescriptor(primaries);
+	    }
+	    catch
+	    {
+            }
+	    if (descriptor != NULL)
+            {
+                const int isCC{descriptor.IsCC()};
+                const int isQE{descriptor.IsQE()};
+                const int isResonant{descriptor.IsResonant()};
+                const int isDIS{descriptor.IsDIS()};
+                const int isCoherent{descriptor.IsCoherent()};
+                const int isNuMu{descriptor.IsMuonNeutrino()};
+                const int isNuE{descriptor.IsElectronNeutrino()};
+                const int nPiZero{static_cast<int>(descriptor.GetNumPiZero())};
+                const int nPiPlus{static_cast<int>(descriptor.GetNumPiPlus())};
+                const int nPiMinus{static_cast<int>(descriptor.GetNumPiMinus())};
+                const int nPhotons{static_cast<int>(descriptor.GetNumPhotons())};
+                const int nProtons{static_cast<int>(descriptor.GetNumProtons())};
+	    }
+            else
+            {
+                const int isCC{0};
+                const int isQE{0};
+                const int isResonant{0};
+                const int isDIS{0};
+                const int isCoherent{0};
+                const int isNuMu{0};
+                const int isNuE{0};
+                const int nPiZero{0};
+                const int nPiPlus{0};
+                const int nPiMinus{0};
+                const int nPhotons{0};
+                const int nProtons{0};
+            }
 
-            const int isCC{descriptor.IsCC()};
-            const int isQE{descriptor.IsQE()};
-            const int isResonant{descriptor.IsResonant()};
-            const int isDIS{descriptor.IsDIS()};
-            const int isCoherent{descriptor.IsCoherent()};
-            const int isNuMu{descriptor.IsMuonNeutrino()};
-            const int isNuE{descriptor.IsElectronNeutrino()};
-            const int nPiZero{static_cast<int>(descriptor.GetNumPiZero())};
-            const int nPiPlus{static_cast<int>(descriptor.GetNumPiPlus())};
-            const int nPiMinus{static_cast<int>(descriptor.GetNumPiMinus())};
-            const int nPhotons{static_cast<int>(descriptor.GetNumPhotons())};
-            const int nProtons{static_cast<int>(descriptor.GetNumProtons())};
 
             std::set<const LArHierarchyHelper::MCHierarchy::Node *> trackNodeSet, showerNodeSet;
             int nGoodTrackMatches{0}, nGoodShowerMatches{0};
@@ -347,7 +372,14 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
             if (primaries.size() == 0)
                 continue;
             primaries.sort(LArMCParticleHelper::SortByMomentum);
-            const InteractionDescriptor descriptor{LArInteractionTypeHelper::GetInteractionDescriptor(primaries)};
+	    const InteractionDescriptor descriptor{NULL};
+	    try
+	    {
+                descriptor = LArInteractionTypeHelper::GetInteractionDescriptor(primaries);
+	    }
+            catch
+	    {
+            }
 
             for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
             {
@@ -400,18 +432,36 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 float vtxDz{std::numeric_limits<float>::max()};
                 float vtxDr{std::numeric_limits<float>::max()};
 
-                const int isCC{descriptor.IsCC()};
-                const int isQE{descriptor.IsQE()};
-                const int isResonant{descriptor.IsResonant()};
-                const int isDIS{descriptor.IsDIS()};
-                const int isCoherent{descriptor.IsCoherent()};
-                const int isNuMu{descriptor.IsMuonNeutrino()};
-                const int isNuE{descriptor.IsElectronNeutrino()};
-                const int nPiZero{static_cast<int>(descriptor.GetNumPiZero())};
-                const int nPiPlus{static_cast<int>(descriptor.GetNumPiPlus())};
-                const int nPiMinus{static_cast<int>(descriptor.GetNumPiMinus())};
-                const int nPhotons{static_cast<int>(descriptor.GetNumPhotons())};
-                const int nProtons{static_cast<int>(descriptor.GetNumProtons())};
+                if (descriptor != NULL)
+		{
+  		    const int isCC{descriptor.IsCC()};
+                    const int isQE{descriptor.IsQE()};
+                    const int isResonant{descriptor.IsResonant()};
+                    const int isDIS{descriptor.IsDIS()};
+                    const int isCoherent{descriptor.IsCoherent()};
+                    const int isNuMu{descriptor.IsMuonNeutrino()};
+                    const int isNuE{descriptor.IsElectronNeutrino()};
+                    const int nPiZero{static_cast<int>(descriptor.GetNumPiZero())};
+                    const int nPiPlus{static_cast<int>(descriptor.GetNumPiPlus())};
+                    const int nPiMinus{static_cast<int>(descriptor.GetNumPiMinus())};
+                    const int nPhotons{static_cast<int>(descriptor.GetNumPhotons())};
+                    const int nProtons{static_cast<int>(descriptor.GetNumProtons())};
+		}
+		else
+		{
+		    const int isCC{0};
+                    const int isQE{0};
+                    const int isResonant{0};
+                    const int isDIS{0};
+                    const int isCoherent{0};
+                    const int isNuMu{0};
+                    const int isNuE{0};
+ 		    const int nPiZero{0};
+                    const int nPiPlus{0};
+                    const int nPiMinus{0};
+                    const int nPhotons{0};
+                    const int nProtons{0};
+		}
 
                 for (const LArHierarchyHelper::RecoHierarchy::Node *pRecoNode : nodeVector)
                 {
