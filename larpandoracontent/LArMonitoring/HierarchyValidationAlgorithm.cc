@@ -362,6 +362,12 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 const int tier{pMCNode->GetHierarchyTier()};
                 const int mcHits{static_cast<int>(pMCNode->GetCaloHits().size())};
                 const int isLeadingLepton{pMCNode->IsLeadingLepton() ? 1 : 0};
+		const CaloHitList mcCaloHits{pMCNode->GetCaloHits()};
+		float mcTotalMIPEnergy;
+		for (const CaloHit *pCaloHit : mcCaloHits};
+		{
+		    mcTotalMipEnergy += pCaloHit->GetMipEquivalentEnergy();
+		}
 
                 const MCParticle *const pLeadingMC{pMCNode->GetLeadingMCParticle()};
                 const MCParticleList &parentList{pLeadingMC->GetParentList()};
@@ -414,6 +420,12 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                     recoSliceIdVector.emplace_back(sliceId);
                     recoIdVector.emplace_back(pRecoNode->GetParticleId());
                     nRecoHitsVector.emplace_back(static_cast<int>(matches.GetSelectedRecoHits(pRecoNode).size()));
+		    const CaloHitList recoCaloHits{pRecoNode->GetCaloHits()};
+                    float recoTotalMIPEnergy;
+                    for (const CaloHit *pCaloHit : recoCaloHits};
+                    {
+                        recoTotalMipEnergy += pCaloHit->GetMipEquivalentEnergy();
+                    }
                     nSharedHitsVector.emplace_back(static_cast<int>(matches.GetSharedHits(pRecoNode)));
                     purityVector.emplace_back(matches.GetPurity(pRecoNode));
                     completenessVector.emplace_back(matches.GetCompleteness(pRecoNode));
@@ -464,7 +476,9 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "mcMtmY", mcMtmY));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "mcMtmZ", mcMtmZ));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "mcEnergy", mcEnergy));
-                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isSignal", isSignal));       
+		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "recoTotalAdc", recoTotalMipEnergy));
+		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "mcTotalAdc", mcTotalMipEnergy));
+		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isSignal", isSignal));       
 	       	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isNuInteraction", isNeutrinoInt));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isCosmicRay", isCosmicRay));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_MCTreeName.c_str(), "isTestBeam", isTestBeam));
