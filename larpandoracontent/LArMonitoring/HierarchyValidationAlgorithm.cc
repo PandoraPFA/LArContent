@@ -136,18 +136,8 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
                 continue;
             primaries.sort(LArMCParticleHelper::SortByMomentum);
 	    
-	    int isCC{0};
-            int isQE{0};
-            int isResonant{0};
-            int isDIS{0};
-            int isCoherent{0};
-            int isNuMu{0};
-            int isNuE{0};
-            int nPiZero{0};
-            int nPiPlus{0};
-            int nPiMinus{0};
-            int nPhotons{0};
-            int nProtons{0};
+	    int isCC{0}; isQE{0}, isResonant{0}, isDIS{0}, isCoherent{0}, isNuMu{0}, isNuE{0}, nPiZero{0}, nPiPlus{0}, nPiMinus{0}, 
+		nPhotons{0}, nProtons{0};
 
 	    try
             {
@@ -164,7 +154,6 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
                 nPiMinus = static_cast<int>(descriptor.GetNumPiMinus());
                 nPhotons = static_cast<int>(descriptor.GetNumPhotons());
                 nProtons = static_cast<int>(descriptor.GetNumProtons());
-
             }
             catch (...)
             {
@@ -420,19 +409,8 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 float vtxDz{std::numeric_limits<float>::max()};
                 float vtxDr{std::numeric_limits<float>::max()};
 
-                int isCC{0};
-                int isQE{0};
-                int isResonant{0};
-                int isDIS{0};
-                int isCoherent{0};
-                int isNuMu{0};
-                int isNuE{0};
-                int nPiZero{0};
-                int nPiPlus{0};
-                int nPiMinus{0};
-                int nPhotons{0};
-		int nProtons{0}; 
-
+                int isCC{0}; isQE{0}, isResonant{0}, isDIS{0}, isCoherent{0}, isNuMu{0}, isNuE{0}, nPiZero{0}, nPiPlus{0}, nPiMinus{0},
+                    nPhotons{0}, nProtons{0};
                 try
                 {
                     const InteractionDescriptor descriptor{LArInteractionTypeHelper::GetInteractionDescriptor(primaries)};
@@ -448,7 +426,6 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                     nPiMinus = static_cast<int>(descriptor.GetNumPiMinus());
                     nPhotons = static_cast<int>(descriptor.GetNumPhotons());
                     nProtons = static_cast<int>(descriptor.GetNumProtons());
-
                 }
                 catch (...)
                 {
@@ -489,8 +466,9 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                     {
                         try
                         {
-                            const CartesianVector recoVertex{isSignal == 1 ? 
-				    LArPfoHelper::GetVertex(pRecoNode->GetLeadingPfo())->GetPosition() : null};
+                            const CartesianVector null(0.f,0.f,0.f);
+			    const CartesianVector recoVertex{isSignal == 1 ? LArPfoHelper::GetVertex(pRecoNode->GetLeadingPfo())
+				  ->GetPosition() : null};
                             recoVtxX = recoVertex.GetX();
                             recoVtxY = recoVertex.GetY();
                             recoVtxZ = recoVertex.GetZ();
