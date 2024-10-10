@@ -16,6 +16,7 @@
 #include "larpandoracontent/LArCheating/CheatingBeamParticleSliceSelectionTool.h"
 #include "larpandoracontent/LArCheating/CheatingClusterCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingClusterCreationAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.h"
 #include "larpandoracontent/LArCheating/CheatingCosmicRayRemovalAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
@@ -175,6 +176,7 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/MvaLowEClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/SimpleClusterGrowingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/SimpleClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
@@ -239,6 +241,7 @@
     d("LArEventReading",                        EventReadingAlgorithm)                                                          \
     d("LArEventWriting",                        EventWritingAlgorithm)                                                          \
     d("LArCheatingClusterCharacterisation",     CheatingClusterCharacterisationAlgorithm)                                       \
+    d("LArCheatingClusterMerging",              CheatingClusterMergingAlgorithm)                                                \
     d("LArCheatingClusterCreation",             CheatingClusterCreationAlgorithm)                                               \
     d("LArCheatingCosmicRayIdentification",     CheatingCosmicRayIdentificationAlg)                                             \
     d("LArCheatingCosmicRayShowerMatching",     CheatingCosmicRayShowerMatchingAlg)                                             \
@@ -297,6 +300,7 @@
     d("LArHitWidthClusterMerging",              HitWidthClusterMergingAlgorithm)                                                \
     d("LArLongitudinalAssociation",             LongitudinalAssociationAlgorithm)                                               \
     d("LArLongitudinalExtension",               LongitudinalExtensionAlgorithm)                                                 \
+    d("LArBdtLowEClusterMerging",               BdtLowEClusterMergingAlgorithm)                                                 \
     d("LArSimpleClusterGrowing",                SimpleClusterGrowingAlgorithm)                                                  \
     d("LArSimpleClusterMerging",                SimpleClusterMergingAlgorithm)                                                  \
     d("LArTransverseAssociation",               TransverseAssociationAlgorithm)                                                 \
