@@ -327,6 +327,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
     {
         int interaction{0};
         MCParticleList rootMCParticles;
+	const CartesianVector null(0.f,0.f,0.f);
         matchInfo.GetRootMCParticles(rootMCParticles);
         PfoList rootPfos;
         const LArHierarchyHelper::RecoHierarchy &recoHierarchy{matchInfo.GetRecoHierarchy()};
@@ -396,7 +397,6 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 FloatVector purityAdcVector, completenessAdcVector;
                 FloatVector purityVectorU, purityVectorV, purityVectorW, completenessVectorU, completenessVectorV, completenessVectorW;
                 FloatVector purityAdcVectorU, purityAdcVectorV, purityAdcVectorW, completenessAdcVectorU, completenessAdcVectorV, completenessAdcVectorW;
-                const CartesianVector null(0.f,0.f,0.f);
 		const CartesianVector &trueVertex{isSignal == 1 ? pLeadingMC->GetVertex() : null};
                 const float trueVtxX{trueVertex.GetX()};
                 const float trueVtxY{trueVertex.GetY()};
@@ -466,9 +466,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                     {
                         try
                         {
-                            const CartesianVector null(0.f,0.f,0.f);
-			    const CartesianVector recoVertex{isSignal == 1 ? LArPfoHelper::GetVertex(pRecoNode->GetLeadingPfo())
-				  ->GetPosition() : null};
+			    const CartesianVector recoVertex{isSignal == 1 ? LArPfoHelper::GetVertex(pRecoNode->GetLeadingPfo())->GetPosition() : null};
                             recoVtxX = recoVertex.GetX();
                             recoVtxY = recoVertex.GetY();
                             recoVtxZ = recoVertex.GetZ();
