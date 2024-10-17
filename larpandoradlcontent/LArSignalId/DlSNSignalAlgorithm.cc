@@ -224,7 +224,7 @@ StatusCode DlSNSignalAlgorithm::PrepareTrainingSample()
         const std::string trainingFilename{m_trainingOutputFile + "_" + listname + ".csv"};
         unsigned long nHits{0};
 
-        // Calo hits
+        // Loop over all calo hits in appropriate region
         double xMin{driftMin}, xMax{driftMax}, zMin{wireMin[view]}, zMax{wireMax[view]};
 
         LArMvaHelper::MvaFeatureVector featureVector;

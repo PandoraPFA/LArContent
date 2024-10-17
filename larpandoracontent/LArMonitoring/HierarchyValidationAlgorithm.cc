@@ -136,7 +136,7 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
                 continue;
             primaries.sort(LArMCParticleHelper::SortByMomentum);
 	    
-	    int isCC{0}; isQE{0}, isResonant{0}, isDIS{0}, isCoherent{0}, isNuMu{0}, isNuE{0}, nPiZero{0}, nPiPlus{0}, nPiMinus{0}, 
+	    int isCC{0}, isQE{0}, isResonant{0}, isDIS{0}, isCoherent{0}, isNuMu{0}, isNuE{0}, nPiZero{0}, nPiPlus{0}, nPiMinus{0}, 
 		nPhotons{0}, nProtons{0};
 
 	    try
@@ -409,7 +409,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 float vtxDz{std::numeric_limits<float>::max()};
                 float vtxDr{std::numeric_limits<float>::max()};
 
-                int isCC{0}; isQE{0}, isResonant{0}, isDIS{0}, isCoherent{0}, isNuMu{0}, isNuE{0}, nPiZero{0}, nPiPlus{0}, nPiMinus{0},
+                int isCC{0}, isQE{0}, isResonant{0}, isDIS{0}, isCoherent{0}, isNuMu{0}, isNuE{0}, nPiZero{0}, nPiPlus{0}, nPiMinus{0},
                     nPhotons{0}, nProtons{0};
                 try
                 {
