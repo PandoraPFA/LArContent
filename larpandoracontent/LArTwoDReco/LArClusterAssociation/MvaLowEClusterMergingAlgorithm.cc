@@ -284,8 +284,8 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 		vectorTool = centroid1;
 	    }
             std::vector<float> distanceDistribution;
-	    float finalDistance{0}, maxEdgeHitSeparation{std::numeric_limits<float>::lowest()}, 
-                minEdgeHitSeparation{std::numeric_limits<float>::max()}, adc1{0}, adc2{0};
+	    float finalDistance{0.f}, maxEdgeHitSeparation{std::numeric_limits<float>::lowest()}, 
+                minEdgeHitSeparation{std::numeric_limits<float>::max()}, adc1{0.f}, adc2{0.f};
             int contact{0}, proximity{0};;
 
 	    for (const CaloHit *const caloHit1 : largestList)
