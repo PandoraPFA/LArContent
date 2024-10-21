@@ -47,10 +47,20 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
 {
     try
     {
+        // INFO: See if there is already a vertex, and quit early if there is.
+        //       The vertex has likely already been defined by another algorithm.
+        const VertexList *pVertexList(nullptr);
+        PandoraContentApi::GetCurrentList(*this, pVertexList);
+        if (pVertexList != nullptr && ! pVertexList->empty()) {
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "CandidateVertexCreationAlgorithm: Vertex already defined, skipping" << std::endl;
+
+            return STATUS_CODE_SUCCESS;
+        }
+
         ClusterVector clusterVectorU, clusterVectorV, clusterVectorW;
         this->SelectClusters(clusterVectorU, clusterVectorV, clusterVectorW);
 
-        const VertexList *pVertexList(NULL);
         std::string temporaryListName;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
 
