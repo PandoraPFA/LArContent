@@ -10,8 +10,8 @@
 
 #include "larpandoracontent/LArMonitoring/VisualParticleMonitoringAlgorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
 
@@ -53,7 +53,6 @@ StatusCode VisualParticleMonitoringAlgorithm::Run()
         const MCParticleList *pMCParticleList(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
         this->MakeSelection(pCaloHitList, targetMCParticleToHitsMap);
- 
     }
 
     if (m_visualizeMC)
@@ -449,21 +448,21 @@ void VisualParticleMonitoringAlgorithm::VisualizePfoByParticleId(const PfoList &
 
 void VisualParticleMonitoringAlgorithm::MakeSelection(const CaloHitList *pCaloHitList, LArMCParticleHelper::MCContributionMap &mcMap) const
 {
- 
+
     for (const CaloHit *pCaloHit : *pCaloHitList)
     {
-	try
-	{
-	    const MCParticle *pMC{MCParticleHelper::GetMainMCParticle(pCaloHit)};
-            const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMC));
-            if (LArMCParticleHelper::IsNeutrino(pParentMCParticle)) 
-            {
-	        mcMap[pMC].emplace_back(pCaloHit);
-            }
-	}
-	catch (const StatusCodeException &)
+        try
         {
-	}
+            const MCParticle *pMC{MCParticleHelper::GetMainMCParticle(pCaloHit)};
+            const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMC));
+            if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
+            {
+                mcMap[pMC].emplace_back(pCaloHit);
+            }
+        }
+        catch (const StatusCodeException &)
+        {
+        }
     }
 }
 #endif // MONITORING

@@ -3,20 +3,20 @@
  *
  * @brief  Implementation file for the cheating cluster merging algorithm.
  *
- * $Log: 
+ * $Log:
  */
 
-#include "Pandora/AlgorithmHeaders.h"
 #include "Helpers/MCParticleHelper.h"
 #include "Objects/MCParticle.h"
+#include "Pandora/AlgorithmHeaders.h"
 
 #include <cmath>
 
 #include "larpandoracontent/LArCheating/CheatingClusterMergingAlgorithm.h"
-#include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
+#include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 
 using namespace pandora;
 
@@ -36,7 +36,8 @@ StatusCode CheatingClusterMergingAlgorithm::Run()
         try
         {
             const ClusterList *pClusterList{nullptr};
-            PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+            PANDORA_RETURN_RESULT_IF_AND_IF(
+                STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
 
             if (!pClusterList || pClusterList->empty())
             {
@@ -44,8 +45,8 @@ StatusCode CheatingClusterMergingAlgorithm::Run()
                     std::cout << "ClusterMergingAlgorithm: unable to find cluster list " << clusterListName << std::endl;
 
                 continue;
-            } 
-	    this->CheatedClusterMerging(pClusterList, clusterListName);
+            }
+            this->CheatedClusterMerging(pClusterList, clusterListName);
         }
         catch (StatusCodeException &statusCodeException)
         {
@@ -55,10 +56,10 @@ StatusCode CheatingClusterMergingAlgorithm::Run()
     return STATUS_CODE_SUCCESS;
 }
 //--------------------------------------------------------------------------------------------//
-const MCParticle* CheatingClusterMergingAlgorithm::GetMCForCluster(const Cluster *const cluster, std::map<const Cluster*,
-    const MCParticle*> &clusterToMCMap) const
+const MCParticle *CheatingClusterMergingAlgorithm::GetMCForCluster(
+    const Cluster *const cluster, std::map<const Cluster *, const MCParticle *> &clusterToMCMap) const
 {
-    const MCParticle* clusterMC{nullptr};
+    const MCParticle *clusterMC{nullptr};
 
     if (clusterToMCMap.count(cluster) > 0)
     {
@@ -73,8 +74,7 @@ const MCParticle* CheatingClusterMergingAlgorithm::GetMCForCluster(const Cluster
         }
         catch (StatusCodeException e)
         {
-            std::cout << "Failed to get MC particle for cluster of " << cluster->GetOrderedCaloHitList().size()
-                      << " : " << e.ToString() << std::endl;
+            std::cout << "Failed to get MC particle for cluster of " << cluster->GetOrderedCaloHitList().size() << " : " << e.ToString() << std::endl;
         }
     }
     return clusterMC;
@@ -82,7 +82,7 @@ const MCParticle* CheatingClusterMergingAlgorithm::GetMCForCluster(const Cluster
 
 //---------------------------------------------------------------------------------------------//
 
-bool CheatingClusterMergingAlgorithm::IsValidToUse(const Cluster *const cluster, std::map<const Cluster*, bool> &clusterIsUsed) const
+bool CheatingClusterMergingAlgorithm::IsValidToUse(const Cluster *const cluster, std::map<const Cluster *, bool> &clusterIsUsed) const
 {
     if (!cluster->IsAvailable())
         return false;
@@ -100,9 +100,9 @@ bool CheatingClusterMergingAlgorithm::IsValidToUse(const Cluster *const cluster,
 
 void CheatingClusterMergingAlgorithm::CheatedClusterMerging(const pandora::ClusterList *const pClusterList, const std::string &listName) const
 {
-    std::map<const Cluster*, const MCParticle*> clusterToMCParticleMap;
-    std::map<const Cluster*, bool> clusterIsUsed;
-    std::map<const Cluster*, ClusterVector> clustersToMerge;
+    std::map<const Cluster *, const MCParticle *> clusterToMCParticleMap;
+    std::map<const Cluster *, bool> clusterIsUsed;
+    std::map<const Cluster *, ClusterVector> clustersToMerge;
 
     for (auto it = pClusterList->begin(); it != pClusterList->end(); ++it)
     {
@@ -113,7 +113,8 @@ void CheatingClusterMergingAlgorithm::CheatedClusterMerging(const pandora::Clust
 
         const MCParticle *clusterMC(this->GetMCForCluster(cluster, clusterToMCParticleMap));
 
-        for (auto it2 = std::next(it); it2 != pClusterList->end(); ++it2) {
+        for (auto it2 = std::next(it); it2 != pClusterList->end(); ++it2)
+        {
             const Cluster *const otherCluster(*it2);
 
             if (!this->IsValidToUse(otherCluster, clusterIsUsed))
@@ -126,7 +127,7 @@ void CheatingClusterMergingAlgorithm::CheatedClusterMerging(const pandora::Clust
                 clusterIsUsed[cluster] = true;
                 clusterIsUsed[otherCluster] = true;
                 clustersToMerge[cluster].emplace_back(otherCluster);
-            }    
+            }
         }
     }
 
@@ -137,17 +138,17 @@ void CheatingClusterMergingAlgorithm::CheatedClusterMerging(const pandora::Clust
 
         for (auto clusterToMerge : clusters)
         {
-            if (! clusterToMerge->IsAvailable())
+            if (!clusterToMerge->IsAvailable())
                 continue;
 
             try
             {
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, 
-				   PandoraContentApi::MergeAndDeleteClusters(*this, currentCluster, clusterToMerge, listName, listName));
-            } 
-	    catch (StatusCodeException) 
-	    {
-	    }
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                    PandoraContentApi::MergeAndDeleteClusters(*this, currentCluster, clusterToMerge, listName, listName));
+            }
+            catch (StatusCodeException)
+            {
+            }
         }
     }
 }
@@ -156,14 +157,12 @@ void CheatingClusterMergingAlgorithm::CheatedClusterMerging(const pandora::Clust
 
 StatusCode CheatingClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-	"InputClusterListNames", m_inputClusterListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MCParticleListName", m_mcParticleListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinNCaloHits", m_minNCaloHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinNCaloHits", m_minNCaloHits));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -37,9 +37,8 @@ public:
     virtual ~DlSNSignalAlgorithm();
 
 private:
-
-    typedef std::pair<int, int> Pixel; // A Pixel is a row, column pair
-    typedef std::map<const pandora::CaloHit*, Pixel> PixelMap; //A mapping between a CaloHit and a Pixel in the canvas
+    typedef std::pair<int, int> Pixel;                          // A Pixel is a row, column pair
+    typedef std::map<const pandora::CaloHit *, Pixel> PixelMap; //A mapping between a CaloHit and a Pixel in the canvas
 
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -97,37 +96,37 @@ private:
      */
     void GetHitRegion(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax) const;
 
-    bool m_trainingMode;                      ///< Training mode
-    std::string m_trainingOutputFile;         ///< Output file name for training examples
-    std::string m_inputSignalListName;        ///< Input vertex list name if 2nd pass
-    pandora::StringVector m_caloHitListNames; ///< Names of input calo hit lists
-    LArDLHelper::TorchModel m_modelU;         ///< The model for the U view
-    LArDLHelper::TorchModel m_modelV;         ///< The model for the V view
-    LArDLHelper::TorchModel m_modelW;         ///< The model for the W view
-    int m_event;                              ///< The current event number
-    int m_pass;                               ///< The pass of the train/infer step
-    int m_height;                             ///< The height of the images
-    int m_width;                              ///< The width of the images
-    float m_driftStep;                        ///< The size of a pixel in the drift direction in cm (most relevant in pass 2)
-    bool m_visualise;                         ///< Whether or not to visualise the candidate vertices
-    bool m_writeTree;                         ///< Whether or not to write validation details to a ROOT tree
-    std::string m_rootTreeName;               ///< The ROOT tree name
-    std::string m_rootFileName;               ///< The ROOT file name
-    std::mt19937 m_rng;                       ///< The random number generator
-    bool m_printOut;                          ///< Whether or not to print out network outputs of CaloHitList names and sizes
-    std::string m_signalListNameU;            ///< Output signal CaloHitListU name
-    std::string m_signalListNameV;            ///< Output signal CaloHitListV name
-    std::string m_signalListNameW;            ///< Output signal CaloHitListW name
-    std::string m_signalListName2D;           ///< Output signal CaloHitList2D name
-    std::string m_caloHitListName2D;          ///< Input CaloHitList2D name
+    bool m_trainingMode;                           ///< Training mode
+    std::string m_trainingOutputFile;              ///< Output file name for training examples
+    std::string m_inputSignalListName;             ///< Input vertex list name if 2nd pass
+    pandora::StringVector m_caloHitListNames;      ///< Names of input calo hit lists
+    LArDLHelper::TorchModel m_modelU;              ///< The model for the U view
+    LArDLHelper::TorchModel m_modelV;              ///< The model for the V view
+    LArDLHelper::TorchModel m_modelW;              ///< The model for the W view
+    int m_event;                                   ///< The current event number
+    int m_pass;                                    ///< The pass of the train/infer step
+    int m_height;                                  ///< The height of the images
+    int m_width;                                   ///< The width of the images
+    float m_driftStep;                             ///< The size of a pixel in the drift direction in cm (most relevant in pass 2)
+    bool m_visualise;                              ///< Whether or not to visualise the candidate vertices
+    bool m_writeTree;                              ///< Whether or not to write validation details to a ROOT tree
+    std::string m_rootTreeName;                    ///< The ROOT tree name
+    std::string m_rootFileName;                    ///< The ROOT file name
+    std::mt19937 m_rng;                            ///< The random number generator
+    bool m_printOut;                               ///< Whether or not to print out network outputs of CaloHitList names and sizes
+    std::string m_signalListNameU;                 ///< Output signal CaloHitListU name
+    std::string m_signalListNameV;                 ///< Output signal CaloHitListV name
+    std::string m_signalListNameW;                 ///< Output signal CaloHitListW name
+    std::string m_signalListName2D;                ///< Output signal CaloHitList2D name
+    std::string m_caloHitListName2D;               ///< Input CaloHitList2D name
     pandora::StringVector m_inputCaloHitListNames; ///< Names of input calo hit lists, passed from Pass 1 of DLSignalAlg
-    std::string m_backgroundListName;         ///< Input Background CaloHitList name
-    bool m_applyCheatedSeparation;            ///< Whether cheating to separate background and signal hits 
-    bool m_simpleZoom;                        ///< Decide whethere to run a simple loop to find highest adc hit or run network
-    long unsigned int m_passOneTrustThreshold;///< Number of pixels in pass one required to trust the wire finding ability, below this                                                           threshold, the algorithm will use highest ADC within Drift Min/Max to set wire limits
-    const int PHOTON_CLASS{2};                ///< Constant for network classification for photons
-    const int ELECTRON_CLASS{3};                ///< Constant for network classification for electrons
-    const int SIGNAL_CLASS{2};                ///< Constant for network classification for signal
+    std::string m_backgroundListName;              ///< Input Background CaloHitList name
+    bool m_applyCheatedSeparation;                 ///< Whether cheating to separate background and signal hits
+    bool m_simpleZoom;                             ///< Decide whethere to run a simple loop to find highest adc hit or run network
+    long unsigned int m_passOneTrustThreshold; ///< Number of pixels in pass one required to trust the wire finding ability, below this                                                           threshold, the algorithm will use highest ADC within Drift Min/Max to set wire limits
+    const int PHOTON_CLASS{2};                 ///< Constant for network classification for photons
+    const int ELECTRON_CLASS{3};               ///< Constant for network classification for electrons
+    const int SIGNAL_CLASS{2};                 ///< Constant for network classification for signal
 };
 
 } // namespace lar_dl_content

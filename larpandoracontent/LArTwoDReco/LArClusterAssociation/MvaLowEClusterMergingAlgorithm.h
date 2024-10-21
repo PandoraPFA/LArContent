@@ -46,10 +46,10 @@ protected:
       *  @param  cluster         The current cluster to lookup
       *  @param  clusterToMCMap  Map from Cluster to MC to cache results.
       */
-    const pandora::MCParticle* GetMCForCluster(const pandora::Cluster *const cluster, std::map<const pandora::Cluster*,
-        const pandora::MCParticle*> &clusterToMCMap) const;
+    const pandora::MCParticle *GetMCForCluster(
+        const pandora::Cluster *const cluster, std::map<const pandora::Cluster *, const pandora::MCParticle *> &clusterToMCMap) const;
 
-    bool IsValidToUse(const pandora::Cluster *const cluster, std::map<const pandora::Cluster*, bool> &clusterIsUsed) const;
+    bool IsValidToUse(const pandora::Cluster *const cluster, std::map<const pandora::Cluster *, bool> &clusterIsUsed) const;
 
     double Angle(const pandora::CartesianVector vector1, const pandora::CartesianVector vector2) const;
 
@@ -59,30 +59,30 @@ protected:
 
     pandora::StatusCode EdgeHitComparer(const pandora::ClusterList *const pClusterList, const std::string &listName) const;
 
-    pandora::StringVector  m_inputClusterListNames; ///< The names of the input cluster lists.
-    std::string            m_mcParticleListName;    ///< Input MC particle list name.
-    bool                   m_trainingSetMode;       ///< Whether to train
-    bool                   m_enableProbability;     ///< Whether to use probabilities instead of binary classification
-    float                  m_minProbabilityCut;     ///< The minimum probability to label a cluster as track-like
-    std::string            m_treeName;              ///< Input tree name for ROOT.
-    std::string            m_fileName;              ///< Input file name for ROOT.
-    int                    m_event;                 ///< Event Number Counter
-    float                  m_maxClusterFraction;    ///< The maximum fraction a cluster can be contaminated by to be considered clean.
-    float                  m_minNCaloHits;          ///< The minimum number of hits for a cluster to be deemed true for IsAvailableToUse.
-    bool                   m_writeTree;             ///< Whether a tree should be output with recorded parameters.
-    float                  m_upperHitThreshold;     ///< Max number of hits for cluster to be considered
-    std::string            m_trainingOutputFile;    ///< The training output file
-    std::string            m_filePathEnvironmentVariable; ///< The environment variable providing a list of paths to mva files
-    std::string            m_mvaFileName;           ///< The mva input file
-    std::string            m_mvaName;               ///< The name of the mva to find
-    T                      m_mva;                   ///< The mva
-    float                  m_countHitsThreshold;    ///< A cut on whether cluster merges will occur depending on total event hits
-    std::string            m_vertexListName;        ///< Input Vertex List name for vertex based calculation
-    float                  m_contactThreshold;      ///< Distance value for hits to be considered in contact
-    float                  m_proximityThreshold;    ///< Distance value for hits to be considered in proximity   
-    float                  m_divisions;             ///< Number of sectors to search in with Edge Hit Finder Function
-    float                  m_sectorTolerance;       ///< Tolerance in radians for dot product between sector and centroid to CaloHit vector
-    bool                   m_printOut;              ///< Whether the algorithm outputs cluster size information
+    pandora::StringVector m_inputClusterListNames; ///< The names of the input cluster lists.
+    std::string m_mcParticleListName;              ///< Input MC particle list name.
+    bool m_trainingSetMode;                        ///< Whether to train
+    bool m_enableProbability;                      ///< Whether to use probabilities instead of binary classification
+    float m_minProbabilityCut;                     ///< The minimum probability to label a cluster as track-like
+    std::string m_treeName;                        ///< Input tree name for ROOT.
+    std::string m_fileName;                        ///< Input file name for ROOT.
+    int m_event;                                   ///< Event Number Counter
+    float m_maxClusterFraction;                    ///< The maximum fraction a cluster can be contaminated by to be considered clean.
+    float m_minNCaloHits;                          ///< The minimum number of hits for a cluster to be deemed true for IsAvailableToUse.
+    bool m_writeTree;                              ///< Whether a tree should be output with recorded parameters.
+    float m_upperHitThreshold;                     ///< Max number of hits for cluster to be considered
+    std::string m_trainingOutputFile;              ///< The training output file
+    std::string m_filePathEnvironmentVariable;     ///< The environment variable providing a list of paths to mva files
+    std::string m_mvaFileName;                     ///< The mva input file
+    std::string m_mvaName;                         ///< The name of the mva to find
+    T m_mva;                                       ///< The mva
+    float m_countHitsThreshold;                    ///< A cut on whether cluster merges will occur depending on total event hits
+    std::string m_vertexListName;                  ///< Input Vertex List name for vertex based calculation
+    float m_contactThreshold;                      ///< Distance value for hits to be considered in contact
+    float m_proximityThreshold;                    ///< Distance value for hits to be considered in proximity
+    float m_divisions;                             ///< Number of sectors to search in with Edge Hit Finder Function
+    float m_sectorTolerance;                       ///< Tolerance in radians for dot product between sector and centroid to CaloHit vector
+    bool m_printOut;                               ///< Whether the algorithm outputs cluster size information
 };
 
 typedef MvaLowEClusterMergingAlgorithm<AdaBoostDecisionTree> BdtLowEClusterMergingAlgorithm;
