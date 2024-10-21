@@ -20,6 +20,7 @@ namespace lar_content
 {
 
 VertexSelectionBaseAlgorithm::VertexSelectionBaseAlgorithm() :
+    m_inputVertexListName(""),
     m_replaceCurrentVertexList(true),
     m_beamMode(true),
     m_nDecayLengthsInZSpan(2.f),
@@ -142,7 +143,15 @@ void VertexSelectionBaseAlgorithm::CalculateClusterSlidingFits(const ClusterList
 StatusCode VertexSelectionBaseAlgorithm::Run()
 {
     const VertexList *pInputVertexList(NULL);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputVertexList));
+
+    if (m_inputVertexListName == "")
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputVertexList));
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pInputVertexList));
+    }
 
     if (!pInputVertexList || pInputVertexList->empty())
     {
@@ -393,6 +402,8 @@ pandora::CartesianPointVector VertexSelectionBaseAlgorithm::ShowerCluster::GetCl
 StatusCode VertexSelectionBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputCaloHitListNames", m_inputCaloHitListNames));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_inputVertexListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
