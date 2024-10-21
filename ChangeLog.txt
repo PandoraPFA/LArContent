@@ -1,4 +1,10 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v04_11_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Updates to support reconstruction of supernova neutrinos
+Adds backward compatability with legacy NeutrinoEventValidationAlgorithm for HierarchyTools
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v04_10_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Updates to hierarchy tools to improve robustness and configurability, along with simultaneous output of event-level and particle-level
