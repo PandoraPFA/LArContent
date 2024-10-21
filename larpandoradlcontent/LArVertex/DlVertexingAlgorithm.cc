@@ -171,7 +171,21 @@ StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
 StatusCode DlVertexingAlgorithm::Infer()
 {
     if (m_pass == 1)
+    {
         ++m_event;
+    }
+    else
+    {
+        // INFO: Check if there is a zoom in region for the second pass.
+        const VertexList *pVertexList(nullptr);
+        PandoraContentApi::GetList(*this, m_inputVertexListName, pVertexList);
+        if (pVertexList == nullptr || pVertexList->empty())
+        {
+            std::cout << "DLVertexing: Input vertex list is empty! Can't perform pass " << m_pass << std::endl;
+            return STATUS_CODE_SUCCESS;
+        }
+    }
+
 
     std::map<HitType, float> wireMin, wireMax;
     float driftMin{std::numeric_limits<float>::max()}, driftMax{-std::numeric_limits<float>::max()};
