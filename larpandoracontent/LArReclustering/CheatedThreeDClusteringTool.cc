@@ -49,30 +49,6 @@ bool CheatedThreeDClusteringTool::Run(const Algorithm *const pAlgorithm, std::ve
             McIdCaloHitListMap.insert(std::make_pair(mainMcParticleIndex, newList));
         } 
 
-        // Flag to indicate if a matching list was found
-        //bool found = false;
-
-        // Search for an existing list with matching MC particle index
-        /*for (CaloHitList *caloHitList : newCaloHitListsVector)
-        {
-            const CaloHit *const pListParentCaloHit = static_cast<const CaloHit *>(caloHitList->front()->GetParentAddress());
-            int listMainMcParticleIndex = this->GetMainMcParticleIndex(pAlgorithm, pListParentCaloHit);
-            if (listMainMcParticleIndex == mainMcParticleIndex)
-            {
-                found = true;
-                caloHitList->push_back(pCaloHit);
-                break;
-            }
-        }
-		
-        // If a list with matching MC particle hits is not found, create one
-        if (!found)
-        {
-            CaloHitList* newList = new CaloHitList();
-            newList->push_back(pCaloHit);
-            newCaloHitListsVector.push_back(newList);
-        }
-        */
     }
     for (const auto& pair : McIdCaloHitListMap) newCaloHitListsVector.push_back(pair.second);
     return true;
