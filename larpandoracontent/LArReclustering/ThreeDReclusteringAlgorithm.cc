@@ -22,6 +22,7 @@ namespace lar_content
 {
 
 ThreeDReclusteringAlgorithm::ThreeDReclusteringAlgorithm():
+    m_PfosForReclusteringListName("newShowerParticles3D"),
     m_hitThresholdForNewPfo(0),
     m_fomThresholdForReclustering(0.3)
 {
@@ -39,125 +40,124 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
 {
     //Only proceed if successfuly get shower pfo list, and it has at least one pfo
     const PfoList *pShowerPfoList(nullptr);
-    if ((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "ShowerParticles3D", pShowerPfoList)) && pShowerPfoList->size())
+    if (!((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "ShowerParticles3D", pShowerPfoList)) && pShowerPfoList->size()))
     {
-        m_newPfosListNameAllAfterReclustering = "newShowerParticles3D";
-        std::string newPfosListNameUnchanged = "unchangedShowerParticles3D";
-        PfoList unchangedPfoList;   
+        return STATUS_CODE_SUCCESS;
+    }
 
-        //Save current pfo list name, so that this can be set as current again at the end of reclustering
-        std::string initialPfosListName;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Pfo>(*this, initialPfosListName));
+    m_PfosForReclusteringListName = "newShowerParticles3D";
+    PfoList unchangedPfoList;   
+
+    //Save current pfo list name, so that this can be set as current again at the end of reclustering
+    std::string initialPfosListName;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Pfo>(*this, initialPfosListName));
+
+    //Some pfos are shower-like and yet include track-like 3D clusters. For the moment I don't want to deal with these.
+    const ClusterList *pShowerClusters(nullptr);
+    PandoraContentApi::GetList(*this, "ShowerClusters3D", pShowerClusters);
+    if(!pShowerClusters) return STATUS_CODE_NOT_FOUND;
+
+    for (const Pfo *const pShowerPfo : *pShowerPfoList)
+    {
+        ClusterList clusterList3D;
+        LArPfoHelper::GetThreeDClusterList(pShowerPfo, clusterList3D);
+       
+        if(!this->PassesCutsForReclustering(pShowerPfo))
+        {
+            unchangedPfoList.push_back(pShowerPfo);
+            continue;
+        }
 
         //Some pfos are shower-like and yet include track-like 3D clusters. For the moment I don't want to deal with these.
-        const ClusterList *pShowerClusters(nullptr);
-        PandoraContentApi::GetList(*this, "ShowerClusters3D", pShowerClusters);
-        if(!pShowerClusters) return STATUS_CODE_NOT_FOUND;
+        if(pShowerClusters->end() == std::find(pShowerClusters->begin(), pShowerClusters->end(), clusterList3D.front())) continue;
 
-        for (const Pfo *const pShowerPfo : *pShowerPfoList)
+        CaloHitList caloHitList3D;
+        clusterList3D.front()->GetOrderedCaloHitList().FillCaloHitList(caloHitList3D);
+
+		//Calculate initial figure of merit 
+        float initialFigureOfMerit=this->GetFigureOfMerit(caloHitList3D);
+		
+		//Create a variable for the minimum figure of merit and initialize to initial FOM
+        float minimumFigureOfMerit(initialFigureOfMerit);
+
+        //Free the hits in this cluster, so that they are not owned by the original pfo, and are available for reclustering
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pShowerPfo, clusterList3D.front()));
+
+        // Initialize reclustering with these local lists
+        std::string currentClustersListName;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, currentClustersListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, "ShowerClusters3D"));
+
+		//I want to split the calo hit list into a new set of calo hit lists, taking the best outcome out of different algorithms
+        std::vector<CaloHitList*> newCaloHitListsVector, minimumFigureOfMeritCaloHitListsVector, initialCaloHitListsVector;
+        initialCaloHitListsVector.emplace_back(&caloHitList3D);
+        minimumFigureOfMeritCaloHitListsVector = initialCaloHitListsVector;
+
+        for (auto toolIter = m_algorithmToolVector.begin(); toolIter != m_algorithmToolVector.end(); ++toolIter)
         {
-            ClusterList clusterList3D;
-            LArPfoHelper::GetThreeDClusterList(pShowerPfo, clusterList3D);
-           
-            if(!this->PassesCutsForReclustering(pShowerPfo))
-            {
-                unchangedPfoList.push_back(pShowerPfo);
-                continue;
+            newCaloHitListsVector = initialCaloHitListsVector;
+
+            try {
+                (*toolIter)->Run(this, newCaloHitListsVector);
+            } catch (const StatusCodeException &){
+                std::cout << "Exception caught! Cannot run reclustering tool!" << std::endl;
             }
-            if (clusterList3D.empty())
-                continue;
 
-            //Some pfos are shower-like and yet include track-like 3D clusters. For the moment I don't want to deal with these.
-            if(pShowerClusters->end() == std::find(pShowerClusters->begin(), pShowerClusters->end(), clusterList3D.front())) continue;
+            //Calculate FOM for this vector of new CaloHitLists
+			float newFigureOfMerit = this->GetFigureOfMerit(newCaloHitListsVector);
 
-            CaloHitList caloHitList3D;
-            clusterList3D.front()->GetOrderedCaloHitList().FillCaloHitList(caloHitList3D);
-
-			//Calculate initial figure of merit 
-            float initialFigureOfMerit=this->GetFigureOfMerit(caloHitList3D);
-			
-			//Create a variable for the minimum figure of merit and initialize to initial FOM
-            float minimumFigureOfMerit(initialFigureOfMerit);
-
-            //Free the hits in this cluster, so that they are not owned by the original pfo, and are available for reclustering
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pShowerPfo, clusterList3D.front()));
-
-            // Initialize reclustering with these local lists
-            std::string currentClustersListName;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, currentClustersListName));
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, "ShowerClusters3D"));
-
-			//I want to split the calo hit list into a new set of calo hit lists, taking the best outcome out of different algorithms
-            std::vector<CaloHitList*> newCaloHitListsVector, minimumFigureOfMeritCaloHitListsVector, initialCaloHitListsVector;
-            initialCaloHitListsVector.emplace_back(&caloHitList3D);
-            minimumFigureOfMeritCaloHitListsVector = initialCaloHitListsVector;
-
-            for (auto toolIter = m_algorithmToolVector.begin(); toolIter != m_algorithmToolVector.end(); ++toolIter)
+            //Is this FOM smaller?
+            if(newFigureOfMerit <= minimumFigureOfMerit)
             {
-                newCaloHitListsVector = initialCaloHitListsVector;
-
-                try {
-                    (*toolIter)->Run(this, newCaloHitListsVector);
-                } catch (const StatusCodeException &){
-                    std::cout << "Exception caught! Cannot run reclustering tool!" << std::endl;
-                }
-
-                //Calculate FOM for this vector of new CaloHitLists
-				float newFigureOfMerit = this->GetFigureOfMerit(newCaloHitListsVector);
-
-                //Is this FOM smaller?
-                if(newFigureOfMerit <= minimumFigureOfMerit)
-                {
-                     minimumFigureOfMerit = newFigureOfMerit;
-                     minimumFigureOfMeritCaloHitListsVector = newCaloHitListsVector;
-                }
-                else //If not, clear the lists and vector!!
-                {
-                    for (CaloHitList* caloHitList : newCaloHitListsVector) delete caloHitList;
-                }
-                newCaloHitListsVector.clear();
+                 minimumFigureOfMerit = newFigureOfMerit;
+                 minimumFigureOfMeritCaloHitListsVector = newCaloHitListsVector;
             }
-            
-            //If the new best calo hit lists outcome is equivalent to original, move pfo to unchanged pfo list. Else, create new vector of 3D clusters
-            if(minimumFigureOfMeritCaloHitListsVector==newCaloHitListsVector)
+            else //If not, clear the lists and vector!!
             {
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pShowerPfo, clusterList3D.front()));
-                unchangedPfoList.push_back(pShowerPfo);
+                for (CaloHitList* caloHitList : newCaloHitListsVector) delete caloHitList;
             }
-            else
-            {
-                const ClusterList reclusterClusterList(1, clusterList3D.front());
-                std::string clusterListToSaveName, clusterListToDeleteName;
- 
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                PandoraContentApi::InitializeFragmentation(*this, reclusterClusterList, clusterListToDeleteName, clusterListToSaveName));
-
-                ClusterList newClustersList;
-                for(auto list: minimumFigureOfMeritCaloHitListsVector)
-                {
-                    const Cluster *pCluster = nullptr;
-                    PandoraContentApi::Cluster::Parameters parameters;
-                    parameters.m_caloHitList = *list;
-                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
-                    newClustersList.push_back(pCluster);
-                }
-
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildPfo(pShowerPfo, newClustersList));
-                newCaloHitListsVector.clear();
-            }
+            newCaloHitListsVector.clear();
         }
-        //If there are any pfos that did not change after reclustering procedure, move them from list called ShowerParticles3D into list of new pfos after reclustering
-        if(unchangedPfoList.size()>0) PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<PfoList>(*this, "ShowerParticles3D", m_newPfosListNameAllAfterReclustering,  unchangedPfoList));
+        
+        //If the new best calo hit lists outcome is equivalent to original, move pfo to unchanged pfo list. Else, create new vector of 3D clusters
+        if(minimumFigureOfMeritCaloHitListsVector==newCaloHitListsVector)
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pShowerPfo, clusterList3D.front()));
+            unchangedPfoList.push_back(pShowerPfo);
+            continue;
+        }
+        
+        const ClusterList reclusterClusterList(1, clusterList3D.front());
+        std::string clusterListToSaveName, clusterListToDeleteName;
 
-        //Save list of Pfos after reclustering into list called ShowerParticles3D
-        const PfoList *pNewPfosListAllAfterReclustering;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList<PfoList>(*this, m_newPfosListNameAllAfterReclustering, pNewPfosListAllAfterReclustering));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_newPfosListNameAllAfterReclustering, "ShowerParticles3D"));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+        PandoraContentApi::InitializeFragmentation(*this, reclusterClusterList, clusterListToDeleteName, clusterListToSaveName));
 
-        //Set current list to be the same as before reclustering
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Pfo>(*this, initialPfosListName));
+        ClusterList newClustersList;
+        for(auto list: minimumFigureOfMeritCaloHitListsVector)
+        {
+            const Cluster *pCluster = nullptr;
+            PandoraContentApi::Cluster::Parameters parameters;
+            parameters.m_caloHitList = *list;
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
+            newClustersList.push_back(pCluster);
+        }
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildPfo(pShowerPfo, newClustersList));
+        newCaloHitListsVector.clear();
     }
+    //If there are any pfos that did not change after reclustering procedure, move them from list called ShowerParticles3D into list of new pfos after reclustering
+    if(unchangedPfoList.size()>0) PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<PfoList>(*this, "ShowerParticles3D", m_PfosForReclusteringListName,  unchangedPfoList));
+
+    //Save list of Pfos after reclustering into list called ShowerParticles3D
+    const PfoList *pNewPfosListAllAfterReclustering;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList<PfoList>(*this, m_PfosForReclusteringListName, pNewPfosListAllAfterReclustering));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_PfosForReclusteringListName, "ShowerParticles3D"));
+
+    //Set current list to be the same as before reclustering
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Pfo>(*this, initialPfosListName));
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -296,7 +296,7 @@ StatusCode ThreeDReclusteringAlgorithm::BuildNewPfos(const Pfo *pPfoToRebuild, C
         
         iCluster++;
     }
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, newPfoListName, m_newPfosListNameAllAfterReclustering));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, newPfoListName, m_PfosForReclusteringListName));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -399,6 +399,7 @@ float ThreeDReclusteringAlgorithm::GetFigureOfMerit(std::string figureOfMeritNam
 {
     float figureOfMerit(-999);
     if(figureOfMeritName=="cheated") figureOfMerit=this->GetCheatedFigureOfMerit(mergedClusterCaloHitList3D);
+    else throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
     return figureOfMerit;
 }
 
@@ -449,6 +450,7 @@ StatusCode ThreeDReclusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "FigureOfMeritNames", m_figureOfMeritNames));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfosForReclusteringListName", m_PfosForReclusteringListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "HitThresholdForNewPfo", m_hitThresholdForNewPfo));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FOMThresholdForReclustering", m_fomThresholdForReclustering));
 
