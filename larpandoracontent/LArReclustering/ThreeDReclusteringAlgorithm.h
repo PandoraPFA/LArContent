@@ -134,7 +134,7 @@ private:
     ClusteringToolVector m_algorithmToolVector; ///< The reclustering algorithm tool vector
     std::string m_pfoListName; ///< The input pfo list name
     pandora::StringVector m_figureOfMeritNames; ///< The names of the figures of merit to use
-    std::string m_newPfosListNameAllAfterReclustering; ///< Name of the list that contains new Pfos after reclustering
+    std::string m_PfosForReclusteringListName; ///< Name of the list that contains new Pfos before/after reclustering
     int m_hitThresholdForNewPfo; ///< Minimum nr. of hits to form new 3Dclusters
     std::string m_mcParticleListName; ///< The mc particle list name 
     float m_fomThresholdForReclustering; ///< A threshold on the minimum figure of merit for reclustering
