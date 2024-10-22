@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.cc
  *
- *  @brief  Implementation file for the reclustering algorithm that uses transverse calorimetric profiles.
+ *  @brief  Implementation file for the cheated threeD reclustering algorithm.
  *
  *  $Log: $
  */
@@ -30,17 +30,30 @@ bool CheatedThreeDClusteringTool::Run(const Algorithm *const pAlgorithm, std::ve
 
     CaloHitList *initialCaloHitList = newCaloHitListsVector.at(0);
     newCaloHitListsVector.clear();
+
+    std::map<int, CaloHitList*> McIdCaloHitListMap;
+
     for (const CaloHit *const pCaloHit : *initialCaloHitList)
     {
         const CaloHit *const pParentCaloHit = static_cast<const CaloHit *>(pCaloHit->GetParentAddress());
 
         int mainMcParticleIndex = this->GetMainMcParticleIndex(pAlgorithm, pParentCaloHit);
 
+        if (McIdCaloHitListMap.find(mainMcParticleIndex) != McIdCaloHitListMap.end()) 
+        {
+            McIdCaloHitListMap.at(mainMcParticleIndex)->push_back(pCaloHit);
+        }
+        else
+        {
+            CaloHitList* newList = new CaloHitList();
+            McIdCaloHitListMap.insert(std::make_pair(mainMcParticleIndex, newList));
+        } 
+
         // Flag to indicate if a matching list was found
-        bool found = false;
+        //bool found = false;
 
         // Search for an existing list with matching MC particle index
-        for (CaloHitList *caloHitList : newCaloHitListsVector)
+        /*for (CaloHitList *caloHitList : newCaloHitListsVector)
         {
             const CaloHit *const pListParentCaloHit = static_cast<const CaloHit *>(caloHitList->front()->GetParentAddress());
             int listMainMcParticleIndex = this->GetMainMcParticleIndex(pAlgorithm, pListParentCaloHit);
@@ -51,7 +64,7 @@ bool CheatedThreeDClusteringTool::Run(const Algorithm *const pAlgorithm, std::ve
                 break;
             }
         }
-
+		
         // If a list with matching MC particle hits is not found, create one
         if (!found)
         {
@@ -59,8 +72,9 @@ bool CheatedThreeDClusteringTool::Run(const Algorithm *const pAlgorithm, std::ve
             newList->push_back(pCaloHit);
             newCaloHitListsVector.push_back(newList);
         }
+        */
     }
-
+    for (const auto& pair : McIdCaloHitListMap) newCaloHitListsVector.push_back(pair.second);
     return true;
 }
 
@@ -76,7 +90,7 @@ int CheatedThreeDClusteringTool::GetMainMcParticleIndex(const Algorithm *const p
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, m_mcParticleListName, pMCParticleList));
     if (!pMCParticleList) {
-        std::cerr << "MCParticleList is null!" << std::endl;
+        std::cerr << "ERROR in CheatedThreeDClusteringTool: MCParticleList is null!" << std::endl;
         return -1;
     }
     MCParticleVector mcParticleVector(pMCParticleList->begin(),pMCParticleList->end());
