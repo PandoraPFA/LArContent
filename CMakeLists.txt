@@ -155,6 +155,11 @@ else()
         set_target_properties(${PROJ} PROPERTIES VERSION ${${PROJ}_VERSION} SOVERSION ${${PROJ}_SOVERSION})
     endforeach()
 
+    # If we are building the DL Library, it needs to link to the default library
+    if(PANDORA_LIBTORCH)
+        target_link_libraries(${DL_PROJECT_NAME} ${PROJECT_NAME})
+    endif()
+
     # - Optional documents
     if(LArContent_BUILD_DOCS)
         add_subdirectory(doc)
