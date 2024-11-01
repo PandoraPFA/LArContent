@@ -13,7 +13,7 @@ jobs:
   build:
 
     # Use the latest ubuntu image: https://github.com/actions/runner-images
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: LArContent - Coverity
 
     # Only run in the PandoraPFA repos.
@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false # Don't quit other jobs if one job fails.
       matrix:
-        compiler: [ {cpp: g++-9, c: gcc-9} ]
+        compiler: [ {cpp: g++-12, c: gcc-12} ]
         monitoring: [ "ON" ]
         torch: [ "ON" ]
 
@@ -36,7 +36,7 @@ jobs:
 
       # Install ROOT dependencies to start with
       - name: apt Install Dependencies
-        run: sudo apt install -y xlibmesa-glu-dev
+        run: sudo apt install -y xlibmesa-glu-dev libvdt-dev
 
       # Make a central location to build from.
       - name: Create build folder
@@ -45,10 +45,10 @@ jobs:
       # Cache the build tool, to speed up subsequent runs.
       - name: Cache Coverity Build Tool
         id: cov-build-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /pandora/coverity/
-          key: cov-build-2022.6
+          key: cov-build-2023.12
 
       # Get Coverity build tool
       - name: Get Coverity Build Tool
@@ -80,50 +80,49 @@ jobs:
           make -j$(nproc) install
 
       # Sort ROOT install out.
-      # TODO: Does the version need to change with compiler?
       - name: Pull ROOT
         if: matrix.monitoring == 'ON'
-        run: wget https://root.cern/download/root_v6.26.14.Linux-ubuntu22-x86_64-gcc11.4.tar.gz
+        run: wget https://root.cern/download/root_v6.28.12.Linux-ubuntu22-x86_64-gcc11.4.tar.gz
       - name: Unpack ROOT
         if: matrix.monitoring == 'ON'
-        run: tar -xzvf root_v6.26.14.Linux-ubuntu22-x86_64-gcc11.4.tar.gz && mv root/ /pandora/root
+        run: tar -xzvf root_v6.28.12.Linux-ubuntu22-x86_64-gcc11.4.tar.gz && mv root/ /pandora/root
 
       # Sort LibTorch install out.
       - name: Pull Torch
         if: matrix.torch == 'ON'
-        run: wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip
+        run: wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.1.1%2Bcpu.zip
       - name: Unpack Torch
         if: matrix.torch == 'ON'
-        run: unzip libtorch-cxx11-abi-shared-with-deps-1.13.0+cpu.zip && mv libtorch/ /pandora/libtorch
+        run: unzip libtorch-cxx11-abi-shared-with-deps-2.1.1+cpu.zip && mv libtorch/ /pandora/libtorch
 
       # Pull the various dependencies and LArContent.
       - name: Pull PandoraPFA
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/PandoraPFA'
           path: PandoraPFA
 
       - name: Pull PandoraSDK
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/PandoraSDK'
           path: PandoraSDK
 
       - name: Pull PandoraMonitoring
         if: matrix.monitoring == 'ON'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/PandoraMonitoring'
           path: PandoraMonitoring
 
       - name: Pull LArContent
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/LArContent'
           path: LArContent
 
       - name: Pull LArReco
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/LArReco'
           path: LArReco

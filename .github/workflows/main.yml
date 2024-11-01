@@ -72,31 +72,31 @@ jobs:
 
       # Pull the various Pandora repos...
       - name: Pull PandoraPFA
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/PandoraPFA'
           path: PandoraPFA
 
       - name: Pull PandoraSDK
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/PandoraSDK'
           path: PandoraSDK
 
       - name: Pull PandoraMonitoring
         if: matrix.monitoring == 'ON'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/PandoraMonitoring'
           path: PandoraMonitoring
 
       - name: Pull LArContent
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: LArContent
 
       - name: Pull LArReco
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/LArReco'
           path: LArReco
