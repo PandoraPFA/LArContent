@@ -428,7 +428,7 @@ StatusCode DlSNSignalAlgorithm::Infer()
         // we want the maximum value in the num_classes dimension (1) for every pixel
         auto classes{torch::argmax(output, 1)};
         // the argmax result is a 1 x height x width tensor where each element is a class id
-        auto classesAccessor{classes.accessor<long, 3>()};
+        auto classesAccessor{classes.accessor<int64_t, 3>()};
         std::map<int, bool> haveSeenMap;
 
         for (const auto &[pCaloHit, pixel] : pixelMap)
