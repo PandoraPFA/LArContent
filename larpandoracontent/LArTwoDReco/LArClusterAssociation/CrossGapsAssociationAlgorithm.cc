@@ -141,16 +141,14 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(
     const HitType hitType(LArClusterHelper::GetClusterHitType(targetFitResult.GetCluster()));
     const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), hitType)};
     const float sampleStepSizeAdjusted{ratio * m_sampleStepSize};
-    unsigned int nSamplingPoints(0), nGapSamplingPoints(0), nMatchedSamplingPoints(0), nUnmatchedSampleRun(0);
+    unsigned int nMatchedSamplingPoints(0), nUnmatchedSampleRun(0);
 
     for (unsigned int iSample = 0; iSample < m_maxSamplingPoints; ++iSample)
     {
-        ++nSamplingPoints;
         const CartesianVector samplingPoint(startPosition + startDirection * static_cast<float>(iSample) * sampleStepSizeAdjusted);
 
         if (LArGeometryHelper::IsInGap(this->GetPandora(), samplingPoint, hitType, m_gapTolerance))
         {
-            ++nGapSamplingPoints;
             nUnmatchedSampleRun = 0; // ATTN Choose to also reset run when entering gap region
             continue;
         }

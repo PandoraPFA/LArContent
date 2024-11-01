@@ -935,18 +935,16 @@ void DlSNSignalAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xM
     if (m_simpleZoom && m_pass > 1)
     {
         float xPos{-std::numeric_limits<float>::max()}, zPos{-std::numeric_limits<float>::max()}, adcMax{0.f};
-        int nSum{0}, tCount{0}, hCount{0};
+        int nSum{0};
         for (const CaloHit *pCaloHit : caloHitList)
         {
             const float xC{pCaloHit->GetPositionVector().GetX()}, zC{pCaloHit->GetPositionVector().GetZ()}, adc{pCaloHit->GetMipEquivalentEnergy()};
             ;
-            tCount += 1;
             if (xC >= xMin && xC < xMax)
             {
                 nSum += 1;
                 if (adc > adcMax)
                 {
-                    hCount += 1;
                     adcMax = adc;
                     xPos = xC;
                     zPos = zC;
