@@ -104,9 +104,9 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(
     static int eventNumber{-1};
     ++eventNumber;
     if (printToScreen && useInterpretedMatching)
-        std::cout << "---INTERPRETED-MATCHING-OUTPUT------------------------------------------------------------------" << std::endl;
+        std::cout << "---EVENT-" << eventNumber << "-INTERPRETED-MATCHING-OUTPUT----------------------------------------------------------" << std::endl;
     else if (printToScreen)
-        std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
+        std::cout << "---EVENT-" << eventNumber << "-RAW-MATCHING-OUTPUT------------------------------------------------------------------" << std::endl;
 
     PfoVector primaryPfoVector;
     LArMonitoringHelper::GetOrderedPfoVector(validationInfo.GetPfoToHitsMap(), primaryPfoVector);

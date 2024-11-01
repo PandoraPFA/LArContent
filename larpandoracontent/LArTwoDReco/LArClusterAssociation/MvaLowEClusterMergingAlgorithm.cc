@@ -183,8 +183,6 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
         if (!cluster || hits.empty())
             continue;
 
-        const int nClusters(pClusterList->size());
-
         if (!this->IsValidToUse(cluster, clusterIsUsed))
             continue;
 
@@ -210,7 +208,6 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
         this->EdgeHitFinder(cluster, clusterEdgeHits);
 
         const unsigned int clusterNHits{cluster->GetNCaloHits()};
-        const unsigned long int clusterNEdgeHits{clusterEdgeHits.size()};
 
         for (auto iter2 = std::next(iter); iter2 != pClusterList->end(); ++iter2)
         {
@@ -267,7 +264,6 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
             this->EdgeHitFinder(otherCluster, otherClusterEdgeHits);
 
             const unsigned int otherClusterNHits{otherCluster->GetNCaloHits()};
-            const unsigned long int otherClusterNEdgeHits{otherClusterEdgeHits.size()};
             CaloHitList largestList, smallestList;
             CartesianVector vectorTool(0.f, 0.f, 0.f);
 
@@ -345,7 +341,6 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
                 distanceDistribution.push_back(finalDistance);
             }
 
-            float combinedNClusterHits(clusterNHits + otherClusterNHits), combinedNClusterEdgeHits(clusterNEdgeHits + otherClusterNEdgeHits);
             const double avgDistance{!distanceDistribution.empty()
                     ? std::accumulate(distanceDistribution.begin(), distanceDistribution.end(), 0.0) / distanceDistribution.size()
                     : -1.0};
@@ -415,6 +410,12 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
             if (m_writeTree)
             {
+#ifdef MONITORING
+                const int nClusters(pClusterList->size());
+                const unsigned long int clusterNEdgeHits{clusterEdgeHits.size()};
+                const unsigned long int otherClusterNEdgeHits{otherClusterEdgeHits.size()};
+                float combinedNClusterHits(clusterNHits + otherClusterNHits), combinedNClusterEdgeHits(clusterNEdgeHits + otherClusterNEdgeHits);
+#endif
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "EventNumber", m_event));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "VertexClusterAngle", vtxClusterAngle));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "maxEdgeHitSeparation", maxEdgeHitSeparation));

@@ -42,7 +42,7 @@ jobs:
       # Setup dependencies and build folder...
       - name: Install Dependencies
         run: |
-          sudo apt install -y xlibmesa-glu-dev
+          sudo apt install -y xlibmesa-glu-dev libvdt-dev
           sudo mkdir -m 0777 -p /pandora
 
       # Pull and Install Eigen...
