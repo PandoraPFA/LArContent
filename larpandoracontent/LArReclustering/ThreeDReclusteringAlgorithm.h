@@ -71,36 +71,36 @@ private:
      *
      *  @return The figure of merit
      */
-    float GetFigureOfMerit(pandora::CaloHitList mergedClusterCaloHitList3D);
+    float GetFigureOfMerit(const pandora::CaloHitList &mergedClusterCaloHitList3D);
     
     /**
-     *  @brief Calculate the specified figure of merit for the CaloHitList under consideration, under consideration, and return the smallest FOM
+     *  @brief Calculate the specified figure of merit for the CaloHitList under consideration, and return the smallest FOM
      *
      *  @param figureOfMeritName the name of the figure of merit
      *  @param mergedClusterCaloHitList3D the CaloHitList under consideration 
      *
      *  @return The figure of merit
      */
-    float GetFigureOfMerit(std::string figureOfMeritName, pandora::CaloHitList mergedClusterCaloHitList3D);
+    float GetFigureOfMerit(const std::string &figureOfMeritName, const pandora::CaloHitList &mergedClusterCaloHitList3D);
 
     /**
-     *  @brief Loop over all specified figure of merit names, calculate figures of merit for each CaloHitList in the provided vector, under consideration, and return the smallest FOM
+     *  @brief Loop over all specified figure of merit names, calculate figures of merit for each CaloHitList in the provided vector, and return the smallest FOM
      *
      *  @param newClustersCaloHitLists3D the vector of CaloHitLists under consideration 
      *
      *  @return The figure of merit
      */
-    float GetFigureOfMerit(std::vector<pandora::CaloHitList*> newClustersCaloHitList3D);
+    float GetFigureOfMerit(const std::vector<pandora::CaloHitList*> &newClustersCaloHitList3D);
 
     /**
-     *  @brief Calculate the specified figure of merit for each CaloHitList in the provided vector, under consideration, and return the smallest FOM
+     *  @brief Calculate the specified figure of merit for each CaloHitList in the provided vector, and return the smallest FOM
      *
      *  @param figureOfMeritName the name of the figure of merit
      *  @param newClustersCaloHitLists3D the vector of CaloHitLists under consideration 
      *
      *  @return The figure of merit 
      */
-   float GetFigureOfMerit(std::string figureOfMeritName, std::vector<pandora::CaloHitList*> newClustersCaloHitLists3D);
+   float GetFigureOfMerit(const std::string &figureOfMeritName, const std::vector<pandora::CaloHitList*> &newClustersCaloHitLists3D);
 
     /** 
      *  @brief Get cheated FOM as an impurity: the fraction of hits that are NOT contributed by the main MC particle. If clustering was perfect, cheated FOM would always be 0.
@@ -109,7 +109,7 @@ private:
      *
      * @return The figure of merit (purity)
      */
-    float GetCheatedFigureOfMerit(pandora::CaloHitList mergedClusterCaloHitList3D);
+    float GetCheatedFigureOfMerit(const pandora::CaloHitList &mergedClusterCaloHitList3D);
     
     /**
      *  @brief Select pfos to be reclustered if it passes reclustering criteria
@@ -132,9 +132,9 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     ClusteringToolVector m_algorithmToolVector; ///< The reclustering algorithm tool vector
-    std::string m_pfoListName; ///< The input pfo list name
+    std::string m_pfoListName; ///< Name of the list of pfos to consider for reclustering
     pandora::StringVector m_figureOfMeritNames; ///< The names of the figures of merit to use
-    std::string m_PfosForReclusteringListName; ///< Name of the list that contains new Pfos before/after reclustering
+    std::string m_PfosForReclusteringListName; ///< Name of the internal list to contain new Pfos before/after reclustering
     int m_hitThresholdForNewPfo; ///< Minimum nr. of hits to form new 3Dclusters
     std::string m_mcParticleListName; ///< The mc particle list name 
     float m_fomThresholdForReclustering; ///< A threshold on the minimum figure of merit for reclustering

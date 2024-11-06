@@ -25,7 +25,7 @@ SimplePCAThreeDClusteringTool::SimplePCAThreeDClusteringTool()
 
 bool SimplePCAThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, std::vector<pandora::CaloHitList*> &newCaloHitListsVector)
 {
-    if (newCaloHitListsVector.empty() || newCaloHitListsVector.size() != 1)
+    if (newCaloHitListsVector.size() != 1)
         return false;
 
     CaloHitList *pInitialCaloHitList = newCaloHitListsVector.at(0);
@@ -61,7 +61,7 @@ bool SimplePCAThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, s
         const CartesianVector pCaloHitPosition = pCaloHit->GetPositionVector();
 
         if((pCaloHitPosition-centroid).GetDotProduct(centroid+orthoDirection1)<0)
-		{
+        {
             negCaloHitList->push_back(pCaloHit);
         }
 		else
@@ -103,12 +103,12 @@ bool SimplePCAThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, s
     negCaloHitList->clear();
 
     //Loop over original hit list, check whether it is within smaller cone of pos or neg axis, attach to relevant list
-    float cosConeAxisPos(0), cosConeAxisNeg(0);
     for (const CaloHit *const pCaloHit3D : *pInitialCaloHitList)
     {
-        cosConeAxisPos = axisDirectionPos.GetCosOpeningAngle(pCaloHit3D->GetPositionVector()-intersectionPoint);
-        cosConeAxisNeg = axisDirectionNeg.GetCosOpeningAngle(pCaloHit3D->GetPositionVector()-intersectionPoint);
-        if(cosConeAxisPos>cosConeAxisNeg) posCaloHitList->push_back(pCaloHit3D);
+        const float cosConeAxisPos = axisDirectionPos.GetCosOpeningAngle(pCaloHit3D->GetPositionVector()-intersectionPoint);
+        const float cosConeAxisNeg = axisDirectionNeg.GetCosOpeningAngle(pCaloHit3D->GetPositionVector()-intersectionPoint);
+        if(cosConeAxisPos>cosConeAxisNeg)
+            posCaloHitList->push_back(pCaloHit3D);
         else negCaloHitList->push_back(pCaloHit3D);
     }
 
