@@ -46,6 +46,7 @@ bool CheatedThreeDClusteringTool::Run(const Algorithm *const pAlgorithm, std::ve
         else
         {
             CaloHitList* newList = new CaloHitList();
+            newList->push_back(pCaloHit);
             McIdCaloHitListMap.insert(std::make_pair(mainMcParticleIndex, newList));
         } 
 
