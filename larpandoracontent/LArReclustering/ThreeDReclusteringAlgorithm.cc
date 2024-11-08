@@ -104,7 +104,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
             }
 
             //Calculate FOM for this vector of new CaloHitLists
-            float newFigureOfMerit = this->GetFigureOfMerit(newCaloHitListsVector);
+            float newFigureOfMerit(this->GetFigureOfMerit(newCaloHitListsVector));
 
             //Is this FOM smaller?
             if(newFigureOfMerit <= minimumFigureOfMerit)
@@ -193,11 +193,11 @@ StatusCode ThreeDReclusteringAlgorithm::BuildNewTwoDClusters(const Pfo *pPfoToRe
         int iCluster(0);
         for(const Cluster *pNewCluster : newClustersList)
         {
-     		if (!pNewCluster)
-    		{
-         		  std::cout << "Error: found null pointer in list of new clusters!" << std::endl;
-       			  continue;
-    		}
+            if (!pNewCluster)
+            {
+                std::cout << "Error: found null pointer in list of new clusters!" << std::endl;
+                continue;
+            }
             PandoraContentApi::Cluster::Parameters parameters;
             CaloHitList newClusterCaloHitList3D;
             pNewCluster->GetOrderedCaloHitList().FillCaloHitList(newClusterCaloHitList3D); 
@@ -239,7 +239,7 @@ StatusCode ThreeDReclusteringAlgorithm::BuildNewTwoDClusters(const Pfo *pPfoToRe
             {
                 for (const CaloHit *const pCaloHit : *mapEntry.second)
                 {
-                    const Cluster* pNearestCluster = nullptr;
+                    const Cluster* pNearestCluster(nullptr);
                     double minimumDistance(std::numeric_limits<float>::max());
                     for(const auto & [clusterIndex, pNewTwoDCluster] : clustersForLeftoverHitsMap)
                     {
@@ -374,7 +374,7 @@ float ThreeDReclusteringAlgorithm::GetCheatedFigureOfMerit(const CaloHitList &me
     
     const auto maxSharedHits = std::max_element(mainMcParticleMap.begin(), mainMcParticleMap.end(), [](const auto &x, const auto &y) {return x.second < y.second;});
     float mainMcParticleFraction = (float)maxSharedHits->second/mergedClusterCaloHitList3D.size();
-    return (1-mainMcParticleFraction);
+    return (1.f-mainMcParticleFraction);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -405,7 +405,7 @@ int ThreeDReclusteringAlgorithm::GetMainMcParticleIndex(const pandora::CaloHit *
 
 float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::string &figureOfMeritName, const CaloHitList &mergedClusterCaloHitList3D)
 {
-    float figureOfMerit(-999);
+    float figureOfMerit(-999.f);
 
     if(figureOfMeritName=="cheated")
         figureOfMerit=this->GetCheatedFigureOfMerit(mergedClusterCaloHitList3D);
@@ -424,7 +424,7 @@ float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::string &figureOfM
       {
         if(figureOfMeritName=="cheated")newClustersFigureOfMeritVector.push_back(this->GetCheatedFigureOfMerit(*clusterCaloHitLists3D));
       }
-      const float figureOfMerit=*(std::min_element(newClustersFigureOfMeritVector.begin(), newClustersFigureOfMeritVector.end()));
+      const float figureOfMerit(*std::min_element(newClustersFigureOfMeritVector.begin(), newClustersFigureOfMeritVector.end()));
       return figureOfMerit;
 }
 
