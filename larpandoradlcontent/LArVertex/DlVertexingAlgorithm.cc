@@ -1,4 +1,4 @@
-/**
+/*
  *  @file   larpandoradlcontent/LArVertex/DlVertexingAlgorithm.cc
  *
  *  @brief  Implementation of the deep learning vertexing algorithm.

@@ -303,6 +303,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
         {
             MCParticleList primaries;
             CaloHitList allHits;
+	    const float neutrinoEnergy{LArMCParticleHelper::IsNeutrino2(pRoot) ? pRoot->GetEnergy() : 0};
             for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches(pRoot))
             {
                 const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
@@ -412,6 +413,7 @@ void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchI
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interaction", interaction));
 		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isSignal", isSignal));
+		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "neutrinoEnergy", neutrinoEnergy));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcEnergy", mcEnergy));
 		PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcTotalAdc", mcTotalAdc));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "recoTotalAdc", &recoTotalAdcVector));
