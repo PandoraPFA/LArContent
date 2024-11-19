@@ -186,7 +186,6 @@ StatusCode DlVertexingAlgorithm::Infer()
         }
     }
 
-
     std::map<HitType, float> wireMin, wireMax;
     float driftMin{std::numeric_limits<float>::max()}, driftMax{-std::numeric_limits<float>::max()};
     for (const std::string &listname : m_caloHitListNames)

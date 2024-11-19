@@ -51,7 +51,8 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         //       The vertex has likely already been defined by another algorithm.
         const VertexList *pVertexList(nullptr);
         PandoraContentApi::GetCurrentList(*this, pVertexList);
-        if (pVertexList != nullptr && ! pVertexList->empty()) {
+        if (pVertexList != nullptr && !pVertexList->empty())
+        {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "CandidateVertexCreationAlgorithm: Vertex already defined, skipping" << std::endl;
 
