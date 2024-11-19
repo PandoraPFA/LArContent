@@ -26,7 +26,7 @@ else() # Configure for standalone build.
 endif()
 
 # Single project() call with/without Cetmodules (CMake >=3.0, CMP0048).
-project(${LAR_PROJECT_NAME} VERSION 04.10.00)
+project(${LAR_PROJECT_NAME} VERSION 04.11.00)
 
 # Build options.
 #option(PANDORA_LIBTORCH "Flag for building against LibTorch" ${PANDORA_LIBTORCH_DEF})
@@ -154,6 +154,11 @@ else()
         add_library(${PROJ} SHARED ${${PROJ}_SRCS})
         set_target_properties(${PROJ} PROPERTIES VERSION ${${PROJ}_VERSION} SOVERSION ${${PROJ}_SOVERSION})
     endforeach()
+
+    # If we are building the DL Library, it needs to link to the default library
+    if(PANDORA_LIBTORCH)
+        target_link_libraries(${DL_PROJECT_NAME} ${PROJECT_NAME})
+    endif()
 
     # - Optional documents
     if(LArContent_BUILD_DOCS)

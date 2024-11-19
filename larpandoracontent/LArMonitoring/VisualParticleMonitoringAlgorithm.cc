@@ -10,6 +10,7 @@
 
 #include "larpandoracontent/LArMonitoring/VisualParticleMonitoringAlgorithm.h"
 
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
@@ -51,7 +52,7 @@ StatusCode VisualParticleMonitoringAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
         const MCParticleList *pMCParticleList(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
-        this->MakeSelection(pMCParticleList, pCaloHitList, targetMCParticleToHitsMap);
+        this->MakeSelection(pCaloHitList, targetMCParticleToHitsMap);
     }
 
     if (m_visualizeMC)
@@ -445,26 +446,23 @@ void VisualParticleMonitoringAlgorithm::VisualizePfoByParticleId(const PfoList &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VisualParticleMonitoringAlgorithm::MakeSelection(
-    const MCParticleList *pMCList, const CaloHitList *pCaloHitList, LArMCParticleHelper::MCContributionMap &mcMap) const
+void VisualParticleMonitoringAlgorithm::MakeSelection(const CaloHitList *pCaloHitList, LArMCParticleHelper::MCContributionMap &mcMap) const
 {
-    // Default reconstructability criteria are very liberal to allow for unfolded hierarchy
-    LArMCParticleHelper::PrimaryParameters parameters;
-    parameters.m_minPrimaryGoodHits = 2;
-    parameters.m_minHitsForGoodView = 1;
-    parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
-    parameters.m_minHitSharingFraction = 0;
-    parameters.m_foldBackHierarchy = false;
 
-    if (!m_isTestBeam)
+    for (const CaloHit *pCaloHit : *pCaloHitList)
     {
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcMap);
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, mcMap);
-    }
-    else
-    {
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, mcMap);
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, mcMap);
+        try
+        {
+            const MCParticle *pMC{MCParticleHelper::GetMainMCParticle(pCaloHit)};
+            const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMC));
+            if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
+            {
+                mcMap[pMC].emplace_back(pCaloHit);
+            }
+        }
+        catch (const StatusCodeException &)
+        {
+        }
     }
 }
 #endif // MONITORING

@@ -75,11 +75,13 @@ public:
          *
          *  @param  minPurity The minimum purity for a cut to be considered good
          *  @param  minCompleteness The minimum completeness for a cut to be considered good
+	 *  @param  selectRecoHits Whether to only use reco hits that overlap with the MC particle hits
          */
-        QualityCuts(const float minPurity, const float minCompleteness);
+        QualityCuts(const float minPurity, const float minCompleteness, const bool selectRecoHits = false);
 
         const float m_minPurity;       ///< The minimum purity for a match to be considered good
         const float m_minCompleteness; ///< The minimum completeness for a match to be considered good
+        const bool m_selectRecoHits;   ///< Whether to only use reco hits that overlap with the MC particle hits
     };
 
     /**
@@ -517,7 +519,7 @@ public:
             const RecoHierarchy &m_hierarchy;             ///< The parent reco hierarchy
             pandora::PfoList m_pfos;                      ///< The list of PFOs of which this node is composed
             pandora::CaloHitList m_caloHits;              ///< The list of calo hits of which this node is composed
-            NodeVector m_children;                        ///< The child nodes of this nodea
+            NodeVector m_children;                        ///< The child nodes of this node
             const pandora::ParticleFlowObject *m_mainPfo; ///< The leading particle flow object for this node
             int m_pdg;                                    ///< The particle ID (track = muon, shower = electron)
         };
@@ -598,6 +600,8 @@ public:
         RecoNodeVectorMap m_interactions; ///< Map from the root PFO (e.g. neutrino) to primaries
     };
 
+    typedef std::map<const RecoHierarchy::Node *, const pandora::CaloHitList> SelectedRecoHitsMap;
+
     /**
      *  @brief  MCMatches class
      */
@@ -615,9 +619,10 @@ public:
          *  @brief  Add a reconstructed node as a match for this MC node
          *
          *  @param  pReco The reconstructed node that matches this MC node
-         *  @param  nSharedHits The number of hits shared betweeb reco and MC nodes
+         *  @param  nSharedHits The number of hits shared between reco and MC nodes
+	 *  @param  selectedRecoHits The reco node hits that are selected from the MC particle hits
          */
-        void AddRecoMatch(const RecoHierarchy::Node *pReco, const int nSharedHits);
+        void AddRecoMatch(const RecoHierarchy::Node *pReco, const int nSharedHits, const pandora::CaloHitList &selectedRecoHits);
 
         /**
          *  @brief  Retrieve the MC node
@@ -632,6 +637,15 @@ public:
          *  @return The vector of matched reco nodes
          */
         const RecoHierarchy::NodeVector &GetRecoMatches() const;
+
+        /**
+	 *  @brief  Retrieve the selected hits for the given reco node
+	 *
+	 *  @param  pReco The reco node pointer
+	 *
+	 *  @return The list of selected calo reco hits
+	 */
+        const pandora::CaloHitList GetSelectedRecoHits(const RecoHierarchy::Node *pReco) const;
 
         /**
          *  @brief  Retrieve the number of shared hits in the match
@@ -723,16 +737,17 @@ public:
          */
         float GetCompleteness(const pandora::CaloHitVector &intersection, const pandora::CaloHitList &mcHits, const bool adcWeighted) const;
 
-        const MCHierarchy::Node *m_pMCParticle; ///< MC node associated with any matches
-        RecoHierarchy::NodeVector m_recoNodes;  ///< Matched reco nodes
-        pandora::IntVector m_sharedHits;        ///< Number of shared hits for each match
+        const MCHierarchy::Node *m_pMCParticle;    ///< MC node associated with any matches
+        RecoHierarchy::NodeVector m_recoNodes;     ///< Matched reco nodes
+        pandora::IntVector m_sharedHits;           ///< Number of shared hits for each match
+        SelectedRecoHitsMap m_selectedRecoHitsMap; ///< Map storing the selected CaloHits for a given reco node
     };
 
     typedef std::vector<MCMatches> MCMatchesVector;
     typedef std::map<const pandora::MCParticle *, MCMatchesVector> InteractionInfo;
 
     /**
-     *  @brief  MatcheInfo class
+     *  @brief  MatchInfo class
      */
     class MatchInfo
     {
@@ -837,6 +852,16 @@ public:
          *  @return The quality cuts
          */
         const QualityCuts &GetQualityCuts() const;
+
+        /**
+	 *  @brief  Get the selected reco node hits that are contained in the allMCHits list
+	 *
+	 *  @param  pRecoNode The reco node pointer
+	 *  @param  allMCHits The CaloHit list of all of the MC particles that will be used for the selection
+	 *
+	 *  @return The selected reco calo hits
+	 */
+        const pandora::CaloHitList GetSelectedRecoHits(const RecoHierarchy::Node *pRecoNode, const pandora::CaloHitList &allMCHits) const;
 
         /**
          *  @brief  Prints information about which reco nodes are matched to the MC nodes, information about hit sharing, purity and

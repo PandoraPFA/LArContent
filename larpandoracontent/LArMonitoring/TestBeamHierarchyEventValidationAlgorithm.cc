@@ -104,9 +104,11 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(
     static int eventNumber{-1};
     ++eventNumber;
     if (printToScreen && useInterpretedMatching)
-        std::cout << "---INTERPRETED-MATCHING-OUTPUT------------------------------------------------------------------" << std::endl;
+        std::cout << "---EVENT-" << eventNumber << "-INTERPRETED-MATCHING-OUTPUT----------------------------------------------------------"
+                  << std::endl;
     else if (printToScreen)
-        std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
+        std::cout << "---EVENT-" << eventNumber << "-RAW-MATCHING-OUTPUT------------------------------------------------------------------"
+                  << std::endl;
 
     PfoVector primaryPfoVector;
     LArMonitoringHelper::GetOrderedPfoVector(validationInfo.GetPfoToHitsMap(), primaryPfoVector);
@@ -176,7 +178,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(
     PfoSet recoTestBeamHierarchies;
     MCParticleList associatedMCPrimaries;
 
-    int nCorrectTB(0), nTotalTB(0), nCorrectTBHierarchy(0), nTotalTBHierarchy(0), nCorrectCR(0), nTotalCR(0);
+    int nCorrectTBHierarchy(0), nTotalTBHierarchy(0), nCorrectCR(0), nTotalCR(0);
     int nFakeTBHierarchy(0), nFakeCR(0), nSplitTBHierarchy(0), nSplitCR(0), nLost(0), mcPrimaryIndex(0), nTargetMatches(0),
         nTargetTBHierarchyMatches(0);
     int nTargetCRMatches(0), nTargetGoodTBHierarchyMatches(0), nTargetTBHierarchySplits(0), nTargetTBHierarchyLosses(0);
@@ -461,7 +463,6 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(
             const int interactionTypeInt(static_cast<int>(interactionType));
 #endif
             // ATTN Some redundancy introduced to contributing variables
-            const int isCorrectTB(isBeamParticle && (nTargetTBHierarchyMatches == 1) && (nTargetCRMatches == 0));
             const int isCorrectTBHierarchy(isLeadingBeamParticle && (nTargetGoodTBHierarchyMatches == nTargetTBHierarchyMatches) &&
                 (nTargetGoodTBHierarchyMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetTBHierarchySplits == 0) &&
                 (nTargetTBHierarchyLosses == 0));
@@ -477,14 +478,10 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(
             outcomeSS << LArInteractionTypeHelper::ToString(interactionType) << " (Nuance " << mcNuanceCode << ", TB " << isBeamHierarchy
                       << ", CR " << isCosmicRay << ")" << std::endl;
 
-            if (isBeamParticle)
-                ++nTotalTB;
             if (isLastTestBeamLeading)
                 ++nTotalTBHierarchy;
             if (isCosmicRay)
                 ++nTotalCR;
-            if (isCorrectTB)
-                ++nCorrectTB;
             if (isCorrectTBHierarchy)
                 ++nCorrectTBHierarchy;
             if (isCorrectCR)

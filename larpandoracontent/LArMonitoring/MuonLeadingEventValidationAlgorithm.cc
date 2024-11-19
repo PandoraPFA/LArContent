@@ -443,13 +443,11 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
                          << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, leadingParticleHitList) << ")" << std::endl;
 
             // Look at the pfo matches
-            int nMatches(0), nAboveThresholdMatches(0);
+            int nAboveThresholdMatches(0);
             bool isCorrectParentLink(false);
 
             for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : foldedMCToPfoHitSharingMap.at(pLeadingParticle))
             {
-                ++nMatches;
-
                 const ParticleFlowObject *const pMatchedPfo(pfoToSharedHits.first);
                 const CaloHitList &pfoHitList(foldedPfoToHitsMap.at(pMatchedPfo));
                 const CaloHitList &sharedHitList(pfoToSharedHits.second);

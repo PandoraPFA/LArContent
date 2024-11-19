@@ -71,6 +71,7 @@ private:
     unsigned int m_minRecoHitsPerView; ///< Minimum number of reconstructed hits for a good view
     unsigned int m_minRecoGoodViews;   ///< Minimum number of reconstructed primary good views
     bool m_removeRecoNeutrons;         ///< Whether to remove reconstructed neutrons and their downstream particles
+    bool m_selectRecoHits;             ///< Whether to select reco hits that overlap with the MC particle hits
 };
 
 } // namespace lar_content

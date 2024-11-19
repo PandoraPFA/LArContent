@@ -60,15 +60,17 @@ LArHierarchyHelper::FoldingParameters::FoldingParameters(const int foldingTier) 
 
 LArHierarchyHelper::QualityCuts::QualityCuts() :
     m_minPurity{0.8f},
-    m_minCompleteness{0.65f}
+    m_minCompleteness{0.65f},
+    m_selectRecoHits{false}
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArHierarchyHelper::QualityCuts::QualityCuts(const float minPurity, const float minCompleteness) :
+LArHierarchyHelper::QualityCuts::QualityCuts(const float minPurity, const float minCompleteness, const bool selectRecoHits) :
     m_minPurity{minPurity},
-    m_minCompleteness{minCompleteness}
+    m_minCompleteness{minCompleteness},
+    m_selectRecoHits{selectRecoHits}
 {
 }
 
@@ -1092,10 +1094,22 @@ LArHierarchyHelper::MCMatches::MCMatches(const MCHierarchy::Node *pMCParticle) :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHierarchyHelper::MCMatches::AddRecoMatch(const RecoHierarchy::Node *pReco, const int nSharedHits)
+void LArHierarchyHelper::MCMatches::AddRecoMatch(const RecoHierarchy::Node *pReco, const int nSharedHits, const CaloHitList &selectedRecoHits)
 {
     m_recoNodes.emplace_back(pReco);
     m_sharedHits.emplace_back(nSharedHits);
+    m_selectedRecoHitsMap.insert(std::make_pair(pReco, selectedRecoHits));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const CaloHitList LArHierarchyHelper::MCMatches::GetSelectedRecoHits(const RecoHierarchy::Node *pReco) const
+{
+    auto iter{m_selectedRecoHitsMap.find(pReco)};
+    if (iter != m_selectedRecoHitsMap.end())
+        return iter->second;
+    else
+        return pReco->GetCaloHits();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1118,7 +1132,7 @@ float LArHierarchyHelper::MCMatches::GetPurity(const RecoHierarchy::Node *pReco,
     if (iter == m_recoNodes.end())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    const CaloHitList &recoHits{pReco->GetCaloHits()};
+    const CaloHitList recoHits = LArHierarchyHelper::MCMatches::GetSelectedRecoHits(pReco);
     const CaloHitList &mcHits{m_pMCParticle->GetCaloHits()};
     CaloHitVector intersection;
     std::set_intersection(mcHits.begin(), mcHits.end(), recoHits.begin(), recoHits.end(), std::back_inserter(intersection));
@@ -1135,7 +1149,7 @@ float LArHierarchyHelper::MCMatches::GetPurity(const RecoHierarchy::Node *pReco,
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     CaloHitList recoHits;
-    for (const CaloHit *pCaloHit : pReco->GetCaloHits())
+    for (const CaloHit *pCaloHit : LArHierarchyHelper::MCMatches::GetSelectedRecoHits(pReco))
         if (pCaloHit->GetHitType() == view)
             recoHits.emplace_back(pCaloHit);
     CaloHitList mcHits;
@@ -1157,7 +1171,7 @@ float LArHierarchyHelper::MCMatches::GetCompleteness(const RecoHierarchy::Node *
     if (iter == m_recoNodes.end())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    const CaloHitList &recoHits{pReco->GetCaloHits()};
+    const CaloHitList recoHits = LArHierarchyHelper::MCMatches::GetSelectedRecoHits(pReco);
     const CaloHitList &mcHits{m_pMCParticle->GetCaloHits()};
     CaloHitVector intersection;
     std::set_intersection(mcHits.begin(), mcHits.end(), recoHits.begin(), recoHits.end(), std::back_inserter(intersection));
@@ -1174,7 +1188,7 @@ float LArHierarchyHelper::MCMatches::GetCompleteness(const RecoHierarchy::Node *
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     CaloHitList recoHits;
-    for (const CaloHit *pCaloHit : pReco->GetCaloHits())
+    for (const CaloHit *pCaloHit : LArHierarchyHelper::MCMatches::GetSelectedRecoHits(pReco))
         if (pCaloHit->GetHitType() == view)
             recoHits.emplace_back(pCaloHit);
     CaloHitList mcHits;
@@ -1301,6 +1315,15 @@ void LArHierarchyHelper::MatchInfo::Match()
     {
         MCHierarchy::NodeVector mcNodes;
         m_mcHierarchy.GetFlattenedNodes(pRootMC, mcNodes);
+
+        // Get all of the hits from the MC nodes (for selecting reco hits)
+        CaloHitList allMCHits;
+        for (const MCHierarchy::Node *pMCNode : mcNodes)
+        {
+            const CaloHitList &mcHits{pMCNode->GetCaloHits()};
+            allMCHits.insert(allMCHits.begin(), mcHits.begin(), mcHits.end());
+        }
+
         for (const ParticleFlowObject *const pRootPfo : rootPfos)
         {
             RecoHierarchy::NodeVector recoNodes;
@@ -1315,7 +1338,12 @@ void LArHierarchyHelper::MatchInfo::Match()
 
             for (const RecoHierarchy::Node *pRecoNode : recoNodes)
             {
-                const CaloHitList &recoHits{pRecoNode->GetCaloHits()};
+                // Get the selected list of reco hits that overlap with all of the MC hits
+                // or just use all of the hits in the reco node
+                const CaloHitList selectedRecoHits = (m_qualityCuts.m_selectRecoHits == true)
+                    ? LArHierarchyHelper::MatchInfo::GetSelectedRecoHits(pRecoNode, allMCHits)
+                    : pRecoNode->GetCaloHits();
+
                 const MCHierarchy::Node *pBestNode{nullptr};
                 size_t bestSharedHits{0};
                 for (const MCHierarchy::Node *pMCNode : mcNodes)
@@ -1324,7 +1352,8 @@ void LArHierarchyHelper::MatchInfo::Match()
                         continue;
                     const CaloHitList &mcHits{pMCNode->GetCaloHits()};
                     CaloHitVector intersection;
-                    std::set_intersection(mcHits.begin(), mcHits.end(), recoHits.begin(), recoHits.end(), std::back_inserter(intersection));
+                    std::set_intersection(
+                        mcHits.begin(), mcHits.end(), selectedRecoHits.begin(), selectedRecoHits.end(), std::back_inserter(intersection));
 
                     if (!intersection.empty())
                     {
@@ -1342,12 +1371,12 @@ void LArHierarchyHelper::MatchInfo::Match()
                     if (iter != mcToMatchMap.end())
                     {
                         MCMatches &match(iter->second);
-                        match.AddRecoMatch(pRecoNode, static_cast<int>(bestSharedHits));
+                        match.AddRecoMatch(pRecoNode, static_cast<int>(bestSharedHits), selectedRecoHits);
                     }
                     else
                     {
                         MCMatches match(pBestNode);
-                        match.AddRecoMatch(pRecoNode, static_cast<int>(bestSharedHits));
+                        match.AddRecoMatch(pRecoNode, static_cast<int>(bestSharedHits), selectedRecoHits);
                         mcToMatchMap.insert(std::make_pair(pBestNode, match));
                     }
                 }
@@ -1461,6 +1490,32 @@ unsigned int LArHierarchyHelper::MatchInfo::GetNTestBeamMCNodes(const MCParticle
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const CaloHitList LArHierarchyHelper::MatchInfo::GetSelectedRecoHits(const RecoHierarchy::Node *pRecoNode, const CaloHitList &allMCHits) const
+{
+    // Select all of the reco node hit Ids that overlap with the allMCHits Ids
+    CaloHitList selectedHits;
+    if (pRecoNode)
+    {
+        const CaloHitList recoHits{pRecoNode->GetCaloHits()};
+        for (const CaloHit *pRecoHit : recoHits)
+        {
+            const int recoId = reinterpret_cast<intptr_t>(pRecoHit->GetParentAddress());
+            for (const CaloHit *pMCHit : allMCHits)
+            {
+                const int mcId = reinterpret_cast<intptr_t>(pMCHit->GetParentAddress());
+                if (recoId == mcId)
+                {
+                    selectedHits.emplace_back(pRecoHit);
+                    break;
+                }
+            }
+        }
+    }
+    return selectedHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
 {
     MCParticleList rootMCParticles;
@@ -1509,15 +1564,16 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
 
             for (const RecoHierarchy::Node *pRecoNode : nodeVector)
             {
-                const unsigned int recoHits{static_cast<unsigned int>(pRecoNode->GetCaloHits().size())};
+                const CaloHitList recoHits = match.GetSelectedRecoHits(pRecoNode);
+                const unsigned int nRecoHits{static_cast<unsigned int>(recoHits.size())};
                 const unsigned int sharedHits{match.GetSharedHits(pRecoNode)};
                 const float purity{match.GetPurity(pRecoNode)};
                 const float completeness{match.GetCompleteness(pRecoNode)};
                 if (completeness > 0.1f)
-                    std::cout << "   Matched " << sharedHits << " out of " << recoHits << " with purity " << purity << " and completeness "
+                    std::cout << "   Matched " << sharedHits << " out of " << nRecoHits << " with purity " << purity << " and completeness "
                               << completeness << std::endl;
                 else
-                    std::cout << "   (Below threshold) " << sharedHits << " out of " << recoHits << " with purity " << purity
+                    std::cout << "   (Below threshold) " << sharedHits << " out of " << nRecoHits << " with purity " << purity
                               << " and completeness " << completeness << std::endl;
             }
             if (nodeVector.empty())

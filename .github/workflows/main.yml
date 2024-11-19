@@ -18,7 +18,7 @@ jobs:
   build:
 
     # Use the latest ubuntu image: https://github.com/actions/runner-images
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     name: LArContent - ${{ matrix.compiler.c }} - Monitoring ${{ matrix.monitoring }} - DL ${{ matrix.torch }}
 
     # Only run in the PandoraPFA repos.
@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false # Don't quit other jobs if one job fails.
       matrix:
-        compiler: [ {cpp: g++-8, c: gcc-8}, {cpp: clang++, c: clang} ]
+        compiler: [ {cpp: g++-12, c: gcc-12}, {cpp: clang++, c: clang} ]
         monitoring: [ "ON", "OFF" ]
         torch: [ "ON", "OFF" ]
 
@@ -42,7 +42,7 @@ jobs:
       # Setup dependencies and build folder...
       - name: Install Dependencies
         run: |
-          sudo apt install -y xlibmesa-glu-dev gcc-8 g++-8
+          sudo apt install -y xlibmesa-glu-dev libvdt-dev
           sudo mkdir -m 0777 -p /pandora
 
       # Pull and Install Eigen...
@@ -60,43 +60,43 @@ jobs:
       - name: Install ROOT
         if: matrix.monitoring == 'ON'
         run: |
-          wget https://root.cern/download/root_v6.26.14.Linux-ubuntu20-x86_64-gcc9.4.tar.gz
-          tar -xzvf root_v6.26.14.Linux-ubuntu20-x86_64-gcc9.4.tar.gz && mv root/ /pandora/root
+          wget https://root.cern/download/root_v6.28.12.Linux-ubuntu22-x86_64-gcc11.4.tar.gz
+          tar -xzvf root_v6.28.12.Linux-ubuntu22-x86_64-gcc11.4.tar.gz && mv root/ /pandora/root
 
       # Sort LibTorch install out...
       - name: Install Torch
         if: matrix.torch == 'ON'
         run: |
-          wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip
-          unzip libtorch-cxx11-abi-shared-with-deps-1.13.0+cpu.zip && mv libtorch/ /pandora/libtorch
+          wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.1.1%2Bcpu.zip
+          unzip libtorch-cxx11-abi-shared-with-deps-2.1.1+cpu.zip && mv libtorch/ /pandora/libtorch
 
       # Pull the various Pandora repos...
       - name: Pull PandoraPFA
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/PandoraPFA'
           path: PandoraPFA
 
       - name: Pull PandoraSDK
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/PandoraSDK'
           path: PandoraSDK
 
       - name: Pull PandoraMonitoring
         if: matrix.monitoring == 'ON'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/PandoraMonitoring'
           path: PandoraMonitoring
 
       - name: Pull LArContent
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: LArContent
 
       - name: Pull LArReco
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'PandoraPFA/LArReco'
           path: LArReco
