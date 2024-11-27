@@ -29,17 +29,6 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    /**
-     *  @brief Get the MC index for the true particle that contributes most energy to the calo hit 
-     *
-     *  @param pAlgorithm the algorithm calling the tool 
-     *  @param pCaloHit address of the calo hit
-     *
-     *  @return MCParticle Index
-     */
-
-    int GetMainMcParticleIndex(const pandora::Algorithm *const pAlgorithm, const pandora::CaloHit *const pCaloHit);
-
     std::string m_mcParticleListName; ///< The mc particle list name 
 };
 
