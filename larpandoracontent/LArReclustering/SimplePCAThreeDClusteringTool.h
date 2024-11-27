@@ -23,7 +23,7 @@ public:
 
 private:
 
-    bool Run(const pandora::Algorithm *const /*pAlgorithm*/, std::vector<pandora::CaloHitList*> &newCaloHitListsVector) override;
+    std::vector<std::reference_wrapper<pandora::CaloHitList>> Run(const pandora::Algorithm *const pAlgorithm, std::reference_wrapper<pandora::CaloHitList> &inputCaloHitList);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle /*xmlHandle*/);
 };

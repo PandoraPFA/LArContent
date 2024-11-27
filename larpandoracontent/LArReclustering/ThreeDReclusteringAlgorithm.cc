@@ -74,11 +74,11 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
         if(pShowerClusters->end() == std::find(pShowerClusters->begin(), pShowerClusters->end(), clusterList3D.front()))
             continue;
 
-        CaloHitList caloHitList3D;
-        clusterList3D.front()->GetOrderedCaloHitList().FillCaloHitList(caloHitList3D);
+        CaloHitList initialCaloHitList;
+        clusterList3D.front()->GetOrderedCaloHitList().FillCaloHitList(initialCaloHitList);
 
 		//Create a variable for the minimum figure of merit and initialize to initial FOM
-        float minimumFigureOfMerit(this->GetFigureOfMerit(caloHitList3D));
+        float minimumFigureOfMerit(this->GetFigureOfMerit(initialCaloHitList));
 
         //Free the hits in this cluster, so that they are not owned by the original pfo, and are available for reclustering
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pShowerPfo, clusterList3D.front()));
@@ -89,16 +89,15 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, "ShowerClusters3D"));
 
 		//Split the calo hit list into a new set of calo hit lists, taking the best outcome out of different algorithms
-        std::vector<CaloHitList*> newCaloHitListsVector, minimumFigureOfMeritCaloHitListsVector, initialCaloHitListsVector;
-        initialCaloHitListsVector.emplace_back(&caloHitList3D);
-        minimumFigureOfMeritCaloHitListsVector = initialCaloHitListsVector;
+        std::vector<std::reference_wrapper<CaloHitList>> newCaloHitListsVector, minimumFigureOfMeritCaloHitListsVector;
+        minimumFigureOfMeritCaloHitListsVector.push_back(initialCaloHitList);
+
+        std::reference_wrapper<CaloHitList> initialCaloHitListWrapper(initialCaloHitList);
 
         for (auto toolIter = m_algorithmToolVector.begin(); toolIter != m_algorithmToolVector.end(); ++toolIter)
         {
-            newCaloHitListsVector = initialCaloHitListsVector;
-
             try {
-                (*toolIter)->Run(this, newCaloHitListsVector);
+                newCaloHitListsVector = (*toolIter)->Run(this, initialCaloHitListWrapper);
             } catch (const StatusCodeException &){
                 std::cout << "Exception caught! Cannot run reclustering tool!" << std::endl;
             }
@@ -110,20 +109,13 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
             if(newFigureOfMerit <= minimumFigureOfMerit)
             {
                  minimumFigureOfMerit = newFigureOfMerit;
-                 minimumFigureOfMeritCaloHitListsVector = newCaloHitListsVector;
-            }
-            else //If not, clear the lists and vector!!
-            {
-                for (CaloHitList* caloHitList : newCaloHitListsVector)
-                {
-                    delete caloHitList;
-                }
+                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyListVector(newCaloHitListsVector,minimumFigureOfMeritCaloHitListsVector));
             }
             newCaloHitListsVector.clear();
         }
         
         //If the new best calo hit lists outcome is equivalent to original, move pfo to unchanged pfo list. Else, create new vector of 3D clusters
-        if(minimumFigureOfMeritCaloHitListsVector==newCaloHitListsVector)
+        if((minimumFigureOfMeritCaloHitListsVector.size()==1) && (minimumFigureOfMeritCaloHitListsVector.at(0).get()==initialCaloHitList))
         {
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pShowerPfo, clusterList3D.front()));
             unchangedPfoList.push_back(pShowerPfo);
@@ -141,7 +133,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
         {
             const Cluster *pCluster = nullptr;
             PandoraContentApi::Cluster::Parameters parameters;
-            parameters.m_caloHitList = *list;
+            parameters.m_caloHitList = list.get();
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
             newClustersList.push_back(pCluster);
         }
@@ -390,12 +382,12 @@ float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::string &figureOfM
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::string &figureOfMeritName, const std::vector<CaloHitList*> &newClustersCaloHitLists3D)
+float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::string &figureOfMeritName, const std::vector<std::reference_wrapper<CaloHitList>> &newClustersCaloHitLists3D)
 {
       std::vector<float> newClustersFigureOfMeritVector;
       for(auto clusterCaloHitLists3D: newClustersCaloHitLists3D)
       {
-        if(figureOfMeritName=="cheated")newClustersFigureOfMeritVector.push_back(this->GetCheatedFigureOfMerit(*clusterCaloHitLists3D));
+        if(figureOfMeritName=="cheated")newClustersFigureOfMeritVector.push_back(this->GetCheatedFigureOfMerit(clusterCaloHitLists3D));
       }
       const float figureOfMerit(*std::min_element(newClustersFigureOfMeritVector.begin(), newClustersFigureOfMeritVector.end()));
       return figureOfMerit;
@@ -403,7 +395,7 @@ float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::string &figureOfM
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::vector<CaloHitList*> &newClustersCaloHitLists3D)
+float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::vector<std::reference_wrapper<CaloHitList>> &newClustersCaloHitLists3D)
 {
     std::vector<float> figureOfMeritVector;
     for (StringVector::const_iterator iter = m_figureOfMeritNames.begin(), iterEnd = m_figureOfMeritNames.end(); iter != iterEnd; ++iter)
@@ -426,6 +418,20 @@ float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const CaloHitList &mergedClu
     }
     const float figureOfMerit=*(std::min_element(figureOfMeritVector.begin(), figureOfMeritVector.end()));
     return figureOfMerit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode ThreeDReclusteringAlgorithm::CopyListVector(std::vector<std::reference_wrapper<CaloHitList>> listVectorSource, std::vector<std::reference_wrapper<CaloHitList>> listVectorDestination)
+{
+    listVectorDestination.clear();
+
+    for (size_t i = 0; i < listVectorSource.size(); ++i)
+    {
+        listVectorDestination.push_back(listVectorSource[i].get());
+    }
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
