@@ -120,15 +120,6 @@ private:
      */
     bool PassesCutsForReclustering(const pandora::ParticleFlowObject *const pPfo);
 
-    /**
-     *  @brief Get the MC index for the true particle that contributes most energy to the calo hit 
-     *
-     *  @param pCaloHit address of the calo hit
-     *
-     *  @return MCParticle Index
-     */
-    int GetMainMcParticleIndex(const pandora::CaloHit *const pCaloHit);
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     ClusteringToolVector m_algorithmToolVector; ///< The reclustering algorithm tool vector

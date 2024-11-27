@@ -355,50 +355,23 @@ bool ThreeDReclusteringAlgorithm::PassesCutsForReclustering(const pandora::Parti
 
 float ThreeDReclusteringAlgorithm::GetCheatedFigureOfMerit(const CaloHitList &mergedClusterCaloHitList3D)
 {
-    std::map<int,int> mainMcParticleMap;
+    std::map<const pandora::MCParticle *,int> mainMcParticleMap;
     for (const CaloHit *const pCaloHit : mergedClusterCaloHitList3D)
     {
         const CaloHit *const pParentCaloHit = static_cast<const CaloHit *>(pCaloHit->GetParentAddress());
-        int mainMcParticleIndex = this->GetMainMcParticleIndex(pParentCaloHit);
-        std::map<int, int>::iterator it = mainMcParticleMap.find(mainMcParticleIndex);
+
+        const MCParticle *const pMainMCParticle(MCParticleHelper::GetMainMCParticle(pParentCaloHit));
+
+        std::map<const pandora::MCParticle *, int>::iterator it = mainMcParticleMap.find(pMainMCParticle);
  
         if (it != mainMcParticleMap.end()) 
             it->second++;
         else 
-            mainMcParticleMap.insert(std::make_pair(mainMcParticleIndex, 1));
+            mainMcParticleMap.insert(std::make_pair(pMainMCParticle, 1));
     }
-    const MCParticleList *pMCParticleList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
-    MCParticleVector mcParticleVector(pMCParticleList->begin(),pMCParticleList->end());
-    std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
-    
     const auto maxSharedHits = std::max_element(mainMcParticleMap.begin(), mainMcParticleMap.end(), [](const auto &x, const auto &y) {return x.second < y.second;});
     float mainMcParticleFraction = (float)maxSharedHits->second/mergedClusterCaloHitList3D.size();
     return (1.f-mainMcParticleFraction);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-int ThreeDReclusteringAlgorithm::GetMainMcParticleIndex(const pandora::CaloHit *const pCaloHit)
-{
-    const MCParticleList *pMCParticleList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
-    MCParticleVector mcParticleVector(pMCParticleList->begin(),pMCParticleList->end());
-    std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
-    int iMcPart(0); 
-    for (const auto &weightMapEntry : pCaloHit->GetMCParticleWeightMap()) 
-    { 
-      if(weightMapEntry.second>0.5) 
-      { 
-        iMcPart=0;  
-        for(const MCParticle *const pMCParticle: mcParticleVector) 
-        { 
-            if(pMCParticle==weightMapEntry.first) { break;} 
-            iMcPart++; 
-        }
-      } 
-    }
-    return iMcPart;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

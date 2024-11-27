@@ -23,7 +23,7 @@ CheatedThreeDClusteringTool::CheatedThreeDClusteringTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CheatedThreeDClusteringTool::Run(const Algorithm *const pAlgorithm, std::vector<pandora::CaloHitList*> &newCaloHitListsVector)
+bool CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, std::vector<pandora::CaloHitList*> &newCaloHitListsVector)
 {
     if (newCaloHitListsVector.size() != 1)
         return false;
@@ -31,64 +31,32 @@ bool CheatedThreeDClusteringTool::Run(const Algorithm *const pAlgorithm, std::ve
     CaloHitList *initialCaloHitList = newCaloHitListsVector.at(0);
     newCaloHitListsVector.clear();
 
-    std::map<int, CaloHitList*> McIdCaloHitListMap;
+    std::map<const pandora::MCParticle *, CaloHitList*> McParticleCaloHitListMap;
 
     for (const CaloHit *const pCaloHit : *initialCaloHitList)
     {
         const CaloHit *const pParentCaloHit = static_cast<const CaloHit *>(pCaloHit->GetParentAddress());
 
-        int mainMcParticleIndex = this->GetMainMcParticleIndex(pAlgorithm, pParentCaloHit);
+        const MCParticle *const pMainMCParticle(MCParticleHelper::GetMainMCParticle(pParentCaloHit));
 
-        if (McIdCaloHitListMap.count(mainMcParticleIndex)) 
+        auto it = McParticleCaloHitListMap.find(pMainMCParticle);
+
+        if (it != McParticleCaloHitListMap.end()) 
         {
-            McIdCaloHitListMap.at(mainMcParticleIndex)->push_back(pCaloHit);
+            it->second->push_back(pCaloHit);
         }
         else
         {
             CaloHitList* newList = new CaloHitList();
             newList->push_back(pCaloHit);
-            McIdCaloHitListMap.insert(std::make_pair(mainMcParticleIndex, newList));
+            McParticleCaloHitListMap.insert(std::make_pair(pMainMCParticle, newList));
         } 
 
     }
-    for (const auto& pair : McIdCaloHitListMap)
+    for (const auto& pair : McParticleCaloHitListMap)
         newCaloHitListsVector.push_back(pair.second);
 
     return true;
-}
-
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-int CheatedThreeDClusteringTool::GetMainMcParticleIndex(const Algorithm *const pAlgorithm, const pandora::CaloHit *const pCaloHit)
-{
-    if (!pCaloHit) {
-        std::cerr << "ERROR in CheatedThreeDClusteringTool: pCaloHit is null!" << std::endl;
-        return -1;
-    }
-    const MCParticleList *pMCParticleList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, m_mcParticleListName, pMCParticleList));
-    if (!pMCParticleList) {
-        std::cerr << "ERROR in CheatedThreeDClusteringTool: MCParticleList is null!" << std::endl;
-        return -1;
-    }
-    MCParticleVector mcParticleVector(pMCParticleList->begin(),pMCParticleList->end());
-    std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
-
-    int iMcPart(0); 
-    for (const auto &weightMapEntry : pCaloHit->GetMCParticleWeightMap()) 
-    { 
-      if(weightMapEntry.second>0.5) 
-      { 
-        iMcPart=0;  
-        for(const MCParticle *const pMCParticle: mcParticleVector) 
-        { 
-            if(pMCParticle==weightMapEntry.first) { break;} 
-            ++iMcPart; 
-        }
-      } 
-    }
-    return iMcPart;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
