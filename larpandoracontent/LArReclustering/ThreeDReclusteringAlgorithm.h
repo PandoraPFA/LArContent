@@ -90,7 +90,7 @@ private:
      *
      *  @return The figure of merit
      */
-    float GetFigureOfMerit(const std::vector<pandora::CaloHitList*> &newClustersCaloHitList3D);
+    float GetFigureOfMerit(const std::vector<std::reference_wrapper<pandora::CaloHitList>> &newClustersCaloHitList3D);
 
     /**
      *  @brief Calculate the specified figure of merit for each CaloHitList in the provided vector, and return the smallest FOM
@@ -100,7 +100,7 @@ private:
      *
      *  @return The figure of merit 
      */
-   float GetFigureOfMerit(const std::string &figureOfMeritName, const std::vector<pandora::CaloHitList*> &newClustersCaloHitLists3D);
+   float GetFigureOfMerit(const std::string &figureOfMeritName, const std::vector<std::reference_wrapper<pandora::CaloHitList>> &newClustersCaloHitLists3D);
 
     /** 
      *  @brief Get cheated FOM as an impurity: the fraction of hits that are NOT contributed by the main MC particle. If clustering was perfect, cheated FOM would always be 0.
@@ -120,6 +120,14 @@ private:
      */
     bool PassesCutsForReclustering(const pandora::ParticleFlowObject *const pPfo);
 
+    /**
+     *  @brief Copy a vector of reference wrappers into another 
+     *
+     *  @param listVectorSource the vector of reference wrappers to be copied
+     *  @param listVectorDestination the vector of reference wrappers to copy to
+     */
+    pandora::StatusCode CopyListVector(std::vector<std::reference_wrapper<pandora::CaloHitList>> listVectorSource, std::vector<std::reference_wrapper<pandora::CaloHitList>> listVectorDestination);
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     ClusteringToolVector m_algorithmToolVector; ///< The reclustering algorithm tool vector
@@ -133,7 +141,6 @@ private:
 
 };
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
@@ -144,7 +151,7 @@ class ClusteringTool: public pandora::AlgorithmTool {
 public:
     ClusteringTool() = default;
     virtual ~ClusteringTool() = default;
-    virtual bool Run(const pandora::Algorithm *const pAlgorithm, std::vector<pandora::CaloHitList*> &newCaloHitListsVector) = 0;
+    virtual std::vector<std::reference_wrapper<pandora::CaloHitList>> Run(const pandora::Algorithm *const pAlgorithm, std::reference_wrapper<pandora::CaloHitList> &inputCaloHitList) = 0;
 };
 
 } // namespace lar_content

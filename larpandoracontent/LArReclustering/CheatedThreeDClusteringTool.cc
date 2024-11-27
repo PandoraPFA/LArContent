@@ -23,17 +23,13 @@ CheatedThreeDClusteringTool::CheatedThreeDClusteringTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, std::vector<pandora::CaloHitList*> &newCaloHitListsVector)
+std::vector<std::reference_wrapper<pandora::CaloHitList>> CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, std::reference_wrapper<pandora::CaloHitList> &inputCaloHitList)
 {
-    if (newCaloHitListsVector.size() != 1)
-        return false;
+    std::vector<std::reference_wrapper<pandora::CaloHitList>> newCaloHitListsVector;
 
-    CaloHitList *initialCaloHitList = newCaloHitListsVector.at(0);
-    newCaloHitListsVector.clear();
+    std::map<const pandora::MCParticle *, CaloHitList> McParticleCaloHitListMap;
 
-    std::map<const pandora::MCParticle *, CaloHitList*> McParticleCaloHitListMap;
-
-    for (const CaloHit *const pCaloHit : *initialCaloHitList)
+    for (const CaloHit *const pCaloHit : inputCaloHitList.get())
     {
         const CaloHit *const pParentCaloHit = static_cast<const CaloHit *>(pCaloHit->GetParentAddress());
 
@@ -43,20 +39,20 @@ bool CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, std
 
         if (it != McParticleCaloHitListMap.end()) 
         {
-            it->second->push_back(pCaloHit);
+            it->second.push_back(pCaloHit);
         }
         else
         {
-            CaloHitList* newList = new CaloHitList();
-            newList->push_back(pCaloHit);
+            CaloHitList newList;
+            newList.push_back(pCaloHit);
             McParticleCaloHitListMap.insert(std::make_pair(pMainMCParticle, newList));
         } 
 
     }
-    for (const auto& pair : McParticleCaloHitListMap)
-        newCaloHitListsVector.push_back(pair.second);
+    for (auto& pair : McParticleCaloHitListMap)
+        newCaloHitListsVector.push_back(std::ref(pair.second));
 
-    return true;
+    return newCaloHitListsVector;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
