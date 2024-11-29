@@ -227,11 +227,18 @@ int ShowerStartFinderTool::FindShowerStartLongitudinalCoordinate(const ParticleF
         const float longitudinalCoordinate(iter->first * m_longitudinalCoordinateBinSize);
         const float energyDeviation((iter->second - meanEnergy) / energySigma);
 
-        // Use energy and local topology to assess whether we are at the shower start
-        if ((energyDeviation > m_minSigmaDeviation) &&
-            this->IsShowerTopology(pShowerPfo, hitType, spineTwoDSlidingFit, longitudinalCoordinate, showerSpineHitList, isEndDownstream))
+        try
         {
-            break;
+            // Use energy and local topology to assess whether we are at the shower start
+            if ((energyDeviation > m_minSigmaDeviation) &&
+                this->IsShowerTopology(pShowerPfo, hitType, spineTwoDSlidingFit, longitudinalCoordinate, showerSpineHitList, isEndDownstream))
+            {
+                break;
+            }
+        }
+        catch (...)
+        {
+            continue;
         }
     }
 
