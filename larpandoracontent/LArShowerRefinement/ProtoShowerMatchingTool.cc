@@ -144,7 +144,8 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(const ProtoShower &protoSh
     const CartesianVector &directionV1(protoShowerV.GetConnectionPathway().GetStartDirection());
     const CartesianVector &directionW1(protoShowerW.GetConnectionPathway().GetStartDirection());
 
-    if (this->AreDirectionsConsistent(directionU1, directionV1, directionW1))
+    if (this->AreDirectionsConsistent(protoShowerU.GetConnectionPathway().GetStartPosition(), protoShowerV.GetConnectionPathway().GetStartPosition(), 
+        protoShowerW.GetConnectionPathway().GetStartPosition(), directionU1, directionV1, directionW1))
     {
         return true;
     }
@@ -172,7 +173,8 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(const ProtoShower &protoSh
         const CartesianVector directionV2(isDownstream ? spineFitV.GetGlobalMinLayerDirection() : spineFitV.GetGlobalMaxLayerDirection() * (-1.f));
         const CartesianVector directionW2(isDownstream ? spineFitW.GetGlobalMinLayerDirection() : spineFitW.GetGlobalMaxLayerDirection() * (-1.f));
 
-        return this->AreDirectionsConsistent(directionU2, directionV2, directionW2);
+        return this->AreDirectionsConsistent(protoShowerU.GetConnectionPathway().GetStartPosition(), protoShowerV.GetConnectionPathway().GetStartPosition(), 
+            protoShowerW.GetConnectionPathway().GetStartPosition(), directionU2, directionV2, directionW2);
     }
 
     return false;
@@ -180,7 +182,8 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(const ProtoShower &protoSh
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ProtoShowerMatchingTool::AreDirectionsConsistent(CartesianVector directionU, CartesianVector directionV, CartesianVector directionW) const
+bool ProtoShowerMatchingTool::AreDirectionsConsistent(const CartesianVector &nuVertexU, const CartesianVector &nuVertexV, const CartesianVector &nuVertexW,
+    const CartesianVector &directionU, const CartesianVector &directionV, const CartesianVector &directionW) const
 {
     const CartesianVector wireAxis(0.f, 0.f, 1.f);
 
@@ -197,12 +200,7 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(CartesianVector directionU
     bool isIsochronous((wireDeviationU < radians) && (wireDeviationV < radians) && (wireDeviationW < radians));
 
     if (isIsochronous)
-    {
-        // Enforce consistency
-        directionU = CartesianVector(std::fabs(directionU.GetX()), 0.f, directionU.GetZ());
-        directionV = CartesianVector(std::fabs(directionV.GetX()), 0.f, directionV.GetZ());
-        directionW = CartesianVector(std::fabs(directionW.GetX()), 0.f, directionW.GetZ());
-    }
+        return true;
 
     if (directionU.GetX() * directionV.GetX() < 0.f)
         return false;
@@ -213,22 +211,43 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(CartesianVector directionU
     if (directionV.GetX() * directionW.GetX() < 0.f)
         return false;
 
-    const CartesianVector projectionU(LArGeometryHelper::MergeTwoDirections(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, directionV, directionW));
-    const CartesianVector projectionV(LArGeometryHelper::MergeTwoDirections(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, directionW, directionU));
-    const CartesianVector projectionW(LArGeometryHelper::MergeTwoDirections(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, directionU, directionV));
+    const CartesianVector xAxis(1.f, 0.f, 0.f);
+    const float cosOpeningAngleU(std::fabs(directionU.GetCosOpeningAngle(xAxis)));
+    const float cosOpeningAngleV(std::fabs(directionV.GetCosOpeningAngle(xAxis)));
+    const float cosOpeningAngleW(std::fabs(directionW.GetCosOpeningAngle(xAxis)));
+
+    const float xSeparation(5.f);
+    const CartesianVector uPoint(nuVertexU + (directionU * (xSeparation / cosOpeningAngleU)));
+    const CartesianVector vPoint(nuVertexV + (directionV * (xSeparation / cosOpeningAngleV)));
+    const CartesianVector wPoint(nuVertexW + (directionW * (xSeparation / cosOpeningAngleW)));
+
+    float chiSquared(0.f);
+
+    CartesianVector projectionPointU(0.f, 0.f, 0.f);
+    LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vPoint, wPoint, projectionPointU, chiSquared);
+
+    CartesianVector projectionPointV(0.f, 0.f, 0.f);
+    LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, wPoint, uPoint, projectionPointV, chiSquared);
+
+    CartesianVector projectionPointW(0.f, 0.f, 0.f);
+    LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uPoint, vPoint, projectionPointW, chiSquared);
+
+    // Project U
+    const CartesianVector projectionU((projectionPointU - nuVertexU).GetUnitVector());
+
+    // Project V
+    const CartesianVector projectionV((projectionPointV - nuVertexV).GetUnitVector());
+
+    // Project W
+    const CartesianVector projectionW((projectionPointW - nuVertexW).GetUnitVector());
 
     float openingAngleU(directionU.GetOpeningAngle(projectionU) * 180.f / M_PI);
     float openingAngleV(directionV.GetOpeningAngle(projectionV) * 180.f / M_PI);
     float openingAngleW(directionW.GetOpeningAngle(projectionW) * 180.f / M_PI);
 
-    if (isIsochronous)
-    {
-        openingAngleU = std::min(openingAngleU, 180.f - openingAngleU);
-        openingAngleV = std::min(openingAngleV, 180.f - openingAngleV);
-        openingAngleW = std::min(openingAngleW, 180.f - openingAngleW);
-    }
+    const float metric((openingAngleU + openingAngleV + openingAngleW) / 3.f);
 
-    if ((openingAngleU > m_maxAngularDeviation) || (openingAngleV > m_maxAngularDeviation) || (openingAngleW > m_maxAngularDeviation))
+    if (metric > m_maxAngularDeviation)
         return false;
 
     return true;
