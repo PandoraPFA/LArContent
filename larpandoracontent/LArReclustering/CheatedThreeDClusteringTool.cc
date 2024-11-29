@@ -23,11 +23,11 @@ CheatedThreeDClusteringTool::CheatedThreeDClusteringTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<std::reference_wrapper<pandora::CaloHitList>> CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, std::reference_wrapper<pandora::CaloHitList> &inputCaloHitList)
+std::vector<std::reference_wrapper<CaloHitList>> CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, std::reference_wrapper<CaloHitList> &inputCaloHitList)
 {
-    std::vector<std::reference_wrapper<pandora::CaloHitList>> newCaloHitListsVector;
+    std::vector<std::reference_wrapper<CaloHitList>> newCaloHitListsVector;
 
-    std::map<const pandora::MCParticle *, CaloHitList> McParticleCaloHitListMap;
+    LArMCParticleHelper::MCContributionMap mcParticleCaloHitListMap;
 
     for (const CaloHit *const pCaloHit : inputCaloHitList.get())
     {
@@ -35,9 +35,9 @@ std::vector<std::reference_wrapper<pandora::CaloHitList>> CheatedThreeDClusterin
 
         const MCParticle *const pMainMCParticle(MCParticleHelper::GetMainMCParticle(pParentCaloHit));
 
-        auto it = McParticleCaloHitListMap.find(pMainMCParticle);
+        auto it = mcParticleCaloHitListMap.find(pMainMCParticle);
 
-        if (it != McParticleCaloHitListMap.end()) 
+        if (it != mcParticleCaloHitListMap.end()) 
         {
             it->second.push_back(pCaloHit);
         }
@@ -45,11 +45,11 @@ std::vector<std::reference_wrapper<pandora::CaloHitList>> CheatedThreeDClusterin
         {
             CaloHitList newList;
             newList.push_back(pCaloHit);
-            McParticleCaloHitListMap.insert(std::make_pair(pMainMCParticle, newList));
+            mcParticleCaloHitListMap.insert(std::make_pair(pMainMCParticle, newList));
         } 
 
     }
-    for (auto& pair : McParticleCaloHitListMap)
+    for (auto& pair : mcParticleCaloHitListMap)
         newCaloHitListsVector.push_back(std::ref(pair.second));
 
     return newCaloHitListsVector;
