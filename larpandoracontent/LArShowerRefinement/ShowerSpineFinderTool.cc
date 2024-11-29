@@ -93,7 +93,7 @@ void ShowerSpineFinderTool::FindShowerSpine(const CaloHitList *const pViewHitLis
     unsigned int count(0);
     bool hitsCollected(true);
     const bool isEndDownstream(initialDirection.GetZ() > 0.f);
-    const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), showerSpineHitList.front()->GetHitType()));
+    const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), pViewHitList->front()->GetHitType()));
     CartesianVector extrapolatedStartPosition(nuVertex2D), extrapolatedDirection(initialDirection);
     CartesianVector extrapolatedEndPosition(extrapolatedStartPosition + (extrapolatedDirection * highestL));
 
