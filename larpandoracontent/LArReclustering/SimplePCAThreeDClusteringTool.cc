@@ -42,7 +42,7 @@ bool SimplePCAThreeDClusteringTool::Run(const CaloHitList &inputCaloHitList, std
 
     for (const CaloHit *const pCaloHit3D : inputCaloHitList)
     {
-        const CartesianVector pCaloHit3DPosition = pCaloHit3D->GetPositionVector();
+        const CartesianVector pCaloHit3DPosition{pCaloHit3D->GetPositionVector()};
 
         if((pCaloHit3DPosition-centroid).GetDotProduct(orthoDirection1)<0)
         {
