@@ -53,9 +53,8 @@ bool CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CheatedThreeDClusteringTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode CheatedThreeDClusteringTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     return STATUS_CODE_SUCCESS;
 }
 
