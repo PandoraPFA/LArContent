@@ -23,7 +23,7 @@ public:
 
 private:
 
-    std::vector<std::reference_wrapper<pandora::CaloHitList>> Run(const pandora::Algorithm *const pAlgorithm, std::reference_wrapper<pandora::CaloHitList> &inputCaloHitList);
+    bool Run(const pandora::Algorithm *const pAlgorithm, const pandora::CaloHitList &inputCaloHitList, std::vector<pandora::CaloHitList> &outputCaloHitListsVector);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle /*xmlHandle*/);
 };

@@ -21,13 +21,11 @@ CheatedThreeDClusteringTool::CheatedThreeDClusteringTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<std::reference_wrapper<CaloHitList>> CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, std::reference_wrapper<CaloHitList> &inputCaloHitList)
+bool CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, const pandora::CaloHitList &inputCaloHitList,std::vector<pandora::CaloHitList> &outputCaloHitListsVector)
 {
-    std::vector<std::reference_wrapper<CaloHitList>> newCaloHitListsVector;
-
     LArMCParticleHelper::MCContributionMap mcParticleCaloHitListMap;
 
-    for (const CaloHit *const pCaloHit : inputCaloHitList.get())
+    for (const CaloHit *const pCaloHit : inputCaloHitList)
     {
         const CaloHit *const pParentCaloHit = static_cast<const CaloHit *>(pCaloHit->GetParentAddress());
 
@@ -48,9 +46,9 @@ std::vector<std::reference_wrapper<CaloHitList>> CheatedThreeDClusteringTool::Ru
 
     }
     for (auto& pair : mcParticleCaloHitListMap)
-        newCaloHitListsVector.push_back(std::ref(pair.second));
+        outputCaloHitListsVector.push_back(std::ref(pair.second));
 
-    return newCaloHitListsVector;
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

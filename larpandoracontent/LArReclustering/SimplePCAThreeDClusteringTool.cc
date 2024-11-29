@@ -23,22 +23,20 @@ SimplePCAThreeDClusteringTool::SimplePCAThreeDClusteringTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<std::reference_wrapper<pandora::CaloHitList>> SimplePCAThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, std::reference_wrapper<pandora::CaloHitList> &inputCaloHitList)
+bool SimplePCAThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, const CaloHitList &inputCaloHitList, std::vector<CaloHitList> &outputCaloHitListsVector)
 {
-    std::vector<std::reference_wrapper<pandora::CaloHitList>> newCaloHitListsVector;
-
     // Begin with a PCA
     CartesianVector centroid(0.f, 0.f, 0.f);
     LArPcaHelper::EigenVectors eigenVecs;
     LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-    LArPcaHelper::RunPca(inputCaloHitList.get(), centroid, eigenValues, eigenVecs);
+    LArPcaHelper::RunPca(inputCaloHitList, centroid, eigenValues, eigenVecs);
 
     // By convention, the primary axis has a positive z-component.
     const CartesianVector axisDirection(eigenVecs.at(0).GetZ() > 0.f ? eigenVecs.at(0) : eigenVecs.at(0) * -1.f);
 
     // Place intercept at hit with minimum projection
     float minProjection(std::numeric_limits<float>::max());
-    for (const CaloHit *const pCaloHit3D : inputCaloHitList.get())
+    for (const CaloHit *const pCaloHit3D : inputCaloHitList)
         minProjection = std::min(minProjection, axisDirection.GetDotProduct(pCaloHit3D->GetPositionVector() - centroid));
 
     const CartesianVector axisIntercept(centroid + (axisDirection * minProjection));
@@ -51,7 +49,7 @@ std::vector<std::reference_wrapper<pandora::CaloHitList>> SimplePCAThreeDCluster
     //Lists for hits that have a positive and negative projection on the secondary axis
     CaloHitList posCaloHitList, negCaloHitList;
 
-    for (const CaloHit *const pCaloHit : inputCaloHitList.get())
+    for (const CaloHit *const pCaloHit : inputCaloHitList)
     {
         const CartesianVector pCaloHitPosition = pCaloHit->GetPositionVector();
 
@@ -65,8 +63,8 @@ std::vector<std::reference_wrapper<pandora::CaloHitList>> SimplePCAThreeDCluster
 		}
     }
 
-    newCaloHitListsVector.push_back(posCaloHitList);
-    newCaloHitListsVector.push_back(negCaloHitList);
+    outputCaloHitListsVector.push_back(posCaloHitList);
+    outputCaloHitListsVector.push_back(negCaloHitList);
 
     //Now, run PCA independently on pos and neg hit lists, to refine split
 
@@ -98,7 +96,7 @@ std::vector<std::reference_wrapper<pandora::CaloHitList>> SimplePCAThreeDCluster
     negCaloHitList.clear();
 
     //Loop over original hit list, check whether it is within smaller cone of pos or neg axis, attach to relevant list
-    for (const CaloHit *const pCaloHit3D : inputCaloHitList.get())
+    for (const CaloHit *const pCaloHit3D : inputCaloHitList)
     {
         const float cosConeAxisPos = axisDirectionPos.GetCosOpeningAngle(pCaloHit3D->GetPositionVector()-intersectionPoint);
         const float cosConeAxisNeg = axisDirectionNeg.GetCosOpeningAngle(pCaloHit3D->GetPositionVector()-intersectionPoint);
@@ -107,7 +105,7 @@ std::vector<std::reference_wrapper<pandora::CaloHitList>> SimplePCAThreeDCluster
         else negCaloHitList.push_back(pCaloHit3D);
     }
 
-    return newCaloHitListsVector;
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
