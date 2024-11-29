@@ -236,7 +236,7 @@ void ElectronInitialRegionRefinementAlgorithm::BuildViewProtoShowers(const Parti
         // Create the ProtoShower object
         const CartesianVector nuVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), nuVertex3D, hitType));
 
-        ProtoShower protoShower(ShowerCore(showerStartPosition, showerStartDirection), ConnectionPathway(nuVertex2D, peakDirection),
+        ProtoShower protoShower(ShowerCore(showerStartPosition), ConnectionPathway(nuVertex2D, peakDirection),
             showerSpineHitList, CaloHitList(), CartesianPointVector(), CaloHitList());
 
         // Now determine the hits to be added to the shower from the found spine

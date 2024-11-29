@@ -68,13 +68,17 @@ private:
     /**
      *  @brief  Determine whether three 2D initial spine directions correspond to the same 3D initial spine direction
      *
+     *  @param  nuVertexU the U view projection of the neutrino vertex
+     *  @param  nuVertexV the V view projection of the neutrino vertex
+     *  @param  nuVertexW the W view projection of the neutrino vertex
      *  @param  directionU the U view initial spine direction
      *  @param  directionU the V view initial spine direction
      *  @param  directionU the W view initial spine direction
      *
      *  @return whether three 2D initial spine directions correspond to the same 3D initial spine direction
      */
-    bool AreDirectionsConsistent(pandora::CartesianVector directionU, pandora::CartesianVector directionV, pandora::CartesianVector directionW) const;
+    bool AreDirectionsConsistent(const pandora::CartesianVector &nuVertexU, const pandora::CartesianVector &nuVertexV, const pandora::CartesianVector &nuVertexW,
+        const pandora::CartesianVector &directionU, const pandora::CartesianVector &directionV, const pandora::CartesianVector &directionW) const;
 
     unsigned int m_spineSlidingFitWindow; ///< The shower spine sliding fit window
     float m_maxXSeparation;               ///< The max. drift-coordinate separation between matched 2D shower start positions
