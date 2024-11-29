@@ -33,7 +33,7 @@ public:
      *  @param  startPosition the 2D position at which the cascade looks to begin
      *  @param  startDirection the initial 2D direction of the shower cascade
      */
-    ShowerCore(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection);
+    ShowerCore(const pandora::CartesianVector &startPosition);
 
     /**
      *  @brief  Get the start position of the shower core
@@ -42,31 +42,21 @@ public:
      */
     const pandora::CartesianVector &GetStartPosition() const;
 
-    /**
-     *  @brief  Get the start direction of the shower core
-     *
-     *  @return the start direction
-     */
-    const pandora::CartesianVector &GetStartDirection() const;
-
 private:
     pandora::CartesianVector m_startPosition;  ///< the 2D position at which the cascade looks to begin
-    pandora::CartesianVector m_startDirection; ///< the initial 2D direction of the shower cascade
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ShowerCore::ShowerCore(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection) :
-    m_startPosition(startPosition),
-    m_startDirection(startDirection)
+inline ShowerCore::ShowerCore(const pandora::CartesianVector &startPosition) :
+    m_startPosition(startPosition)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ShowerCore::ShowerCore() :
-    m_startPosition(0.f, 0.f, 0.f),
-    m_startDirection(0.f, 0.f, 0.f)
+    m_startPosition(0.f, 0.f, 0.f)
 {
 }
 
@@ -75,13 +65,6 @@ inline ShowerCore::ShowerCore() :
 inline const pandora::CartesianVector &ShowerCore::GetStartPosition() const
 {
     return m_startPosition;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::CartesianVector &ShowerCore::GetStartDirection() const
-{
-    return m_startDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,7 +268,7 @@ inline ProtoShower::ProtoShower(const ShowerCore &showerCore, const ConnectionPa
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ProtoShower::ProtoShower(const ProtoShower &protoShower) :
-    m_showerCore(ShowerCore(protoShower.GetShowerCore().GetStartPosition(), protoShower.GetShowerCore().GetStartDirection())),
+    m_showerCore(ShowerCore(protoShower.GetShowerCore().GetStartPosition())),
     m_connectionPathway(
         ConnectionPathway(protoShower.GetConnectionPathway().GetStartPosition(), protoShower.GetConnectionPathway().GetStartDirection())),
     m_spineHitList(protoShower.GetSpineHitList()),
