@@ -49,17 +49,17 @@ bool SimplePCAThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, c
     //Lists for hits that have a positive and negative projection on the secondary axis
     CaloHitList posCaloHitList, negCaloHitList;
 
-    for (const CaloHit *const pCaloHit : inputCaloHitList)
+    for (const CaloHit *const pCaloHit3D : inputCaloHitList)
     {
-        const CartesianVector pCaloHitPosition = pCaloHit->GetPositionVector();
+        const CartesianVector pCaloHit3DPosition = pCaloHit3D->GetPositionVector();
 
-        if((pCaloHitPosition-centroid).GetDotProduct(centroid+orthoDirection1)<0)
+        if((pCaloHit3DPosition-centroid).GetDotProduct(centroid+orthoDirection1)<0)
         {
-            negCaloHitList.push_back(pCaloHit);
+            negCaloHitList.push_back(pCaloHit3D);
         }
 		else
 		{ 
-            posCaloHitList.push_back(pCaloHit);
+            posCaloHitList.push_back(pCaloHit3D);
 		}
     }
 
