@@ -23,6 +23,7 @@ namespace lar_content
 
 ThreeDReclusteringAlgorithm::ThreeDReclusteringAlgorithm():
     m_pfoListName("ShowerParticles3D"),
+    m_clusterListName("ShowerClusters3D"),
     m_fomThresholdForReclustering(0.3)
 {
 }
@@ -39,10 +40,10 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
 {
     //Only proceed if successfuly get shower pfo list, and it has at least one pfo
     const PfoList *pShowerPfoList(nullptr);
-    if (!((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pShowerPfoList)) && pShowerPfoList->size()))
-    {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pShowerPfoList));
+
+    if(pShowerPfoList->empty())
         return STATUS_CODE_SUCCESS;
-    }
 
     m_PfosForReclusteringListName = "newShowerParticles3D";
     PfoList unchangedPfoList;   
@@ -53,7 +54,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
 
     //Some pfos are shower-like and yet include track-like 3D clusters. For the moment I don't want to deal with these.
     const ClusterList *pShowerClusters(nullptr);
-    PandoraContentApi::GetList(*this, "ShowerClusters3D", pShowerClusters);
+    PandoraContentApi::GetList(*this, m_clusterListName, pShowerClusters);
 
     if(!pShowerClusters)
         return STATUS_CODE_NOT_FOUND;
@@ -85,7 +86,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
         // Initialize reclustering with these local lists
         std::string currentClustersListName;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, currentClustersListName));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, "ShowerClusters3D"));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListName));
 
 		//Split the calo hit list into a new set of calo hit lists, taking the best outcome out of different algorithms
         std::vector<CaloHitList> newCaloHitListsVector, minimumFigureOfMeritCaloHitListsVector;
@@ -139,13 +140,11 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildPfo(pShowerPfo, newClustersList));
         newCaloHitListsVector.clear();
     }
-    //If there are any pfos that did not change after reclustering procedure, move them from list called ShowerParticles3D into list of new pfos after reclustering
+    //If there are any pfos that did not change after reclustering procedure, move them into list of new pfos after reclustering (where there may be some reclustered showers too)
     if(unchangedPfoList.size()>0)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<PfoList>(*this, m_pfoListName, m_PfosForReclusteringListName,  unchangedPfoList));
 
-    //Save list of Pfos after reclustering into list called ShowerParticles3D
-    const PfoList *pNewPfoListAllAfterReclustering;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList<PfoList>(*this, m_PfosForReclusteringListName, pNewPfoListAllAfterReclustering));
+    //Save list of Pfos after reclustering and save into list called m_pfoListName
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_PfosForReclusteringListName, m_pfoListName));
 
     //Set current list to be the same as before reclustering
@@ -332,7 +331,7 @@ bool ThreeDReclusteringAlgorithm::PassesCutsForReclustering(const pandora::Parti
 
     //Some pfos are shower-like and yet include track-like 3D clusters. For the moment I don't want to deal with these.
     const ClusterList *pShowerClusters(nullptr);
-    PandoraContentApi::GetList(*this, "ShowerClusters3D", pShowerClusters);
+    PandoraContentApi::GetList(*this, m_clusterListName, pShowerClusters);
     if(!pShowerClusters) return false;
 
     if(pShowerClusters->end() == std::find(pShowerClusters->begin(), pShowerClusters->end(), clusterList3D.front())) return false;
@@ -422,6 +421,7 @@ StatusCode ThreeDReclusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "FigureOfMeritNames", m_figureOfMeritNames));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListName", m_clusterListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FOMThresholdForReclustering", m_fomThresholdForReclustering));
 
     AlgorithmToolVector algorithmToolVector;

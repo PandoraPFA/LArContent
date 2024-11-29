@@ -125,6 +125,7 @@ private:
 
     ClusteringToolVector m_algorithmToolVector; ///< The reclustering algorithm tool vector
     std::string m_pfoListName; ///< Name of the list of pfos to consider for reclustering
+    std::string m_clusterListName; ///< Name of the list of clusters to consider for reclustering
     pandora::StringVector m_figureOfMeritNames; ///< The names of the figures of merit to use
     std::string m_PfosForReclusteringListName; ///< Name of the internal list to contain new Pfos before/after reclustering
     std::string m_mcParticleListName; ///< The mc particle list name 
