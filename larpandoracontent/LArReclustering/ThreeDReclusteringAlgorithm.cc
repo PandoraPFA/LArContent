@@ -95,7 +95,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
         for (auto toolIter = m_algorithmToolVector.begin(); toolIter != m_algorithmToolVector.end(); ++toolIter)
         {
             try {
-                (*toolIter)->Run(this, initialCaloHitList, newCaloHitListsVector);
+                (*toolIter)->Run(initialCaloHitList, newCaloHitListsVector);
             } catch (const StatusCodeException &){
                 std::cout << "Exception caught! Cannot run reclustering tool!" << std::endl;
             }
