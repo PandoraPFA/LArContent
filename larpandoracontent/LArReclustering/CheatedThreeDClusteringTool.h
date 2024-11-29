@@ -27,9 +27,7 @@ private:
 
     bool Run(const pandora::Algorithm *const pAlgorithm, const pandora::CaloHitList &inputCaloHitList, std::vector<pandora::CaloHitList> &outputCaloHitListsVector);
 
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    std::string m_mcParticleListName; ///< The mc particle list name 
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle /*xmlHandle*/);
 };
 
 } // namespace lar_content
