@@ -34,17 +34,8 @@ bool SimplePCAThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, c
     // By convention, the primary axis has a positive z-component.
     const CartesianVector axisDirection(eigenVecs.at(0).GetZ() > 0.f ? eigenVecs.at(0) : eigenVecs.at(0) * -1.f);
 
-    // Place intercept at hit with minimum projection
-    float minProjection(std::numeric_limits<float>::max());
-    for (const CaloHit *const pCaloHit3D : inputCaloHitList)
-        minProjection = std::min(minProjection, axisDirection.GetDotProduct(pCaloHit3D->GetPositionVector() - centroid));
-
-    const CartesianVector axisIntercept(centroid + (axisDirection * minProjection));
-
     // Now define ortho directions
-    const CartesianVector seedDirection((axisDirection.GetX() < std::min(axisDirection.GetY(), axisDirection.GetZ())) ? CartesianVector(1.f, 0.f, 0.f) :
-        (axisDirection.GetY() < std::min(axisDirection.GetX(), axisDirection.GetZ())) ? CartesianVector(0.f, 1.f, 0.f) : CartesianVector(0.f, 0.f, 1.f));
-    const CartesianVector orthoDirection1(seedDirection.GetCrossProduct(axisDirection).GetUnitVector());
+    const CartesianVector orthoDirection1(eigenVecs.at(1).GetZ() > 0.f ? eigenVecs.at(1) : eigenVecs.at(1) * -1.f);
 
     //Lists for hits that have a positive and negative projection on the secondary axis
     CaloHitList posCaloHitList, negCaloHitList;
@@ -53,7 +44,7 @@ bool SimplePCAThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, c
     {
         const CartesianVector pCaloHit3DPosition = pCaloHit3D->GetPositionVector();
 
-        if((pCaloHit3DPosition-centroid).GetDotProduct(centroid+orthoDirection1)<0)
+        if((pCaloHit3DPosition-centroid).GetDotProduct(orthoDirection1)<0)
         {
             negCaloHitList.push_back(pCaloHit3D);
         }
