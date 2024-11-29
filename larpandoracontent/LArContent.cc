@@ -158,7 +158,6 @@
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewSimpleTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
-#include "larpandoracontent/LArReclustering/ThreeDReclusteringAlgorithm.h"
 
 #include "larpandoracontent/LArVertex/EnergyDepositionAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
@@ -224,6 +223,7 @@
 #include "larpandoracontent/LArVertex/HitAngleVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/MvaVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/VertexRefinementAlgorithm.h"
+#include "larpandoracontent/LArReclustering/ThreeDReclusteringAlgorithm.h"
 
 #include "larpandoracontent/LArContent.h"
 
@@ -347,7 +347,7 @@
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArCheatedThreeDClusteringTool",         CheatedThreeDClusteringTool)                                                    \
-    d("LArSimplePCAThreeDClusteringTool",                 SimplePCAThreeDClusteringTool)                                        \
+    d("LArSimplePCAThreeDClusteringTool",       SimplePCAThreeDClusteringTool)                                                  \
     d("LArConnectionRegionFeatureTool",         ConnectionRegionFeatureTool)                                                    \
     d("LArShowerRegionFeatureTool",             ShowerRegionFeatureTool)                                                        \
     d("LArAmbiguousRegionFeatureTool",          AmbiguousRegionFeatureTool)                                                     \
