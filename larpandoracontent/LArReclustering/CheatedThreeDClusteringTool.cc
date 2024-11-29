@@ -21,7 +21,7 @@ CheatedThreeDClusteringTool::CheatedThreeDClusteringTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, const pandora::CaloHitList &inputCaloHitList,std::vector<pandora::CaloHitList> &outputCaloHitListsVector)
+bool CheatedThreeDClusteringTool::Run(const pandora::CaloHitList &inputCaloHitList,std::vector<pandora::CaloHitList> &outputCaloHitListsVector)
 {
     LArMCParticleHelper::MCContributionMap mcParticleCaloHitListMap;
 

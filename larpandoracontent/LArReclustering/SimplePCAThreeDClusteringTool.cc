@@ -23,7 +23,7 @@ SimplePCAThreeDClusteringTool::SimplePCAThreeDClusteringTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SimplePCAThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, const CaloHitList &inputCaloHitList, std::vector<CaloHitList> &outputCaloHitListsVector)
+bool SimplePCAThreeDClusteringTool::Run(const CaloHitList &inputCaloHitList, std::vector<CaloHitList> &outputCaloHitListsVector)
 {
     // Begin with a PCA
     CartesianVector centroid(0.f, 0.f, 0.f);

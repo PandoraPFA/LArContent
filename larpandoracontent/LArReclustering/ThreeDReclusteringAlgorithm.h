@@ -143,7 +143,7 @@ class ClusteringTool: public pandora::AlgorithmTool {
 public:
     ClusteringTool() = default;
     virtual ~ClusteringTool() = default;
-    virtual bool Run(const pandora::Algorithm *const pAlgorithm, const pandora::CaloHitList &inputCaloHitList,std::vector<pandora::CaloHitList> &outputCaloHitListsVector) = 0;
+    virtual bool Run(const pandora::CaloHitList &inputCaloHitList,std::vector<pandora::CaloHitList> &outputCaloHitListsVector) = 0;
 };
 
 } // namespace lar_content
