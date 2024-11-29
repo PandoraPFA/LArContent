@@ -9,8 +9,8 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
-#include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
 
 using namespace pandora;
 
