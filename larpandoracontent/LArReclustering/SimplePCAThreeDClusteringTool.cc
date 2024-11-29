@@ -80,7 +80,12 @@ bool SimplePCAThreeDClusteringTool::Run(const CaloHitList &inputCaloHitList, std
     //Get intersection point of the two new principal axes
     CartesianVector intersectionPoint(0.f, 0.f, 0.f);
     float displacementPos(0.f),displacementNeg(0.f);
-    LArPointingClusterHelper::GetIntersection(centroidPos,axisDirectionPos,centroidNeg,axisDirectionNeg,intersectionPoint,displacementPos,displacementNeg);
+
+    try {
+        LArPointingClusterHelper::GetIntersection(centroidPos,axisDirectionPos,centroidNeg,axisDirectionNeg,intersectionPoint,displacementPos,displacementNeg);
+    } catch (const StatusCodeException &){
+        std::cout << "Exception caught! Cannot get intersection between positive and negative hit lists primary PCA axes!" << std::endl;
+    }
 
     //Clear pos and neg lists
     posCaloHitList.clear();
