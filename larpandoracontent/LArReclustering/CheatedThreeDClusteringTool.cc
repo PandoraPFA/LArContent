@@ -27,7 +27,7 @@ bool CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, con
 
     for (const CaloHit *const pCaloHit3D : inputCaloHitList)
     {
-        const CaloHit *const pParentCaloHit2D = static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress());
+        const CaloHit *const pParentCaloHit2D{static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress())};
 
         const MCParticle *const pMainMCParticle(MCParticleHelper::GetMainMCParticle(pParentCaloHit2D));
 
