@@ -25,22 +25,22 @@ bool CheatedThreeDClusteringTool::Run(const Algorithm *const /*pAlgorithm*/, con
 {
     LArMCParticleHelper::MCContributionMap mcParticleCaloHitListMap;
 
-    for (const CaloHit *const pCaloHit : inputCaloHitList)
+    for (const CaloHit *const pCaloHit3D : inputCaloHitList)
     {
-        const CaloHit *const pParentCaloHit = static_cast<const CaloHit *>(pCaloHit->GetParentAddress());
+        const CaloHit *const pParentCaloHit2D = static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress());
 
-        const MCParticle *const pMainMCParticle(MCParticleHelper::GetMainMCParticle(pParentCaloHit));
+        const MCParticle *const pMainMCParticle(MCParticleHelper::GetMainMCParticle(pParentCaloHit2D));
 
         auto it = mcParticleCaloHitListMap.find(pMainMCParticle);
 
         if (it != mcParticleCaloHitListMap.end()) 
         {
-            it->second.push_back(pCaloHit);
+            it->second.push_back(pCaloHit3D);
         }
         else
         {
             CaloHitList newList;
-            newList.push_back(pCaloHit);
+            newList.push_back(pCaloHit3D);
             mcParticleCaloHitListMap.insert(std::make_pair(pMainMCParticle, newList));
         } 
 
