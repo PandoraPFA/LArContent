@@ -23,7 +23,6 @@ namespace lar_content
 
 ThreeDReclusteringAlgorithm::ThreeDReclusteringAlgorithm():
     m_pfoListName("ShowerParticles3D"),
-    m_hitThresholdForNewPfo(0),
     m_fomThresholdForReclustering(0.3)
 {
 }
@@ -423,7 +422,6 @@ StatusCode ThreeDReclusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "FigureOfMeritNames", m_figureOfMeritNames));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "HitThresholdForNewPfo", m_hitThresholdForNewPfo));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FOMThresholdForReclustering", m_fomThresholdForReclustering));
 
     AlgorithmToolVector algorithmToolVector;
