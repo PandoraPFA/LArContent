@@ -44,14 +44,14 @@ bool SimplePCAThreeDClusteringTool::Run(const CaloHitList &inputCaloHitList, std
     {
         const CartesianVector pCaloHit3DPosition{pCaloHit3D->GetPositionVector()};
 
-        if((pCaloHit3DPosition-centroid).GetDotProduct(orthoDirection1)<0)
+        if ((pCaloHit3DPosition - centroid).GetDotProduct(orthoDirection1) < 0)
         {
             negCaloHitList.push_back(pCaloHit3D);
         }
-		else
-		{ 
+        else
+        {
             posCaloHitList.push_back(pCaloHit3D);
-		}
+        }
     }
 
     outputCaloHitListsVector.push_back(posCaloHitList);
@@ -79,11 +79,15 @@ bool SimplePCAThreeDClusteringTool::Run(const CaloHitList &inputCaloHitList, std
 
     //Get intersection point of the two new principal axes
     CartesianVector intersectionPoint(0.f, 0.f, 0.f);
-    float displacementPos(0.f),displacementNeg(0.f);
+    float displacementPos(0.f), displacementNeg(0.f);
 
-    try {
-        LArPointingClusterHelper::GetIntersection(centroidPos,axisDirectionPos,centroidNeg,axisDirectionNeg,intersectionPoint,displacementPos,displacementNeg);
-    } catch (const StatusCodeException &){
+    try
+    {
+        LArPointingClusterHelper::GetIntersection(
+            centroidPos, axisDirectionPos, centroidNeg, axisDirectionNeg, intersectionPoint, displacementPos, displacementNeg);
+    }
+    catch (const StatusCodeException &)
+    {
         std::cout << "Exception caught! Cannot get intersection between positive and negative hit lists primary PCA axes!" << std::endl;
     }
 
@@ -94,11 +98,12 @@ bool SimplePCAThreeDClusteringTool::Run(const CaloHitList &inputCaloHitList, std
     //Loop over original hit list, check whether it is within smaller cone of pos or neg axis, attach to relevant list
     for (const CaloHit *const pCaloHit3D : inputCaloHitList)
     {
-        const float cosConeAxisPos = axisDirectionPos.GetCosOpeningAngle(pCaloHit3D->GetPositionVector()-intersectionPoint);
-        const float cosConeAxisNeg = axisDirectionNeg.GetCosOpeningAngle(pCaloHit3D->GetPositionVector()-intersectionPoint);
-        if(cosConeAxisPos>cosConeAxisNeg)
+        const float cosConeAxisPos = axisDirectionPos.GetCosOpeningAngle(pCaloHit3D->GetPositionVector() - intersectionPoint);
+        const float cosConeAxisNeg = axisDirectionNeg.GetCosOpeningAngle(pCaloHit3D->GetPositionVector() - intersectionPoint);
+        if (cosConeAxisPos > cosConeAxisNeg)
             posCaloHitList.push_back(pCaloHit3D);
-        else negCaloHitList.push_back(pCaloHit3D);
+        else
+            negCaloHitList.push_back(pCaloHit3D);
     }
 
     return true;

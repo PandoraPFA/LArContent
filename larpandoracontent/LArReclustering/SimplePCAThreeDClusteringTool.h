@@ -18,11 +18,9 @@ namespace lar_content
 class SimplePCAThreeDClusteringTool : public ClusteringTool
 {
 public:
-
     SimplePCAThreeDClusteringTool();
 
 private:
-
     bool Run(const pandora::CaloHitList &inputCaloHitList, std::vector<pandora::CaloHitList> &outputCaloHitListsVector);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle /*xmlHandle*/);
