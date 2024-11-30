@@ -6,9 +6,9 @@
  *  $Log: $
  */
 
+#include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
 #include "Pandora/AlgorithmHeaders.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
-#include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
 
 using namespace pandora;
 
@@ -21,7 +21,7 @@ CheatedThreeDClusteringTool::CheatedThreeDClusteringTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CheatedThreeDClusteringTool::Run(const pandora::CaloHitList &inputCaloHitList,std::vector<pandora::CaloHitList> &outputCaloHitListsVector)
+bool CheatedThreeDClusteringTool::Run(const pandora::CaloHitList &inputCaloHitList, std::vector<pandora::CaloHitList> &outputCaloHitListsVector)
 {
     LArMCParticleHelper::MCContributionMap mcParticleCaloHitListMap;
 
@@ -33,7 +33,7 @@ bool CheatedThreeDClusteringTool::Run(const pandora::CaloHitList &inputCaloHitLi
 
         auto it = mcParticleCaloHitListMap.find(pMainMCParticle);
 
-        if (it != mcParticleCaloHitListMap.end()) 
+        if (it != mcParticleCaloHitListMap.end())
         {
             it->second.push_back(pCaloHit3D);
         }
@@ -42,10 +42,9 @@ bool CheatedThreeDClusteringTool::Run(const pandora::CaloHitList &inputCaloHitLi
             CaloHitList newList;
             newList.push_back(pCaloHit3D);
             mcParticleCaloHitListMap.insert(std::make_pair(pMainMCParticle, newList));
-        } 
-
+        }
     }
-    for (auto& pair : mcParticleCaloHitListMap)
+    for (auto &pair : mcParticleCaloHitListMap)
         outputCaloHitListsVector.push_back(std::ref(pair.second));
 
     return true;

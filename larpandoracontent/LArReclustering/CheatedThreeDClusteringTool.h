@@ -20,11 +20,9 @@ class ClusteringTool;
 class CheatedThreeDClusteringTool : public ClusteringTool
 {
 public:
-
     CheatedThreeDClusteringTool();
 
 private:
-
     bool Run(const pandora::CaloHitList &inputCaloHitList, std::vector<pandora::CaloHitList> &outputCaloHitListsVector);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle /*xmlHandle*/);
