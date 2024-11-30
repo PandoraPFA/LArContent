@@ -21,6 +21,11 @@ using namespace pandora;
 namespace lar_content
 {
 
+//Figure of merit type enum to string map
+const std::unordered_map<std::string, ThreeDReclusteringAlgorithm::FigureOfMeritType> ThreeDReclusteringAlgorithm::m_stringToEnumMap = {
+    {"cheated", ThreeDReclusteringAlgorithm::FigureOfMeritType::CHEATED}
+};
+
 ThreeDReclusteringAlgorithm::ThreeDReclusteringAlgorithm():
     m_pfoListName("ShowerParticles3D"),
     m_clusterListName("ShowerClusters3D"),
@@ -370,7 +375,14 @@ float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::string &figureOfM
 {
     float figureOfMerit(-999.f);
 
-    if(figureOfMeritName=="cheated")
+    FigureOfMeritType figureOfMeritType(FigureOfMeritType::CHEATED);
+    auto stringToEnumIt=m_stringToEnumMap.find(figureOfMeritName);
+    if (stringToEnumIt != m_stringToEnumMap.end())
+    {
+        figureOfMeritType = stringToEnumIt->second;
+    }
+
+    if(figureOfMeritType==FigureOfMeritType::CHEATED)
         figureOfMerit=this->GetCheatedFigureOfMerit(mergedClusterCaloHitList3D);
     else
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
@@ -385,7 +397,7 @@ float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::string &figureOfM
       std::vector<float> newClustersFigureOfMeritVector;
       for(auto clusterCaloHitLists3D: newClustersCaloHitLists3D)
       {
-        if(figureOfMeritName=="cheated")newClustersFigureOfMeritVector.push_back(this->GetFigureOfMerit("cheated",clusterCaloHitLists3D));
+        newClustersFigureOfMeritVector.push_back(this->GetFigureOfMerit(figureOfMeritName,clusterCaloHitLists3D));
       }
       const float figureOfMerit(*std::min_element(newClustersFigureOfMeritVector.begin(), newClustersFigureOfMeritVector.end()));
       return figureOfMerit;
@@ -417,6 +429,8 @@ float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const CaloHitList &mergedClu
     const float figureOfMerit=*(std::min_element(figureOfMeritVector.begin(), figureOfMeritVector.end()));
     return figureOfMerit;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDReclusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
