@@ -24,17 +24,26 @@ namespace lar_content
  class ThreeDReclusteringAlgorithm : public pandora::Algorithm
  {
  public:
-     /**
-      *  @brief  Default constructor
-      */
+
+    /**
+    *  @brief  FigureOfMerit type enumeration
+    */
+    enum FigureOfMeritType
+    {
+        CHEATED
+    };
+
+    /**
+     *  @brief  Default constructor
+     */
     ThreeDReclusteringAlgorithm();
 
-   /**
+    /**
     *  @brief  Destructor
     */
     ~ThreeDReclusteringAlgorithm();
 
-private:
+ private:
 
     typedef std::vector<ClusteringTool *> ClusteringToolVector;
 
@@ -111,7 +120,7 @@ private:
      * @return The figure of merit (purity)
      */
     float GetCheatedFigureOfMerit(const pandora::CaloHitList &mergedClusterCaloHitList3D);
-    
+
     /**
      *  @brief Select pfos to be reclustered if it passes reclustering criteria
      *
@@ -135,6 +144,8 @@ private:
     std::string m_vClustersListName;
     std::string m_wClustersListName; //Names of U,V and W cluster lists
     std::map<int,const pandora::Cluster*> m_newClustersUMap, m_newClustersVMap,m_newClustersWMap; ///< Per-view maps associating new 3D clusters with new 2D clusters 
+
+    static const std::unordered_map<std::string, ThreeDReclusteringAlgorithm::FigureOfMeritType> m_stringToEnumMap; //Figure of merit type enum to string map
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -142,9 +153,9 @@ private:
 /**
  *  @brief  ClusteringTool class
  */
-class ClusteringTool: public pandora::AlgorithmTool {
-
-public:
+class ClusteringTool: public pandora::AlgorithmTool
+{
+ public:
     ClusteringTool() = default;
     ~ClusteringTool() = default;
     virtual bool Run(const pandora::CaloHitList &inputCaloHitList,std::vector<pandora::CaloHitList> &outputCaloHitListsVector) = 0;
