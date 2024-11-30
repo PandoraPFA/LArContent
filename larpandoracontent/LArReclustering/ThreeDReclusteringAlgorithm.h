@@ -130,6 +130,10 @@ private:
     std::string m_PfosForReclusteringListName; ///< Name of the internal list to contain new Pfos before/after reclustering
     std::string m_mcParticleListName; ///< The mc particle list name 
     float m_fomThresholdForReclustering; ///< A threshold on the minimum figure of merit for reclustering
+    long unsigned int m_minNumCaloHitsForReclustering;
+    std::string m_uClustersListName;
+    std::string m_vClustersListName;
+    std::string m_wClustersListName; //Names of U,V and W cluster lists
     std::map<int,const pandora::Cluster*> m_newClustersUMap, m_newClustersVMap,m_newClustersWMap; ///< Per-view maps associating new 3D clusters with new 2D clusters 
 };
 
