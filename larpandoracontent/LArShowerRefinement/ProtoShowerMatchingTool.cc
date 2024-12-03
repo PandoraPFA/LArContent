@@ -26,6 +26,7 @@ ProtoShowerMatchingTool::ProtoShowerMatchingTool() :
     m_spineSlidingFitWindow(20),
     m_maxXSeparation(5.f),
     m_maxSeparation(5.f),
+    m_xExtrapolation(5.f),
     m_maxAngularDeviation(5.f)
 {
 }
@@ -215,11 +216,9 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(const CartesianVector &nuV
     const float cosOpeningAngleU(std::fabs(directionU.GetCosOpeningAngle(xAxis)));
     const float cosOpeningAngleV(std::fabs(directionV.GetCosOpeningAngle(xAxis)));
     const float cosOpeningAngleW(std::fabs(directionW.GetCosOpeningAngle(xAxis)));
-
-    const float xSeparation(5.f);
-    const CartesianVector uPoint(nuVertexU + (directionU * (xSeparation / cosOpeningAngleU)));
-    const CartesianVector vPoint(nuVertexV + (directionV * (xSeparation / cosOpeningAngleV)));
-    const CartesianVector wPoint(nuVertexW + (directionW * (xSeparation / cosOpeningAngleW)));
+    const CartesianVector uPoint(nuVertexU + (directionU * (m_xExtrapolation / cosOpeningAngleU)));
+    const CartesianVector vPoint(nuVertexV + (directionV * (m_xExtrapolation / cosOpeningAngleV)));
+    const CartesianVector wPoint(nuVertexW + (directionW * (m_xExtrapolation / cosOpeningAngleW)));
 
     float chiSquared(0.f);
 
@@ -263,6 +262,8 @@ StatusCode ProtoShowerMatchingTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxXSeparation", m_maxXSeparation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSeparation", m_maxSeparation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "XExtrapolation", m_xExtrapolation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxAngularDeviation", m_maxAngularDeviation));
