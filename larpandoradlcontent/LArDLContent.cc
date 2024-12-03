@@ -15,6 +15,7 @@
 #include "larpandoradlcontent/LArControlFlow/DLMasterAlgorithm.h"
 #include "larpandoradlcontent/LArMonitoring/DlHitValidationAlgorithm.h"
 #include "larpandoradlcontent/LArSignalId/DlSNSignalAlgorithm.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPNeutrinoHierarchyAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlClusterCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlPfoCharacterisationAlgorithm.h"
