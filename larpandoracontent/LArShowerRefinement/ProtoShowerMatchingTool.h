@@ -83,6 +83,7 @@ private:
     unsigned int m_spineSlidingFitWindow; ///< The shower spine sliding fit window
     float m_maxXSeparation;               ///< The max. drift-coordinate separation between matched 2D shower start positions
     float m_maxSeparation;                ///< The max. average separation between true and projected 2D shower start positions for a match
+    float m_xExtrapolation;               ///< Extrapolation distance in the x-direction
     float m_maxAngularDeviation;          ///< The max. opening angle between true and projected 2D initial directions for a match
 };
 
