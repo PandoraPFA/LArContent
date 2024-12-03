@@ -43,7 +43,7 @@ public:
     const pandora::CartesianVector &GetStartPosition() const;
 
 private:
-    pandora::CartesianVector m_startPosition;  ///< the 2D position at which the cascade looks to begin
+    pandora::CartesianVector m_startPosition; ///< the 2D position at which the cascade looks to begin
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

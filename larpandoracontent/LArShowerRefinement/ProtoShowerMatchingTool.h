@@ -77,8 +77,9 @@ private:
      *
      *  @return whether three 2D initial spine directions correspond to the same 3D initial spine direction
      */
-    bool AreDirectionsConsistent(const pandora::CartesianVector &nuVertexU, const pandora::CartesianVector &nuVertexV, const pandora::CartesianVector &nuVertexW,
-        const pandora::CartesianVector &directionU, const pandora::CartesianVector &directionV, const pandora::CartesianVector &directionW) const;
+    bool AreDirectionsConsistent(const pandora::CartesianVector &nuVertexU, const pandora::CartesianVector &nuVertexV,
+        const pandora::CartesianVector &nuVertexW, const pandora::CartesianVector &directionU, const pandora::CartesianVector &directionV,
+        const pandora::CartesianVector &directionW) const;
 
     unsigned int m_spineSlidingFitWindow; ///< The shower spine sliding fit window
     float m_maxXSeparation;               ///< The max. drift-coordinate separation between matched 2D shower start positions

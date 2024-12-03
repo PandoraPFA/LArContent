@@ -145,8 +145,8 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(const ProtoShower &protoSh
     const CartesianVector &directionV1(protoShowerV.GetConnectionPathway().GetStartDirection());
     const CartesianVector &directionW1(protoShowerW.GetConnectionPathway().GetStartDirection());
 
-    if (this->AreDirectionsConsistent(protoShowerU.GetConnectionPathway().GetStartPosition(), protoShowerV.GetConnectionPathway().GetStartPosition(), 
-        protoShowerW.GetConnectionPathway().GetStartPosition(), directionU1, directionV1, directionW1))
+    if (this->AreDirectionsConsistent(protoShowerU.GetConnectionPathway().GetStartPosition(), protoShowerV.GetConnectionPathway().GetStartPosition(),
+            protoShowerW.GetConnectionPathway().GetStartPosition(), directionU1, directionV1, directionW1))
     {
         return true;
     }
@@ -174,8 +174,9 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(const ProtoShower &protoSh
         const CartesianVector directionV2(isDownstream ? spineFitV.GetGlobalMinLayerDirection() : spineFitV.GetGlobalMaxLayerDirection() * (-1.f));
         const CartesianVector directionW2(isDownstream ? spineFitW.GetGlobalMinLayerDirection() : spineFitW.GetGlobalMaxLayerDirection() * (-1.f));
 
-        return this->AreDirectionsConsistent(protoShowerU.GetConnectionPathway().GetStartPosition(), protoShowerV.GetConnectionPathway().GetStartPosition(), 
-            protoShowerW.GetConnectionPathway().GetStartPosition(), directionU2, directionV2, directionW2);
+        return this->AreDirectionsConsistent(protoShowerU.GetConnectionPathway().GetStartPosition(),
+            protoShowerV.GetConnectionPathway().GetStartPosition(), protoShowerW.GetConnectionPathway().GetStartPosition(), directionU2,
+            directionV2, directionW2);
     }
 
     return false;
@@ -183,8 +184,8 @@ bool ProtoShowerMatchingTool::AreDirectionsConsistent(const ProtoShower &protoSh
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ProtoShowerMatchingTool::AreDirectionsConsistent(const CartesianVector &nuVertexU, const CartesianVector &nuVertexV, const CartesianVector &nuVertexW,
-    const CartesianVector &directionU, const CartesianVector &directionV, const CartesianVector &directionW) const
+bool ProtoShowerMatchingTool::AreDirectionsConsistent(const CartesianVector &nuVertexU, const CartesianVector &nuVertexV,
+    const CartesianVector &nuVertexW, const CartesianVector &directionU, const CartesianVector &directionV, const CartesianVector &directionW) const
 {
     const CartesianVector wireAxis(0.f, 0.f, 1.f);
 
