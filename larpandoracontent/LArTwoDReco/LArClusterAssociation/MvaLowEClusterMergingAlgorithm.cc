@@ -301,7 +301,17 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
                         intercept(tangent.GetX() * hit2Position.GetX() + tangent.GetZ() * hit2Position.GetZ());
                     adc2 += caloHit2->GetInputEnergy();
 
-                    if (intercept < c)
+                    if (distance < m_proximityThreshold)
+                    {
+                        ++proximity;
+                        if (distance < m_contactThreshold)
+                        {
+                            ++contact;
+                            --proximity;
+                        }
+                    }
+		      
+		    if (intercept < c)
                         continue;
 
                     if (distance > maxEdgeHitSeparation)
@@ -313,35 +323,21 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
                     {
                         minEdgeHitSeparation = distance;
                     }
-
-                    if (distance < nearestHit)
+                    
+		    if (distance < nearestHit)
                     {
                         nearestHit = distance;
                     }
-
-                    if (std::abs(vector1.GetDotProduct(centroidVector)) > smallestAngle)
-                        continue;
-
-                    if (caloHit1->GetPseudoLayer() == caloHit2->GetPseudoLayer())
-                    {
-                        if (distance < m_proximityThreshold)
-                        {
-                            ++proximity;
-                            if (distance < m_contactThreshold)
-                            {
-                                ++contact;
-                                --proximity;
-                            }
-                        }
-                    }
-
-                    smallestAngle = std::abs(vector1.GetDotProduct(centroidVector));
-                    finalDistance = distance;
+		    if (std::abs(vector1.GetDotProduct(centroidVector)) > smallestAngle)
+	                continue;
+                   
+	            smallestAngle = std::abs(vector1.GetDotProduct(centroidVector));
+          	    finalDistance = distance;
                 }
-                distanceDistribution.push_back(finalDistance);
-            }
-
-            const double avgDistance{!distanceDistribution.empty()
+	        distanceDistribution.push_back(finalDistance);
+	    }
+            
+	    const double avgDistance{!distanceDistribution.empty()
                     ? std::accumulate(distanceDistribution.begin(), distanceDistribution.end(), 0.0) / distanceDistribution.size()
                     : -1.0};
 
