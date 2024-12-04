@@ -304,6 +304,16 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 			    intercept(tangent.GetX() * hit2Position.GetX() + tangent.GetZ() * hit2Position.GetZ());
                       adc2 += caloHit2->GetInputEnergy();
 
+                      if (distance < m_proximityThreshold)
+                      {
+                          ++proximity;
+                          if (distance < m_contactThreshold)
+                          {
+                              ++contact;
+                              --proximity;
+                          }
+                      }
+		      
 		      if (intercept < c)
                           continue;
 
@@ -324,20 +334,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 		      
 		      if (std::abs(vector1.GetDotProduct(centroidVector)) > smallestAngle)
 		         continue;
-                    
-                      if (caloHit1->GetPseudoLayer() == caloHit2->GetPseudoLayer())
-	              {
-	                  if (distance < m_proximityThreshold)
-			  { 
-			      ++proximity;
-			      if (distance < m_contactThreshold)
-			      {
-	                          ++contact;
-			          --proximity;
-		              }
-		          }
-	              }
-		      
+                   
 		      smallestAngle = std::abs(vector1.GetDotProduct(centroidVector));
 		      finalDistance = distance;
                   }
