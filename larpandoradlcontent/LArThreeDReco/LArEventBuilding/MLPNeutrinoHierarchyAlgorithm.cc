@@ -19,6 +19,8 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPNeutrinoHierarchyAlgorithm.h"
 
 using namespace pandora;
@@ -27,42 +29,6 @@ using namespace lar_content;
 namespace lar_dl_content
 {
 
-MLPNeutrinoHierarchyAlgorithm::HierarchyPfo::HierarchyPfo() :
-    m_pPfo(nullptr),
-    m_pPredictedParentPfo(nullptr),
-    m_pParentPfo(nullptr),
-    m_childPfoVector(PfoVector()),
-    m_upstreamVertex(CartesianVector(-999.f, -999.f, -999.f)),
-    m_upstreamDirection(CartesianVector(-999.f, -999.f, -999.f)),
-    m_downstreamVertex(CartesianVector(-999.f, -999.f, -999.f)),
-    m_downstreamDirection(CartesianVector(-999.f, -999.f, -999.f)),
-    m_primaryScore(-std::numeric_limits<float>::max()),
-    m_laterTierScore(-std::numeric_limits<float>::max()),
-    m_parentOrientation(-1),
-    m_childOrientation(-1),
-    m_isInHierarchy(false)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-MLPNeutrinoHierarchyAlgorithm::HierarchyPfo::HierarchyPfo(const ParticleFlowObject *pPfo, const CartesianVector &upstreamVertex,
-    const CartesianVector &upstreamDirection, const CartesianVector &downstreamVertex, const CartesianVector &downstreamDirection) :
-        HierarchyPfo()
-{
-    m_pPfo = pPfo;
-    m_upstreamVertex = upstreamVertex;
-    m_upstreamDirection = upstreamDirection;
-    m_downstreamVertex = downstreamVertex;
-    m_downstreamDirection = downstreamDirection;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool MLPNeutrinoHierarchyAlgorithm::HierarchyPfo::operator== (const HierarchyPfo &otherHierarchyPfo) const
-{
-    return this->GetPfo() == otherHierarchyPfo.GetPfo();
-}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -199,7 +165,7 @@ bool MLPNeutrinoHierarchyAlgorithm::GetNeutrinoPfo()
 
 void MLPNeutrinoHierarchyAlgorithm::FillTrackShowerVectors()
 {
-   for (const std::string &pfoListName : m_pfoListNames)
+    for (const std::string &pfoListName : m_pfoListNames)
     {
         const PfoList *pPfoList(nullptr);
 
@@ -445,7 +411,7 @@ void MLPNeutrinoHierarchyAlgorithm::SetPrimaryScores()
 
     // For showers
     for (auto& [pPfo, hierarchyPfo] : m_showerPfos)
-        this->SetPrimaryScoreTrack(hierarchyPfo);    
+        this->SetPrimaryScoreShower(hierarchyPfo);    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -459,7 +425,10 @@ void MLPNeutrinoHierarchyAlgorithm::SetPrimaryScoreTrack(HierarchyPfo &trackPfo)
 
 void MLPNeutrinoHierarchyAlgorithm::SetPrimaryScoreShower(HierarchyPfo &showerPfo)
 {
-    showerPfo.SetPrimaryScore(this->GetRandomNumber());
+    if (m_primaryHierarchyTool->Run(this, showerPfo, m_pNeutrinoPfo, true) != STATUS_CODE_SUCCESS)
+        showerPfo.SetPrimaryScore(-999.f);
+    else
+        showerPfo.SetPrimaryScore(this->GetRandomNumber());
 }
 
 
@@ -696,6 +665,13 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHand
         m_primaryShowerClassifierModelName = LArFileHelper::FindFileInPath(m_primaryShowerClassifierModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryShowerClassifierModelName, m_primaryShowerClassifierModel));
     }
+
+    AlgorithmTool *pAlgorithmTool(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "MLPPrimaryHierarchyTool", pAlgorithmTool));
+    m_primaryHierarchyTool = dynamic_cast<MLPPrimaryHierarchyTool *>(pAlgorithmTool);
+
+    if (!m_primaryHierarchyTool)
+        return STATUS_CODE_INVALID_PARAMETER;
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryThresholdTrackPass1", m_primaryThresholdTrackPass1));
 
