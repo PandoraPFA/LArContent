@@ -110,6 +110,9 @@ private:
     bool GetExtremalVerticesAndDirections(const pandora::ParticleFlowObject *const pPfo, pandora::CartesianVector &upstreamVertex, 
         pandora::CartesianVector &upstreamDirection, pandora::CartesianVector &downstreamVertex, pandora::CartesianVector &downstreamDirection);
 
+    bool GetShowerDirection(const pandora::ParticleFlowObject *const pPfp, const pandora::CartesianVector &vertex, const float searchRegion, 
+        pandora::CartesianVector &direction);
+
     void SetPrimaryScores();
 
     void SetPrimaryScoreTrack(HierarchyPfo &trackPfo);
