@@ -12,7 +12,7 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
-
+#include "larpandoracontent/LArObjects/LArPfoObjects.h"
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
@@ -103,73 +103,73 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::Run()
 
     // //std::cout << "output: " << 
 
-    // // Give PFPs IDs to keep track of them
-    // this->DetermineIsobelID();
+    // Give PFPs IDs to keep track of them
+    this->DetermineIsobelID();
 
     // Fill the track/shower vectors
     this->FillTrackShowerVectors();
 
-    // // Calculate primary scores
-    // this->SetPrimaryScores();
+    // Calculate primary scores
+    this->SetPrimaryScores();
 
-    // //////////////////////////////////////////////////////////////////
-    // std::cout << "---------------------------------------------------------" << std::endl;
-    // std::cout << "PRIMARY SCORES" << std::endl;
-    // for (const auto& [pPfo, hierarchyPfo] : m_trackPfos)
-    //     std::cout << m_isobelID[pPfo] << ": " << hierarchyPfo.GetPrimaryScore() << std::endl;
+    //////////////////////////////////////////////////////////////////
+    std::cout << "---------------------------------------------------------" << std::endl;
+    std::cout << "PRIMARY SCORES" << std::endl;
+    for (const auto& [pPfo, hierarchyPfo] : m_trackPfos)
+        std::cout << m_isobelID[pPfo] << ": " << hierarchyPfo.GetPrimaryScore() << std::endl;
 
-    // for (const auto& [pPfo, hierarchyPfo] : m_showerPfos)
-    //     std::cout << m_isobelID[pPfo] << ": " << hierarchyPfo.GetPrimaryScore() << std::endl;
-    // std::cout << "---------------------------------------------------------" << std::endl;
-    // //////////////////////////////////////////////////////////////////
+    for (const auto& [pPfo, hierarchyPfo] : m_showerPfos)
+        std::cout << m_isobelID[pPfo] << ": " << hierarchyPfo.GetPrimaryScore() << std::endl;
+    std::cout << "---------------------------------------------------------" << std::endl;
+    //////////////////////////////////////////////////////////////////
 
-    // // Set what primary things we can
-    // this->BuildPrimaryTierPass1();
+    // Set what primary things we can
+    this->BuildPrimaryTierPass1();
 
-    // if (m_hierarchy.size() == 0)
-    // {
-    //     std::cout << "NO PRIMARIES FOUND!" << std::endl;
-    //     return STATUS_CODE_FAILURE;
-    // }
+    if (m_hierarchy.size() == 0)
+    {
+        std::cout << "NO PRIMARIES FOUND!" << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
 
-    // //////////////////////////////////////////////////////////////////    
-    // std::cout << "---------------------------------------------------------" << std::endl;
-    // std::cout << "PRIMARY TIER:" << std::endl;
-    // for (const ParticleFlowObject* pPfo : m_hierarchy.at(0))
-    //     std::cout << m_isobelID[pPfo] << std::endl;
-    // std::cout << "---------------------------------------------------------" << std::endl;
-    // //////////////////////////////////////////////////////////////////    
+    //////////////////////////////////////////////////////////////////    
+    std::cout << "---------------------------------------------------------" << std::endl;
+    std::cout << "PRIMARY TIER:" << std::endl;
+    for (const ParticleFlowObject* pPfo : m_hierarchy.at(0))
+        std::cout << m_isobelID[pPfo] << std::endl;
+    std::cout << "---------------------------------------------------------" << std::endl;
+    //////////////////////////////////////////////////////////////////    
 
-    // // Set later tier scores
-    // this->SetLaterTierScores();
+    // Set later tier scores
+    this->SetLaterTierScores();
 
-    // //////////////////////////////////////////////////////////////////
-    // std::cout << "---------------------------------------------------------" << std::endl;
-    // std::cout << "LATER SCORES" << std::endl;
-    // for (const auto& [pPfo, hierarchyPfo] : m_trackPfos)
-    //     if (hierarchyPfo.GetPredictedParentPfo())
-    //         std::cout << m_isobelID[pPfo] << ": " << m_isobelID[hierarchyPfo.GetPredictedParentPfo()] << ", " << hierarchyPfo.GetLaterTierScore() << std::endl;
+    //////////////////////////////////////////////////////////////////
+    std::cout << "---------------------------------------------------------" << std::endl;
+    std::cout << "LATER SCORES" << std::endl;
+    for (const auto& [pPfo, hierarchyPfo] : m_trackPfos)
+        if (hierarchyPfo.GetPredictedParentPfo())
+            std::cout << m_isobelID[pPfo] << ": " << m_isobelID[hierarchyPfo.GetPredictedParentPfo()] << ", " << hierarchyPfo.GetLaterTierScore() << std::endl;
 
-    // for (const auto& [pPfo, hierarchyPfo] : m_showerPfos)
-    //     if (hierarchyPfo.GetPredictedParentPfo())
-    //         std::cout << m_isobelID[pPfo] << ": " << m_isobelID[hierarchyPfo.GetPredictedParentPfo()] << ", " << hierarchyPfo.GetLaterTierScore() << std::endl;
-    // std::cout << "---------------------------------------------------------" << std::endl;
-    // //////////////////////////////////////////////////////////////////
+    for (const auto& [pPfo, hierarchyPfo] : m_showerPfos)
+        if (hierarchyPfo.GetPredictedParentPfo())
+            std::cout << m_isobelID[pPfo] << ": " << m_isobelID[hierarchyPfo.GetPredictedParentPfo()] << ", " << hierarchyPfo.GetLaterTierScore() << std::endl;
+    std::cout << "---------------------------------------------------------" << std::endl;
+    //////////////////////////////////////////////////////////////////
 
-    // // Build the later tier
-    // this->BuildLaterTierPass1();
+    // Build the later tier
+    this->BuildLaterTierPass1();
 
-    // //////////////////////////////////////////////////////////////////
-    // this->PrintHierarchy();
-    // //////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////
+    this->PrintHierarchy();
+    //////////////////////////////////////////////////////////////////
 
-    // this->BuildPandoraHierarchy();
+    this->BuildPandoraHierarchy();
 
-    // //////////////////////////////////////////////////////////////////
-    // this->PrintPandoraHierarchy();
-    // //////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////
+    this->PrintPandoraHierarchy();
+    //////////////////////////////////////////////////////////////////
 
-    // this->CheckForOrphans();
+    this->CheckForOrphans();
 
     return STATUS_CODE_SUCCESS;
 }
@@ -197,6 +197,51 @@ bool MLPNeutrinoHierarchyAlgorithm::GetNeutrinoPfo()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void MLPNeutrinoHierarchyAlgorithm::FillTrackShowerVectors()
+{
+   for (const std::string &pfoListName : m_pfoListNames)
+    {
+        const PfoList *pPfoList(nullptr);
+
+        if (PandoraContentApi::GetList(*this, pfoListName, pPfoList) != STATUS_CODE_SUCCESS)
+            continue;
+
+        for (const ParticleFlowObject * pPfo : *pPfoList)
+        {
+            // Apply hit cut
+            ClusterList clusterList3D;
+            LArPfoHelper::GetThreeDClusterList(pPfo, clusterList3D);
+
+            int total3DHits(0);
+
+            for (const Cluster *const pCluster3D : clusterList3D)
+                total3DHits += pCluster3D->GetNCaloHits();
+
+            if (total3DHits == 0)
+                continue;
+
+            // We need directions...
+            CartesianVector upstreamVertex(-999.f, -999.f, -999.f), upstreamDirection(-999.f, -999.f, -999.f), 
+                downstreamVertex(-999.f, -999.f, -999.f), downstreamDirection(-999.f, -999.f, -999.f);
+
+            if (!this->GetExtremalVerticesAndDirections(pPfo, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection))
+                continue;
+
+            // Create track/shower objects
+            if (pPfo->GetParticleId() == 13)
+                m_trackPfos[pPfo] = HierarchyPfo(pPfo, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection);
+            else if (pPfo->GetParticleId() == 11) 
+                m_showerPfos[pPfo] = HierarchyPfo(pPfo, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection);
+            else
+                std::cout << "IDK what this pfo is" << std::endl;
+        }
+    }
+
+    std::cout << "We have " << m_trackPfos.size() << " track(s) and " << m_showerPfos.size() << " shower(s)" << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const ParticleFlowObject *const pPfo, CartesianVector &upstreamVertex, 
     CartesianVector &upstreamDirection, CartesianVector &downstreamVertex, CartesianVector &downstreamDirection)
 {
@@ -209,23 +254,25 @@ bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const Parti
 
     const bool isTrack = pPfo->GetParticleId() == 13;
 
+    ClusterList clusterList3D;
+    LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList3D);
+
+    if (clusterList3D.size() != 1)
+        return false;
+
     if (isTrack)
     {
-        ClusterList clusterList3D;
-        LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList3D);
-
-        if (clusterList3D.size() != 1)
-            return false;
-
-        const int HALF_WINDOW_LAYERS(20);
-        const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
-        const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
-        const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
-        const float slidingFitPitch(std::max({pitchU, pitchV, pitchW}));
-
         try
         {
+            const int HALF_WINDOW_LAYERS(20);
+            const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
+            const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
+            const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
+            const float slidingFitPitch(std::max({pitchU, pitchV, pitchW}));
+
+            // This could throw an exception
             const LArPointingCluster pointingCluster(*(clusterList3D.begin()), HALF_WINDOW_LAYERS, slidingFitPitch);
+
             const CartesianVector innerVertex(pointingCluster.GetInnerVertex().GetPosition().GetX(), pointingCluster.GetInnerVertex().GetPosition().GetY(), pointingCluster.GetInnerVertex().GetPosition().GetZ()); 
             CartesianVector innerDirection(pointingCluster.GetInnerVertex().GetDirection().GetX(), pointingCluster.GetInnerVertex().GetDirection().GetY(), pointingCluster.GetInnerVertex().GetDirection().GetZ()); 
             const CartesianVector outerVertex(pointingCluster.GetOuterVertex().GetPosition().GetX(), pointingCluster.GetOuterVertex().GetPosition().GetY(), pointingCluster.GetOuterVertex().GetPosition().GetZ());
@@ -255,77 +302,137 @@ bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const Parti
             }
         }
         catch(...) { return false; }        
-
-        return true;
     }
     else
     {
-        return false;
+        try
+        {
+            CartesianPointVector pointVector;
+            LArPfoHelper::GetCoordinateVector(pPfo, TPC_3D, pointVector);
+
+            // This could throw an exception
+            const LArShowerPCA showerPCA(LArPfoHelper::GetPrincipalComponents(pointVector, CartesianVector(-999.f, -999.f, -999.f)));
+
+            // Find extremal points
+            float lowestL(std::numeric_limits<float>::max()), highestL(-std::numeric_limits<float>::max());
+            CartesianVector lowestPoint(-999.f, -999.f, -999.f), highestPoint(-999.f, -999.f, -999.f);
+            CartesianVector lowestDirection(-999.f, -999.f, -999.f), highestDirection(-999.f, -999.f, -999.f);
+
+            for (const CartesianVector &cartesianVector : pointVector)
+            {
+                const float l(showerPCA.GetPrimaryAxis().GetDotProduct(showerPCA.GetCentroid() - cartesianVector));
+
+                if (l < lowestL)
+                {
+                    lowestL = l;
+                    lowestPoint = cartesianVector;
+                }
+
+                if (l > highestL)
+                {
+                    highestL = l;
+                    highestPoint = cartesianVector;
+                }
+            }
+
+            // find directions, demand that we have at least one
+            const bool lowestDirectionSet(this->GetShowerDirection(pPfo, lowestPoint, 25.f, lowestDirection));
+            const bool highestDirectionSet(this->GetShowerDirection(pPfo, highestPoint, 25.f, highestDirection));
+
+            if (!lowestDirectionSet && !highestDirectionSet)
+                return false;
+
+            // now find out who is closer
+            if ((lowestPoint - nuVertex).GetMagnitudeSquared() < (highestPoint - nuVertex).GetMagnitudeSquared())
+            {
+                upstreamVertex = lowestPoint;
+                upstreamDirection = lowestDirection;
+                downstreamVertex = highestPoint;
+                downstreamDirection = highestDirection;
+            }
+            else
+            {
+                upstreamVertex = highestPoint;
+                upstreamDirection = highestDirection;
+                downstreamVertex = lowestPoint;
+                downstreamDirection = lowestDirection;
+            }
+        }
+        catch (...) { return false; }
     }
 
     return true;
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPNeutrinoHierarchyAlgorithm::FillTrackShowerVectors()
+bool MLPNeutrinoHierarchyAlgorithm::GetShowerDirection(const ParticleFlowObject *const pPfo, const CartesianVector &vertex, const float searchRegion, 
+    CartesianVector &direction)
 {
-   for (const std::string &pfoListName : m_pfoListNames)
-    {
-        const PfoList *pPfoList(nullptr);
+    CartesianPointVector pointVector;
+    LArPfoHelper::GetCoordinateVector(pPfo, TPC_3D, pointVector);
 
-        if (PandoraContentApi::GetList(*this, pfoListName, pPfoList) != STATUS_CODE_SUCCESS)
+    if (pointVector.empty())
+        return false;
+
+    // set direction by angular distribution
+    const int nBins(180);
+    const float angleMin(0.f), angleMax(2.f * M_PI);
+    const float binWidth((angleMax - angleMin) / static_cast<float>(nBins));
+
+    std::vector<std::vector<int>> spatialDist(nBins, std::vector<int>(nBins, 0));
+    std::vector<std::vector<float>> tieBreakerDist(nBins, std::vector<float>(nBins, 0.f));
+
+    int highestSP(0), bestTheta0YZBin(-1), bestTheta0XZBin(-1);
+    float tieBreaker(std::numeric_limits<float>::max());
+
+    for (const CartesianVector &position3D : pointVector)
+    {
+        const CartesianVector displacement(position3D - vertex);
+        const float mag = displacement.GetMagnitude();
+
+        if (mag > searchRegion)
             continue;
 
-        for (const ParticleFlowObject * pPfo : *pPfoList)
+        const float magXZ = sqrt((displacement.GetX() * displacement.GetX()) + (displacement.GetZ() * displacement.GetZ()));
+
+        float theta0YZ = (mag < std::numeric_limits<float>::epsilon()) ? 0.f : 
+            (std::fabs(std::fabs(displacement.GetY() / mag) - 1.f) < std::numeric_limits<float>::epsilon()) ? 0.f : 
+            std::acos(displacement.GetY() / mag);
+
+        float theta0XZ = (magXZ < std::numeric_limits<float>::epsilon()) ? 0.f : 
+            (std::fabs(std::fabs(displacement.GetX() / magXZ) - 1.f) < std::numeric_limits<float>::epsilon()) ? 0.f :
+            std::acos(displacement.GetX() / magXZ);
+
+        // try do signed-ness
+        if (displacement.GetZ() < 0.f)
+            theta0XZ = (2.0 * M_PI) - theta0XZ;
+
+        const int bin0YZ = std::floor(theta0YZ / binWidth);
+        const int bin0XZ = std::floor(theta0XZ / binWidth);
+
+        spatialDist[bin0YZ][bin0XZ] += 1;
+        tieBreakerDist[bin0YZ][bin0XZ] += (1.f / mag); // tie-breaker
+
+        if (((spatialDist[bin0YZ][bin0XZ] == highestSP) && (tieBreakerDist[bin0YZ][bin0XZ] < tieBreaker)) ||
+            (spatialDist[bin0YZ][bin0XZ] > highestSP))
         {
-            std::cout << "hi " << std::endl;
-
-
-            // Apply hit cut
-            ClusterList clusterList3D;
-            LArPfoHelper::GetThreeDClusterList(pPfo, clusterList3D);
-
-            int total3DHits(0);
-
-            for (const Cluster *const pCluster3D : clusterList3D)
-                total3DHits += pCluster3D->GetNCaloHits();
-
-            if (total3DHits == 0)
-                continue;
-
-            // We need directions...
-            CartesianVector upstreamVertex(-999.f, -999.f, -999.f), upstreamDirection(-999.f, -999.f, -999.f), 
-                downstreamVertex(-999.f, -999.f, -999.f), downstreamDirection(-999.f, -999.f, -999.f);
-
-            if (!this->GetExtremalVerticesAndDirections(pPfo, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection))
-                continue;
-
-            // Create track/shower objects
-            if (pPfo->GetParticleId() == 13)
-            {
-                std::cout << "NSpacepoints: " << total3DHits << std::endl;
-                std::cout << "upstreamVertex: " << upstreamVertex << std::endl;
-                std::cout << "upstreamDirection: " << upstreamDirection << std::endl;
-                std::cout << "downstreamVertex: " << downstreamVertex << std::endl;
-                std::cout << "downstreamDirection: " << downstreamDirection << std::endl;
-
-                m_trackPfos[pPfo] = HierarchyPfo(pPfo, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection);
-            }
-            else if (pPfo->GetParticleId() == 11) 
-            {
-                m_showerPfos[pPfo] = HierarchyPfo(pPfo, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection);
-            }
-            else
-                std::cout << "IDK what this pfo is" << std::endl;
+            highestSP = spatialDist[bin0YZ][bin0XZ];
+            tieBreaker = tieBreakerDist[bin0YZ][bin0XZ];
+            bestTheta0YZBin = bin0YZ;
+            bestTheta0XZBin = bin0XZ;
         }
     }
 
-    // Sort the maps
+    if ((bestTheta0YZBin < 0) || (bestTheta0XZBin < 0))
+        return false;
 
-    std::cout << "We have " << m_trackPfos.size() << " track(s) and " << m_showerPfos.size() << " shower(s)" << std::endl;
+    const float bestTheta0YZ = angleMin + ((static_cast<float>(bestTheta0YZBin) + 0.5f) * binWidth);
+    const float bestTheta0XZ = angleMin + ((static_cast<float>(bestTheta0XZBin) + 0.5f) * binWidth);
 
+    direction = CartesianVector(std::sin(bestTheta0YZ) * std::cos(bestTheta0XZ), std::cos(bestTheta0YZ), std::sin(bestTheta0YZ) * std::sin(bestTheta0XZ));
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
