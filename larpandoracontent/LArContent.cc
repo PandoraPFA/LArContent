@@ -69,6 +69,8 @@
 #include "larpandoracontent/LArPersistency/EventWritingAlgorithm.h"
 
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
+#include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
+#include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
 
 #include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
 #include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
@@ -216,6 +218,7 @@
 #include "larpandoracontent/LArUtility/ListPruningAlgorithm.h"
 #include "larpandoracontent/LArUtility/PfoHitCleaningAlgorithm.h"
 
+#include "larpandoracontent/LArReclustering/ThreeDReclusteringAlgorithm.h"
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/HitAngleVertexSelectionAlgorithm.h"
@@ -333,14 +336,18 @@
     d("LArListMerging",                         ListMergingAlgorithm)                                                           \
     d("LArPfoHitCleaning",                      PfoHitCleaningAlgorithm)                                                        \
     d("LArListPruning",                         ListPruningAlgorithm)                                                           \
+    d("LArThreeDReclustering",                  ThreeDReclusteringAlgorithm)                                                    \
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
     d("LArBdtVertexSelection",                  BdtVertexSelectionAlgorithm)                                                    \
     d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)                                                    \
-    d("LArVertexRefinement",                    VertexRefinementAlgorithm)
+    d("LArVertexRefinement",                    VertexRefinementAlgorithm)                                                      \
+
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
+    d("LArCheatedThreeDClusteringTool",         CheatedThreeDClusteringTool)                                                    \
+    d("LArSimplePCAThreeDClusteringTool",       SimplePCAThreeDClusteringTool)                                                  \
     d("LArConnectionRegionFeatureTool",         ConnectionRegionFeatureTool)                                                    \
     d("LArShowerRegionFeatureTool",             ShowerRegionFeatureTool)                                                        \
     d("LArAmbiguousRegionFeatureTool",          AmbiguousRegionFeatureTool)                                                     \
