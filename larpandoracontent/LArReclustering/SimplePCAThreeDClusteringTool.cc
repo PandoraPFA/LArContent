@@ -31,10 +31,7 @@ bool SimplePCAThreeDClusteringTool::Run(const CaloHitList &inputCaloHitList, std
     LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
     LArPcaHelper::RunPca(inputCaloHitList, centroid, eigenValues, eigenVecs);
 
-    // By convention, the primary axis has a positive z-component.
-    const CartesianVector axisDirection(eigenVecs.at(0).GetZ() > 0.f ? eigenVecs.at(0) : eigenVecs.at(0) * -1.f);
-
-    // Now define ortho directions
+    // By convention, the primary axis has a positive z-component - define ortho directions
     const CartesianVector orthoDirection1(eigenVecs.at(1).GetZ() > 0.f ? eigenVecs.at(1) : eigenVecs.at(1) * -1.f);
 
     //Lists for hits that have a positive and negative projection on the secondary axis
