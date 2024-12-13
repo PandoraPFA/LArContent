@@ -50,31 +50,31 @@ private:
     /**
      *  @brief Create new TwoD clusters and Pfos for each  new ThreeD cluster in newClustersList
      *
-     *  @param pPfoToRebuild the address of the original pfo to rebuild 
-     *  @param newClustersList a reference to the new list of clusters obtained via the reclustering process 
+     *  @param pPfoToRebuild the address of the original pfo to rebuild
+     *  @param newClustersList a reference to the new list of clusters obtained via the reclustering process
      */
     pandora::StatusCode RebuildPfo(const pandora::Pfo *pPfoToRebuild, pandora::ClusterList &newClustersList);
 
     /**
-     *  @brief Create new TwoD clusters for each  new ThreeD cluster in newClustersList 
+     *  @brief Create new TwoD clusters for each  new ThreeD cluster in newClustersList
      *
-     *  @param pPfoToRebuild the address of the original pfo to rebuild 
-     *  @param newClustersList a reference to the new list of clusters obtained via the reclustering process 
+     *  @param pPfoToRebuild the address of the original pfo to rebuild
+     *  @param newClustersList a reference to the new list of clusters obtained via the reclustering process
      */
     pandora::StatusCode BuildNewTwoDClusters(const pandora::Pfo *pPfoToRebuild, pandora::ClusterList &newClustersList);
 
     /**
-     *  @brief Create new Pfos for each  new ThreeD cluster in newClustersList  
+     *  @brief Create new Pfos for each  new ThreeD cluster in newClustersList
      *
-     *  @param pPfoToRebuild the address of the original pfo to rebuild 
-     *  @param newClustersList a reference to the new list of clusters obtained via the reclustering process 
+     *  @param pPfoToRebuild the address of the original pfo to rebuild
+     *  @param newClustersList a reference to the new list of clusters obtained via the reclustering process
      */
     pandora::StatusCode BuildNewPfos(const pandora::Pfo *pPfoToRebuild, pandora::ClusterList &newClustersList);
 
     /**
      *  @brief Loop over all specified figure of merit names, calculate figures of merit for the CaloHitList under consideration, and return the smallest FOM
      *
-     *  @param mergedClusterCaloHitList3D the CaloHitList under consideration 
+     *  @param mergedClusterCaloHitList3D the CaloHitList under consideration
      *
      *  @return The figure of merit
      */
@@ -84,7 +84,7 @@ private:
      *  @brief Calculate the specified figure of merit for the CaloHitList under consideration, and return the smallest FOM
      *
      *  @param figureOfMeritName the name of the figure of merit
-     *  @param mergedClusterCaloHitList3D the CaloHitList under consideration 
+     *  @param mergedClusterCaloHitList3D the CaloHitList under consideration
      *
      *  @return The figure of merit
      */
@@ -93,7 +93,7 @@ private:
     /**
      *  @brief Loop over all specified figure of merit names, calculate figures of merit for each CaloHitList in the provided vector, and return the smallest FOM
      *
-     *  @param newClustersCaloHitLists3D the vector of CaloHitLists under consideration 
+     *  @param newClustersCaloHitLists3D the vector of CaloHitLists under consideration
      *
      *  @return The figure of merit
      */
@@ -103,13 +103,13 @@ private:
      *  @brief Calculate the specified figure of merit for each CaloHitList in the provided vector, and return the smallest FOM
      *
      *  @param figureOfMeritName the name of the figure of merit
-     *  @param newClustersCaloHitLists3D the vector of CaloHitLists under consideration 
+     *  @param newClustersCaloHitLists3D the vector of CaloHitLists under consideration
      *
-     *  @return The figure of merit 
+     *  @return The figure of merit
      */
     float GetFigureOfMerit(const std::string &figureOfMeritName, const std::vector<pandora::CaloHitList> &newClustersCaloHitLists3D);
 
-    /** 
+    /**
      *  @brief Get cheated FOM as an impurity: the fraction of hits that are NOT contributed by the main MC particle. If clustering was perfect, cheated FOM would always be 0.
      *
      * @param List of calo hits for the pfo to recluster
@@ -121,7 +121,7 @@ private:
     /**
      *  @brief Select pfos to be reclustered if it passes reclustering criteria
      *
-     *  @param pPfo the address of the pfo 
+     *  @param pPfo the address of the pfo
      *
      *  @return bool corresponding to decision: recluster (1), do not recluster (0)
      */

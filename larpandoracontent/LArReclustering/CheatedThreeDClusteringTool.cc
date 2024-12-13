@@ -6,9 +6,9 @@
  *  $Log: $
  */
 
+#include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
 #include "Pandora/AlgorithmHeaders.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
-#include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
 
 using namespace pandora;
 
