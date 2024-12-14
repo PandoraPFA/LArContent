@@ -9,7 +9,10 @@
 #ifndef LAR_THREE_D_RECLUSTERING_ALGORITHM_H
 #define LAR_THREE_D_RECLUSTERING_ALGORITHM_H 1
 
+#include "Objects/ParticleFlowObject.h"
 #include "Pandora/Algorithm.h"
+#include "Pandora/AlgorithmTool.h"
+#include "Pandora/PandoraInternal.h"
 
 namespace lar_content
 {
