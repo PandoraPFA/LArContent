@@ -52,23 +52,6 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::Run()
     if (!this->GetNeutrinoPfo())
         return STATUS_CODE_SUCCESS;
 
-    // LArDLHelper::TorchInput input;
-    // LArDLHelper::InitialiseInput({6}, input);
-    // input[0] = 0.1;
-    // input[1] = 0.7;
-    // input[2] = 0.2;
-    // input[3] = 0.05;
-    // input[4] = 0.05;
-    // input[5] = 0.9;
-
-    // LArDLHelper::TorchOutput output;
-    // LArDLHelper::Forward(m_primaryTrackClassifierModel, {input}, output);
-
-
-    // std::cout << "output[0]: " << output[0] << std::endl;
-
-    // //std::cout << "output: " << 
-
     // Give PFPs IDs to keep track of them
     this->DetermineIsobelID();
 
@@ -195,9 +178,9 @@ void MLPNeutrinoHierarchyAlgorithm::FillTrackShowerVectors()
 
             // Create track/shower objects
             if (pPfo->GetParticleId() == 13)
-                m_trackPfos[pPfo] = HierarchyPfo(pPfo, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection);
+                m_trackPfos[pPfo] = HierarchyPfo(pPfo, true, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection);
             else if (pPfo->GetParticleId() == 11) 
-                m_showerPfos[pPfo] = HierarchyPfo(pPfo, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection);
+                m_showerPfos[pPfo] = HierarchyPfo(pPfo, false, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection);
             else
                 std::cout << "IDK what this pfo is" << std::endl;
         }
@@ -308,6 +291,8 @@ bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const Parti
             if (!lowestDirectionSet && !highestDirectionSet)
                 return false;
 
+            std::cout << "this needs to be better" << std::endl;
+
             // now find out who is closer
             if ((lowestPoint - nuVertex).GetMagnitudeSquared() < (highestPoint - nuVertex).GetMagnitudeSquared())
             {
@@ -407,30 +392,12 @@ void MLPNeutrinoHierarchyAlgorithm::SetPrimaryScores()
 {
     // For tracks
     for (auto& [pPfo, hierarchyPfo] : m_trackPfos)
-        this->SetPrimaryScoreTrack(hierarchyPfo);
+        m_primaryHierarchyTool->Run(this, m_pNeutrinoPfo, m_trackPfos, hierarchyPfo);
 
     // For showers
     for (auto& [pPfo, hierarchyPfo] : m_showerPfos)
-        this->SetPrimaryScoreShower(hierarchyPfo);    
+        m_primaryHierarchyTool->Run(this, m_pNeutrinoPfo, m_trackPfos, hierarchyPfo);
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MLPNeutrinoHierarchyAlgorithm::SetPrimaryScoreTrack(HierarchyPfo &trackPfo)
-{
-    trackPfo.SetPrimaryScore(this->GetRandomNumber());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MLPNeutrinoHierarchyAlgorithm::SetPrimaryScoreShower(HierarchyPfo &showerPfo)
-{
-    if (m_primaryHierarchyTool->Run(this, showerPfo, m_pNeutrinoPfo, true) != STATUS_CODE_SUCCESS)
-        showerPfo.SetPrimaryScore(-999.f);
-    else
-        showerPfo.SetPrimaryScore(this->GetRandomNumber());
-}
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -641,30 +608,6 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoPfoListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackBranchModelName", m_primaryTrackBranchModelName));
-
-    if (!m_primaryTrackBranchModelName.empty())
-    {
-        m_primaryTrackBranchModelName = LArFileHelper::FindFileInPath(m_primaryTrackBranchModelName, "FW_SEARCH_PATH");
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryTrackBranchModelName, m_primaryTrackBranchModel));
-    }
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackClassifierModelName", m_primaryTrackClassifierModelName));
-
-    if (!m_primaryTrackClassifierModelName.empty())
-    {
-        m_primaryTrackClassifierModelName = LArFileHelper::FindFileInPath(m_primaryTrackClassifierModelName, "FW_SEARCH_PATH");
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryTrackClassifierModelName, m_primaryTrackClassifierModel));
-    }
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryShowerClassifierModelName", m_primaryShowerClassifierModelName));
-
-    if (!m_primaryShowerClassifierModelName.empty())
-    {
-        m_primaryShowerClassifierModelName = LArFileHelper::FindFileInPath(m_primaryShowerClassifierModelName, "FW_SEARCH_PATH");
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryShowerClassifierModelName, m_primaryShowerClassifierModel));
-    }
 
     AlgorithmTool *pAlgorithmTool(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "MLPPrimaryHierarchyTool", pAlgorithmTool));

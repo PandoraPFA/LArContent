@@ -55,10 +55,6 @@ private:
 
     void SetPrimaryScores();
 
-    void SetPrimaryScoreTrack(HierarchyPfo &trackPfo);
-
-    void SetPrimaryScoreShower(HierarchyPfo &showerPfo);
-
     void BuildPrimaryTierPass1();
 
     void SetLaterTierScores();
@@ -85,14 +81,6 @@ private:
     std::string m_neutrinoPfoListName;
     pandora::StringVector m_pfoListNames;
 
-    std::string m_primaryTrackBranchModelName;
-    std::string m_primaryTrackClassifierModelName;
-    std::string m_primaryShowerClassifierModelName;
-
-    LArDLHelper::TorchModel m_primaryTrackBranchModel;
-    LArDLHelper::TorchModel m_primaryTrackClassifierModel;
-    LArDLHelper::TorchModel m_primaryShowerClassifierModel;
-
     MLPPrimaryHierarchyTool *m_primaryHierarchyTool;
 
     float m_primaryThresholdTrackPass1;
@@ -105,8 +93,8 @@ private:
     ///////////////////////////
 
     const pandora::ParticleFlowObject* m_pNeutrinoPfo;
-    std::map<const pandora::ParticleFlowObject*, HierarchyPfo> m_trackPfos;
-    std::map<const pandora::ParticleFlowObject*, HierarchyPfo> m_showerPfos;
+    HierarchyPfoMap m_trackPfos;
+    HierarchyPfoMap m_showerPfos;
     std::vector<pandora::PfoVector> m_hierarchy;
 };
 
