@@ -28,7 +28,7 @@ class HierarchyPfo
      */
     HierarchyPfo();
 
-    HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const pandora::CartesianVector &upstreamVertex,
+    HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const bool isTrack, const pandora::CartesianVector &upstreamVertex,
         const pandora::CartesianVector &upstreamDirection, const pandora::CartesianVector &downstreamVertex, 
         const pandora::CartesianVector &downstreamDirection);
 
@@ -36,6 +36,8 @@ class HierarchyPfo
 
     const pandora::ParticleFlowObject* GetPfo() const;
     void SetPfo(const pandora::ParticleFlowObject *pPfo);
+    bool GetIsTrack() const;
+    void SetIsTrack(const bool isTrack);
     const pandora::ParticleFlowObject* GetPredictedParentPfo() const;
     void SetPredictedParentPfo(const pandora::ParticleFlowObject *pPredictedParentPfo);
     const pandora::ParticleFlowObject* GetParentPfo() const;
@@ -66,6 +68,7 @@ class HierarchyPfo
     private:
 
     const pandora::ParticleFlowObject *m_pPfo;
+    bool m_isTrack;
     const pandora::ParticleFlowObject *m_pPredictedParentPfo;
     const pandora::ParticleFlowObject *m_pParentPfo;
     pandora::PfoVector m_childPfoVector;
@@ -83,10 +86,13 @@ class HierarchyPfo
 
 };
 
+typedef std::map<const pandora::ParticleFlowObject*, HierarchyPfo> HierarchyPfoMap;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline HierarchyPfo::HierarchyPfo() :
     m_pPfo(nullptr),
+    m_isTrack(false),
     m_pPredictedParentPfo(nullptr),
     m_pParentPfo(nullptr),
     m_childPfoVector(pandora::PfoVector()),
@@ -104,12 +110,13 @@ inline HierarchyPfo::HierarchyPfo() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline HierarchyPfo::HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const pandora::CartesianVector &upstreamVertex,
+inline HierarchyPfo::HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const bool isTrack, const pandora::CartesianVector &upstreamVertex,
     const pandora::CartesianVector &upstreamDirection, const pandora::CartesianVector &downstreamVertex, 
     const pandora::CartesianVector &downstreamDirection) :
         HierarchyPfo()
 {
     m_pPfo = pPfo;
+    m_isTrack = isTrack;
     m_upstreamVertex = upstreamVertex;
     m_upstreamDirection = upstreamDirection;
     m_downstreamVertex = downstreamVertex;
@@ -130,12 +137,27 @@ inline const pandora::ParticleFlowObject* HierarchyPfo::GetPfo() const
     return m_pPfo;
 }
 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline void HierarchyPfo::SetPfo(const pandora::ParticleFlowObject* pPfo)
 {
     m_pPfo = pPfo;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool HierarchyPfo::GetIsTrack() const
+{
+    return m_isTrack;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void HierarchyPfo::SetIsTrack(const bool isTrack)
+{
+    m_isTrack = isTrack;
+}
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
