@@ -12,10 +12,10 @@
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
+
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h"
 
 #include <torch/script.h>
@@ -28,14 +28,7 @@ namespace lar_dl_content
 {
 
 MLPPrimaryHierarchyTool::MLPPrimaryHierarchyTool() :
-    m_detectorMinX(std::numeric_limits<float>::max()),
-    m_detectorMaxX(-std::numeric_limits<float>::max()),
-    m_detectorMinY(std::numeric_limits<float>::max()),
-    m_detectorMaxY(-std::numeric_limits<float>::max()),
-    m_detectorMinZ(std::numeric_limits<float>::max()),
-    m_detectorMaxZ(-std::numeric_limits<float>::max()),
-    m_pfoListNames({"TrackParticles3D", "ShowerParticles3D"}),
-    m_vertexRegionRadius(5.f),
+    MLPBaseHierarchyTool(),
     m_extrapolationStepSize(1.f),
     m_nSpacepointsMin(0.f),
     m_nSpacepointsMax(2000.f),
@@ -110,23 +103,6 @@ StatusCode MLPPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPPrimaryHierarchyTool::SetDetectorBoundaries()
-{
-    const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
-
-    for (const auto &entry : larTPCMap)
-    {
-        m_detectorMinX = std::min(m_detectorMinX, entry.second->GetCenterX() - (entry.second->GetWidthX() * 0.5f));
-        m_detectorMaxX = std::max(m_detectorMaxX, entry.second->GetCenterX() + (entry.second->GetWidthX() * 0.5f));
-        m_detectorMinY = std::min(m_detectorMinY, entry.second->GetCenterY() - (entry.second->GetWidthY() * 0.5f));
-        m_detectorMaxY = std::max(m_detectorMaxY, entry.second->GetCenterY() + (entry.second->GetWidthY() * 0.5f));
-        m_detectorMinZ = std::min(m_detectorMinZ, entry.second->GetCenterZ() - (entry.second->GetWidthZ() * 0.5f));
-        m_detectorMaxZ = std::max(m_detectorMaxZ, entry.second->GetCenterZ() + (entry.second->GetWidthZ() * 0.5f));
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode MLPPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
     const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const bool useUpstream, MLPPrimaryNetworkParams &primaryNetworkParams)
 {
@@ -142,15 +118,12 @@ StatusCode MLPPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *c
     const CartesianVector particleDirection(useUpstream ? hierarchyPfo.GetUpstreamDirection() : hierarchyPfo.GetDownstreamDirection());
 
     // Check that we could actually calculate pfo vertex/direction, return if not
-    if ((particleVertex.GetZ() < -990.f) || (particleVertex.GetZ() < -990.f))
-        return STATUS_CODE_NOT_INITIALIZED;
-
-    if ((particleDirection.GetZ() < -990.f) || (particleDirection.GetZ() < -990.f))
-        return STATUS_CODE_NOT_INITIALIZED;
+    if (!this->IsVectorSet(particleVertex)) { return STATUS_CODE_NOT_INITIALIZED; }
+    if (!this->IsVectorSet(particleDirection)) { return STATUS_CODE_NOT_INITIALIZED; }
 
    // Set primaryNetworkParams
-    this->SetNSpacepoints(hierarchyPfo.GetPfo(), primaryNetworkParams);
-    this->SetNuVertexSep(particleVertex, nuVertex, primaryNetworkParams);
+    primaryNetworkParams.m_nSpacepoints = this->GetNSpacepoints(hierarchyPfo);
+    primaryNetworkParams.m_nuSeparation = (particleVertex - nuVertex).GetMagnitude();
     this->SetVertexRegionParams(pAlgorithm, hierarchyPfo.GetPfo(), particleVertex, primaryNetworkParams);
     this->SetConnectionParams(particleVertex, particleDirection, nuVertex, primaryNetworkParams);
     this->SetContextParams(hierarchyPfo.GetPfo(), particleVertex, particleDirection, nuVertex, trackPfos, primaryNetworkParams);
@@ -191,71 +164,13 @@ StatusCode MLPPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPPrimaryHierarchyTool::SetNSpacepoints(const ParticleFlowObject *const pPfo, MLPPrimaryNetworkParams &primaryNetworkParams) const
-{
-    ClusterList clusterList3D;
-    LArPfoHelper::GetThreeDClusterList(pPfo, clusterList3D);
-
-    int total3DHits(0);
-
-    for (const Cluster *const pCluster3D : clusterList3D)
-        total3DHits += pCluster3D->GetNCaloHits();
-
-    primaryNetworkParams.m_nSpacepoints = total3DHits;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MLPPrimaryHierarchyTool::SetNuVertexSep(const CartesianVector &particleVertex, const CartesianVector &nuVertex,
-    MLPPrimaryNetworkParams &primaryNetworkParams) const
-{ 
-    const float separation((particleVertex - nuVertex).GetMagnitude());
-
-    primaryNetworkParams.m_nuSeparation = separation;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void MLPPrimaryHierarchyTool::SetVertexRegionParams(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, 
     const CartesianVector &particleVertex, MLPPrimaryNetworkParams &primaryNetworkParams) const
 { 
-    int hitCount = 0;
-    int particleCount = 0;    
+    std::pair<float, float> vertexRegionParams(this->GetParticleInfoAboutPfoPosition(pAlgorithm, pPfo, particleVertex));
 
-    for (const std::string &pfoListName : m_pfoListNames)
-    {
-        const PfoList *pPfoList(nullptr);
-        if (PandoraContentApi::GetList(*pAlgorithm, pfoListName, pPfoList) != STATUS_CODE_SUCCESS)
-            continue;
-
-        for (const ParticleFlowObject *const pOtherPfo : *pPfoList)
-        {
-            if (pPfo == pOtherPfo)
-                continue;
-
-            bool isClose(false);
-
-            CartesianPointVector otherPfoPositions3D;
-            LArPfoHelper::GetCoordinateVector(pOtherPfo, TPC_3D, otherPfoPositions3D);
-
-            for (const CartesianVector &otherPfoPosition : otherPfoPositions3D)
-            {
-                const double sepSq = (otherPfoPosition - particleVertex).GetMagnitudeSquared();
-
-                if (sepSq < (m_vertexRegionRadius * m_vertexRegionRadius))
-                {
-                    isClose = true;
-                    ++hitCount;
-                }
-            }
-
-            if (isClose)
-                ++particleCount;
-        }
-    }
-
-    primaryNetworkParams.m_vertexRegionNHits = hitCount;
-    primaryNetworkParams.m_vertexRegionNParticles = particleCount;
+    primaryNetworkParams.m_vertexRegionNHits = vertexRegionParams.first;
+    primaryNetworkParams.m_vertexRegionNParticles = vertexRegionParams.second;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -357,22 +272,6 @@ void MLPPrimaryHierarchyTool::CalculateConnectionDistances(const CartesianVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MLPPrimaryHierarchyTool::IsInFV(const CartesianVector &position) const
-{
-    if ((position.GetX() < m_detectorMinX) or (position.GetX() > m_detectorMaxX))
-        return false;
-
-    if ((position.GetY() < m_detectorMinY) or (position.GetY() > m_detectorMaxY))
-        return false;
-
-    if ((position.GetZ() < m_detectorMinZ) or (position.GetZ() > m_detectorMaxZ))
-        return false;
-
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void MLPPrimaryHierarchyTool::NormaliseNetworkParams(MLPPrimaryNetworkParams &primaryNetworkParams) const
 {
     this->NormaliseNetworkParam(m_nSpacepointsMin, m_nSpacepointsMax, primaryNetworkParams.m_nSpacepoints);
@@ -383,21 +282,6 @@ void MLPPrimaryHierarchyTool::NormaliseNetworkParams(MLPPrimaryNetworkParams &pr
     this->NormaliseNetworkParam(m_connectionExtrapDistanceMin, m_connectionExtrapDistanceMax, primaryNetworkParams.m_connectionExtrapDistance);
     this->NormaliseNetworkParam(m_parentConnectionDistanceMin, m_parentConnectionDistanceMax, primaryNetworkParams.m_parentConnectionDistance);
     this->NormaliseNetworkParam(m_childConnectionDistanceMin, m_childConnectionDistanceMax, primaryNetworkParams.m_childConnectionDistance);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MLPPrimaryHierarchyTool::NormaliseNetworkParam(const float minLimit, const float maxLimit, float &primaryNetworkParam) const
-{
-    const float interval(std::fabs(minLimit) + std::fabs(maxLimit));
-
-    if (primaryNetworkParam < minLimit)
-        primaryNetworkParam = minLimit;
-
-    if (primaryNetworkParam > maxLimit)
-        primaryNetworkParam = maxLimit;
-
-    primaryNetworkParam /= interval;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -554,7 +438,7 @@ StatusCode MLPPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryShowerClassifierModelName, m_primaryShowerClassifierModel));
     }
 
-    return STATUS_CODE_SUCCESS;
+    return MLPBaseHierarchyTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_dl_content

@@ -8,7 +8,6 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
@@ -16,10 +15,8 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
-#include <torch/script.h>
-#include <torch/torch.h>
-
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPNeutrinoHierarchyAlgorithm.h"
 
@@ -291,8 +288,6 @@ bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const Parti
             if (!lowestDirectionSet && !highestDirectionSet)
                 return false;
 
-            std::cout << "this needs to be better" << std::endl;
-
             // now find out who is closer
             if ((lowestPoint - nuVertex).GetMagnitudeSquared() < (highestPoint - nuVertex).GetMagnitudeSquared())
             {
@@ -414,7 +409,7 @@ void MLPNeutrinoHierarchyAlgorithm::BuildPrimaryTierPass1()
             const float thisPrimaryScore(hierarchyPfo.GetPrimaryScore());
 
             if ((thisPrimaryScore > 0.f) && ((isTrack && (thisPrimaryScore > m_primaryThresholdTrackPass1)) || 
-                                           (!isTrack && (thisPrimaryScore > m_primaryThresholdShowerPass1))))
+                (!isTrack && (thisPrimaryScore > m_primaryThresholdShowerPass1))))
             {
                 // Add to primary tier
                 primaryTier.emplace_back(pPfo);
@@ -445,7 +440,7 @@ void MLPNeutrinoHierarchyAlgorithm::SetLaterTierScores()
 
             float highestScore(-std::numeric_limits<float>::max());
 
-            for (const auto& [pParentPfo, parentPfo] : m_trackPfos)
+            for (auto& [pParentPfo, parentPfo] : m_trackPfos)
             {
                 if (pChildPfo == pParentPfo)
                     continue;
@@ -521,7 +516,7 @@ void MLPNeutrinoHierarchyAlgorithm::BuildLaterTierPass1()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScoreTrackToTrack(const HierarchyPfo &/*parentPfo*/, const HierarchyPfo &/*childPfo*/, 
+float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScoreTrackToTrack(HierarchyPfo &parentPfo, HierarchyPfo &childPfo, 
     int &parentOrientation, int &childOrientation) const
 {
     return this->GetRandomNumber();
@@ -529,9 +524,11 @@ float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScoreTrackToTrack(const Hierarc
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScoreTrackToShower(const HierarchyPfo &/*parentPfo*/, const HierarchyPfo &/*childPfo*/,
+float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScoreTrackToShower(HierarchyPfo &parentPfo, HierarchyPfo &childPfo,
     int &parentOrientation, int &childOrientation) const
 {
+    m_laterTierHierarchyTool->Run(this, m_pNeutrinoPfo, parentPfo, childPfo);
+
     return this->GetRandomNumber();
 }
 
@@ -614,6 +611,13 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     m_primaryHierarchyTool = dynamic_cast<MLPPrimaryHierarchyTool *>(pAlgorithmTool);
 
     if (!m_primaryHierarchyTool)
+        return STATUS_CODE_INVALID_PARAMETER;
+
+    pAlgorithmTool = nullptr;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "MLPLaterTierHierarchyTool", pAlgorithmTool));
+    m_laterTierHierarchyTool = dynamic_cast<MLPLaterTierHierarchyTool *>(pAlgorithmTool);
+
+    if (!m_laterTierHierarchyTool)
         return STATUS_CODE_INVALID_PARAMETER;
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryThresholdTrackPass1", m_primaryThresholdTrackPass1));
