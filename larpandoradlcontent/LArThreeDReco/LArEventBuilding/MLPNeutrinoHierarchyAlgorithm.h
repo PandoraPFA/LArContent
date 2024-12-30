@@ -11,9 +11,9 @@
 #include "Pandora/Algorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-#include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h"
 
 using namespace lar_content;
@@ -61,9 +61,9 @@ private:
 
     void BuildLaterTierPass1();
 
-    float GetLaterTierScoreTrackToTrack(const HierarchyPfo &parentPfo, const HierarchyPfo &childPfo, 
+    float GetLaterTierScoreTrackToTrack(HierarchyPfo &parentPfo, HierarchyPfo &childPfo, 
         int &parentOrientation, int &childOrientation) const;
-    float GetLaterTierScoreTrackToShower(const HierarchyPfo &parentPfo, const HierarchyPfo &childPfo,
+    float GetLaterTierScoreTrackToShower(HierarchyPfo &parentPfo, HierarchyPfo &childPfo,
         int &parentOrientation, int &childOrientation) const;
 
     void BuildPandoraHierarchy();
@@ -82,6 +82,7 @@ private:
     pandora::StringVector m_pfoListNames;
 
     MLPPrimaryHierarchyTool *m_primaryHierarchyTool;
+    MLPLaterTierHierarchyTool *m_laterTierHierarchyTool;
 
     float m_primaryThresholdTrackPass1;
     float m_primaryThresholdShowerPass1;
