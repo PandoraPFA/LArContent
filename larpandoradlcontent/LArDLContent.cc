@@ -23,6 +23,7 @@
 #include "larpandoradlcontent/LArVertex/DlSecondaryVertexingAlgorithm.h"
 #include "larpandoradlcontent/LArVertex/DlVertexingAlgorithm.h"
 
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h"
 
 #include "larpandoradlcontent/LArDLContent.h"
@@ -40,6 +41,7 @@
     d("LArDLSecondaryVertexing", DlSecondaryVertexingAlgorithm)
 
 #define LAR_DL_ALGORITHM_TOOL_LIST(d)                                                                                                      \
+    d("LArMLPLaterTierHierarchy",               MLPLaterTierHierarchyTool)                                                                 \
     d("LArMLPPrimaryHierarchy",                 MLPPrimaryHierarchyTool)
 
 #define DL_FACTORY Factory

@@ -14,13 +14,15 @@
 
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
+
 namespace lar_dl_content
 {
 
 /**
  *   @brief  MLPPrimaryHierarchyTool to calculate variables related to the initial shower region
  */
-class MLPPrimaryHierarchyTool : public pandora::AlgorithmTool
+class MLPPrimaryHierarchyTool : public MLPBaseHierarchyTool
 {
 public:
     struct MLPPrimaryNetworkParams  // all floats because they'll be normalised
@@ -47,16 +49,9 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    void SetDetectorBoundaries();
-
     pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const bool useUpstream, 
         MLPPrimaryNetworkParams &primaryNetworkParams);
-
-    void SetNSpacepoints(const pandora::ParticleFlowObject *const pPfo, MLPPrimaryNetworkParams &primaryNetworkParams) const;
-
-    void SetNuVertexSep(const pandora::CartesianVector &particleVertex, const pandora::CartesianVector &nuVertex,
-        MLPPrimaryNetworkParams &primaryNetworkParams) const;
 
     void SetVertexRegionParams(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, 
         const pandora::CartesianVector &particleVertex, MLPPrimaryNetworkParams &primaryNetworkParams) const;
@@ -72,11 +67,7 @@ private:
         const pandora::CartesianVector &childVertex, const pandora::CartesianVector &childDirection, 
         float &trainingCutL, float &trainingCutT) const;
 
-    bool IsInFV(const pandora::CartesianVector &position) const;
-
     void NormaliseNetworkParams(MLPPrimaryNetworkParams &primaryNetworkParams) const;
-
-    void NormaliseNetworkParam(const float minLimit, const float maxLimit, float &primaryNetworkParam) const;
 
     float ClassifyTrack(const MLPPrimaryNetworkParams &primaryNetworkParamsUp, const MLPPrimaryNetworkParams &primaryNetworkParamsDown);
 
@@ -90,14 +81,6 @@ private:
     LArDLHelper::TorchModel m_primaryTrackClassifierModel;
     LArDLHelper::TorchModel m_primaryShowerClassifierModel;
 
-    float m_detectorMinX;
-    float m_detectorMaxX;
-    float m_detectorMinY;
-    float m_detectorMaxY;
-    float m_detectorMinZ;
-    float m_detectorMaxZ;
-    pandora::StringVector m_pfoListNames;
-    float m_vertexRegionRadius;
     float m_extrapolationStepSize;
     float m_nSpacepointsMin;
     float m_nSpacepointsMax;
