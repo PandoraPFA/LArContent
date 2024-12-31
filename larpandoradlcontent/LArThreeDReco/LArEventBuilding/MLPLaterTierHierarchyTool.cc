@@ -10,6 +10,7 @@
 #include "Pandora/StatusCodes.h"
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
@@ -23,6 +24,9 @@ namespace lar_dl_content
 {
 
 MLPLaterTierHierarchyTool::MLPLaterTierHierarchyTool() :
+    m_trajectoryStepSize(1.f),
+    m_connectionBuffer(50.f),
+    m_searchRegion(10.f),
     m_trackScoreMin(-1.f),
     m_trackScoreMax(1.f),
     m_nSpacepointsMin(0.f),
@@ -38,7 +42,27 @@ MLPLaterTierHierarchyTool::MLPLaterTierHierarchyTool() :
     m_parentEndRegionRToWallMin(-10.f),
     m_parentEndRegionRToWallMax(400.f),
     m_vertexSepMin(-50.f),
-    m_vertexSepMax(700.f)
+    m_vertexSepMax(700.f),
+    m_doesChildConnectMin(-1.f),
+    m_doesChildConnectMax(1.f),
+    m_overshootDCAMin(-700.f),
+    m_overshootDCAMax(700.f),
+    m_overshootLMin(-100.f),
+    m_overshootLMax(700.f),
+    m_childCPDCAMin(-5.f),
+    m_childCPDCAMax(50.f),
+    m_childCPExtrapDistanceMin(-500.f),
+    m_childCPExtrapDistanceMax(500.f),
+    m_childCPLRatioMin(-5.f),
+    m_childCPLRatioMax(30.f),
+    m_parentCPNHitsMin(-10.f),
+    m_parentCPNHitsMax(100.f),
+    m_parentCPNHitRatioMin(-5.f),
+    m_parentCPNHitRatioMax(30.f),
+    m_parentCPEigenvalueRatioMin(-5.f),
+    m_parentCPEigenvalueRatioMax(50.f),
+    m_parentCPOpeningAngleMin(-10.f),
+    m_parentCPOpeningAngleMax(180.f)
 {
 }
 
@@ -49,43 +73,83 @@ StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, con
 {
     this->SetDetectorBoundaries();
 
+    // Get the common params i.e. independent of postulated orientation
+    const std::pair<float, float> trackScoreParams(this->GetTrackScoreParams(parentHierarchyPfo, childHierarchyPfo));
+    const std::pair<float, float> nSpacepointsParams(this->GetNSpacepointsParams(parentHierarchyPfo, childHierarchyPfo));
+    const float separation3D(this->GetSeparation3D(parentHierarchyPfo, childHierarchyPfo));
+
+    //////////////////////////////////////////////
+    if (this->GetNSpacepoints(parentHierarchyPfo) != 82)
+        return STATUS_CODE_SUCCESS;
+
+    if (this->GetNSpacepoints(childHierarchyPfo) != 177)
+        return STATUS_CODE_SUCCESS;
+    //////////////////////////////////////////////
+
     if (childHierarchyPfo.GetIsTrack())
     {
+        // Set network params 
+        // Variable name = first parent orientation then child
+        MLPLaterTierNetworkParams upupLaterTierNetworkParams, updownLaterTierNetworkParams;
+        MLPLaterTierNetworkParams downupLaterTierNetworkParams, downdownLaterTierNetworkParams;
+
+        // Set common params
+        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, upupLaterTierNetworkParams);
+        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, updownLaterTierNetworkParams);
+        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, downupLaterTierNetworkParams);
+        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, downdownLaterTierNetworkParams);
+
+        // Get orientation dependent params
+        const StatusCode upupStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
+            pNeutrinoPfo, true, true, upupLaterTierNetworkParams));
+
+        if (upupStatusCode != STATUS_CODE_SUCCESS)
+            return upupStatusCode;
+
+        const StatusCode updownStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
+            pNeutrinoPfo, true, false, updownLaterTierNetworkParams));
+
+        if (updownStatusCode != STATUS_CODE_SUCCESS)
+            return updownStatusCode;
+
+        const StatusCode downupStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
+            pNeutrinoPfo, false, true, downupLaterTierNetworkParams));
+
+        if (downupStatusCode != STATUS_CODE_SUCCESS)
+            return downupStatusCode;
+
+        const StatusCode downdownStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
+            pNeutrinoPfo, false, false, downdownLaterTierNetworkParams));
+
+        if (downdownStatusCode != STATUS_CODE_SUCCESS)
+            return updownStatusCode;
+
+        // // Combine to get primary score
+        // const float primaryScore(this->ClassifyTrack(primaryNetworkParamsUp, primaryNetworkParamsDown));
+
+        // hierarchyPfo.SetPrimaryScore(primaryScore);
+
         return STATUS_CODE_SUCCESS;
     }
     else
     {
-        //////////////////////////////////////////////
-        if (this->GetNSpacepoints(parentHierarchyPfo) != 731)
-            return STATUS_CODE_SUCCESS;
-
-        if (this->GetNSpacepoints(childHierarchyPfo) != 143)
-            return STATUS_CODE_SUCCESS;
-        //////////////////////////////////////////////
-
         // Get shower vertex
         const bool isShowerVertexUpstream(this->IsShowerVertexUpstream(parentHierarchyPfo, childHierarchyPfo));
 
         // Set network params
         MLPLaterTierNetworkParams upLaterTierNetworkParams, downLaterTierNetworkParams;
 
-        // Get the common params i.e. independent of postulated orientation
-        const std::pair<float, float> trackScoreParams(this->GetTrackScoreParams(parentHierarchyPfo, childHierarchyPfo));
-        const std::pair<float, float> nSpacepointsParams(this->GetNSpacepointsParams(parentHierarchyPfo, childHierarchyPfo));
-        const float separation3D(this->GetSeparation3D(parentHierarchyPfo, childHierarchyPfo));
-
         // Set common params
         this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, upLaterTierNetworkParams);
         this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, downLaterTierNetworkParams);
 
-        // Get params at parent upstream vertex 
+        // Get orientation dependent params
         const StatusCode upStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
             pNeutrinoPfo, true, isShowerVertexUpstream, upLaterTierNetworkParams));
 
         if (upStatusCode != STATUS_CODE_SUCCESS)
             return upStatusCode;
 
-        // Get params at parent downstream vertex 
         const StatusCode downStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
             pNeutrinoPfo, false, isShowerVertexUpstream, downLaterTierNetworkParams));
 
@@ -204,11 +268,12 @@ StatusCode MLPLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm 
     // Pick out the correct pfo vertex/direction
     // Parent POI is a postulate endpoint
     // Child POI is a postulate startpoint
-    const CartesianVector parentStart(useUpstreamForParent ? parentHierarchyPfo.GetDownstreamVertex() : parentHierarchyPfo.GetUpstreamVertex());
-    const CartesianVector parentEnd(useUpstreamForParent ? parentHierarchyPfo.GetUpstreamVertex() : parentHierarchyPfo.GetDownstreamVertex());
-    const CartesianVector parentEndDirection(useUpstreamForParent ? parentHierarchyPfo.GetUpstreamDirection() : parentHierarchyPfo.GetDownstreamDirection());
-    const CartesianVector childStart(useUpstreamForChild ? childHierarchyPfo.GetUpstreamVertex() : childHierarchyPfo.GetDownstreamVertex());
-    const CartesianVector childStartDirection(useUpstreamForChild ? childHierarchyPfo.GetUpstreamDirection() : childHierarchyPfo.GetDownstreamDirection());
+    const CartesianVector &parentStart(useUpstreamForParent ? parentHierarchyPfo.GetDownstreamVertex() : parentHierarchyPfo.GetUpstreamVertex());
+    const CartesianVector &parentStartDirection(useUpstreamForParent ? parentHierarchyPfo.GetDownstreamDirection() : parentHierarchyPfo.GetUpstreamDirection());
+    const CartesianVector &parentEnd(useUpstreamForParent ? parentHierarchyPfo.GetUpstreamVertex() : parentHierarchyPfo.GetDownstreamVertex());
+    const CartesianVector &parentEndDirection(useUpstreamForParent ? parentHierarchyPfo.GetUpstreamDirection() : parentHierarchyPfo.GetDownstreamDirection());
+    const CartesianVector &childStart(useUpstreamForChild ? childHierarchyPfo.GetUpstreamVertex() : childHierarchyPfo.GetDownstreamVertex());
+    const CartesianVector &childStartDirection(useUpstreamForChild ? childHierarchyPfo.GetUpstreamDirection() : childHierarchyPfo.GetDownstreamDirection());
 
     // Check that we could actually calculate pfo vertex/direction, return if not
     if (!this->IsVectorSet(parentStart)) { return STATUS_CODE_NOT_INITIALIZED; }
@@ -222,7 +287,9 @@ StatusCode MLPLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm 
     laterTierNetworkParams.m_childIsPOIClosestToNu = useUpstreamForChild ? 1.f : 0.f;
     this->SetVertexParams(nuVertex, parentStart, parentEnd, childStart, laterTierNetworkParams);
     this->SetEndRegionParams(pAlgorithm, parentHierarchyPfo.GetPfo(), parentEnd, laterTierNetworkParams);
-    this->GetConnectionPoint(parentHierarchyPfo, childHierarchyPfo, parentStart, childStart, childStartDirection);
+    this->SetConnectionParams(parentHierarchyPfo, childHierarchyPfo, parentStart, childStart, childStartDirection, laterTierNetworkParams);
+    this->SetOvershootParams(parentStart, parentStartDirection, parentEnd, parentEndDirection, childStart, childStartDirection, laterTierNetworkParams);
+    this->SetParentConnectionPointVars(parentHierarchyPfo, laterTierNetworkParams);
 
     /////////////////////////////////////////
     std::cout << "-----------------------------------------" << std::endl;
@@ -235,10 +302,10 @@ StatusCode MLPLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm 
     this->NormaliseNetworkParams(laterTierNetworkParams);
 
     /////////////////////////////////////////
-    std::cout << "-----------------------------------------" << std::endl;
-    std::cout << "AFTER NORMALISATION" << std::endl;
-    laterTierNetworkParams.Print();
-    std::cout << "-----------------------------------------" << std::endl;
+    // std::cout << "-----------------------------------------" << std::endl;
+    // std::cout << "AFTER NORMALISATION" << std::endl;
+    // laterTierNetworkParams.Print();
+    // std::cout << "-----------------------------------------" << std::endl;
     /////////////////////////////////////////
 
     return STATUS_CODE_SUCCESS;
@@ -291,9 +358,11 @@ void MLPLaterTierHierarchyTool::SetEndRegionRToWall(const CartesianVector &paren
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPLaterTierHierarchyTool::GetConnectionPoint(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, 
-    const CartesianVector &parentStart, const CartesianVector &childStart, const CartesianVector &childStartDirection)
+void MLPLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, 
+    const CartesianVector &parentStart, const CartesianVector &childStart, const CartesianVector &childStartDirection, 
+    MLPLaterTierNetworkParams &laterTierNetworkParams)
 {
+    // Get fit of parent
     CartesianPointVector parentPositions3D;
     LArPfoHelper::GetCoordinateVector(parentHierarchyPfo.GetPfo(), TPC_3D, parentPositions3D);
 
@@ -302,47 +371,80 @@ void MLPLaterTierHierarchyTool::GetConnectionPoint(const HierarchyPfo &parentHie
     const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
     const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
     const float slidingFitPitch(std::max({pitchU, pitchV, pitchW}));
-
-    const ThreeDSlidingFitResult slidingFitResult(&parentPositions3D, HALF_WINDOW_LAYERS, slidingFitPitch);
-
-    // Now walk along track, starting from parentStart
-    // I want this to be interpreted as l = 0 so have to alter pandora def
-    const bool startFromMin((parentStart - slidingFitResult.GetGlobalMinLayerPosition()).GetMagnitude() >
-                            (parentStart - slidingFitResult.GetGlobalMaxLayerPosition()).GetMagnitude());
-
-    const float minL(slidingFitResult.GetLongitudinalDisplacement(slidingFitResult.GetGlobalMinLayerPosition()));
-    const float maxL(slidingFitResult.GetLongitudinalDisplacement(slidingFitResult.GetGlobalMaxLayerPosition()));
-    const int nSteps(std::floor(std::fabs(maxL - minL) / 1.f));
-
-    float slidingL(startFromMin ? minL : 0.f);
-
-    for (int i = 0; i < nSteps; i++)
+  
+    try
     {
-        float firstL(slidingL), secondL(slidingL + 1.f);
-        float firstEvalL(startFromMin ? firstL : (maxL - firstL));
-        float secondEvalL(startFromMin ? secondL : (maxL - secondL));
-        CartesianVector firstPosition(0.f, 0.f, 0.f), secondPosition(0.f, 0.f, 0.f);
+        const ThreeDSlidingFitResult slidingFitResult(&parentPositions3D, HALF_WINDOW_LAYERS, slidingFitPitch);
 
-        if ((slidingFitResult.GetGlobalFitPosition(firstEvalL, firstPosition) != STATUS_CODE_SUCCESS) ||
-            (slidingFitResult.GetGlobalFitPosition(secondEvalL, secondPosition) != STATUS_CODE_SUCCESS))
+        // Now walk along track, starting from parentStart
+        // I want this to be interpreted as l = 0 so have to alter pandora def
+        const bool startFromMin((parentStart - slidingFitResult.GetGlobalMinLayerPosition()).GetMagnitudeSquared() <
+                                (parentStart - slidingFitResult.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
+        const float minL(slidingFitResult.GetLongitudinalDisplacement(slidingFitResult.GetGlobalMinLayerPosition()));
+        const float maxL(slidingFitResult.GetLongitudinalDisplacement(slidingFitResult.GetGlobalMaxLayerPosition()));
+
+        if (std::fabs(minL - maxL) < std::numeric_limits<float>::epsilon())
+            return;
+
+        const int nSteps(std::floor(std::fabs(maxL - minL) / m_trajectoryStepSize));
+
+        // Keep track of these in loop
+        float slidingL(startFromMin ? minL : 0.f);
+        float trackLength(0.f);
+        float minDCA(std::numeric_limits<float>::max());
+        float lengthAtConnection(0.f);
+
+        laterTierNetworkParams.m_doesChildConnect = 0.f;
+
+        for (int i = 0; i < nSteps; i++)
         {
-            slidingL += 1.f;
-            continue;
+            float firstL(slidingL), secondL(slidingL + m_trajectoryStepSize);
+            float firstEvalL(startFromMin ? firstL : (maxL - firstL));
+            float secondEvalL(startFromMin ? secondL : (maxL - secondL));
+            CartesianVector firstPosition(0.f, 0.f, 0.f), secondPosition(0.f, 0.f, 0.f);
+
+            if ((slidingFitResult.GetGlobalFitPosition(firstEvalL, firstPosition) != STATUS_CODE_SUCCESS) ||
+                (slidingFitResult.GetGlobalFitPosition(secondEvalL, secondPosition) != STATUS_CODE_SUCCESS))
+            {
+                slidingL += m_trajectoryStepSize;
+                continue;
+            }
+
+            // Get trajectory position
+            const CartesianVector midPoint((secondPosition + firstPosition) * 0.5f);
+
+            // Extrap child vertex to parent position
+            const std::pair<CartesianVector, bool> extrap(this->ExtrapolateChildToParent(midPoint, childStart, childStartDirection));
+            const float thisDCA((midPoint - extrap.first).GetMagnitude());
+
+            if (thisDCA < minDCA)
+            {
+                if (this->DoesConnect(firstPosition, secondPosition, extrap.first, m_connectionBuffer))
+                {
+
+                    std::cout << "#################" << std::endl;
+                    std::cout << "midpoint: " << midPoint << std::endl;
+                    std::cout << "direction: " << (secondPosition - firstPosition).GetUnitVector() << std::endl;
+
+                    laterTierNetworkParams.m_doesChildConnect = 1.f;
+                    laterTierNetworkParams.m_connectionPoint = midPoint;
+                    laterTierNetworkParams.m_connectionDirection = (secondPosition - firstPosition).GetUnitVector();
+                    laterTierNetworkParams.m_childCPDCA = thisDCA;
+                    laterTierNetworkParams.m_childCPExtrapDistance = (extrap.first - childStart).GetMagnitude() * (extrap.second ? 1.f : (-1.f));
+                    lengthAtConnection = trackLength + (midPoint - firstPosition).GetMagnitude();
+                }
+            }
+            
+            slidingL += m_trajectoryStepSize;
+            trackLength += (secondPosition - firstPosition).GetMagnitude();
         }
 
-        // Extrap child vertex to parent position
-        const CartesianVector midpoint((secondPosition + firstPosition) * 0.5f);
-        const std::pair<CartesianVector, bool> extrap(this->ExtrapolateChildToParent(midpoint, childStart, childStartDirection));
-
-        std::cout << "######################" << std::endl;
-        std::cout << "midpoint: " << midpoint << std::endl;
-
-        if (this->DoesConnect(firstPosition, secondPosition, extrap.first, 50.f))
-        {
-            std::cout << "HELLO!!" << std::endl;
-        }
-
-        slidingL += 1.f;
+        if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) < std::numeric_limits<float>::epsilon()) 
+            laterTierNetworkParams.m_childCPLRatio = lengthAtConnection / trackLength; 
+    }
+    catch (...)
+    {
+        return;
     }
 }
 
@@ -368,19 +470,97 @@ bool MLPLaterTierHierarchyTool::DoesConnect(const CartesianVector &boundary1, co
     const CartesianVector unitVector = displacement * (1.f / segmentLength);
     const double l = unitVector.GetDotProduct(testPoint - boundary1);
 
-    std::cout << "l: " << l << std::endl;
-
     if ((l < 0.f) || (l > segmentLength))
         return false;
 
     const double t = unitVector.GetCrossProduct(testPoint - boundary1).GetMagnitudeSquared();
 
-    std::cout << "t: " << std::sqrt(t) << std::endl;
-
     if (t > (buffer * buffer))
         return false;
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void MLPLaterTierHierarchyTool::SetOvershootParams(const CartesianVector &parentStart, const CartesianVector &parentStartDirection, 
+    const CartesianVector &parentEnd, const CartesianVector &parentEndDirection, const CartesianVector &childStart, 
+    const CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams)
+{
+    if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) < std::numeric_limits<float>::epsilon())
+        return;
+
+    // Let's start at the very beginning, a very good place to start
+    const std::pair<CartesianVector, bool> extrapStart(this->ExtrapolateChildToParent(parentStart, childStart, childStartDirection));
+    laterTierNetworkParams.m_overshootStartDCA = (extrapStart.first - parentStart).GetMagnitude() * (extrapStart.second ? 1.f : (-1.f));
+    laterTierNetworkParams.m_overshootStartL = std::fabs((childStart - parentStart).GetDotProduct(parentStartDirection));
+
+    // Now end
+    const std::pair<CartesianVector, bool> extrapEnd(this->ExtrapolateChildToParent(parentEnd, childStart, childStartDirection));
+    laterTierNetworkParams.m_overshootEndDCA = (extrapEnd.first - parentEnd).GetMagnitude() * (extrapEnd.second ? 1.f : (-1.f));
+    laterTierNetworkParams.m_overshootEndL = std::fabs((childStart - parentEnd).GetDotProduct(parentEndDirection));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void MLPLaterTierHierarchyTool::SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, MLPLaterTierNetworkParams &laterTierNetworkParams)
+{
+    if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) > std::numeric_limits<float>::epsilon())
+        return;
+
+    // Use direction to current direction to split spacepoints into two groups
+    CartesianPointVector parentPositions3D;
+    LArPfoHelper::GetCoordinateVector(parentHierarchyPfo.GetPfo(), TPC_3D, parentPositions3D);
+
+    CartesianPointVector upstreamGroup, downstreamGroup;
+
+    for (const CartesianVector &parentPosition : parentPositions3D)
+    {
+        const CartesianVector displacement(parentPosition - laterTierNetworkParams.m_connectionPoint);
+
+        // Do box as quicker than circle with mag.
+        if ((std::fabs(displacement.GetX()) > m_searchRegion) || (std::fabs(displacement.GetY()) > m_searchRegion) ||
+            (std::fabs(displacement.GetZ()) > m_searchRegion))
+        {
+            continue;
+        }
+
+        // Assign to group
+        const float thisL = laterTierNetworkParams.m_connectionDirection.GetDotProduct(displacement);
+        CartesianPointVector &group(thisL > 0.f ? downstreamGroup : upstreamGroup);
+        group.emplace_back(parentPosition);
+    }
+
+    laterTierNetworkParams.m_parentCPNUpstreamHits = upstreamGroup.size();
+    laterTierNetworkParams.m_parentCPNDownstreamHits = downstreamGroup.size();
+
+    if (upstreamGroup.empty() || downstreamGroup.empty())
+        return;
+
+    laterTierNetworkParams.m_parentCPNHitRatio = 
+        laterTierNetworkParams.m_parentCPNDownstreamHits / laterTierNetworkParams.m_parentCPNUpstreamHits;
+
+    // Now PCA magic
+    try
+    {
+        CartesianVector centroidUp(0.f, 0.f, 0.f), centroidDown(0.f, 0.f, 0.f);
+        LArPcaHelper::EigenVectors eigenVecsUp, eigenVecsDown;
+        LArPcaHelper::EigenValues eigenValuesUp(0.f, 0.f, 0.f), eigenValuesDown(0.f, 0.f, 0.f);
+
+        LArPcaHelper::RunPca(upstreamGroup, centroidUp, eigenValuesUp, eigenVecsUp);
+        LArPcaHelper::RunPca(downstreamGroup, centroidDown, eigenValuesDown, eigenVecsDown);
+
+        // Get opening angle from first eigenvectors (this is the longitudinal one) - straight would be around 180
+        laterTierNetworkParams.m_parentCPOpeningAngle = eigenVecsUp.at(0).GetOpeningAngle(eigenVecsDown.at(0)) * (180.f / 3.14);
+
+        // Get average transverse eigenvalues, get ratio
+        const float avTransEVaUp((eigenValuesUp.GetY() + eigenValuesUp.GetZ()) * 0.5f);
+        const float avTransEVaDown((eigenValuesDown.GetY() + eigenValuesDown.GetZ()) * 0.5f);
+
+        laterTierNetworkParams.m_parentCPEigenvalueRatio = avTransEVaUp < std::numeric_limits<double>::epsilon() ? 0.f : 
+            avTransEVaDown / avTransEVaUp;
+    }
+    catch (...) { return; }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -398,12 +578,29 @@ void MLPLaterTierHierarchyTool::NormaliseNetworkParams(MLPLaterTierNetworkParams
     this->NormaliseNetworkParam(m_parentEndRegionNParticlesMin, m_parentEndRegionNParticlesMax, laterTierNetworkParams.m_parentEndRegionNParticles);
     this->NormaliseNetworkParam(m_parentEndRegionRToWallMin, m_parentEndRegionRToWallMax, laterTierNetworkParams.m_parentEndRegionRToWall);
     this->NormaliseNetworkParam(m_vertexSepMin, m_vertexSepMax, laterTierNetworkParams.m_vertexSeparation);
+    this->NormaliseNetworkParam(m_doesChildConnectMin, m_doesChildConnectMax, laterTierNetworkParams.m_doesChildConnect);
+    this->NormaliseNetworkParam(m_overshootDCAMin, m_overshootDCAMax, laterTierNetworkParams.m_overshootStartDCA);
+    this->NormaliseNetworkParam(m_overshootLMin, m_overshootLMax, laterTierNetworkParams.m_overshootStartL);
+    this->NormaliseNetworkParam(m_overshootDCAMin, m_overshootDCAMax, laterTierNetworkParams.m_overshootEndDCA);
+    this->NormaliseNetworkParam(m_overshootLMin, m_overshootLMax, laterTierNetworkParams.m_overshootEndL);
+    this->NormaliseNetworkParam(m_childCPDCAMin, m_childCPDCAMax, laterTierNetworkParams.m_childCPDCA);
+    this->NormaliseNetworkParam(m_childCPExtrapDistanceMin, m_childCPExtrapDistanceMax, laterTierNetworkParams.m_childCPExtrapDistance);
+    this->NormaliseNetworkParam(m_childCPLRatioMin, m_childCPLRatioMax, laterTierNetworkParams.m_childCPLRatio);
+    this->NormaliseNetworkParam(m_parentCPNHitsMin, m_parentCPNHitsMax, laterTierNetworkParams.m_parentCPNUpstreamHits);
+    this->NormaliseNetworkParam(m_parentCPNHitsMin, m_parentCPNHitsMax, laterTierNetworkParams.m_parentCPNDownstreamHits);
+    this->NormaliseNetworkParam(m_parentCPNHitRatioMin, m_parentCPNHitRatioMax, laterTierNetworkParams.m_parentCPNHitRatio);
+    this->NormaliseNetworkParam(m_parentCPEigenvalueRatioMin, m_parentCPEigenvalueRatioMax, laterTierNetworkParams.m_parentCPEigenvalueRatio);
+    this->NormaliseNetworkParam(m_parentCPOpeningAngleMin, m_parentCPOpeningAngleMax, laterTierNetworkParams.m_parentCPOpeningAngle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode MLPLaterTierHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrajectoryStepSize", m_trajectoryStepSize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionBuffer", m_connectionBuffer));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SearchRegion", m_searchRegion));
+
     return MLPBaseHierarchyTool::ReadSettings(xmlHandle);
 }
 
