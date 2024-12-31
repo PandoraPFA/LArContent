@@ -58,41 +58,38 @@ StatusCode MLPPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const
 
     if (hierarchyPfo.GetIsTrack())
     {
-        // Get params at upstream vertex
-        MLPPrimaryNetworkParams primaryNetworkParamsUp;
-        primaryNetworkParamsUp.m_isPOIClosestToNu = 1.f;
+        // Set network params
+        MLPPrimaryNetworkParams primaryNetworkParamsUp, primaryNetworkParamsDown;
 
-        const StatusCode statusCodeUp(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, trackPfos, true, primaryNetworkParamsUp));
+        const StatusCode statusCodeUp(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, 
+            trackPfos, true, primaryNetworkParamsUp));
 
         if (statusCodeUp != STATUS_CODE_SUCCESS)
             return statusCodeUp;
 
-        // Get params at downstream vertex
-        MLPPrimaryNetworkParams primaryNetworkParamsDown;
-        primaryNetworkParamsDown.m_isPOIClosestToNu = 0.f;
-
-        const StatusCode statusCodeDown(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, trackPfos, false, primaryNetworkParamsDown));
+        const StatusCode statusCodeDown(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, 
+            trackPfos, false, primaryNetworkParamsDown));
 
         if (statusCodeDown != STATUS_CODE_SUCCESS)
             return statusCodeDown;
 
-        // Combine to get primary score
+        // Now run the model!
         const float primaryScore(this->ClassifyTrack(primaryNetworkParamsUp, primaryNetworkParamsDown));
 
         hierarchyPfo.SetPrimaryScore(primaryScore);
     }
     else
     {
-        // Get params at upstream vertex 
+        // Set network params
         MLPPrimaryNetworkParams primaryNetworkParams;
-        primaryNetworkParams.m_isPOIClosestToNu = 1.f;
 
-        const StatusCode statusCode(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, trackPfos, true, primaryNetworkParams));
+        const StatusCode statusCode(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, 
+            trackPfos, true, primaryNetworkParams));
 
         if (statusCode != STATUS_CODE_SUCCESS)
             return statusCode;
 
-        // Get primary score
+        // Now run the model!
         const float primaryScore(this->ClassifyShower(primaryNetworkParams));
 
         hierarchyPfo.SetPrimaryScore(primaryScore);
@@ -121,7 +118,8 @@ StatusCode MLPPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *c
     if (!this->IsVectorSet(particleVertex)) { return STATUS_CODE_NOT_INITIALIZED; }
     if (!this->IsVectorSet(particleDirection)) { return STATUS_CODE_NOT_INITIALIZED; }
 
-   // Set primaryNetworkParams
+    // Set primaryNetworkParams
+    primaryNetworkParams.m_isPOIClosestToNu = useUpstream ? 1.f : 0.f;
     primaryNetworkParams.m_nSpacepoints = this->GetNSpacepoints(hierarchyPfo);
     primaryNetworkParams.m_nuSeparation = (particleVertex - nuVertex).GetMagnitude();
     this->SetVertexRegionParams(pAlgorithm, hierarchyPfo.GetPfo(), particleVertex, primaryNetworkParams);
@@ -131,14 +129,7 @@ StatusCode MLPPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *c
     // /////////////////////////////////////////
     // std::cout << "-----------------------------------------" << std::endl;
     // std::cout << "BEFORE NORMALISATION" << std::endl;
-    // std::cout << "NSpacepoints: " << primaryNetworkParams.m_nSpacepoints << std::endl;
-    // std::cout << "NuVertexSep: " << primaryNetworkParams.m_nuSeparation << std::endl;
-    // std::cout << "StartRegionNHits: " << primaryNetworkParams.m_vertexRegionNHits << std::endl;
-    // std::cout << "StartRegionNParticles: " << primaryNetworkParams.m_vertexRegionNParticles << std::endl;
-    // std::cout << "DCA: " << primaryNetworkParams.m_dca << std::endl;
-    // std::cout << "ExtrapDistance: " << primaryNetworkParams.m_connectionExtrapDistance << std::endl;
-    // std::cout << "parentConnectionDistance: " << primaryNetworkParams.m_parentConnectionDistance << std::endl;
-    // std::cout << "childConnectionDistance: " << primaryNetworkParams.m_childConnectionDistance << std::endl;
+    // primaryNetworkParams.Print();
     // std::cout << "-----------------------------------------" << std::endl;
     // /////////////////////////////////////////
 
@@ -148,14 +139,7 @@ StatusCode MLPPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *c
     /////////////////////////////////////////
     // std::cout << "-----------------------------------------" << std::endl;
     // std::cout << "AFTER NORMALISATION" << std::endl;
-    // std::cout << "NSpacepoints: " << primaryNetworkParams.m_nSpacepoints << std::endl;
-    // std::cout << "NuVertexSep: " << primaryNetworkParams.m_nuSeparation << std::endl;
-    // std::cout << "StartRegionNHits: " << primaryNetworkParams.m_vertexRegionNHits << std::endl;
-    // std::cout << "StartRegionNParticles: " << primaryNetworkParams.m_vertexRegionNParticles << std::endl;
-    // std::cout << "DCA: " << primaryNetworkParams.m_dca << std::endl;
-    // std::cout << "ExtrapDistance: " << primaryNetworkParams.m_connectionExtrapDistance << std::endl;
-    // std::cout << "parentConnectionDistance: " << primaryNetworkParams.m_parentConnectionDistance << std::endl;
-    // std::cout << "childConnectionDistance: " << primaryNetworkParams.m_childConnectionDistance << std::endl;
+    // primaryNetworkParams.Print();
     // std::cout << "-----------------------------------------" << std::endl;
     /////////////////////////////////////////
 
@@ -286,80 +270,63 @@ void MLPPrimaryHierarchyTool::NormaliseNetworkParams(MLPPrimaryNetworkParams &pr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float MLPPrimaryHierarchyTool::ClassifyTrack(const MLPPrimaryNetworkParams &primaryNetworkParamsUp, const MLPPrimaryNetworkParams &primaryNetworkParamsDown)
+float MLPPrimaryHierarchyTool::ClassifyTrack(const MLPPrimaryNetworkParams &edgeParamsUp, const MLPPrimaryNetworkParams &edgeParamsDown)
 {
+    ////////////////////////////////////////////////////////////
     std::cout << "------------------------" << std::endl;
-    std::cout << "Classifying track with " << primaryNetworkParamsUp.m_nSpacepoints << " hits" << std::endl;
+    std::cout << "Classifying track with " << edgeParamsUp.m_nSpacepoints << " hits" << std::endl;
+    ////////////////////////////////////////////////////////////
 
-    // Invoke branch model for upstream edge
-    LArDLHelper::TorchInput inputUp;
-    LArDLHelper::InitialiseInput({1, 17}, inputUp);
-    inputUp[0][0] = primaryNetworkParamsUp.m_nSpacepoints;
-    inputUp[0][1] = primaryNetworkParamsUp.m_nuSeparation;
-    inputUp[0][2] = primaryNetworkParamsUp.m_vertexRegionNHits;
-    inputUp[0][3] = primaryNetworkParamsUp.m_vertexRegionNParticles;
-    inputUp[0][4] = primaryNetworkParamsUp.m_dca;
-    inputUp[0][5] = primaryNetworkParamsUp.m_connectionExtrapDistance;
-    inputUp[0][6] = primaryNetworkParamsUp.m_isPOIClosestToNu;
-    inputUp[0][7] = primaryNetworkParamsUp.m_parentConnectionDistance;
-    inputUp[0][8] = primaryNetworkParamsUp.m_childConnectionDistance;
-    inputUp[0][9] = primaryNetworkParamsDown.m_nuSeparation;
-    inputUp[0][10] = primaryNetworkParamsDown.m_vertexRegionNHits;
-    inputUp[0][11] = primaryNetworkParamsDown.m_vertexRegionNParticles;
-    inputUp[0][12] = primaryNetworkParamsDown.m_dca;
-    inputUp[0][13] = primaryNetworkParamsDown.m_connectionExtrapDistance;
-    inputUp[0][14] = primaryNetworkParamsDown.m_isPOIClosestToNu;
-    inputUp[0][15] = primaryNetworkParamsDown.m_parentConnectionDistance;
-    inputUp[0][16] = primaryNetworkParamsDown.m_childConnectionDistance;
-    LArDLHelper::TorchOutput outputUp;
-    LArDLHelper::Forward(m_primaryTrackBranchModel, {inputUp}, outputUp);
-    auto outputAccessorUp = outputUp.accessor<float, 2>();
+    // Invoke branch model for each edge
+    torch::TensorAccessor<float, 2> outputAccessorUp(this->ClassifyTrackEdge(edgeParamsUp, edgeParamsDown));
+    torch::TensorAccessor<float, 2> outputAccessorDown(this->ClassifyTrackEdge(edgeParamsDown, edgeParamsUp));
 
+    ////////////////////////////////////////////////////////////
     std::cout << "outputUp: " << outputAccessorUp[0][0] << ", " << outputAccessorUp[0][1] << ", " << outputAccessorUp[0][2] << std::endl;
-
-    // Invoke branch model for downstream edge
-    LArDLHelper::TorchInput inputDown;
-    LArDLHelper::InitialiseInput({1, 17}, inputDown);
-    inputDown[0][0] = primaryNetworkParamsDown.m_nSpacepoints;
-    inputDown[0][1] = primaryNetworkParamsDown.m_nuSeparation;
-    inputDown[0][2] = primaryNetworkParamsDown.m_vertexRegionNHits;
-    inputDown[0][3] = primaryNetworkParamsDown.m_vertexRegionNParticles;
-    inputDown[0][4] = primaryNetworkParamsDown.m_dca;
-    inputDown[0][5] = primaryNetworkParamsDown.m_connectionExtrapDistance;
-    inputDown[0][6] = primaryNetworkParamsDown.m_isPOIClosestToNu;
-    inputDown[0][7] = primaryNetworkParamsDown.m_parentConnectionDistance;
-    inputDown[0][8] = primaryNetworkParamsDown.m_childConnectionDistance;
-    inputDown[0][9] = primaryNetworkParamsUp.m_nuSeparation;
-    inputDown[0][10] = primaryNetworkParamsUp.m_vertexRegionNHits;
-    inputDown[0][11] = primaryNetworkParamsUp.m_vertexRegionNParticles;
-    inputDown[0][12] = primaryNetworkParamsUp.m_dca;
-    inputDown[0][13] = primaryNetworkParamsUp.m_connectionExtrapDistance;
-    inputDown[0][14] = primaryNetworkParamsUp.m_isPOIClosestToNu;
-    inputDown[0][15] = primaryNetworkParamsUp.m_parentConnectionDistance;
-    inputDown[0][16] = primaryNetworkParamsUp.m_childConnectionDistance;
-    LArDLHelper::TorchOutput outputDown;
-    LArDLHelper::Forward(m_primaryTrackBranchModel, {inputDown}, outputDown);
-    auto outputAccessorDown = outputDown.accessor<float, 2>();
-
     std::cout << "outputDown: " << outputAccessorDown[0][0] << ", " << outputAccessorDown[0][1] << ", " << outputAccessorDown[0][2] << std::endl;
+    ////////////////////////////////////////////////////////////
 
-    // Invoke classifier model
+    // Invoke classifier model for final output
     LArDLHelper::TorchInput input;
     LArDLHelper::InitialiseInput({1, 6}, input);
-    input[0][0] = outputAccessorUp[0][0];
-    input[0][1] = outputAccessorUp[0][1];
-    input[0][2] = outputAccessorUp[0][2];
-    input[0][3] = outputAccessorDown[0][0];
-    input[0][4] = outputAccessorDown[0][1];
-    input[0][5] = outputAccessorDown[0][2];
+
+    int insertIndex = 0;
+
+    for (const torch::TensorAccessor<float, 2> &accessor : {outputAccessorUp, outputAccessorDown})
+    {
+        for (int accessorIndex = 0; accessorIndex < 3; ++accessorIndex)
+        {
+            input[0][insertIndex] = accessor[0][accessorIndex];
+            ++insertIndex;
+        }
+    }
+
     LArDLHelper::TorchOutput output;
     LArDLHelper::Forward(m_primaryTrackClassifierModel, {input}, output);
-    auto outputAccessor = output.accessor<float, 2>();
+    torch::TensorAccessor<float, 2> outputAccessor = output.accessor<float, 2>();
 
     std::cout << "Track classification score: " << outputAccessor[0][0] << std::endl;
     std::cout << "------------------------" << std::endl;
 
     return outputAccessor[0][0];
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+torch::TensorAccessor<float, 2> MLPPrimaryHierarchyTool::ClassifyTrackEdge(const MLPPrimaryNetworkParams &edgeParams, 
+    const MLPPrimaryNetworkParams &otherEdgeParams)
+{
+    LArDLHelper::TorchInput input;
+    LArDLHelper::InitialiseInput({1, 17}, input);
+
+    int insertIndex(this->AddToInput(0, edgeParams.GetCommonParamsForModel(), input));
+    insertIndex = this->AddToInput(insertIndex, edgeParams.GetOrientationParamsForModel(), input);
+    insertIndex = this->AddToInput(insertIndex, otherEdgeParams.GetOrientationParamsForModel(), input);
+
+    LArDLHelper::TorchOutput output;
+    LArDLHelper::Forward(m_primaryTrackBranchModel, {input}, output);
+
+    return output.accessor<float, 2>();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -371,15 +338,9 @@ float MLPPrimaryHierarchyTool::ClassifyShower(const MLPPrimaryNetworkParams &pri
 
     LArDLHelper::TorchInput input;
     LArDLHelper::InitialiseInput({1, 9}, input);
-    input[0][0] = primaryNetworkParams.m_nSpacepoints;
-    input[0][1] = primaryNetworkParams.m_nuSeparation;
-    input[0][2] = primaryNetworkParams.m_vertexRegionNHits;
-    input[0][3] = primaryNetworkParams.m_vertexRegionNParticles;
-    input[0][4] = primaryNetworkParams.m_dca;
-    input[0][5] = primaryNetworkParams.m_connectionExtrapDistance;
-    input[0][6] = 1.0;
-    input[0][7] = primaryNetworkParams.m_parentConnectionDistance;
-    input[0][8] = primaryNetworkParams.m_childConnectionDistance;
+
+    int insertIndex(this->AddToInput(0, primaryNetworkParams.GetCommonParamsForModel(), input));
+    insertIndex = this->AddToInput(insertIndex, primaryNetworkParams.GetOrientationParamsForModel(), input);
 
     LArDLHelper::TorchOutput output;
     LArDLHelper::Forward(m_primaryShowerClassifierModel, {input}, output);
