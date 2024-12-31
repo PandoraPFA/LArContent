@@ -519,6 +519,8 @@ void MLPNeutrinoHierarchyAlgorithm::BuildLaterTierPass1()
 float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScoreTrackToTrack(HierarchyPfo &parentPfo, HierarchyPfo &childPfo, 
     int &parentOrientation, int &childOrientation) const
 {
+    m_laterTierHierarchyTool->Run(this, m_pNeutrinoPfo, parentPfo, childPfo);
+
     return this->GetRandomNumber();
 }
 

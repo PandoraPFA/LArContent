@@ -36,17 +36,20 @@ public:
         float m_parentEndRegionRToWall = -999.f;
         float m_vertexSeparation = -999.f;
         float m_doesChildConnect = -999.f;
+        pandora::CartesianVector m_connectionPoint = pandora::CartesianVector(-999.f, -999.f, -999.f);
+        pandora::CartesianVector m_connectionDirection = pandora::CartesianVector(-999.f, -999.f, -999.f);
         float m_overshootStartDCA = -999.f;
         float m_overshootStartL = -999.f;
         float m_overshootEndDCA = -999.f;
         float m_overshootEndL = -999.f;
-        float m_childConnectionDCA = -999.f;
-        float m_childConnectionLRatio = -999.f;
-        float m_parentConnectionPointNUpstreamHits = -999.f;
-        float m_parentConnectionPointNDownstreamHits = -999.f;
-        float m_parentConnectionPointNHitRatio = -999.f;
-        float m_parentConnectionPointEigenvalueRatio = -999.f;
-        float m_parentConnectionPointOpeningAngle = -999.f;
+        float m_childCPDCA = -999.f;
+        float m_childCPExtrapDistance = -999.f;
+        float m_childCPLRatio = -999.f;
+        float m_parentCPNUpstreamHits = -999.f;
+        float m_parentCPNDownstreamHits = -999.f;
+        float m_parentCPNHitRatio = -999.f;
+        float m_parentCPEigenvalueRatio = -999.f;
+        float m_parentCPOpeningAngle = -999.f;
         float m_parentIsPOIClosestToNu = -999.f;
         float m_childIsPOIClosestToNu = -999.f;
 
@@ -87,8 +90,9 @@ private:
 
     void SetEndRegionRToWall(const pandora::CartesianVector &parentEnd, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
 
-    void GetConnectionPoint(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, 
-        const pandora::CartesianVector &parentStart, const pandora::CartesianVector &childStart, const pandora::CartesianVector &childStartDirection);
+    void SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, 
+        const pandora::CartesianVector &parentStart, const pandora::CartesianVector &childStart, 
+        const pandora::CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams);
 
     std::pair<pandora::CartesianVector, bool> ExtrapolateChildToParent(const pandora::CartesianVector &parentPosition, const pandora::CartesianVector &childStart, 
         const pandora::CartesianVector &childStartDirection);
@@ -96,8 +100,20 @@ private:
     bool DoesConnect(const pandora::CartesianVector &boundary1, const pandora::CartesianVector &boundary2,
         const pandora::CartesianVector &testPoint, const float buffer);
 
+    void SetOvershootParams(const pandora::CartesianVector &parentStart, const pandora::CartesianVector &parentStartDirection, 
+        const pandora::CartesianVector &parentEnd, const pandora::CartesianVector &parentEndDirection, const pandora::CartesianVector &childStart, 
+        const pandora::CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams);
+
+    void SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, MLPLaterTierNetworkParams &laterTierNetworkParams);
+
     void NormaliseNetworkParams(MLPLaterTierNetworkParams &laterTierNetworkParams);
 
+    // For tool
+    float m_trajectoryStepSize;
+    float m_connectionBuffer;
+    float m_searchRegion;
+
+    // For normalisation
     float m_trackScoreMin;
     float m_trackScoreMax;
     float m_nSpacepointsMin;
@@ -114,6 +130,26 @@ private:
     float m_parentEndRegionRToWallMax;
     float m_vertexSepMin;
     float m_vertexSepMax;
+    float m_doesChildConnectMin;
+    float m_doesChildConnectMax;
+    float m_overshootDCAMin;
+    float m_overshootDCAMax;
+    float m_overshootLMin;
+    float m_overshootLMax;
+    float m_childCPDCAMin;
+    float m_childCPDCAMax;
+    float m_childCPExtrapDistanceMin;
+    float m_childCPExtrapDistanceMax;
+    float m_childCPLRatioMin;
+    float m_childCPLRatioMax;
+    float m_parentCPNHitsMin;
+    float m_parentCPNHitsMax;
+    float m_parentCPNHitRatioMin;
+    float m_parentCPNHitRatioMax;
+    float m_parentCPEigenvalueRatioMin;
+    float m_parentCPEigenvalueRatioMax;
+    float m_parentCPOpeningAngleMin;
+    float m_parentCPOpeningAngleMax;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -133,6 +169,19 @@ inline void MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams::Print()
     std::cout << "ParentEndRegionNParticles: " << this->m_parentEndRegionNParticles << std::endl;
     std::cout << "ParentEndRegionRToWall: " << this->m_parentEndRegionRToWall << std::endl;
     std::cout << "VertexSep: " << this->m_vertexSeparation << std::endl;
+    std::cout << "DoesChildConnect: " << this->m_doesChildConnect << std::endl;
+    std::cout << "OvershootStartDCA: " << this->m_overshootStartDCA << std::endl;
+    std::cout << "OvershootStartL: " << this->m_overshootStartL << std::endl;
+    std::cout << "OvershootEndDCA: " << this->m_overshootEndDCA << std::endl;
+    std::cout << "OvershootEndL: " << this->m_overshootEndL << std::endl;
+    std::cout << "ChildCPDCA: " << this->m_childCPDCA << std::endl;
+    std::cout << "ChildCPExtrapDistance: " << this->m_childCPExtrapDistance << std::endl;
+    std::cout << "ChildCPLRatio: " << this->m_childCPLRatio << std::endl;
+    std::cout << "ParentCPNUpstreamHits: " << this->m_parentCPNUpstreamHits << std::endl;
+    std::cout << "ParentCPNDownstreamHits: " << this->m_parentCPNDownstreamHits << std::endl;
+    std::cout << "ParentCPNHitRatio: " << this->m_parentCPNHitRatio << std::endl;
+    std::cout << "ParentCPEigenvalueRatio: " << this->m_parentCPEigenvalueRatio << std::endl;
+    std::cout << "ParentCPOpeningAngle: " << this->m_parentCPOpeningAngle << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
