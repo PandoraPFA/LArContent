@@ -15,6 +15,9 @@
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
 
+#include <torch/script.h>
+#include <torch/torch.h>
+
 namespace lar_dl_content
 {
 
@@ -35,6 +38,12 @@ public:
         float m_isPOIClosestToNu = -999.f;
         float m_parentConnectionDistance = -999.f;
         float m_childConnectionDistance = -999.f;
+
+        void Print() const;
+
+        pandora::FloatVector GetCommonParamsForModel() const;
+
+        pandora::FloatVector GetOrientationParamsForModel() const;
     };
 
     /**
@@ -68,7 +77,10 @@ private:
 
     void NormaliseNetworkParams(MLPPrimaryNetworkParams &primaryNetworkParams) const;
 
-    float ClassifyTrack(const MLPPrimaryNetworkParams &primaryNetworkParamsUp, const MLPPrimaryNetworkParams &primaryNetworkParamsDown);
+    float ClassifyTrack(const MLPPrimaryNetworkParams &edgeParamsUp, const MLPPrimaryNetworkParams &edgeParamsDown);
+
+    torch::TensorAccessor<float, 2> ClassifyTrackEdge(const MLPPrimaryNetworkParams &edgeParams, 
+        const MLPPrimaryNetworkParams &otherEdgeParams);
 
     float ClassifyShower(const MLPPrimaryNetworkParams &primaryNetworkParams);
 
@@ -99,6 +111,38 @@ private:
     float m_childConnectionDistanceMin;
     float m_childConnectionDistanceMax;
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+ inline void MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams::Print() const
+{
+    std::cout << "IsPOIClosestToNu: " << m_isPOIClosestToNu << std::endl;
+    std::cout << "NSpacepoints: " << m_nSpacepoints << std::endl;
+    std::cout << "NuVertexSep: " << m_nuSeparation << std::endl;
+    std::cout << "StartRegionNHits: " << m_vertexRegionNHits << std::endl;
+    std::cout << "StartRegionNParticles: " << m_vertexRegionNParticles << std::endl;
+    std::cout << "DCA: " << m_dca << std::endl;
+    std::cout << "ExtrapDistance: " << m_connectionExtrapDistance << std::endl;
+    std::cout << "parentConnectionDistance: " << m_parentConnectionDistance << std::endl;
+    std::cout << "childConnectionDistance: " << m_childConnectionDistance << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::FloatVector MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams::GetCommonParamsForModel() const
+{
+    return {m_nSpacepoints};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::FloatVector MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams::GetOrientationParamsForModel() const
+{
+    return {m_nuSeparation, m_vertexRegionNHits, m_vertexRegionNParticles, m_dca, m_connectionExtrapDistance, 
+            m_isPOIClosestToNu, m_parentConnectionDistance, m_childConnectionDistance};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 } // namespace lar_dl_content
 

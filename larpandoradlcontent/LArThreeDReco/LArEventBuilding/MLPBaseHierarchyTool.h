@@ -10,7 +10,12 @@
 
 #include "Pandora/PandoraInternal.h"
 
+#include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
+
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
+
+#include <torch/script.h>
+#include <torch/torch.h>
 
 namespace lar_dl_content
 {
@@ -41,6 +46,8 @@ protected:
     void NormaliseNetworkParam(const float minLimit, const float maxLimit, float &networkParam) const;
 
     bool IsVectorSet(const pandora::CartesianVector &vector);
+
+    int AddToInput(const int startIndex, const pandora::FloatVector &paramVector, LArDLHelper::TorchInput &modelInput);
 
     float m_detectorMinX;
     float m_detectorMaxX;

@@ -9,7 +9,12 @@
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/StatusCodes.h"
 
+#include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
+
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
+
+#include <torch/script.h>
+#include <torch/torch.h>
 
 using namespace pandora;
 using namespace lar_content;
@@ -147,6 +152,21 @@ void MLPBaseHierarchyTool::NormaliseNetworkParam(const float minLimit, const flo
 bool MLPBaseHierarchyTool::IsVectorSet(const CartesianVector &vector)
 {
     return (vector.GetZ() > -990.f);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int MLPBaseHierarchyTool::AddToInput(const int startIndex, const FloatVector &paramVector, LArDLHelper::TorchInput &modelInput)
+{
+    int insertIndex(startIndex);
+
+    for (float param : paramVector)
+    {
+        modelInput[0][insertIndex] = param;
+        ++insertIndex;
+    }
+
+    return insertIndex;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

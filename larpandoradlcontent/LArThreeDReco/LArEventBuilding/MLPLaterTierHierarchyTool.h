@@ -18,7 +18,6 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-
 namespace lar_dl_content
 {
 
@@ -124,8 +123,6 @@ private:
     torch::TensorAccessor<float, 2> ClassifyTrackTrackEdge(const MLPLaterTierNetworkParams &edgeParams, 
         const MLPLaterTierNetworkParams &otherEdgeParams1, const MLPLaterTierNetworkParams &otherEdgeParams2, 
         const MLPLaterTierNetworkParams &otherEdgeParams3);
-
-    int AddToInput(const int startIndex, const pandora::FloatVector &paramVector, LArDLHelper::TorchInput &modelInput);
 
     float ClassifyTrackShower(const MLPLaterTierNetworkParams &edgeParamsUp, const MLPLaterTierNetworkParams &edgeParamsDown);
 
