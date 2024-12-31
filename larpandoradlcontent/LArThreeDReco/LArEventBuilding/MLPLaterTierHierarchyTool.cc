@@ -13,9 +13,9 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
+#include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h"
 
 #include <torch/script.h>
@@ -121,7 +121,7 @@ StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, con
         if (statusCodeDownDown != STATUS_CODE_SUCCESS)
             return statusCodeDownDown;
 
-        // Now input into model!
+        // Now run the model!
         const float laterTierScore(this->ClassifyTrackTrack(edgeParamsUpUp, edgeParamsUpDown, 
             edgeParamsDownUp, edgeParamsDownDown));
 
@@ -154,7 +154,7 @@ StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, con
         if (statusCodeDown != STATUS_CODE_SUCCESS)
             return statusCodeDown;
 
-        // Now input into model!
+        // Now run the model!
         const float laterTierScore(this->ClassifyTrackShower(edgeParamsUp, edgeParamsDown)); 
 
         childHierarchyPfo.SetLaterTierScore(laterTierScore);
@@ -652,21 +652,6 @@ torch::TensorAccessor<float, 2> MLPLaterTierHierarchyTool::ClassifyTrackTrackEdg
     LArDLHelper::Forward(m_trackTrackBranchModel, {input}, output);
 
     return output.accessor<float, 2>();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-int MLPLaterTierHierarchyTool::AddToInput(const int startIndex, const FloatVector &paramVector, LArDLHelper::TorchInput &modelInput)
-{
-    int insertIndex(startIndex);
-
-    for (float param : paramVector)
-    {
-        modelInput[0][insertIndex] = param;
-        ++insertIndex;
-    }
-
-    return insertIndex;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
