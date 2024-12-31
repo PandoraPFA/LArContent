@@ -13,7 +13,6 @@
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
-
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
 
 namespace lar_dl_content
@@ -73,15 +72,16 @@ private:
 
     float ClassifyShower(const MLPPrimaryNetworkParams &primaryNetworkParams);
 
+    // For model
     std::string m_primaryTrackBranchModelName;
     std::string m_primaryTrackClassifierModelName;
     std::string m_primaryShowerClassifierModelName;
-
     LArDLHelper::TorchModel m_primaryTrackBranchModel;
     LArDLHelper::TorchModel m_primaryTrackClassifierModel;
     LArDLHelper::TorchModel m_primaryShowerClassifierModel;
-
+    // For tool
     float m_extrapolationStepSize;
+    // For normalisation
     float m_nSpacepointsMin;
     float m_nSpacepointsMax;
     float m_nuSeparationMin;
