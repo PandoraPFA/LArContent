@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/StatusCodes.h"
 
+#include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
@@ -17,6 +18,9 @@
 
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h"
 
+#include <torch/script.h>
+#include <torch/torch.h>
+
 using namespace pandora;
 using namespace lar_content;
 
@@ -24,6 +28,7 @@ namespace lar_dl_content
 {
 
 MLPLaterTierHierarchyTool::MLPLaterTierHierarchyTool() :
+    MLPBaseHierarchyTool(),
     m_trajectoryStepSize(1.f),
     m_connectionBuffer(50.f),
     m_searchRegion(10.f),
@@ -78,56 +83,49 @@ StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, con
     const std::pair<float, float> nSpacepointsParams(this->GetNSpacepointsParams(parentHierarchyPfo, childHierarchyPfo));
     const float separation3D(this->GetSeparation3D(parentHierarchyPfo, childHierarchyPfo));
 
-    //////////////////////////////////////////////
-    if (this->GetNSpacepoints(parentHierarchyPfo) != 82)
-        return STATUS_CODE_SUCCESS;
-
-    if (this->GetNSpacepoints(childHierarchyPfo) != 177)
-        return STATUS_CODE_SUCCESS;
-    //////////////////////////////////////////////
-
     if (childHierarchyPfo.GetIsTrack())
     {
         // Set network params 
         // Variable name = first parent orientation then child
-        MLPLaterTierNetworkParams upupLaterTierNetworkParams, updownLaterTierNetworkParams;
-        MLPLaterTierNetworkParams downupLaterTierNetworkParams, downdownLaterTierNetworkParams;
+        MLPLaterTierNetworkParams edgeParamsUpUp, edgeParamsUpDown;
+        MLPLaterTierNetworkParams edgeParamsDownUp, edgeParamsDownDown;
 
         // Set common params
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, upupLaterTierNetworkParams);
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, updownLaterTierNetworkParams);
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, downupLaterTierNetworkParams);
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, downdownLaterTierNetworkParams);
+        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsUpUp);
+        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsUpDown);
+        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsDownUp);
+        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsDownDown);
 
         // Get orientation dependent params
-        const StatusCode upupStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, true, true, upupLaterTierNetworkParams));
+        const StatusCode statusCodeUpUp(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
+            pNeutrinoPfo, true, true, edgeParamsUpUp));
 
-        if (upupStatusCode != STATUS_CODE_SUCCESS)
-            return upupStatusCode;
+        if (statusCodeUpUp != STATUS_CODE_SUCCESS)
+            return statusCodeUpUp;
 
-        const StatusCode updownStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, true, false, updownLaterTierNetworkParams));
+        const StatusCode statusCodeUpDown(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
+            pNeutrinoPfo, true, false, edgeParamsUpDown));
 
-        if (updownStatusCode != STATUS_CODE_SUCCESS)
-            return updownStatusCode;
+        if (statusCodeUpDown != STATUS_CODE_SUCCESS)
+            return statusCodeUpDown;
 
-        const StatusCode downupStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, false, true, downupLaterTierNetworkParams));
+        const StatusCode statusCodeDownUp(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
+            pNeutrinoPfo, false, true, edgeParamsDownUp));
 
-        if (downupStatusCode != STATUS_CODE_SUCCESS)
-            return downupStatusCode;
+        if (statusCodeDownUp != STATUS_CODE_SUCCESS)
+            return statusCodeDownUp;
 
-        const StatusCode downdownStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, false, false, downdownLaterTierNetworkParams));
+        const StatusCode statusCodeDownDown(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
+            pNeutrinoPfo, false, false, edgeParamsDownDown));
 
-        if (downdownStatusCode != STATUS_CODE_SUCCESS)
-            return updownStatusCode;
+        if (statusCodeDownDown != STATUS_CODE_SUCCESS)
+            return statusCodeDownDown;
 
-        // // Combine to get primary score
-        // const float primaryScore(this->ClassifyTrack(primaryNetworkParamsUp, primaryNetworkParamsDown));
+        // Now input into model!
+        const float laterTierScore(this->ClassifyTrackTrack(edgeParamsUpUp, edgeParamsUpDown, 
+            edgeParamsDownUp, edgeParamsDownDown));
 
-        // hierarchyPfo.SetPrimaryScore(primaryScore);
+        childHierarchyPfo.SetLaterTierScore(laterTierScore);
 
         return STATUS_CODE_SUCCESS;
     }
@@ -137,29 +135,29 @@ StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, con
         const bool isShowerVertexUpstream(this->IsShowerVertexUpstream(parentHierarchyPfo, childHierarchyPfo));
 
         // Set network params
-        MLPLaterTierNetworkParams upLaterTierNetworkParams, downLaterTierNetworkParams;
+        MLPLaterTierNetworkParams edgeParamsUp, edgeParamsDown;
 
         // Set common params
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, upLaterTierNetworkParams);
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, downLaterTierNetworkParams);
+        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsUp);
+        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsDown);
 
         // Get orientation dependent params
-        const StatusCode upStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, true, isShowerVertexUpstream, upLaterTierNetworkParams));
+        const StatusCode statusCodeUp(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
+            pNeutrinoPfo, true, isShowerVertexUpstream, edgeParamsUp));
 
-        if (upStatusCode != STATUS_CODE_SUCCESS)
-            return upStatusCode;
+        if (statusCodeUp != STATUS_CODE_SUCCESS)
+            return statusCodeUp;
 
-        const StatusCode downStatusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, false, isShowerVertexUpstream, downLaterTierNetworkParams));
+        const StatusCode statusCodeDown(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
+            pNeutrinoPfo, false, isShowerVertexUpstream, edgeParamsDown));
 
-        if (downStatusCode != STATUS_CODE_SUCCESS)
-            return downStatusCode;
+        if (statusCodeDown != STATUS_CODE_SUCCESS)
+            return statusCodeDown;
 
-        // // Combine to get primary score
-        // const float primaryScore(this->ClassifyTrack(primaryNetworkParamsUp, primaryNetworkParamsDown));
+        // Now input into model!
+        const float laterTierScore(this->ClassifyTrackShower(edgeParamsUp, edgeParamsDown)); 
 
-        // hierarchyPfo.SetPrimaryScore(primaryScore);
+        childHierarchyPfo.SetLaterTierScore(laterTierScore);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -292,10 +290,10 @@ StatusCode MLPLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm 
     this->SetParentConnectionPointVars(parentHierarchyPfo, laterTierNetworkParams);
 
     /////////////////////////////////////////
-    std::cout << "-----------------------------------------" << std::endl;
-    std::cout << "BEFORE NORMALISATION" << std::endl;
-    laterTierNetworkParams.Print();
-    std::cout << "-----------------------------------------" << std::endl;
+    // std::cout << "-----------------------------------------" << std::endl;
+    // std::cout << "BEFORE NORMALISATION" << std::endl;
+    // laterTierNetworkParams.Print();
+    // std::cout << "-----------------------------------------" << std::endl;
     /////////////////////////////////////////
 
     // Normalise
@@ -421,11 +419,6 @@ void MLPLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHi
             {
                 if (this->DoesConnect(firstPosition, secondPosition, extrap.first, m_connectionBuffer))
                 {
-
-                    std::cout << "#################" << std::endl;
-                    std::cout << "midpoint: " << midPoint << std::endl;
-                    std::cout << "direction: " << (secondPosition - firstPosition).GetUnitVector() << std::endl;
-
                     laterTierNetworkParams.m_doesChildConnect = 1.f;
                     laterTierNetworkParams.m_connectionPoint = midPoint;
                     laterTierNetworkParams.m_connectionDirection = (secondPosition - firstPosition).GetUnitVector();
@@ -442,10 +435,7 @@ void MLPLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHi
         if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) < std::numeric_limits<float>::epsilon()) 
             laterTierNetworkParams.m_childCPLRatio = lengthAtConnection / trackLength; 
     }
-    catch (...)
-    {
-        return;
-    }
+    catch (...) { return; }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -595,11 +585,265 @@ void MLPLaterTierHierarchyTool::NormaliseNetworkParams(MLPLaterTierNetworkParams
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float MLPLaterTierHierarchyTool::ClassifyTrackTrack(const MLPLaterTierNetworkParams &edgeParamsUpUp, const MLPLaterTierNetworkParams &edgeParamsUpDown, 
+    const MLPLaterTierNetworkParams &edgeParamsDownUp, const MLPLaterTierNetworkParams &edgeParamsDownDown)
+{
+    ////////////////////////////////////////////////////////////
+    std::cout << "------------------------" << std::endl;
+    std::cout << "Classifying track-track edge with " << edgeParamsUpUp.m_parentNSpacepoints << " parent spacepoints and " << 
+        edgeParamsUpUp.m_childNSpacepoints << " child spacepoints" << std::endl;
+    ////////////////////////////////////////////////////////////
+
+    // Invoke branch model for each edge
+    torch::TensorAccessor<float, 2> outputAccessorUpUp(this->ClassifyTrackTrackEdge(edgeParamsUpUp, edgeParamsUpDown, edgeParamsDownUp, edgeParamsDownDown));
+    torch::TensorAccessor<float, 2> outputAccessorUpDown(this->ClassifyTrackTrackEdge(edgeParamsUpDown, edgeParamsDownUp, edgeParamsDownDown, edgeParamsUpUp));
+    torch::TensorAccessor<float, 2> outputAccessorDownUp(this->ClassifyTrackTrackEdge(edgeParamsDownUp, edgeParamsDownDown, edgeParamsUpUp, edgeParamsUpDown));
+    torch::TensorAccessor<float, 2> outputAccessorDownDown(this->ClassifyTrackTrackEdge(edgeParamsDownDown, edgeParamsUpUp, edgeParamsUpDown, edgeParamsDownUp));
+
+    ////////////////////////////////////////////////////////////
+    std::cout << "outputUpUp: " << outputAccessorUpUp[0][0] << ", " << outputAccessorUpUp[0][1] << ", " << outputAccessorUpUp[0][2] << std::endl;
+    std::cout << "outputUpDown: " << outputAccessorUpDown[0][0] << ", " << outputAccessorUpDown[0][1] << ", " << outputAccessorUpDown[0][2] << std::endl;
+    std::cout << "outputDownUp: " << outputAccessorDownUp[0][0] << ", " << outputAccessorDownUp[0][1] << ", " << outputAccessorDownUp[0][2] << std::endl;
+    std::cout << "outputDownDown: " << outputAccessorDownDown[0][0] << ", " << outputAccessorDownDown[0][1] << ", " << outputAccessorDownDown[0][2] << std::endl;
+    ////////////////////////////////////////////////////////////
+
+    // Invoke classifier model for final output
+    LArDLHelper::TorchInput input;
+    LArDLHelper::InitialiseInput({1, 12}, input);
+
+    int insertIndex = 0;
+
+    for (const torch::TensorAccessor<float, 2> &accessor : {outputAccessorUpUp, outputAccessorUpDown, outputAccessorDownUp, outputAccessorDownDown})
+    {
+        for (int accessorIndex = 0; accessorIndex < 3; ++accessorIndex)
+        {
+            input[0][insertIndex] = accessor[0][accessorIndex];
+            ++insertIndex;
+        }
+    }
+
+    LArDLHelper::TorchOutput output;
+    LArDLHelper::Forward(m_trackTrackClassifierModel, {input}, output);
+    torch::TensorAccessor<float, 2> outputAccessor = output.accessor<float, 2>();
+
+    ////////////////////////////////////////////////////////////
+    std::cout << "Track-track classification score: " << outputAccessor[0][0] << std::endl;
+    std::cout << "------------------------" << std::endl;
+    ////////////////////////////////////////////////////////////
+
+    return outputAccessor[0][0];
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+torch::TensorAccessor<float, 2> MLPLaterTierHierarchyTool::ClassifyTrackTrackEdge(const MLPLaterTierNetworkParams &edgeParams, 
+    const MLPLaterTierNetworkParams &otherEdgeParams1, const MLPLaterTierNetworkParams &otherEdgeParams2, const MLPLaterTierNetworkParams &otherEdgeParams3)
+{
+    LArDLHelper::TorchInput input;
+    LArDLHelper::InitialiseInput({1, 89}, input);
+
+    int insertIndex(this->AddToInput(0, edgeParams.GetCommonParamsForModel(), input));
+    insertIndex = this->AddToInput(insertIndex, edgeParams.GetOrientationParamsForModel(), input);
+    insertIndex = this->AddToInput(insertIndex, otherEdgeParams1.GetOrientationParamsForModel(), input);
+    insertIndex = this->AddToInput(insertIndex, otherEdgeParams2.GetOrientationParamsForModel(), input);
+    insertIndex = this->AddToInput(insertIndex, otherEdgeParams3.GetOrientationParamsForModel(), input);
+
+    LArDLHelper::TorchOutput output;
+    LArDLHelper::Forward(m_trackTrackBranchModel, {input}, output);
+
+    return output.accessor<float, 2>();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int MLPLaterTierHierarchyTool::AddToInput(const int startIndex, const FloatVector &paramVector, LArDLHelper::TorchInput &modelInput)
+{
+    int insertIndex(startIndex);
+
+    for (float param : paramVector)
+    {
+        modelInput[0][insertIndex] = param;
+        ++insertIndex;
+    }
+
+    return insertIndex;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float MLPLaterTierHierarchyTool::ClassifyTrackShower(const MLPLaterTierNetworkParams &edgeParamsUp, const MLPLaterTierNetworkParams &edgeParamsDown)
+{
+    ////////////////////////////////////////////////////////////
+    std::cout << "------------------------" << std::endl;
+    std::cout << "Classifying track-shower edge with " << edgeParamsUp.m_parentNSpacepoints << " parent spacepoints and " << 
+        edgeParamsUp.m_childNSpacepoints << " child spacepoints" << std::endl;
+    ////////////////////////////////////////////////////////////
+
+    // Invoke branch model for each edge
+    torch::TensorAccessor<float, 2> outputAccessorUp(this->ClassifyTrackShowerEdge(edgeParamsUp, edgeParamsDown));
+    torch::TensorAccessor<float, 2> outputAccessorDown(this->ClassifyTrackShowerEdge(edgeParamsDown, edgeParamsUp));
+
+    ////////////////////////////////////////////////////////////
+    std::cout << "outputUp: " << outputAccessorUp[0][0] << ", " << outputAccessorUp[0][1] << ", " << outputAccessorUp[0][2] << std::endl;
+    std::cout << "outputDown: " << outputAccessorDown[0][0] << ", " << outputAccessorDown[0][1] << ", " << outputAccessorDown[0][2] << std::endl;
+    ////////////////////////////////////////////////////////////
+
+    // Invoke classifier model for final output
+    LArDLHelper::TorchInput input;
+    LArDLHelper::InitialiseInput({1, 6}, input);
+
+    int insertIndex = 0;
+
+    for (const torch::TensorAccessor<float, 2> &accessor : {outputAccessorUp, outputAccessorDown})
+    {
+        for (int accessorIndex = 0; accessorIndex < 3; ++accessorIndex)
+        {
+            input[0][insertIndex] = accessor[0][accessorIndex];
+            ++insertIndex;
+        }
+    }
+
+    LArDLHelper::TorchOutput output;
+    LArDLHelper::Forward(m_trackShowerClassifierModel, {input}, output);
+    torch::TensorAccessor<float, 2> outputAccessor = output.accessor<float, 2>();
+
+    ////////////////////////////////////////////////////////////
+    std::cout << "Track-shower classification score: " << outputAccessor[0][0] << std::endl;
+    std::cout << "------------------------" << std::endl;
+    ////////////////////////////////////////////////////////////
+
+    return outputAccessor[0][0];
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+torch::TensorAccessor<float, 2> MLPLaterTierHierarchyTool::ClassifyTrackShowerEdge(const MLPLaterTierNetworkParams &edgeParams, 
+    const MLPLaterTierNetworkParams &otherEdgeParams)
+{
+    LArDLHelper::TorchInput input;
+    LArDLHelper::InitialiseInput({1, 47}, input);
+
+    int insertIndex(this->AddToInput(0, edgeParams.GetCommonParamsForModel(), input));
+    insertIndex = this->AddToInput(insertIndex, edgeParams.GetOrientationParamsForModel(), input);
+    insertIndex = this->AddToInput(insertIndex, otherEdgeParams.GetOrientationParamsForModel(), input);
+
+    LArDLHelper::TorchOutput output;
+    LArDLHelper::Forward(m_trackShowerBranchModel, {input}, output);
+
+    return output.accessor<float, 2>();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode MLPLaterTierHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrajectoryStepSize", m_trajectoryStepSize));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionBuffer", m_connectionBuffer));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SearchRegion", m_searchRegion));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "TrackScoreMin", m_trackScoreMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "TrackScoreMax", m_trackScoreMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "NSpacepointsMin", m_nSpacepointsMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "NSpacepointsMax", m_nSpacepointsMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "Separation3DMin", m_separation3DMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "Separation3DMax", m_separation3DMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "NuVertexSepMin", m_nuVertexSepMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "NuVertexSepMax", m_nuVertexSepMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentEndRegionNHitsMin", m_parentEndRegionNHitsMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentEndRegionNHitsMax", m_parentEndRegionNHitsMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentEndRegionNParticlesMin", m_parentEndRegionNParticlesMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentEndRegionNParticlesMax", m_parentEndRegionNParticlesMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentEndRegionRToWallMin", m_parentEndRegionRToWallMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentEndRegionRToWallMax", m_parentEndRegionRToWallMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "VertexSepMin", m_vertexSepMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "VertexSepMax", m_vertexSepMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "DoesChildConnectMin", m_doesChildConnectMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "DoesChildConnectMax", m_doesChildConnectMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "OvershootDCAMin", m_overshootDCAMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "OvershootDCAMax", m_overshootDCAMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "OvershootLMin", m_overshootLMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "OvershootLMax", m_overshootLMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ChildCPDCAMin", m_childCPDCAMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ChildCPDCAMax", m_childCPDCAMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ChildCPExtrapDistanceMin", m_childCPExtrapDistanceMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ChildCPExtrapDistanceMax", m_childCPExtrapDistanceMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ChildCPLRatioMin", m_childCPLRatioMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ChildCPLRatioMax", m_childCPLRatioMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentCPNHitsMin", m_parentCPNHitsMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentCPNHitsMax", m_parentCPNHitsMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentCPNHitRatioMin", m_parentCPNHitRatioMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentCPNHitRatioMax", m_parentCPNHitRatioMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentCPEigenvalueRatioMin", m_parentCPEigenvalueRatioMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentCPEigenvalueRatioMax", m_parentCPEigenvalueRatioMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentCPOpeningAngleMin", m_parentCPOpeningAngleMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ParentCPOpeningAngleMax", m_parentCPOpeningAngleMax));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackTrackBranchModelName", m_trackTrackBranchModelName));
+
+    if (!m_trackTrackBranchModelName.empty())
+    {
+        m_trackTrackBranchModelName = LArFileHelper::FindFileInPath(m_trackTrackBranchModelName, "FW_SEARCH_PATH");
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackTrackBranchModelName, m_trackTrackBranchModel));
+    }
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackTrackClassifierModelName", m_trackTrackClassifierModelName));
+
+    if (!m_trackTrackClassifierModelName.empty())
+    {
+        m_trackTrackClassifierModelName = LArFileHelper::FindFileInPath(m_trackTrackClassifierModelName, "FW_SEARCH_PATH");
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackTrackClassifierModelName, m_trackTrackClassifierModel));
+    }
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackShowerBranchModelName", m_trackShowerBranchModelName));
+
+    if (!m_trackShowerBranchModelName.empty())
+    {
+        m_trackShowerBranchModelName = LArFileHelper::FindFileInPath(m_trackShowerBranchModelName, "FW_SEARCH_PATH");
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackShowerBranchModelName, m_trackShowerBranchModel));
+    }
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackShowerClassifierModelName", m_trackShowerClassifierModelName));
+
+    if (!m_trackShowerClassifierModelName.empty())
+    {
+        m_trackShowerClassifierModelName = LArFileHelper::FindFileInPath(m_trackShowerClassifierModelName, "FW_SEARCH_PATH");
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackShowerClassifierModelName, m_trackShowerClassifierModel));
+    }
 
     return MLPBaseHierarchyTool::ReadSettings(xmlHandle);
 }

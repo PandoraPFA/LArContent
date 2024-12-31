@@ -10,8 +10,14 @@
 
 #include "Pandora/PandoraInternal.h"
 
+#include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
+
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
+
+#include <torch/script.h>
+#include <torch/torch.h>
+
 
 namespace lar_dl_content
 {
@@ -54,6 +60,10 @@ public:
         float m_childIsPOIClosestToNu = -999.f;
 
         void Print();
+
+        pandora::FloatVector GetCommonParamsForModel() const;
+
+        pandora::FloatVector GetOrientationParamsForModel() const;
     };
 
     /**
@@ -94,8 +104,8 @@ private:
         const pandora::CartesianVector &parentStart, const pandora::CartesianVector &childStart, 
         const pandora::CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams);
 
-    std::pair<pandora::CartesianVector, bool> ExtrapolateChildToParent(const pandora::CartesianVector &parentPosition, const pandora::CartesianVector &childStart, 
-        const pandora::CartesianVector &childStartDirection);
+    std::pair<pandora::CartesianVector, bool> ExtrapolateChildToParent(const pandora::CartesianVector &parentPosition, 
+        const pandora::CartesianVector &childStart, const pandora::CartesianVector &childStartDirection);
 
     bool DoesConnect(const pandora::CartesianVector &boundary1, const pandora::CartesianVector &boundary2,
         const pandora::CartesianVector &testPoint, const float buffer);
@@ -108,11 +118,33 @@ private:
 
     void NormaliseNetworkParams(MLPLaterTierNetworkParams &laterTierNetworkParams);
 
+    float ClassifyTrackTrack(const MLPLaterTierNetworkParams &edgeParamsUpUp, const MLPLaterTierNetworkParams &edgeParamsUpDown, 
+        const MLPLaterTierNetworkParams &edgeParamsDownUp, const MLPLaterTierNetworkParams &edgeParamsDownDown);
+
+    torch::TensorAccessor<float, 2> ClassifyTrackTrackEdge(const MLPLaterTierNetworkParams &edgeParams, 
+        const MLPLaterTierNetworkParams &otherEdgeParams1, const MLPLaterTierNetworkParams &otherEdgeParams2, 
+        const MLPLaterTierNetworkParams &otherEdgeParams3);
+
+    int AddToInput(const int startIndex, const pandora::FloatVector &paramVector, LArDLHelper::TorchInput &modelInput);
+
+    float ClassifyTrackShower(const MLPLaterTierNetworkParams &edgeParamsUp, const MLPLaterTierNetworkParams &edgeParamsDown);
+
+    torch::TensorAccessor<float, 2> ClassifyTrackShowerEdge(const MLPLaterTierNetworkParams &edgeParams, 
+        const MLPLaterTierNetworkParams &otherEdgeParams);
+
+    // For model
+    std::string m_trackTrackBranchModelName;
+    std::string m_trackTrackClassifierModelName;
+    std::string m_trackShowerBranchModelName;
+    std::string m_trackShowerClassifierModelName;
+    LArDLHelper::TorchModel m_trackTrackBranchModel;
+    LArDLHelper::TorchModel m_trackTrackClassifierModel;
+    LArDLHelper::TorchModel m_trackShowerBranchModel;
+    LArDLHelper::TorchModel m_trackShowerClassifierModel;
     // For tool
     float m_trajectoryStepSize;
     float m_connectionBuffer;
     float m_searchRegion;
-
     // For normalisation
     float m_trackScoreMin;
     float m_trackScoreMax;
@@ -156,32 +188,49 @@ private:
 
 inline void MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams::Print()
 {
-    std::cout << "ParentPOIClosestToNuVertex: " << this->m_parentIsPOIClosestToNu << std::endl;
-    std::cout << "ChildPOIClosestToNuVertex: " << this->m_childIsPOIClosestToNu << std::endl;
-    std::cout << "ParentTrackScore: " << this->m_parentTrackScore << std::endl; 
-    std::cout << "ChildTrackScore: " << this->m_childTrackScore << std::endl;
-    std::cout << "ParentNSpacepoints: " << this->m_parentNSpacepoints << std::endl;
-    std::cout << "ChildNSpacepoints: " << this->m_childNSpacepoints << std::endl;
-    std::cout << "Separation3D: " << this->m_separation3D << std::endl;
-    std::cout << "ParentNuVertexSep: " << this->m_parentNuVertexSep << std::endl;
-    std::cout << "ChildNuVertexSep: " << this->m_childNuVertexSep << std::endl;
-    std::cout << "ParentEndRegionNHits: " << this->m_parentEndRegionNHits << std::endl;
-    std::cout << "ParentEndRegionNParticles: " << this->m_parentEndRegionNParticles << std::endl;
-    std::cout << "ParentEndRegionRToWall: " << this->m_parentEndRegionRToWall << std::endl;
-    std::cout << "VertexSep: " << this->m_vertexSeparation << std::endl;
-    std::cout << "DoesChildConnect: " << this->m_doesChildConnect << std::endl;
-    std::cout << "OvershootStartDCA: " << this->m_overshootStartDCA << std::endl;
-    std::cout << "OvershootStartL: " << this->m_overshootStartL << std::endl;
-    std::cout << "OvershootEndDCA: " << this->m_overshootEndDCA << std::endl;
-    std::cout << "OvershootEndL: " << this->m_overshootEndL << std::endl;
-    std::cout << "ChildCPDCA: " << this->m_childCPDCA << std::endl;
-    std::cout << "ChildCPExtrapDistance: " << this->m_childCPExtrapDistance << std::endl;
-    std::cout << "ChildCPLRatio: " << this->m_childCPLRatio << std::endl;
-    std::cout << "ParentCPNUpstreamHits: " << this->m_parentCPNUpstreamHits << std::endl;
-    std::cout << "ParentCPNDownstreamHits: " << this->m_parentCPNDownstreamHits << std::endl;
-    std::cout << "ParentCPNHitRatio: " << this->m_parentCPNHitRatio << std::endl;
-    std::cout << "ParentCPEigenvalueRatio: " << this->m_parentCPEigenvalueRatio << std::endl;
-    std::cout << "ParentCPOpeningAngle: " << this->m_parentCPOpeningAngle << std::endl;
+    std::cout << "ParentPOIClosestToNuVertex: " << m_parentIsPOIClosestToNu << std::endl;
+    std::cout << "ChildPOIClosestToNuVertex: " << m_childIsPOIClosestToNu << std::endl;
+    std::cout << "ParentTrackScore: " << m_parentTrackScore << std::endl; 
+    std::cout << "ChildTrackScore: " << m_childTrackScore << std::endl;
+    std::cout << "ParentNSpacepoints: " << m_parentNSpacepoints << std::endl;
+    std::cout << "ChildNSpacepoints: " << m_childNSpacepoints << std::endl;
+    std::cout << "Separation3D: " << m_separation3D << std::endl;
+    std::cout << "ParentNuVertexSep: " << m_parentNuVertexSep << std::endl;
+    std::cout << "ChildNuVertexSep: " << m_childNuVertexSep << std::endl;
+    std::cout << "ParentEndRegionNHits: " << m_parentEndRegionNHits << std::endl;
+    std::cout << "ParentEndRegionNParticles: " << m_parentEndRegionNParticles << std::endl;
+    std::cout << "ParentEndRegionRToWall: " << m_parentEndRegionRToWall << std::endl;
+    std::cout << "VertexSep: " << m_vertexSeparation << std::endl;
+    std::cout << "DoesChildConnect: " << m_doesChildConnect << std::endl;
+    std::cout << "OvershootStartDCA: " << m_overshootStartDCA << std::endl;
+    std::cout << "OvershootStartL: " << m_overshootStartL << std::endl;
+    std::cout << "OvershootEndDCA: " << m_overshootEndDCA << std::endl;
+    std::cout << "OvershootEndL: " << m_overshootEndL << std::endl;
+    std::cout << "ChildCPDCA: " << m_childCPDCA << std::endl;
+    std::cout << "ChildCPExtrapDistance: " << m_childCPExtrapDistance << std::endl;
+    std::cout << "ChildCPLRatio: " << m_childCPLRatio << std::endl;
+    std::cout << "ParentCPNUpstreamHits: " << m_parentCPNUpstreamHits << std::endl;
+    std::cout << "ParentCPNDownstreamHits: " << m_parentCPNDownstreamHits << std::endl;
+    std::cout << "ParentCPNHitRatio: " << m_parentCPNHitRatio << std::endl;
+    std::cout << "ParentCPEigenvalueRatio: " << m_parentCPEigenvalueRatio << std::endl;
+    std::cout << "ParentCPOpeningAngle: " << m_parentCPOpeningAngle << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::FloatVector MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams::GetCommonParamsForModel() const
+{
+    return {m_parentTrackScore, m_childTrackScore, m_parentNSpacepoints, m_childNSpacepoints, m_separation3D};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::FloatVector MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams::GetOrientationParamsForModel() const
+{
+    return {m_parentNuVertexSep, m_childNuVertexSep, m_parentEndRegionNHits, m_parentEndRegionNParticles, m_parentEndRegionRToWall, 
+            m_vertexSeparation, m_doesChildConnect, m_overshootStartDCA, m_overshootStartL, m_overshootEndDCA, m_overshootEndL, 
+            m_childCPDCA, m_childCPExtrapDistance, m_childCPLRatio, m_parentCPNUpstreamHits, m_parentCPNDownstreamHits, 
+            m_parentCPNHitRatio, m_parentCPEigenvalueRatio, m_parentCPOpeningAngle, m_parentIsPOIClosestToNu, m_childIsPOIClosestToNu};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
