@@ -44,7 +44,7 @@ class HierarchyPfo
     void SetPredictedParentPfo(const pandora::ParticleFlowObject *pPredictedParentPfo);
     const pandora::ParticleFlowObject* GetParentPfo() const;
     void SetParentPfo(const pandora::ParticleFlowObject *pParentPfo);
-    const pandora::PfoVector& GetSortedChildPfoVector();
+    const pandora::PfoVector& GetChildPfoVector() const;
     void AddChildPfo(const pandora::ParticleFlowObject *const pChildPfo);
     const pandora::CartesianVector& GetUpstreamVertex() const;
     void SetUpstreamVertex(const pandora::CartesianVector &upstreamVertex);
@@ -59,10 +59,6 @@ class HierarchyPfo
     void SetPrimaryScore(const float primaryScore);
     float GetLaterTierScore() const;
     void SetLaterTierScore(const float laterTierScore);
-    int GetParentOrientation() const;
-    void SetParentOrientation(const int parentOrientation);
-    int GetChildOrientation() const;
-    void SetChildOrientation(const int childOrientation);
     bool GetIsInHierarchy() const;
     void SetIsInHierarchy(const bool isInHierarchy);
 
@@ -82,14 +78,11 @@ class HierarchyPfo
 
     float m_primaryScore;
     float m_laterTierScore;
-    int m_parentOrientation; // 0 - start is not closest to neutrino vertex
-    int m_childOrientation; // 0 - start is not closest to neutrino vertex
     bool m_isInHierarchy;
 
 };
 
 typedef std::map<const pandora::ParticleFlowObject*, HierarchyPfo> HierarchyPfoMap;
-typedef std::pair<const pandora::ParticleFlowObject*, HierarchyPfo> HierarchyPfoMapEntry;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -108,8 +101,6 @@ inline HierarchyPfo::HierarchyPfo(const bool isTrack, const pandora::ParticleFlo
         m_downstreamDirection(downstreamDirection),
         m_primaryScore(-std::numeric_limits<float>::max()),
         m_laterTierScore(-std::numeric_limits<float>::max()),
-        m_parentOrientation(-1),
-        m_childOrientation(-1),
         m_isInHierarchy(false)
 {
 }
@@ -186,10 +177,8 @@ inline void HierarchyPfo::SetParentPfo(const pandora::ParticleFlowObject* pParen
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::PfoVector& HierarchyPfo::GetSortedChildPfoVector()
+inline const pandora::PfoVector& HierarchyPfo::GetChildPfoVector() const
 {
-    std::sort(m_childPfoVector.begin(), m_childPfoVector.end(), LArPfoHelper::SortByNHits);
-
     return m_childPfoVector;
 }
 
@@ -282,34 +271,6 @@ inline float HierarchyPfo::GetLaterTierScore() const
 inline void HierarchyPfo::SetLaterTierScore(const float laterTierScore)
 {
     m_laterTierScore = laterTierScore;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline int HierarchyPfo::GetParentOrientation() const
-{
-    return m_parentOrientation;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void HierarchyPfo::SetParentOrientation(const int parentOrientation)
-{
-    m_parentOrientation = parentOrientation;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline int HierarchyPfo::GetChildOrientation() const
-{
-    return m_childOrientation;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void HierarchyPfo::SetChildOrientation(const int childOrientation)
-{
-    m_childOrientation = childOrientation;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
