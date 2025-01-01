@@ -11,7 +11,6 @@
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
-
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
 
@@ -49,14 +48,13 @@ public:
     MLPPrimaryHierarchyTool();
 
     pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo, 
-        const HierarchyPfoMap &trackPfos, HierarchyPfo &hierarchyPfo);
+        const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, float &primaryScore);
 
 private:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const bool useUpstream, 
-        MLPPrimaryNetworkParams &primaryNetworkParams);
+        MLPPrimaryNetworkParams &primaryNetworkParams) const;
 
     void SetVertexRegionParams(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, 
         const pandora::CartesianVector &particleVertex, MLPPrimaryNetworkParams &primaryNetworkParams) const;
@@ -80,6 +78,8 @@ private:
         const MLPPrimaryNetworkParams &otherEdgeParams);
 
     float ClassifyShower(const MLPPrimaryNetworkParams &primaryNetworkParams);
+
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     // For model
     std::string m_primaryTrackBranchModelName;

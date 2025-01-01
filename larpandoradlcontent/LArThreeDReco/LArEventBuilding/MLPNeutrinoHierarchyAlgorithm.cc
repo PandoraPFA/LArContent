@@ -13,13 +13,11 @@
 #include "larpandoracontent/LArObjects/LArPfoObjects.h"
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
-#include <stdlib.h>     /* srand, rand */
-#include <time.h>       /* time */
 
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPNeutrinoHierarchyAlgorithm.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h"
 
 using namespace pandora;
 using namespace lar_content;
@@ -32,11 +30,20 @@ namespace lar_dl_content
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 MLPNeutrinoHierarchyAlgorithm::MLPNeutrinoHierarchyAlgorithm() :
+    m_bogusFloat(-999.f),
+    m_minClusterSize(5),
+    m_slidingFitWindow(20),
+    m_regionForDirFit(25.f),
+    m_nAngularBins(180),
+    m_primaryRegion(15.f),
     m_primaryThresholdTrackPass1(0.8f),
     m_primaryThresholdShowerPass1(0.45f),
     m_laterTierThresholdTrackPass1(0.8f),
     m_laterTierThresholdShowerPass1(0.8f),
-    m_pNeutrinoPfo(nullptr)
+    m_primaryThresholdTrackPass2(0.9f),
+    m_primaryThresholdShowerPass2(0.9f),
+    m_laterTierThresholdTrackPass2(0.0f),
+    m_laterTierThresholdShowerPass2(0.0f)
 {
 }
 
@@ -44,86 +51,108 @@ MLPNeutrinoHierarchyAlgorithm::MLPNeutrinoHierarchyAlgorithm() :
 
 StatusCode MLPNeutrinoHierarchyAlgorithm::Run()
 {
-    srand(0.1);
-    std::cout << "RUNNING THE NEW HIERARCHY ALG!" << std::endl;
-
-    if (!this->GetNeutrinoPfo())
+    // Get neutrino pfo
+    const ParticleFlowObject *pNeutrinoPfo(nullptr);
+    if (!this->GetNeutrinoPfo(pNeutrinoPfo))
         return STATUS_CODE_SUCCESS;
+
+    // Ensure neutrino has a vertex
+    if (pNeutrinoPfo->GetVertexList().empty())
+        return STATUS_CODE_NOT_INITIALIZED;
 
     // Give PFPs IDs to keep track of them
     this->DetermineIsobelID();
 
     // Fill the track/shower vectors
-    this->FillTrackShowerVectors();
+    HierarchyPfoMap trackPfos, showerPfos;
+    this->FillTrackShowerVectors(pNeutrinoPfo, trackPfos, showerPfos);
 
     // Calculate primary scores
-    this->SetPrimaryScores();
+    this->SetPrimaryScores(pNeutrinoPfo, trackPfos, showerPfos);
 
     //////////////////////////////////////////////////////////////////
     std::cout << "---------------------------------------------------------" << std::endl;
     std::cout << "PRIMARY SCORES" << std::endl;
-    for (const auto& [pPfo, hierarchyPfo] : m_trackPfos)
+    for (const auto& [pPfo, hierarchyPfo] : trackPfos)
         std::cout << m_isobelID[pPfo] << ": " << hierarchyPfo.GetPrimaryScore() << std::endl;
 
-    for (const auto& [pPfo, hierarchyPfo] : m_showerPfos)
+    for (const auto& [pPfo, hierarchyPfo] : showerPfos)
         std::cout << m_isobelID[pPfo] << ": " << hierarchyPfo.GetPrimaryScore() << std::endl;
     std::cout << "---------------------------------------------------------" << std::endl;
     //////////////////////////////////////////////////////////////////
 
-    // Set what primary things we can
-    this->BuildPrimaryTierPass1();
+    // Build initial primary tier
+    Hierarchy hierarchy({PfoVector()});
+    this->UpdateHierarchy(pNeutrinoPfo, true, true, m_primaryThresholdTrackPass1, m_primaryThresholdShowerPass1, 
+        true, trackPfos, showerPfos, hierarchy);
 
-    if (m_hierarchy.size() == 0)
+    if (hierarchy.empty())
     {
-        std::cout << "NO PRIMARIES FOUND!" << std::endl;
-        return STATUS_CODE_FAILURE;
+        // Set everything as primary and leave.
+        this->BuildPandoraHierarchy(pNeutrinoPfo, trackPfos, showerPfos);
+
+        return STATUS_CODE_SUCCESS;
     }
 
     //////////////////////////////////////////////////////////////////    
     std::cout << "---------------------------------------------------------" << std::endl;
     std::cout << "PRIMARY TIER:" << std::endl;
-    for (const ParticleFlowObject* pPfo : m_hierarchy.at(0))
+    for (const ParticleFlowObject* pPfo : hierarchy.at(0))
         std::cout << m_isobelID[pPfo] << std::endl;
     std::cout << "---------------------------------------------------------" << std::endl;
     //////////////////////////////////////////////////////////////////    
 
     // Set later tier scores
-    this->SetLaterTierScores();
+    this->SetLaterTierScores(pNeutrinoPfo, trackPfos, showerPfos);
 
     //////////////////////////////////////////////////////////////////
     std::cout << "---------------------------------------------------------" << std::endl;
     std::cout << "LATER SCORES" << std::endl;
-    for (const auto& [pPfo, hierarchyPfo] : m_trackPfos)
+    for (const auto& [pPfo, hierarchyPfo] : trackPfos)
         if (hierarchyPfo.GetPredictedParentPfo())
             std::cout << m_isobelID[pPfo] << ": " << m_isobelID[hierarchyPfo.GetPredictedParentPfo()] << ", " << hierarchyPfo.GetLaterTierScore() << std::endl;
 
-    for (const auto& [pPfo, hierarchyPfo] : m_showerPfos)
+    for (const auto& [pPfo, hierarchyPfo] : showerPfos)
         if (hierarchyPfo.GetPredictedParentPfo())
             std::cout << m_isobelID[pPfo] << ": " << m_isobelID[hierarchyPfo.GetPredictedParentPfo()] << ", " << hierarchyPfo.GetLaterTierScore() << std::endl;
     std::cout << "---------------------------------------------------------" << std::endl;
     //////////////////////////////////////////////////////////////////
 
     // Build the later tier
-    this->BuildLaterTierPass1();
+    this->UpdateHierarchy(pNeutrinoPfo, false, false, m_laterTierThresholdTrackPass1, m_laterTierThresholdShowerPass1, 
+        true, trackPfos, showerPfos, hierarchy);
+
+    // Try to recover primaries using laterTierScore
+    this->UpdateHierarchy(pNeutrinoPfo, true, false, m_primaryThresholdTrackPass2, m_primaryThresholdShowerPass2, 
+        false, trackPfos, showerPfos, hierarchy);
+
+    // Try to recover any children using laterTierScore
+    this->UpdateHierarchy(pNeutrinoPfo, false, false, m_laterTierThresholdTrackPass2, m_laterTierThresholdShowerPass2, 
+        true, trackPfos, showerPfos, hierarchy);
 
     //////////////////////////////////////////////////////////////////
-    this->PrintHierarchy();
+    this->PrintHierarchy(hierarchy);
     //////////////////////////////////////////////////////////////////
 
-    this->BuildPandoraHierarchy();
+    this->BuildPandoraHierarchy(pNeutrinoPfo, trackPfos, showerPfos);
 
     //////////////////////////////////////////////////////////////////
-    this->PrintPandoraHierarchy();
+    this->PrintPandoraHierarchy(pNeutrinoPfo);
     //////////////////////////////////////////////////////////////////
 
     this->CheckForOrphans();
+
+    ///////////////////////////
+    // Reset member variables
+    m_isobelID.clear();
+    ///////////////////////////
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MLPNeutrinoHierarchyAlgorithm::GetNeutrinoPfo()
+bool MLPNeutrinoHierarchyAlgorithm::GetNeutrinoPfo(const ParticleFlowObject *&pNeutrinoPfo) const
 {
     const PfoList *pPfoList = nullptr;
 
@@ -134,9 +163,9 @@ bool MLPNeutrinoHierarchyAlgorithm::GetNeutrinoPfo()
         return false;
 
     // ATTN Enforces that only one pfo, of neutrino-type, be in the specified input list
-    m_pNeutrinoPfo = (1 == pPfoList->size()) ? *(pPfoList->begin()) : nullptr;
+    pNeutrinoPfo = (1 == pPfoList->size()) ? *(pPfoList->begin()) : nullptr;
 
-    if (!m_pNeutrinoPfo || !LArPfoHelper::IsNeutrino(m_pNeutrinoPfo))
+    if (!pNeutrinoPfo || !LArPfoHelper::IsNeutrino(pNeutrinoPfo))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     return true;
@@ -144,12 +173,10 @@ bool MLPNeutrinoHierarchyAlgorithm::GetNeutrinoPfo()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPNeutrinoHierarchyAlgorithm::FillTrackShowerVectors()
+void MLPNeutrinoHierarchyAlgorithm::FillTrackShowerVectors(const ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos, 
+    HierarchyPfoMap &showerPfos) const
 {
-    const int MIN_3D_CLUSTER_SIZE = 5;
-
     // Sliding fit shenanigans
-    const int HALF_WINDOW_LAYERS(20);
     const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
     const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
     const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
@@ -165,44 +192,47 @@ void MLPNeutrinoHierarchyAlgorithm::FillTrackShowerVectors()
         for (const ParticleFlowObject * pPfo : *pPfoList)
         {
             // Apply hit cut
-            if (this->GetNSpacepoints(pPfo) < MIN_3D_CLUSTER_SIZE)
+            if (this->GetNSpacepoints(pPfo) < m_minClusterSize)
                 continue;
 
             // Attempt sliding linear fit
             try
             {
-                CartesianPointVector pointVector;
-                LArPfoHelper::GetCoordinateVector(pPfo, TPC_3D, pointVector);
+                ClusterList clusters3D;
+                LArPfoHelper::GetThreeDClusterList(pPfo, clusters3D);
 
-                const ThreeDSlidingFitResult slidingFitResult(&pointVector, HALF_WINDOW_LAYERS, slidingFitPitch);
+                if (clusters3D.size() != 1)
+                    continue;
+
+                const ThreeDSlidingFitResult slidingFitResult(*clusters3D.begin(), m_slidingFitWindow, slidingFitPitch);
 
                 // We need directions...
-                CartesianVector upstreamVertex(-999.f, -999.f, -999.f), upstreamDirection(-999.f, -999.f, -999.f), 
-                    downstreamVertex(-999.f, -999.f, -999.f), downstreamDirection(-999.f, -999.f, -999.f);
+                CartesianVector upstreamVertex(m_bogusFloat, m_bogusFloat, m_bogusFloat), upstreamDirection(m_bogusFloat, m_bogusFloat, m_bogusFloat), 
+                    downstreamVertex(m_bogusFloat, m_bogusFloat, m_bogusFloat), downstreamDirection(m_bogusFloat, m_bogusFloat, m_bogusFloat);
 
-                if (!this->GetExtremalVerticesAndDirections(pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection))
+                if (!this->GetExtremalVerticesAndDirections(pNeutrinoPfo, pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection))
                     continue;
 
                 // Create track/shower objects
                 if (pPfo->GetParticleId() == 13)
                 {
-                    m_trackPfos.insert(HierarchyPfoMapEntry({pPfo, HierarchyPfo(true, pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection)}));
+                    trackPfos.insert(std::make_pair(pPfo, HierarchyPfo(true, pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection)));
                 }
                 else if (pPfo->GetParticleId() == 11) 
                 {
-                    m_showerPfos.insert(HierarchyPfoMapEntry({pPfo, HierarchyPfo(false, pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection)}));
+                    showerPfos.insert(std::make_pair(pPfo, HierarchyPfo(false, pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection)));
                 }
             }
             catch (...) { continue; }
         }
     }
 
-    std::cout << "We have " << m_trackPfos.size() << " track(s) and " << m_showerPfos.size() << " shower(s)" << std::endl;
+    std::cout << "We have " << trackPfos.size() << " track(s) and " << showerPfos.size() << " shower(s)" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float MLPNeutrinoHierarchyAlgorithm::GetNSpacepoints(const ParticleFlowObject *const pPfo)
+float MLPNeutrinoHierarchyAlgorithm::GetNSpacepoints(const ParticleFlowObject *const pPfo) const
 {
     ClusterList clusterList3D;
     LArPfoHelper::GetThreeDClusterList(pPfo, clusterList3D);
@@ -217,14 +247,12 @@ float MLPNeutrinoHierarchyAlgorithm::GetNSpacepoints(const ParticleFlowObject *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const ParticleFlowObject *const pPfo, const ThreeDSlidingFitResult &slidingFitResult,
-    CartesianVector &upstreamVertex, CartesianVector &upstreamDirection, CartesianVector &downstreamVertex, CartesianVector &downstreamDirection)
+bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const ParticleFlowObject *const pNeutrinoPfo, const ParticleFlowObject *const pPfo, 
+    const ThreeDSlidingFitResult &slidingFitResult, CartesianVector &upstreamVertex, CartesianVector &upstreamDirection, CartesianVector &downstreamVertex, 
+    CartesianVector &downstreamDirection) const
 {
-    if (m_pNeutrinoPfo->GetVertexList().empty())
-        return false;
- 
     // First, get the neutrino vertex
-    const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(m_pNeutrinoPfo));
+    const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
     const CartesianVector nuVertex(pNeutrinoVertex->GetPosition().GetX(), pNeutrinoVertex->GetPosition().GetY(), pNeutrinoVertex->GetPosition().GetZ());
 
     if (pPfo->GetParticleId() == 13)
@@ -271,8 +299,8 @@ bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const Parti
         downstreamVertex = (minSepSq < maxSepSq) ? slidingFitResult.GetGlobalMaxLayerPosition() : slidingFitResult.GetGlobalMinLayerPosition();
 
         // find directions, demand that we have at least one
-        const bool upstreamDirectionSet(this->GetShowerDirection(pPfo, upstreamVertex, 25.f, upstreamDirection));
-        const bool downstreamDirectionSet(this->GetShowerDirection(pPfo, downstreamVertex, 25.f, downstreamDirection));
+        const bool upstreamDirectionSet(this->GetShowerDirection(pPfo, upstreamVertex, upstreamDirection));
+        const bool downstreamDirectionSet(this->GetShowerDirection(pPfo, downstreamVertex, downstreamDirection));
 
         if (!upstreamDirectionSet && !downstreamDirectionSet)
             return false;
@@ -283,8 +311,8 @@ bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const Parti
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MLPNeutrinoHierarchyAlgorithm::GetShowerDirection(const ParticleFlowObject *const pPfo, const CartesianVector &vertex, const float searchRegion, 
-    CartesianVector &direction)
+bool MLPNeutrinoHierarchyAlgorithm::GetShowerDirection(const ParticleFlowObject *const pPfo, const CartesianVector &vertex,
+    CartesianVector &direction) const
 {
     CartesianPointVector pointVector;
     LArPfoHelper::GetCoordinateVector(pPfo, TPC_3D, pointVector);
@@ -293,12 +321,11 @@ bool MLPNeutrinoHierarchyAlgorithm::GetShowerDirection(const ParticleFlowObject 
         return false;
 
     // set direction by angular distribution
-    const int nBins(180);
     const float angleMin(0.f), angleMax(2.f * M_PI);
-    const float binWidth((angleMax - angleMin) / static_cast<float>(nBins));
+    const float binWidth((angleMax - angleMin) / static_cast<float>(m_nAngularBins));
 
-    std::vector<std::vector<int>> spatialDist(nBins, std::vector<int>(nBins, 0));
-    std::vector<std::vector<float>> tieBreakerDist(nBins, std::vector<float>(nBins, 0.f));
+    std::vector<std::vector<int>> spatialDist(m_nAngularBins, std::vector<int>(m_nAngularBins, 0));
+    std::vector<std::vector<float>> tieBreakerDist(m_nAngularBins, std::vector<float>(m_nAngularBins, 0.f));
 
     int highestSP(0), bestTheta0YZBin(-1), bestTheta0XZBin(-1);
     float tieBreaker(std::numeric_limits<float>::max());
@@ -308,7 +335,7 @@ bool MLPNeutrinoHierarchyAlgorithm::GetShowerDirection(const ParticleFlowObject 
         const CartesianVector displacement(position3D - vertex);
         const float mag = displacement.GetMagnitude();
 
-        if (mag > searchRegion)
+        if (mag > m_regionForDirFit)
             continue;
 
         const float magXZ = sqrt((displacement.GetX() * displacement.GetX()) + (displacement.GetZ() * displacement.GetZ()));
@@ -354,78 +381,146 @@ bool MLPNeutrinoHierarchyAlgorithm::GetShowerDirection(const ParticleFlowObject 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPNeutrinoHierarchyAlgorithm::SetPrimaryScores()
+void MLPNeutrinoHierarchyAlgorithm::SetPrimaryScores(const ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos, 
+    HierarchyPfoMap &showerPfos) const
 {
-    // For tracks
-    for (auto& [pPfo, hierarchyPfo] : m_trackPfos)
-        m_primaryHierarchyTool->Run(this, m_pNeutrinoPfo, m_trackPfos, hierarchyPfo);
+    for (auto& [pPfo, hierarchyPfo] : trackPfos)
+        hierarchyPfo.SetPrimaryScore(this->GetPrimaryScore(pNeutrinoPfo, trackPfos, hierarchyPfo));
 
-    // For showers
-    for (auto& [pPfo, hierarchyPfo] : m_showerPfos)
-        m_primaryHierarchyTool->Run(this, m_pNeutrinoPfo, m_trackPfos, hierarchyPfo);
+    for (auto& [pPfo, hierarchyPfo] : showerPfos)
+        hierarchyPfo.SetPrimaryScore(this->GetPrimaryScore(pNeutrinoPfo, trackPfos, hierarchyPfo));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPNeutrinoHierarchyAlgorithm::BuildPrimaryTierPass1()
+float MLPNeutrinoHierarchyAlgorithm::GetPrimaryScore(const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, 
+    const HierarchyPfo &hierarchyPfo) const
 {
-    std::vector<const ParticleFlowObject*> primaryTier;
+    float primaryScore(m_bogusFloat);
 
-    for (bool isTrack : {true, false})
+    m_primaryHierarchyTool->Run(this, pNeutrinoPfo, trackPfos, hierarchyPfo, primaryScore);
+
+    return primaryScore;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void MLPNeutrinoHierarchyAlgorithm::UpdateHierarchy(const ParticleFlowObject *const pNeutrinoPfo, const bool buildPrimaryTier, 
+    const bool usePrimaryScore, const float trackThreshold, const float showerThreshold, const bool isLowerThreshold, 
+    HierarchyPfoMap &trackPfos, HierarchyPfoMap &showerPfos, Hierarchy &hierarchy) const
+{
+    bool found(true);
+    unsigned int tierIndex(buildPrimaryTier ? 0 : 1);
+
+    while (found)
     {
-        std::map<const ParticleFlowObject*, HierarchyPfo> &hierarchyPfoMap(isTrack ? m_trackPfos : m_showerPfos);
+        found = false;
 
-        for (auto& [pPfo, hierarchyPfo] : hierarchyPfoMap)
+        std::vector<const ParticleFlowObject*> &thisTier(hierarchy.at(tierIndex));
+
+        for (bool isTrack : {true, false})
         {
-            const float thisPrimaryScore(hierarchyPfo.GetPrimaryScore());
+            std::map<const ParticleFlowObject*, HierarchyPfo> &hierarchyPfoMap(isTrack ? trackPfos : showerPfos);
 
-            if ((thisPrimaryScore > 0.f) && ((isTrack && (thisPrimaryScore > m_primaryThresholdTrackPass1)) || 
-                (!isTrack && (thisPrimaryScore > m_primaryThresholdShowerPass1))))
+            for (auto& [pChildPfo, childPfo] : hierarchyPfoMap)
             {
-                // Add to primary tier
-                primaryTier.emplace_back(pPfo);
+                // Continue if parent already found
+                if (childPfo.GetIsInHierarchy())
+                    continue;
 
-                // Add to hierarchyPfo info
-                hierarchyPfo.SetParentPfo(m_pNeutrinoPfo);
-                hierarchyPfo.SetIsInHierarchy(true);
+                const ParticleFlowObject *pPredictedParent(pNeutrinoPfo);
+
+                // If not buildPrimaryTier correct pPredictedParent
+                if (!buildPrimaryTier)
+                {
+                    // Do we have a predicted parent
+                    if (!childPfo.GetPredictedParentPfo())
+                        continue;
+
+                    // Is predicted parent in preceeding tier?
+                    std::vector<const ParticleFlowObject*> &preceedingTier(hierarchy.at(tierIndex - 1));
+                    pPredictedParent = childPfo.GetPredictedParentPfo();
+                    if (std::find(preceedingTier.begin(), preceedingTier.end(), pPredictedParent) == preceedingTier.end())
+                        continue;
+                }
+
+                // Does it pass tier cut?
+                const float networkScore(usePrimaryScore ? childPfo.GetPrimaryScore() : childPfo.GetLaterTierScore());
+                const float thresholdScore(isTrack ? trackThreshold : showerThreshold);
+
+                if ((isLowerThreshold && (networkScore > thresholdScore)) || (!isLowerThreshold && (networkScore < thresholdScore)))
+                {
+                    found = true;
+
+                    // Add child to hierarchy tier
+                    thisTier.emplace_back(pChildPfo);
+
+                    // Add info to childPfo
+                    childPfo.SetIsInHierarchy(true);
+                    childPfo.SetParentPfo(pPredictedParent);
+
+                    // Add info to parentPfo
+                    if (!buildPrimaryTier)
+                    {
+                        if (trackPfos.find(pPredictedParent) == trackPfos.end())
+                            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+                        trackPfos.at(pPredictedParent).AddChildPfo(pChildPfo);
+                    }
+                }
             }
         }
-    }
 
-    m_hierarchy.emplace_back(primaryTier);
+        // Make sure to add the next tier
+        if (hierarchy.size() == (tierIndex + 1))
+            hierarchy.push_back(PfoVector());
+
+        // If buildPrimaryTier, our work is done!
+        if (buildPrimaryTier)
+            break;
+
+        ++tierIndex;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPNeutrinoHierarchyAlgorithm::SetLaterTierScores()
+void MLPNeutrinoHierarchyAlgorithm::SetLaterTierScores(const ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos, 
+    HierarchyPfoMap &showerPfos) const
 {
     for (bool isTrack : {true, false})
     {
-        std::map<const ParticleFlowObject*, HierarchyPfo> &hierarchyPfoMap(isTrack ? m_trackPfos : m_showerPfos);
+        std::map<const ParticleFlowObject*, HierarchyPfo> &hierarchyPfoMap(isTrack ? trackPfos : showerPfos);
 
         for (auto& [pChildPfo, childPfo] : hierarchyPfoMap)
         {
-            // Don't bother if we have already found a parent
+            // Continue if parent already found
             if (childPfo.GetIsInHierarchy())
                 continue;
 
-            float highestScore(-std::numeric_limits<float>::max());
+            // Only consider for later tier if far away from nu vertex
+            const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
+            const CartesianVector nuVertex(pNeutrinoVertex->GetPosition().GetX(), pNeutrinoVertex->GetPosition().GetY(), pNeutrinoVertex->GetPosition().GetZ());
 
-            for (auto& [pParentPfo, parentPfo] : m_trackPfos)
+            if ((childPfo.GetUpstreamVertex() - nuVertex).GetMagnitudeSquared() < (m_primaryRegion * m_primaryRegion))
+                continue;
+
+            float highestScore(0.f);
+            int highestNHits(0);
+
+            for (auto& [pParentPfo, parentPfo] : trackPfos)
             {
                 if (pChildPfo == pParentPfo)
                     continue;
 
-                int parentOrientation(-1), childOrientation(-1);
-                const float thisScore(isTrack ? this->GetLaterTierScoreTrackToTrack(parentPfo, childPfo, parentOrientation, childOrientation) :
-                    this->GetLaterTierScoreTrackToShower(parentPfo, childPfo, parentOrientation, childOrientation));
+                const float thisScore(this->GetLaterTierScore(pNeutrinoPfo, parentPfo, childPfo));
 
-                if (thisScore > highestScore)
+                if ((thisScore > highestScore) || ((std::fabs(thisScore - highestScore) < std::numeric_limits<float>::epsilon()) &&
+                    (this->GetNSpacepoints(pParentPfo) > highestNHits)))
                 {
                     highestScore = thisScore;
+                    highestNHits = this->GetNSpacepoints(pParentPfo);
                     childPfo.SetLaterTierScore(thisScore);
-                    childPfo.SetParentOrientation(parentOrientation);
-                    childPfo.SetChildOrientation(childOrientation);
                     childPfo.SetPredictedParentPfo(pParentPfo);
                 }
             }
@@ -435,79 +530,20 @@ void MLPNeutrinoHierarchyAlgorithm::SetLaterTierScores()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPNeutrinoHierarchyAlgorithm::BuildLaterTierPass1()
+float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScore(const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfo &parentPfo, 
+    const HierarchyPfo &childPfo) const
 {
-    while (m_hierarchy.at(m_hierarchy.size() - 1).size() != 0)
-    {
-        std::vector<const ParticleFlowObject*> &preceedingTier(m_hierarchy.at(m_hierarchy.size() - 1));
-        std::vector<const ParticleFlowObject*> thisTier;
+    float laterTierScore(m_bogusFloat);
 
-        for (bool isTrack : {true, false})
-        {
-            std::map<const ParticleFlowObject*, HierarchyPfo> &hierarchyPfoMap(isTrack ? m_trackPfos : m_showerPfos);
+    m_laterTierHierarchyTool->Run(this, pNeutrinoPfo, parentPfo, childPfo, laterTierScore);
 
-            for (auto& [pChildPfo, childPfo] : hierarchyPfoMap)
-            {
-                // Don't bother if we have already found a parent
-                if (childPfo.GetIsInHierarchy())
-                    continue;
-
-                // Do we have a predicted parent
-                if (!childPfo.GetPredictedParentPfo())
-                    continue;
-
-                // Is predicted parent in preceeding tier?
-                const ParticleFlowObject *const pPredictedParent = childPfo.GetPredictedParentPfo();
-                if (std::find(preceedingTier.begin(), preceedingTier.end(), pPredictedParent) == preceedingTier.end())
-                    continue;
-
-                // Does it pass tier cut?
-                if ((isTrack && (childPfo.GetLaterTierScore() > m_laterTierThresholdTrackPass1)) ||
-                    (!isTrack && (childPfo.GetLaterTierScore() > m_laterTierThresholdShowerPass1)))
-                {
-                    // Add child to hierarchy tier
-                    thisTier.emplace_back(pChildPfo);
-
-                    // Add info to childPfo
-                    childPfo.SetIsInHierarchy(true);
-                    childPfo.SetParentPfo(pPredictedParent);
-
-                    // Add info to parentPfo
-                    if (m_trackPfos.find(pPredictedParent) == m_trackPfos.end())
-                        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-                    m_trackPfos.at(pPredictedParent).AddChildPfo(pChildPfo);
-                }
-            }
-        }
-
-        m_hierarchy.emplace_back(thisTier);
-    }
+    return laterTierScore;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScoreTrackToTrack(HierarchyPfo &parentPfo, HierarchyPfo &childPfo, 
-    int &parentOrientation, int &childOrientation) const
-{
-    //m_laterTierHierarchyTool->Run(this, m_pNeutrinoPfo, parentPfo, childPfo);
-
-    return this->GetRandomNumber();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScoreTrackToShower(HierarchyPfo &parentPfo, HierarchyPfo &childPfo,
-    int &parentOrientation, int &childOrientation) const
-{
-    //m_laterTierHierarchyTool->Run(this, m_pNeutrinoPfo, parentPfo, childPfo);
-
-    return this->GetRandomNumber();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MLPNeutrinoHierarchyAlgorithm::BuildPandoraHierarchy()
+void MLPNeutrinoHierarchyAlgorithm::BuildPandoraHierarchy(const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, 
+    const HierarchyPfoMap &showerPfos) const
 {
     PfoVector pfoVector;
 
@@ -529,38 +565,39 @@ void MLPNeutrinoHierarchyAlgorithm::BuildPandoraHierarchy()
     // Build known hierarchy
     for (const ParticleFlowObject *const pPfo : pfoVector)
     {
-        HierarchyPfo* hierarchyPfo(nullptr);
+        const HierarchyPfo* hierarchyPfo(nullptr);
 
-        if (m_trackPfos.find(pPfo) != m_trackPfos.end())
+        if (trackPfos.find(pPfo) != trackPfos.end())
         {
-            hierarchyPfo = &m_trackPfos.at(pPfo);
+            hierarchyPfo = &trackPfos.at(pPfo);
         }
-        else if (m_showerPfos.find(pPfo) != m_showerPfos.end())
+        else if (showerPfos.find(pPfo) != showerPfos.end())
         {
-            hierarchyPfo = &m_showerPfos.at(pPfo);
+            hierarchyPfo = &showerPfos.at(pPfo);
         }
         else
         {
             // If alg never handled the pfo, assign as primary
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, m_pNeutrinoPfo, pPfo));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pNeutrinoPfo, pPfo));
             continue;
         }
 
         // If pfo was never assigned to hierarchy, add as primary
         if (!hierarchyPfo->GetIsInHierarchy())
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, m_pNeutrinoPfo, pPfo));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pNeutrinoPfo, pPfo));
             continue;
         }
 
         // If parent is a neutrino we have to assign its parent
-        if (hierarchyPfo->GetParentPfo() == m_pNeutrinoPfo)
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, m_pNeutrinoPfo, pPfo));
+        if (hierarchyPfo->GetParentPfo() == pNeutrinoPfo)
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pNeutrinoPfo, pPfo));
 
         // Assign parent-child links of its children
-        const PfoVector &childPfos(hierarchyPfo->GetSortedChildPfoVector());
+        PfoVector childPfos(hierarchyPfo->GetChildPfoVector());
+        std::sort(childPfos.begin(), childPfos.end(), LArPfoHelper::SortByNHits);
 
-        if ((!childPfos.empty()) && (m_showerPfos.find(pPfo) != m_showerPfos.end()))
+        if ((!childPfos.empty()) && (showerPfos.find(pPfo) != showerPfos.end()))
         {
             std::cout << "ISOBEL YOU MORON, SHOWER WITH CHILDREN" << std::endl;
             throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -576,8 +613,21 @@ void MLPNeutrinoHierarchyAlgorithm::BuildPandoraHierarchy()
 StatusCode MLPNeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoPfoListName));
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BogusFloat", m_bogusFloat));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterSize", m_minClusterSize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "RegionForDirectionFit", m_regionForDirFit));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NAngularBins", m_nAngularBins));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryRegion", m_primaryRegion));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryThresholdTrackPass1", m_primaryThresholdTrackPass1));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryThresholdShowerPass1", m_primaryThresholdShowerPass1));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LaterTierThresholdTrackPass1", m_laterTierThresholdTrackPass1));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LaterTierThresholdShowerPass1", m_laterTierThresholdShowerPass1));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryThresholdTrackPass2", m_primaryThresholdTrackPass2));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryThresholdShowerPass2", m_primaryThresholdShowerPass2));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LaterTierThresholdTrackPass2", m_laterTierThresholdTrackPass2));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LaterTierThresholdShowerPass2", m_laterTierThresholdShowerPass2));
 
     AlgorithmTool *pAlgorithmTool(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "MLPPrimaryHierarchyTool", pAlgorithmTool));
@@ -586,34 +636,15 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     if (!m_primaryHierarchyTool)
         return STATUS_CODE_INVALID_PARAMETER;
 
-    // pAlgorithmTool = nullptr;
-    // PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "MLPLaterTierHierarchyTool", pAlgorithmTool));
-    // m_laterTierHierarchyTool = dynamic_cast<MLPLaterTierHierarchyTool *>(pAlgorithmTool);
+    pAlgorithmTool = nullptr;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "MLPLaterTierHierarchyTool", pAlgorithmTool));
+    m_laterTierHierarchyTool = dynamic_cast<MLPLaterTierHierarchyTool *>(pAlgorithmTool);
 
-    // if (!m_laterTierHierarchyTool)
-    //     return STATUS_CODE_INVALID_PARAMETER;
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryThresholdTrackPass1", m_primaryThresholdTrackPass1));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryThresholdShowerPass1", m_primaryThresholdShowerPass1));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LaterTierThresholdTrackPass1", m_laterTierThresholdTrackPass1));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LaterTierThresholdShowerPass1", m_laterTierThresholdShowerPass1));
+    if (!m_laterTierHierarchyTool)
+        return STATUS_CODE_INVALID_PARAMETER;
 
     return STATUS_CODE_SUCCESS;
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float MLPNeutrinoHierarchyAlgorithm::GetRandomNumber() const
-{
-    int randomNumber1 = rand() % 10 + 1;
-    int randomNumber2 = rand() % 10 + 1;
-
-    return ((static_cast<float>(randomNumber1) / 10.f) + (static_cast<float>(randomNumber2) / 100.f));
-}
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -640,18 +671,18 @@ void MLPNeutrinoHierarchyAlgorithm::DetermineIsobelID()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPNeutrinoHierarchyAlgorithm::PrintHierarchy()
+void MLPNeutrinoHierarchyAlgorithm::PrintHierarchy(const Hierarchy &hierarchy) const
 {
     int count = 2;
 
-    for (const std::vector<const ParticleFlowObject*> &hierarchyTier : m_hierarchy)
+    for (const std::vector<const ParticleFlowObject*> &hierarchyTier : hierarchy)
     {
         std::cout << "-------" << std::endl;
-        std::cout << "m_hierarchy Tier: " << count << std::endl;
+        std::cout << "Hierarchy Tier: " << count << std::endl;
         std::cout << "-------" << std::endl;
 
         for (const ParticleFlowObject * pPfo : hierarchyTier)
-            std::cout << "PFP: " << m_isobelID[pPfo] << std::endl;
+            std::cout << "PFP: " << m_isobelID.at(pPfo) << std::endl;
 
         ++count;
     }
@@ -659,10 +690,10 @@ void MLPNeutrinoHierarchyAlgorithm::PrintHierarchy()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPNeutrinoHierarchyAlgorithm::PrintPandoraHierarchy()
+void MLPNeutrinoHierarchyAlgorithm::PrintPandoraHierarchy(const ParticleFlowObject *const pNeutrinoPfo) const
 {
     PfoVector parentPfos;
-    parentPfos.push_back(m_pNeutrinoPfo);
+    parentPfos.push_back(pNeutrinoPfo);
 
     int count = 2;
 
@@ -686,7 +717,7 @@ void MLPNeutrinoHierarchyAlgorithm::PrintPandoraHierarchy()
 
             for (const ParticleFlowObject *const pChildPfo : childVector)
             {
-                std::cout << "PFP: " << m_isobelID[pChildPfo] << std::endl;
+                std::cout << "PFP: " << m_isobelID.at(pChildPfo) << std::endl;
                 tierPfos.push_back(pChildPfo);
             }
         }
@@ -698,7 +729,7 @@ void MLPNeutrinoHierarchyAlgorithm::PrintPandoraHierarchy()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPNeutrinoHierarchyAlgorithm::CheckForOrphans()
+void MLPNeutrinoHierarchyAlgorithm::CheckForOrphans() const
 {
     PfoVector pfoVector;
 

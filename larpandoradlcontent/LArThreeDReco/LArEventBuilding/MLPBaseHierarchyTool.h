@@ -11,7 +11,6 @@
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
-
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 
 #include <torch/script.h>
@@ -32,23 +31,27 @@ public:
     MLPBaseHierarchyTool();
 
 protected:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     void SetDetectorBoundaries();
 
     bool IsInFV(const pandora::CartesianVector &position) const;
 
-    float GetNSpacepoints(const HierarchyPfo &hierarchyPfo);
+    float GetNSpacepoints(const HierarchyPfo &hierarchyPfo) const;
 
     std::pair<float, float> GetParticleInfoAboutPfoPosition(const pandora::Algorithm *const pAlgorithm, 
         const pandora::ParticleFlowObject *const pPfo, const pandora::CartesianVector &pointOfInterest) const;
 
     void NormaliseNetworkParam(const float minLimit, const float maxLimit, float &networkParam) const;
 
-    bool IsVectorSet(const pandora::CartesianVector &vector);
+    bool IsVectorSet(const pandora::CartesianVector &vector) const;
 
-    int AddToInput(const int startIndex, const pandora::FloatVector &paramVector, LArDLHelper::TorchInput &modelInput);
+    int AddToInput(const int startIndex, const pandora::FloatVector &paramVector, LArDLHelper::TorchInput &modelInput) const;
 
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    float m_bogusFloat;
+    float m_vertexRegionRadius;
+    pandora::StringVector m_pfoListNames;
     float m_detectorMinX;
     float m_detectorMaxX;
     float m_detectorMinY;
@@ -56,8 +59,6 @@ protected:
     float m_detectorMinZ;
     float m_detectorMaxZ;
     bool areBoundariesSet;
-    float m_vertexRegionRadius;
-    pandora::StringVector m_pfoListNames;
 };
 
 } // namespace lar_dl_content

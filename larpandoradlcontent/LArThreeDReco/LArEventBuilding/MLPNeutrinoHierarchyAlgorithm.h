@@ -36,71 +36,68 @@ public:
     MLPNeutrinoHierarchyAlgorithm();
 
 private:
-
+    typedef std::vector<pandora::PfoVector> Hierarchy;
 
     pandora::StatusCode Run();
 
     void DetermineIsobelID();
 
-    void PrintHierarchy();
+    void PrintHierarchy(const Hierarchy &hierarchy) const;
 
-    bool GetNeutrinoPfo();
+    bool GetNeutrinoPfo(const pandora::ParticleFlowObject *&pNeutrinoPfo) const;
 
-    void FillTrackShowerVectors();
+    void FillTrackShowerVectors(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos, HierarchyPfoMap &showerPfos) const;
 
-    float GetNSpacepoints(const pandora::ParticleFlowObject *const pPfo);
+    float GetNSpacepoints(const pandora::ParticleFlowObject *const pPfo) const;
 
-    bool GetExtremalVerticesAndDirections(const pandora::ParticleFlowObject *const pPfo, const ThreeDSlidingFitResult &slidingFitResult,
-        pandora::CartesianVector &upstreamVertex, pandora::CartesianVector &upstreamDirection, pandora::CartesianVector &downstreamVertex, 
-        pandora::CartesianVector &downstreamDirection);
+    bool GetExtremalVerticesAndDirections(const pandora::ParticleFlowObject *const pNeutrinoPfo, const pandora::ParticleFlowObject *const pPfo, 
+        const ThreeDSlidingFitResult &slidingFitResult, pandora::CartesianVector &upstreamVertex, pandora::CartesianVector &upstreamDirection, 
+        pandora::CartesianVector &downstreamVertex, pandora::CartesianVector &downstreamDirection) const;
 
-    bool GetShowerDirection(const pandora::ParticleFlowObject *const pPfp, const pandora::CartesianVector &vertex, const float searchRegion, 
-        pandora::CartesianVector &direction);
+    bool GetShowerDirection(const pandora::ParticleFlowObject *const pPfp, const pandora::CartesianVector &vertex, pandora::CartesianVector &direction) const;
 
-    void SetPrimaryScores();
+    void SetPrimaryScores(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos, HierarchyPfoMap &showerPfos) const;
 
-    void BuildPrimaryTierPass1();
+    float GetPrimaryScore(const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo) const;
 
-    void SetLaterTierScores();
+    void UpdateHierarchy(const pandora::ParticleFlowObject *const pNeutrinoPfo, const bool buildPrimaryTier, const bool usePrimaryScore, 
+        const float trackThreshold, const float showerThreshold, const bool isLowerThreshold, HierarchyPfoMap &trackPfos, 
+        HierarchyPfoMap &showerPfos, Hierarchy &hierarchy) const;
 
-    void BuildLaterTierPass1();
+    void SetLaterTierScores(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos, HierarchyPfoMap &showerPfos) const;
 
-    float GetLaterTierScoreTrackToTrack(HierarchyPfo &parentPfo, HierarchyPfo &childPfo, 
-        int &parentOrientation, int &childOrientation) const;
-    float GetLaterTierScoreTrackToShower(HierarchyPfo &parentPfo, HierarchyPfo &childPfo,
-        int &parentOrientation, int &childOrientation) const;
+    float GetLaterTierScore(const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfo &parentPfo, const HierarchyPfo &childPfo) const;
 
-    void BuildPandoraHierarchy();
+    void BuildPandoraHierarchy(const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos) const;
 
-    void PrintPandoraHierarchy();
+    void PrintPandoraHierarchy(const pandora::ParticleFlowObject *const pNeutrinoPfo) const;
 
-    void CheckForOrphans();
-
-    float GetRandomNumber() const;
+    void CheckForOrphans() const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    //typedef std::vector<PfoRelationTool *> PfoRelationToolVector;
-
     std::string m_neutrinoPfoListName;
     pandora::StringVector m_pfoListNames;
-
-    MLPPrimaryHierarchyTool *m_primaryHierarchyTool;
-    MLPLaterTierHierarchyTool *m_laterTierHierarchyTool;
-
+    float m_bogusFloat;
+    int m_minClusterSize;
+    int m_slidingFitWindow;
+    float m_regionForDirFit;
+    int m_nAngularBins;
+    float m_primaryRegion;
     float m_primaryThresholdTrackPass1;
     float m_primaryThresholdShowerPass1;
     float m_laterTierThresholdTrackPass1;
     float m_laterTierThresholdShowerPass1;
+    float m_primaryThresholdTrackPass2;
+    float m_primaryThresholdShowerPass2;
+    float m_laterTierThresholdTrackPass2;
+    float m_laterTierThresholdShowerPass2;
+    MLPPrimaryHierarchyTool *m_primaryHierarchyTool;
+    MLPLaterTierHierarchyTool *m_laterTierHierarchyTool;
 
     ///////////////////////////
     std::map<const pandora::ParticleFlowObject*, int> m_isobelID;
     ///////////////////////////
-
-    const pandora::ParticleFlowObject* m_pNeutrinoPfo;
-    HierarchyPfoMap m_trackPfos;
-    HierarchyPfoMap m_showerPfos;
-    std::vector<pandora::PfoVector> m_hierarchy;
 };
 
 } // namespace lar_dl_content

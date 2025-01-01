@@ -73,9 +73,11 @@ MLPLaterTierHierarchyTool::MLPLaterTierHierarchyTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo, HierarchyPfo &parentHierarchyPfo, 
-    HierarchyPfo &childHierarchyPfo)
+StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfo &parentHierarchyPfo, 
+    const HierarchyPfo &childHierarchyPfo, float &laterTierScore)
 {
+    laterTierScore = m_bogusFloat;
+
     this->SetDetectorBoundaries();
 
     // Get the common params i.e. independent of postulated orientation
@@ -122,10 +124,7 @@ StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, con
             return statusCodeDownDown;
 
         // Now run the model!
-        const float laterTierScore(this->ClassifyTrackTrack(edgeParamsUpUp, edgeParamsUpDown, 
-            edgeParamsDownUp, edgeParamsDownDown));
-
-        childHierarchyPfo.SetLaterTierScore(laterTierScore);
+        laterTierScore = this->ClassifyTrackTrack(edgeParamsUpUp, edgeParamsUpDown, edgeParamsDownUp, edgeParamsDownDown);
 
         return STATUS_CODE_SUCCESS;
     }
@@ -155,9 +154,7 @@ StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, con
             return statusCodeDown;
 
         // Now run the model!
-        const float laterTierScore(this->ClassifyTrackShower(edgeParamsUp, edgeParamsDown)); 
-
-        childHierarchyPfo.SetLaterTierScore(laterTierScore);
+        laterTierScore = this->ClassifyTrackShower(edgeParamsUp, edgeParamsDown); 
     }
 
     return STATUS_CODE_SUCCESS;
@@ -165,8 +162,21 @@ StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MLPLaterTierHierarchyTool::IsShowerVertexUpstream(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo)
+bool MLPLaterTierHierarchyTool::IsShowerVertexUpstream(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const
 {
+    const bool isUpstreamSet(this->IsVectorSet(childHierarchyPfo.GetUpstreamVertex()));
+    const bool isDownstreamSet(this->IsVectorSet(childHierarchyPfo.GetDownstreamVertex()));
+
+    if (isUpstreamSet && !isDownstreamSet)
+        return true;
+
+    if (!isUpstreamSet && isDownstreamSet)
+        return false;
+
+    // By design, showers should have at least one set
+    if (!isUpstreamSet && !isDownstreamSet)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
     CartesianPointVector parentPositions3D;
     LArPfoHelper::GetCoordinateVector(parentHierarchyPfo.GetPfo(), TPC_3D, parentPositions3D);
 
@@ -188,9 +198,9 @@ bool MLPLaterTierHierarchyTool::IsShowerVertexUpstream(const HierarchyPfo &paren
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::pair<float, float> MLPLaterTierHierarchyTool::GetTrackScoreParams(const HierarchyPfo &parentHierarchyPfo, 
-    const HierarchyPfo &childHierarchyPfo)
+    const HierarchyPfo &childHierarchyPfo) const
 {
-    float parentTrackScore(-999.f), childTrackScore(-999.f);
+    float parentTrackScore(m_bogusFloat), childTrackScore(m_bogusFloat);
 
     const PropertiesMap &parentMeta(parentHierarchyPfo.GetPfo()->GetPropertiesMap());
     const PropertiesMap &childMeta(childHierarchyPfo.GetPfo()->GetPropertiesMap());
@@ -207,7 +217,7 @@ std::pair<float, float> MLPLaterTierHierarchyTool::GetTrackScoreParams(const Hie
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::pair<float, float> MLPLaterTierHierarchyTool::GetNSpacepointsParams(const HierarchyPfo &parentHierarchyPfo, 
-    const HierarchyPfo &childHierarchyPfo)
+    const HierarchyPfo &childHierarchyPfo) const
 {
     const float parentNSpacepoints(this->GetNSpacepoints(parentHierarchyPfo));
     const float childNSpacepoints(this->GetNSpacepoints(childHierarchyPfo));
@@ -217,7 +227,7 @@ std::pair<float, float> MLPLaterTierHierarchyTool::GetNSpacepointsParams(const H
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float MLPLaterTierHierarchyTool::GetSeparation3D(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo)
+float MLPLaterTierHierarchyTool::GetSeparation3D(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const
 {
     CartesianPointVector parentPositions3D, childPositions3D;
     LArPfoHelper::GetCoordinateVector(parentHierarchyPfo.GetPfo(), TPC_3D, parentPositions3D);
@@ -241,7 +251,7 @@ float MLPLaterTierHierarchyTool::GetSeparation3D(const HierarchyPfo &parentHiera
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void MLPLaterTierHierarchyTool::SetCommonParams(const std::pair<float, float> &trackScoreParams, const std::pair<float, float> &nSpacepointsParams, 
-    const float separation3D, MLPLaterTierNetworkParams &laterTierNetworkParams)
+    const float separation3D, MLPLaterTierNetworkParams &laterTierNetworkParams) const
 {
     laterTierNetworkParams.m_parentTrackScore = trackScoreParams.first;
     laterTierNetworkParams.m_childTrackScore = trackScoreParams.second;
@@ -254,7 +264,7 @@ void MLPLaterTierHierarchyTool::SetCommonParams(const std::pair<float, float> &t
 
 StatusCode MLPLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm *const pAlgorithm, const HierarchyPfo &parentHierarchyPfo, 
     const HierarchyPfo &childHierarchyPfo, const ParticleFlowObject *const pNeutrinoPfo, const bool useUpstreamForParent, const bool useUpstreamForChild, 
-    MLPLaterTierNetworkParams &laterTierNetworkParams)
+    MLPLaterTierNetworkParams &laterTierNetworkParams) const
 {
     // Pick out neutrino vertex
     if (pNeutrinoPfo->GetVertexList().empty())
@@ -275,6 +285,7 @@ StatusCode MLPLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm 
 
     // Check that we could actually calculate pfo vertex/direction, return if not
     if (!this->IsVectorSet(parentStart)) { return STATUS_CODE_NOT_INITIALIZED; }
+    if (!this->IsVectorSet(parentStartDirection)) { return STATUS_CODE_NOT_INITIALIZED; }
     if (!this->IsVectorSet(parentEnd)) { return STATUS_CODE_NOT_INITIALIZED; }
     if (!this->IsVectorSet(parentEndDirection)) { return STATUS_CODE_NOT_INITIALIZED; }
     if (!this->IsVectorSet(childStart)) { return STATUS_CODE_NOT_INITIALIZED; }
@@ -312,7 +323,7 @@ StatusCode MLPLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void MLPLaterTierHierarchyTool::SetVertexParams(const CartesianVector &nuVertex, const CartesianVector &parentStart, 
-    const CartesianVector &parentEnd, const CartesianVector &childStart, MLPLaterTierNetworkParams &laterTierNetworkParams)
+    const CartesianVector &parentEnd, const CartesianVector &childStart, MLPLaterTierNetworkParams &laterTierNetworkParams) const
 {
     laterTierNetworkParams.m_parentNuVertexSep = ((parentStart - nuVertex).GetMagnitude());
     laterTierNetworkParams.m_childNuVertexSep = ((childStart - nuVertex).GetMagnitude());
@@ -341,8 +352,8 @@ void MLPLaterTierHierarchyTool::SetEndRegionRToWall(const CartesianVector &paren
     for (int iAxis : {0, 1, 2})
     {
         const float parentCoord(iAxis == 0 ? parentEnd.GetX() : iAxis == 1 ? parentEnd.GetY() : parentEnd.GetZ());
-        const float boundaryLow(iAxis == 0 ? m_detectorMinX : iAxis == 1 ? m_detectorMinY : m_detectorMinX);
-        const float boundaryHigh(iAxis == 0 ? m_detectorMaxX : iAxis == 1 ? m_detectorMaxY : m_detectorMaxX);
+        const float boundaryLow(iAxis == 0 ? m_detectorMinX : iAxis == 1 ? m_detectorMinY : m_detectorMinZ);
+        const float boundaryHigh(iAxis == 0 ? m_detectorMaxX : iAxis == 1 ? m_detectorMaxY : m_detectorMaxZ);
 
         for (float boundary : {boundaryLow, boundaryHigh})
         {
@@ -358,7 +369,7 @@ void MLPLaterTierHierarchyTool::SetEndRegionRToWall(const CartesianVector &paren
 
 void MLPLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, 
     const CartesianVector &parentStart, const CartesianVector &childStart, const CartesianVector &childStartDirection, 
-    MLPLaterTierNetworkParams &laterTierNetworkParams)
+    MLPLaterTierNetworkParams &laterTierNetworkParams) const
 {
     // Get fit of parent
     const ThreeDSlidingFitResult &slidingFitResult(parentHierarchyPfo.GetSlidingFitResult());
@@ -388,7 +399,8 @@ void MLPLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHi
         float firstL(slidingL), secondL(slidingL + m_trajectoryStepSize);
         float firstEvalL(startFromMin ? firstL : (maxL - firstL));
         float secondEvalL(startFromMin ? secondL : (maxL - secondL));
-        CartesianVector firstPosition(0.f, 0.f, 0.f), secondPosition(0.f, 0.f, 0.f);
+        CartesianVector firstPosition(m_bogusFloat, m_bogusFloat, m_bogusFloat);
+        CartesianVector secondPosition(m_bogusFloat, m_bogusFloat, m_bogusFloat);
 
         if ((slidingFitResult.GetGlobalFitPosition(firstEvalL, firstPosition) != STATUS_CODE_SUCCESS) ||
             (slidingFitResult.GetGlobalFitPosition(secondEvalL, secondPosition) != STATUS_CODE_SUCCESS))
@@ -406,7 +418,7 @@ void MLPLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHi
 
         if (thisDCA < minDCA)
         {
-            if (this->DoesConnect(firstPosition, secondPosition, extrap.first, m_connectionBuffer))
+            if (this->DoesConnect(firstPosition, secondPosition, extrap.first))
             {
                 laterTierNetworkParams.m_doesChildConnect = 1.f;
                 laterTierNetworkParams.m_connectionPoint = midPoint;
@@ -428,7 +440,7 @@ void MLPLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 std::pair<CartesianVector, bool> MLPLaterTierHierarchyTool::ExtrapolateChildToParent(const CartesianVector &parentPosition, const CartesianVector &childStart, 
-    const CartesianVector &childStartDirection)
+    const CartesianVector &childStartDirection) const
 {
     const double extrapDistance((parentPosition - childStart).GetDotProduct(childStartDirection));
     const bool backwardsExtrap(extrapDistance < 0.f);
@@ -440,7 +452,7 @@ std::pair<CartesianVector, bool> MLPLaterTierHierarchyTool::ExtrapolateChildToPa
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool MLPLaterTierHierarchyTool::DoesConnect(const CartesianVector &boundary1, const CartesianVector &boundary2, 
-    const CartesianVector &testPoint, const float buffer)
+    const CartesianVector &testPoint) const
 {
     const CartesianVector displacement(boundary2 - boundary1);
     const double segmentLength = displacement.GetMagnitude();
@@ -452,7 +464,7 @@ bool MLPLaterTierHierarchyTool::DoesConnect(const CartesianVector &boundary1, co
 
     const double t = unitVector.GetCrossProduct(testPoint - boundary1).GetMagnitudeSquared();
 
-    if (t > (buffer * buffer))
+    if (t > (m_connectionBuffer * m_connectionBuffer))
         return false;
 
     return true;
@@ -462,7 +474,7 @@ bool MLPLaterTierHierarchyTool::DoesConnect(const CartesianVector &boundary1, co
 
 void MLPLaterTierHierarchyTool::SetOvershootParams(const CartesianVector &parentStart, const CartesianVector &parentStartDirection, 
     const CartesianVector &parentEnd, const CartesianVector &parentEndDirection, const CartesianVector &childStart, 
-    const CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams)
+    const CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams) const
 {
     if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) < std::numeric_limits<float>::epsilon())
         return;
@@ -480,7 +492,8 @@ void MLPLaterTierHierarchyTool::SetOvershootParams(const CartesianVector &parent
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPLaterTierHierarchyTool::SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, MLPLaterTierNetworkParams &laterTierNetworkParams)
+void MLPLaterTierHierarchyTool::SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, 
+    MLPLaterTierNetworkParams &laterTierNetworkParams) const
 {
     if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) > std::numeric_limits<float>::epsilon())
         return;
@@ -520,9 +533,11 @@ void MLPLaterTierHierarchyTool::SetParentConnectionPointVars(const HierarchyPfo 
     // Now PCA magic
     try
     {
-        CartesianVector centroidUp(0.f, 0.f, 0.f), centroidDown(0.f, 0.f, 0.f);
+        CartesianVector centroidUp(m_bogusFloat, m_bogusFloat, m_bogusFloat);
+        CartesianVector centroidDown(m_bogusFloat, m_bogusFloat, m_bogusFloat);
         LArPcaHelper::EigenVectors eigenVecsUp, eigenVecsDown;
-        LArPcaHelper::EigenValues eigenValuesUp(0.f, 0.f, 0.f), eigenValuesDown(0.f, 0.f, 0.f);
+        LArPcaHelper::EigenValues eigenValuesUp(m_bogusFloat, m_bogusFloat, m_bogusFloat);
+        LArPcaHelper::EigenValues  eigenValuesDown(m_bogusFloat, m_bogusFloat, m_bogusFloat);
 
         LArPcaHelper::RunPca(upstreamGroup, centroidUp, eigenValuesUp, eigenVecsUp);
         LArPcaHelper::RunPca(downstreamGroup, centroidDown, eigenValuesDown, eigenVecsDown);
@@ -542,7 +557,7 @@ void MLPLaterTierHierarchyTool::SetParentConnectionPointVars(const HierarchyPfo 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPLaterTierHierarchyTool::NormaliseNetworkParams(MLPLaterTierNetworkParams &laterTierNetworkParams)
+void MLPLaterTierHierarchyTool::NormaliseNetworkParams(MLPLaterTierNetworkParams &laterTierNetworkParams) const
 {
     this->NormaliseNetworkParam(m_trackScoreMin, m_trackScoreMax, laterTierNetworkParams.m_parentTrackScore);
     this->NormaliseNetworkParam(m_trackScoreMin, m_trackScoreMax, laterTierNetworkParams.m_childTrackScore);
@@ -576,9 +591,9 @@ float MLPLaterTierHierarchyTool::ClassifyTrackTrack(const MLPLaterTierNetworkPar
     const MLPLaterTierNetworkParams &edgeParamsDownUp, const MLPLaterTierNetworkParams &edgeParamsDownDown)
 {
     ////////////////////////////////////////////////////////////
-    std::cout << "------------------------" << std::endl;
-    std::cout << "Classifying track-track edge with " << edgeParamsUpUp.m_parentNSpacepoints << " parent spacepoints and " << 
-        edgeParamsUpUp.m_childNSpacepoints << " child spacepoints" << std::endl;
+    // std::cout << "------------------------" << std::endl;
+    // std::cout << "Classifying track-track edge with " << edgeParamsUpUp.m_parentNSpacepoints << " parent spacepoints and " << 
+    //     edgeParamsUpUp.m_childNSpacepoints << " child spacepoints" << std::endl;
     ////////////////////////////////////////////////////////////
 
     // Invoke branch model for each edge
@@ -588,10 +603,10 @@ float MLPLaterTierHierarchyTool::ClassifyTrackTrack(const MLPLaterTierNetworkPar
     const FloatVector outputDownDown(this->ClassifyTrackTrackEdge(edgeParamsDownDown, edgeParamsUpUp, edgeParamsUpDown, edgeParamsDownUp));
 
     ////////////////////////////////////////////////////////////
-    std::cout << "outputUpUp: " << outputUpUp.at(0) << ", " << outputUpUp.at(1) << ", " << outputUpUp.at(2) << std::endl;
-    std::cout << "outputUpDown: " << outputUpDown.at(0) << ", " << outputUpDown.at(1) << ", " << outputUpDown.at(2) << std::endl;
-    std::cout << "outputDownUp: " << outputDownUp.at(0) << ", " << outputDownUp.at(1) << ", " << outputDownUp.at(2) << std::endl;
-    std::cout << "outputDownDown: " << outputDownDown.at(0) << ", " << outputDownDown.at(1) << ", " << outputDownDown.at(2) << std::endl;
+    // std::cout << "outputUpUp: " << outputUpUp.at(0) << ", " << outputUpUp.at(1) << ", " << outputUpUp.at(2) << std::endl;
+    // std::cout << "outputUpDown: " << outputUpDown.at(0) << ", " << outputUpDown.at(1) << ", " << outputUpDown.at(2) << std::endl;
+    // std::cout << "outputDownUp: " << outputDownUp.at(0) << ", " << outputDownUp.at(1) << ", " << outputDownUp.at(2) << std::endl;
+    // std::cout << "outputDownDown: " << outputDownDown.at(0) << ", " << outputDownDown.at(1) << ", " << outputDownDown.at(2) << std::endl;
     ////////////////////////////////////////////////////////////
 
     // Invoke classifier model for final output
@@ -614,8 +629,8 @@ float MLPLaterTierHierarchyTool::ClassifyTrackTrack(const MLPLaterTierNetworkPar
     const torch::TensorAccessor<float, 2> outputAccessor = output.accessor<float, 2>();
 
     ////////////////////////////////////////////////////////////
-    std::cout << "Track-track classification score: " << outputAccessor[0][0] << std::endl;
-    std::cout << "------------------------" << std::endl;
+    // std::cout << "Track-track classification score: " << outputAccessor[0][0] << std::endl;
+    // std::cout << "------------------------" << std::endl;
     ////////////////////////////////////////////////////////////
 
     return outputAccessor[0][0];
@@ -648,9 +663,9 @@ FloatVector MLPLaterTierHierarchyTool::ClassifyTrackTrackEdge(const MLPLaterTier
 float MLPLaterTierHierarchyTool::ClassifyTrackShower(const MLPLaterTierNetworkParams &edgeParamsUp, const MLPLaterTierNetworkParams &edgeParamsDown)
 {
     ////////////////////////////////////////////////////////////
-    std::cout << "------------------------" << std::endl;
-    std::cout << "Classifying track-shower edge with " << edgeParamsUp.m_parentNSpacepoints << " parent spacepoints and " << 
-        edgeParamsUp.m_childNSpacepoints << " child spacepoints" << std::endl;
+    // std::cout << "------------------------" << std::endl;
+    // std::cout << "Classifying track-shower edge with " << edgeParamsUp.m_parentNSpacepoints << " parent spacepoints and " << 
+    //     edgeParamsUp.m_childNSpacepoints << " child spacepoints" << std::endl;
     ////////////////////////////////////////////////////////////
 
     // Invoke branch model for each edge
@@ -658,8 +673,8 @@ float MLPLaterTierHierarchyTool::ClassifyTrackShower(const MLPLaterTierNetworkPa
     const FloatVector outputDown(this->ClassifyTrackShowerEdge(edgeParamsDown, edgeParamsUp));
 
     ////////////////////////////////////////////////////////////
-    std::cout << "outputUp: " << outputUp.at(0) << ", " << outputUp.at(1) << ", " << outputUp.at(2) << std::endl;
-    std::cout << "outputDown: " << outputDown.at(0) << ", " << outputDown.at(1) << ", " << outputDown.at(2) << std::endl;
+    // std::cout << "outputUp: " << outputUp.at(0) << ", " << outputUp.at(1) << ", " << outputUp.at(2) << std::endl;
+    // std::cout << "outputDown: " << outputDown.at(0) << ", " << outputDown.at(1) << ", " << outputDown.at(2) << std::endl;
     ////////////////////////////////////////////////////////////
 
     // Invoke classifier model for final output
@@ -682,8 +697,8 @@ float MLPLaterTierHierarchyTool::ClassifyTrackShower(const MLPLaterTierNetworkPa
     const torch::TensorAccessor<float, 2> outputAccessor = output.accessor<float, 2>();
 
     ////////////////////////////////////////////////////////////
-    std::cout << "Track-shower classification score: " << outputAccessor[0][0] << std::endl;
-    std::cout << "------------------------" << std::endl;
+    // std::cout << "Track-shower classification score: " << outputAccessor[0][0] << std::endl;
+    // std::cout << "------------------------" << std::endl;
     ////////////////////////////////////////////////////////////
 
     return outputAccessor[0][0];

@@ -11,7 +11,6 @@
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
-
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
 
@@ -55,7 +54,7 @@ public:
         float m_parentIsPOIClosestToNu = -999.f;
         float m_childIsPOIClosestToNu = -999.f;
 
-        void Print();
+        void Print() const;
 
         pandora::FloatVector GetCommonParamsForModel() const;
 
@@ -68,28 +67,29 @@ public:
     MLPLaterTierHierarchyTool();
 
     pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo, 
-        HierarchyPfo &parentHierarchyPfo, HierarchyPfo &childHierarchyPfo);
+        const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, float &laterTierScore);
 
 private:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    bool IsShowerVertexUpstream(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo);
+    bool IsShowerVertexUpstream(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
 
     pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, 
         const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo,
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const bool useUpstreamForParent, const bool useUpstreamForChild, 
-        MLPLaterTierNetworkParams &laterTierNetworkParams);
+        MLPLaterTierNetworkParams &laterTierNetworkParams) const;
 
-    std::pair<float, float> GetTrackScoreParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo);
-    std::pair<float, float> GetNSpacepointsParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo);
-    float GetSeparation3D(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo);
+    std::pair<float, float> GetTrackScoreParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
+
+    std::pair<float, float> GetNSpacepointsParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
+
+    float GetSeparation3D(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
 
     void SetCommonParams(const std::pair<float, float> &trackScoreParams, const std::pair<float, float> &nSpacepointsParams, 
-        const float separation3D, MLPLaterTierNetworkParams &laterTierNetworkParams);
+        const float separation3D, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
 
     void SetVertexParams(const pandora::CartesianVector &nuVertex, const pandora::CartesianVector &parentStart, 
         const pandora::CartesianVector &parentEnd, const pandora::CartesianVector &childStart, 
-        MLPLaterTierNetworkParams &laterTierNetworkParams);
+        MLPLaterTierNetworkParams &laterTierNetworkParams) const;
 
     void SetEndRegionParams(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pParentPfo, 
         const pandora::CartesianVector &parentEnd, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
@@ -98,21 +98,21 @@ private:
 
     void SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, 
         const pandora::CartesianVector &parentStart, const pandora::CartesianVector &childStart, 
-        const pandora::CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams);
+        const pandora::CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
 
     std::pair<pandora::CartesianVector, bool> ExtrapolateChildToParent(const pandora::CartesianVector &parentPosition, 
-        const pandora::CartesianVector &childStart, const pandora::CartesianVector &childStartDirection);
+        const pandora::CartesianVector &childStart, const pandora::CartesianVector &childStartDirection) const;
 
     bool DoesConnect(const pandora::CartesianVector &boundary1, const pandora::CartesianVector &boundary2,
-        const pandora::CartesianVector &testPoint, const float buffer);
+        const pandora::CartesianVector &testPoint) const;
 
     void SetOvershootParams(const pandora::CartesianVector &parentStart, const pandora::CartesianVector &parentStartDirection, 
         const pandora::CartesianVector &parentEnd, const pandora::CartesianVector &parentEndDirection, const pandora::CartesianVector &childStart, 
-        const pandora::CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams);
+        const pandora::CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
 
-    void SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, MLPLaterTierNetworkParams &laterTierNetworkParams);
+    void SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
 
-    void NormaliseNetworkParams(MLPLaterTierNetworkParams &laterTierNetworkParams);
+    void NormaliseNetworkParams(MLPLaterTierNetworkParams &laterTierNetworkParams) const;
 
     float ClassifyTrackTrack(const MLPLaterTierNetworkParams &edgeParamsUpUp, const MLPLaterTierNetworkParams &edgeParamsUpDown, 
         const MLPLaterTierNetworkParams &edgeParamsDownUp, const MLPLaterTierNetworkParams &edgeParamsDownDown);
@@ -125,6 +125,8 @@ private:
 
     pandora::FloatVector ClassifyTrackShowerEdge(const MLPLaterTierNetworkParams &edgeParams, 
         const MLPLaterTierNetworkParams &otherEdgeParams);
+
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     // For model
     std::string m_trackTrackBranchModelName;
@@ -180,7 +182,7 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams::Print()
+inline void MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams::Print() const
 {
     std::cout << "ParentPOIClosestToNuVertex: " << m_parentIsPOIClosestToNu << std::endl;
     std::cout << "ChildPOIClosestToNuVertex: " << m_childIsPOIClosestToNu << std::endl;
