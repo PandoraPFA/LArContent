@@ -11,6 +11,7 @@
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 using namespace lar_content;
 
@@ -28,23 +29,23 @@ class HierarchyPfo
      */
     HierarchyPfo();
 
-    HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const bool isTrack, const pandora::CartesianVector &upstreamVertex,
-        const pandora::CartesianVector &upstreamDirection, const pandora::CartesianVector &downstreamVertex, 
-        const pandora::CartesianVector &downstreamDirection);
+    HierarchyPfo(const bool isTrack, const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &threeDSlidingFitResult, 
+        const pandora::CartesianVector &upstreamVertex, const pandora::CartesianVector &upstreamDirection, 
+        const pandora::CartesianVector &downstreamVertex, const pandora::CartesianVector &downstreamDirection);
 
     bool operator== (const HierarchyPfo &otherHierarchyPfo) const;
 
-    const pandora::ParticleFlowObject* GetPfo() const;
-    void SetPfo(const pandora::ParticleFlowObject *pPfo);
     bool GetIsTrack() const;
     void SetIsTrack(const bool isTrack);
+    const pandora::ParticleFlowObject* GetPfo() const;
+    void SetPfo(const pandora::ParticleFlowObject *pPfo);
     const pandora::ParticleFlowObject* GetPredictedParentPfo() const;
+    const ThreeDSlidingFitResult& GetSlidingFitResult() const;
     void SetPredictedParentPfo(const pandora::ParticleFlowObject *pPredictedParentPfo);
     const pandora::ParticleFlowObject* GetParentPfo() const;
     void SetParentPfo(const pandora::ParticleFlowObject *pParentPfo);
     const pandora::PfoVector& GetSortedChildPfoVector();
     void AddChildPfo(const pandora::ParticleFlowObject *const pChildPfo);
-
     const pandora::CartesianVector& GetUpstreamVertex() const;
     void SetUpstreamVertex(const pandora::CartesianVector &upstreamVertex);
     const pandora::CartesianVector& GetUpstreamDirection() const;
@@ -67,8 +68,9 @@ class HierarchyPfo
 
     private:
 
-    const pandora::ParticleFlowObject *m_pPfo;
     bool m_isTrack;
+    const pandora::ParticleFlowObject *m_pPfo;
+    ThreeDSlidingFitResult m_slidingFitResult;
     const pandora::ParticleFlowObject *m_pPredictedParentPfo;
     const pandora::ParticleFlowObject *m_pParentPfo;
     pandora::PfoVector m_childPfoVector;
@@ -87,40 +89,29 @@ class HierarchyPfo
 };
 
 typedef std::map<const pandora::ParticleFlowObject*, HierarchyPfo> HierarchyPfoMap;
+typedef std::pair<const pandora::ParticleFlowObject*, HierarchyPfo> HierarchyPfoMapEntry;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline HierarchyPfo::HierarchyPfo() :
-    m_pPfo(nullptr),
-    m_isTrack(false),
-    m_pPredictedParentPfo(nullptr),
-    m_pParentPfo(nullptr),
-    m_childPfoVector(pandora::PfoVector()),
-    m_upstreamVertex(pandora::CartesianVector(-999.f, -999.f, -999.f)),
-    m_upstreamDirection(pandora::CartesianVector(-999.f, -999.f, -999.f)),
-    m_downstreamVertex(pandora::CartesianVector(-999.f, -999.f, -999.f)),
-    m_downstreamDirection(pandora::CartesianVector(-999.f, -999.f, -999.f)),
-    m_primaryScore(-std::numeric_limits<float>::max()),
-    m_laterTierScore(-std::numeric_limits<float>::max()),
-    m_parentOrientation(-1),
-    m_childOrientation(-1),
-    m_isInHierarchy(false)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline HierarchyPfo::HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const bool isTrack, const pandora::CartesianVector &upstreamVertex,
-    const pandora::CartesianVector &upstreamDirection, const pandora::CartesianVector &downstreamVertex, 
+inline HierarchyPfo::HierarchyPfo(const bool isTrack, const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &slidingFitResult,
+    const pandora::CartesianVector &upstreamVertex, const pandora::CartesianVector &upstreamDirection, const pandora::CartesianVector &downstreamVertex, 
     const pandora::CartesianVector &downstreamDirection) :
-        HierarchyPfo()
+        m_isTrack(isTrack),
+        m_pPfo(pPfo),
+        m_slidingFitResult(slidingFitResult),
+        m_pPredictedParentPfo(nullptr),
+        m_pParentPfo(nullptr),
+        m_childPfoVector(pandora::PfoVector()),
+        m_upstreamVertex(upstreamVertex),
+        m_upstreamDirection(upstreamDirection),
+        m_downstreamVertex(downstreamVertex),
+        m_downstreamDirection(downstreamDirection),
+        m_primaryScore(-std::numeric_limits<float>::max()),
+        m_laterTierScore(-std::numeric_limits<float>::max()),
+        m_parentOrientation(-1),
+        m_childOrientation(-1),
+        m_isInHierarchy(false)
 {
-    m_pPfo = pPfo;
-    m_isTrack = isTrack;
-    m_upstreamVertex = upstreamVertex;
-    m_upstreamDirection = upstreamDirection;
-    m_downstreamVertex = downstreamVertex;
-    m_downstreamDirection = downstreamDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -130,20 +121,6 @@ inline bool HierarchyPfo::operator== (const HierarchyPfo &otherHierarchyPfo) con
     return this->GetPfo() == otherHierarchyPfo.GetPfo();
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::ParticleFlowObject* HierarchyPfo::GetPfo() const
-{
-    return m_pPfo;
-}
-
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void HierarchyPfo::SetPfo(const pandora::ParticleFlowObject* pPfo)
-{
-    m_pPfo = pPfo;
-}
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline bool HierarchyPfo::GetIsTrack() const
@@ -158,6 +135,26 @@ inline void HierarchyPfo::SetIsTrack(const bool isTrack)
     m_isTrack = isTrack;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::ParticleFlowObject* HierarchyPfo::GetPfo() const
+{
+    return m_pPfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void HierarchyPfo::SetPfo(const pandora::ParticleFlowObject* pPfo)
+{
+    m_pPfo = pPfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const ThreeDSlidingFitResult& HierarchyPfo::GetSlidingFitResult() const
+{
+    return m_slidingFitResult;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

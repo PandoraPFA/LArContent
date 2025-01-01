@@ -361,81 +361,68 @@ void MLPLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHi
     MLPLaterTierNetworkParams &laterTierNetworkParams)
 {
     // Get fit of parent
-    CartesianPointVector parentPositions3D;
-    LArPfoHelper::GetCoordinateVector(parentHierarchyPfo.GetPfo(), TPC_3D, parentPositions3D);
+    const ThreeDSlidingFitResult &slidingFitResult(parentHierarchyPfo.GetSlidingFitResult());
 
-    const int HALF_WINDOW_LAYERS(20);
-    const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
-    const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
-    const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
-    const float slidingFitPitch(std::max({pitchU, pitchV, pitchW}));
-  
-    try
+    // Now walk along track, starting from parentStart
+    // I want this to be interpreted as l = 0 so have to alter pandora def
+    const bool startFromMin((parentStart - slidingFitResult.GetGlobalMinLayerPosition()).GetMagnitudeSquared() <
+                            (parentStart - slidingFitResult.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
+    const float minL(slidingFitResult.GetLongitudinalDisplacement(slidingFitResult.GetGlobalMinLayerPosition()));
+    const float maxL(slidingFitResult.GetLongitudinalDisplacement(slidingFitResult.GetGlobalMaxLayerPosition()));
+
+    if (std::fabs(minL - maxL) < std::numeric_limits<float>::epsilon())
+        return;
+
+    const int nSteps(std::floor(std::fabs(maxL - minL) / m_trajectoryStepSize));
+
+    // Keep track of these in loop
+    float slidingL(startFromMin ? minL : 0.f);
+    float trackLength(0.f);
+    float minDCA(std::numeric_limits<float>::max());
+    float lengthAtConnection(0.f);
+
+    laterTierNetworkParams.m_doesChildConnect = 0.f;
+
+    for (int i = 0; i < nSteps; i++)
     {
-        const ThreeDSlidingFitResult slidingFitResult(&parentPositions3D, HALF_WINDOW_LAYERS, slidingFitPitch);
+        float firstL(slidingL), secondL(slidingL + m_trajectoryStepSize);
+        float firstEvalL(startFromMin ? firstL : (maxL - firstL));
+        float secondEvalL(startFromMin ? secondL : (maxL - secondL));
+        CartesianVector firstPosition(0.f, 0.f, 0.f), secondPosition(0.f, 0.f, 0.f);
 
-        // Now walk along track, starting from parentStart
-        // I want this to be interpreted as l = 0 so have to alter pandora def
-        const bool startFromMin((parentStart - slidingFitResult.GetGlobalMinLayerPosition()).GetMagnitudeSquared() <
-                                (parentStart - slidingFitResult.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
-        const float minL(slidingFitResult.GetLongitudinalDisplacement(slidingFitResult.GetGlobalMinLayerPosition()));
-        const float maxL(slidingFitResult.GetLongitudinalDisplacement(slidingFitResult.GetGlobalMaxLayerPosition()));
-
-        if (std::fabs(minL - maxL) < std::numeric_limits<float>::epsilon())
-            return;
-
-        const int nSteps(std::floor(std::fabs(maxL - minL) / m_trajectoryStepSize));
-
-        // Keep track of these in loop
-        float slidingL(startFromMin ? minL : 0.f);
-        float trackLength(0.f);
-        float minDCA(std::numeric_limits<float>::max());
-        float lengthAtConnection(0.f);
-
-        laterTierNetworkParams.m_doesChildConnect = 0.f;
-
-        for (int i = 0; i < nSteps; i++)
+        if ((slidingFitResult.GetGlobalFitPosition(firstEvalL, firstPosition) != STATUS_CODE_SUCCESS) ||
+            (slidingFitResult.GetGlobalFitPosition(secondEvalL, secondPosition) != STATUS_CODE_SUCCESS))
         {
-            float firstL(slidingL), secondL(slidingL + m_trajectoryStepSize);
-            float firstEvalL(startFromMin ? firstL : (maxL - firstL));
-            float secondEvalL(startFromMin ? secondL : (maxL - secondL));
-            CartesianVector firstPosition(0.f, 0.f, 0.f), secondPosition(0.f, 0.f, 0.f);
-
-            if ((slidingFitResult.GetGlobalFitPosition(firstEvalL, firstPosition) != STATUS_CODE_SUCCESS) ||
-                (slidingFitResult.GetGlobalFitPosition(secondEvalL, secondPosition) != STATUS_CODE_SUCCESS))
-            {
-                slidingL += m_trajectoryStepSize;
-                continue;
-            }
-
-            // Get trajectory position
-            const CartesianVector midPoint((secondPosition + firstPosition) * 0.5f);
-
-            // Extrap child vertex to parent position
-            const std::pair<CartesianVector, bool> extrap(this->ExtrapolateChildToParent(midPoint, childStart, childStartDirection));
-            const float thisDCA((midPoint - extrap.first).GetMagnitude());
-
-            if (thisDCA < minDCA)
-            {
-                if (this->DoesConnect(firstPosition, secondPosition, extrap.first, m_connectionBuffer))
-                {
-                    laterTierNetworkParams.m_doesChildConnect = 1.f;
-                    laterTierNetworkParams.m_connectionPoint = midPoint;
-                    laterTierNetworkParams.m_connectionDirection = (secondPosition - firstPosition).GetUnitVector();
-                    laterTierNetworkParams.m_childCPDCA = thisDCA;
-                    laterTierNetworkParams.m_childCPExtrapDistance = (extrap.first - childStart).GetMagnitude() * (extrap.second ? 1.f : (-1.f));
-                    lengthAtConnection = trackLength + (midPoint - firstPosition).GetMagnitude();
-                }
-            }
-            
             slidingL += m_trajectoryStepSize;
-            trackLength += (secondPosition - firstPosition).GetMagnitude();
+            continue;
         }
 
-        if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) < std::numeric_limits<float>::epsilon()) 
-            laterTierNetworkParams.m_childCPLRatio = lengthAtConnection / trackLength; 
+        // Get trajectory position
+        const CartesianVector midPoint((secondPosition + firstPosition) * 0.5f);
+
+        // Extrap child vertex to parent position
+        const std::pair<CartesianVector, bool> extrap(this->ExtrapolateChildToParent(midPoint, childStart, childStartDirection));
+        const float thisDCA((midPoint - extrap.first).GetMagnitude());
+
+        if (thisDCA < minDCA)
+        {
+            if (this->DoesConnect(firstPosition, secondPosition, extrap.first, m_connectionBuffer))
+            {
+                laterTierNetworkParams.m_doesChildConnect = 1.f;
+                laterTierNetworkParams.m_connectionPoint = midPoint;
+                laterTierNetworkParams.m_connectionDirection = (secondPosition - firstPosition).GetUnitVector();
+                laterTierNetworkParams.m_childCPDCA = thisDCA;
+                laterTierNetworkParams.m_childCPExtrapDistance = (extrap.first - childStart).GetMagnitude() * (extrap.second ? 1.f : (-1.f));
+                lengthAtConnection = trackLength + (midPoint - firstPosition).GetMagnitude();
+            }
+        }
+            
+        slidingL += m_trajectoryStepSize;
+        trackLength += (secondPosition - firstPosition).GetMagnitude();
     }
-    catch (...) { return; }
+
+    if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) < std::numeric_limits<float>::epsilon()) 
+       laterTierNetworkParams.m_childCPLRatio = lengthAtConnection / trackLength; 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -595,16 +582,16 @@ float MLPLaterTierHierarchyTool::ClassifyTrackTrack(const MLPLaterTierNetworkPar
     ////////////////////////////////////////////////////////////
 
     // Invoke branch model for each edge
-    torch::TensorAccessor<float, 2> outputAccessorUpUp(this->ClassifyTrackTrackEdge(edgeParamsUpUp, edgeParamsUpDown, edgeParamsDownUp, edgeParamsDownDown));
-    torch::TensorAccessor<float, 2> outputAccessorUpDown(this->ClassifyTrackTrackEdge(edgeParamsUpDown, edgeParamsDownUp, edgeParamsDownDown, edgeParamsUpUp));
-    torch::TensorAccessor<float, 2> outputAccessorDownUp(this->ClassifyTrackTrackEdge(edgeParamsDownUp, edgeParamsDownDown, edgeParamsUpUp, edgeParamsUpDown));
-    torch::TensorAccessor<float, 2> outputAccessorDownDown(this->ClassifyTrackTrackEdge(edgeParamsDownDown, edgeParamsUpUp, edgeParamsUpDown, edgeParamsDownUp));
+    const FloatVector outputUpUp(this->ClassifyTrackTrackEdge(edgeParamsUpUp, edgeParamsUpDown, edgeParamsDownUp, edgeParamsDownDown));
+    const FloatVector outputUpDown(this->ClassifyTrackTrackEdge(edgeParamsUpDown, edgeParamsDownUp, edgeParamsDownDown, edgeParamsUpUp));
+    const FloatVector outputDownUp(this->ClassifyTrackTrackEdge(edgeParamsDownUp, edgeParamsDownDown, edgeParamsUpUp, edgeParamsUpDown));
+    const FloatVector outputDownDown(this->ClassifyTrackTrackEdge(edgeParamsDownDown, edgeParamsUpUp, edgeParamsUpDown, edgeParamsDownUp));
 
     ////////////////////////////////////////////////////////////
-    std::cout << "outputUpUp: " << outputAccessorUpUp[0][0] << ", " << outputAccessorUpUp[0][1] << ", " << outputAccessorUpUp[0][2] << std::endl;
-    std::cout << "outputUpDown: " << outputAccessorUpDown[0][0] << ", " << outputAccessorUpDown[0][1] << ", " << outputAccessorUpDown[0][2] << std::endl;
-    std::cout << "outputDownUp: " << outputAccessorDownUp[0][0] << ", " << outputAccessorDownUp[0][1] << ", " << outputAccessorDownUp[0][2] << std::endl;
-    std::cout << "outputDownDown: " << outputAccessorDownDown[0][0] << ", " << outputAccessorDownDown[0][1] << ", " << outputAccessorDownDown[0][2] << std::endl;
+    std::cout << "outputUpUp: " << outputUpUp.at(0) << ", " << outputUpUp.at(1) << ", " << outputUpUp.at(2) << std::endl;
+    std::cout << "outputUpDown: " << outputUpDown.at(0) << ", " << outputUpDown.at(1) << ", " << outputUpDown.at(2) << std::endl;
+    std::cout << "outputDownUp: " << outputDownUp.at(0) << ", " << outputDownUp.at(1) << ", " << outputDownUp.at(2) << std::endl;
+    std::cout << "outputDownDown: " << outputDownDown.at(0) << ", " << outputDownDown.at(1) << ", " << outputDownDown.at(2) << std::endl;
     ////////////////////////////////////////////////////////////
 
     // Invoke classifier model for final output
@@ -613,18 +600,18 @@ float MLPLaterTierHierarchyTool::ClassifyTrackTrack(const MLPLaterTierNetworkPar
 
     int insertIndex = 0;
 
-    for (const torch::TensorAccessor<float, 2> &accessor : {outputAccessorUpUp, outputAccessorUpDown, outputAccessorDownUp, outputAccessorDownDown})
+    for (const FloatVector &edgeOutput : {outputUpUp, outputUpDown, outputDownUp, outputDownDown})
     {
-        for (int accessorIndex = 0; accessorIndex < 3; ++accessorIndex)
+        for (int i = 0; i < 3; ++i)
         {
-            input[0][insertIndex] = accessor[0][accessorIndex];
+            input[0][insertIndex] = edgeOutput.at(i);
             ++insertIndex;
         }
     }
 
     LArDLHelper::TorchOutput output;
     LArDLHelper::Forward(m_trackTrackClassifierModel, {input}, output);
-    torch::TensorAccessor<float, 2> outputAccessor = output.accessor<float, 2>();
+    const torch::TensorAccessor<float, 2> outputAccessor = output.accessor<float, 2>();
 
     ////////////////////////////////////////////////////////////
     std::cout << "Track-track classification score: " << outputAccessor[0][0] << std::endl;
@@ -636,7 +623,7 @@ float MLPLaterTierHierarchyTool::ClassifyTrackTrack(const MLPLaterTierNetworkPar
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-torch::TensorAccessor<float, 2> MLPLaterTierHierarchyTool::ClassifyTrackTrackEdge(const MLPLaterTierNetworkParams &edgeParams, 
+FloatVector MLPLaterTierHierarchyTool::ClassifyTrackTrackEdge(const MLPLaterTierNetworkParams &edgeParams, 
     const MLPLaterTierNetworkParams &otherEdgeParams1, const MLPLaterTierNetworkParams &otherEdgeParams2, const MLPLaterTierNetworkParams &otherEdgeParams3)
 {
     LArDLHelper::TorchInput input;
@@ -651,7 +638,9 @@ torch::TensorAccessor<float, 2> MLPLaterTierHierarchyTool::ClassifyTrackTrackEdg
     LArDLHelper::TorchOutput output;
     LArDLHelper::Forward(m_trackTrackBranchModel, {input}, output);
 
-    return output.accessor<float, 2>();
+    const torch::TensorAccessor<float, 2> outputAccessor(output.accessor<float, 2>());
+
+    return {outputAccessor[0][0], outputAccessor[0][1], outputAccessor[0][2]};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -665,12 +654,12 @@ float MLPLaterTierHierarchyTool::ClassifyTrackShower(const MLPLaterTierNetworkPa
     ////////////////////////////////////////////////////////////
 
     // Invoke branch model for each edge
-    torch::TensorAccessor<float, 2> outputAccessorUp(this->ClassifyTrackShowerEdge(edgeParamsUp, edgeParamsDown));
-    torch::TensorAccessor<float, 2> outputAccessorDown(this->ClassifyTrackShowerEdge(edgeParamsDown, edgeParamsUp));
+    const FloatVector outputUp(this->ClassifyTrackShowerEdge(edgeParamsUp, edgeParamsDown));
+    const FloatVector outputDown(this->ClassifyTrackShowerEdge(edgeParamsDown, edgeParamsUp));
 
     ////////////////////////////////////////////////////////////
-    std::cout << "outputUp: " << outputAccessorUp[0][0] << ", " << outputAccessorUp[0][1] << ", " << outputAccessorUp[0][2] << std::endl;
-    std::cout << "outputDown: " << outputAccessorDown[0][0] << ", " << outputAccessorDown[0][1] << ", " << outputAccessorDown[0][2] << std::endl;
+    std::cout << "outputUp: " << outputUp.at(0) << ", " << outputUp.at(1) << ", " << outputUp.at(2) << std::endl;
+    std::cout << "outputDown: " << outputDown.at(0) << ", " << outputDown.at(1) << ", " << outputDown.at(2) << std::endl;
     ////////////////////////////////////////////////////////////
 
     // Invoke classifier model for final output
@@ -679,18 +668,18 @@ float MLPLaterTierHierarchyTool::ClassifyTrackShower(const MLPLaterTierNetworkPa
 
     int insertIndex = 0;
 
-    for (const torch::TensorAccessor<float, 2> &accessor : {outputAccessorUp, outputAccessorDown})
+    for (const FloatVector &edgeOutput : {outputUp, outputDown})
     {
-        for (int accessorIndex = 0; accessorIndex < 3; ++accessorIndex)
+        for (int i = 0; i < 3; ++i)
         {
-            input[0][insertIndex] = accessor[0][accessorIndex];
+            input[0][insertIndex] = edgeOutput.at(i);
             ++insertIndex;
         }
     }
 
     LArDLHelper::TorchOutput output;
     LArDLHelper::Forward(m_trackShowerClassifierModel, {input}, output);
-    torch::TensorAccessor<float, 2> outputAccessor = output.accessor<float, 2>();
+    const torch::TensorAccessor<float, 2> outputAccessor = output.accessor<float, 2>();
 
     ////////////////////////////////////////////////////////////
     std::cout << "Track-shower classification score: " << outputAccessor[0][0] << std::endl;
@@ -702,7 +691,7 @@ float MLPLaterTierHierarchyTool::ClassifyTrackShower(const MLPLaterTierNetworkPa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-torch::TensorAccessor<float, 2> MLPLaterTierHierarchyTool::ClassifyTrackShowerEdge(const MLPLaterTierNetworkParams &edgeParams, 
+FloatVector MLPLaterTierHierarchyTool::ClassifyTrackShowerEdge(const MLPLaterTierNetworkParams &edgeParams, 
     const MLPLaterTierNetworkParams &otherEdgeParams)
 {
     LArDLHelper::TorchInput input;
@@ -715,7 +704,9 @@ torch::TensorAccessor<float, 2> MLPLaterTierHierarchyTool::ClassifyTrackShowerEd
     LArDLHelper::TorchOutput output;
     LArDLHelper::Forward(m_trackShowerBranchModel, {input}, output);
 
-    return output.accessor<float, 2>();
+    const torch::TensorAccessor<float, 2> outputAccessor(output.accessor<float, 2>());
+
+    return {outputAccessor[0][0], outputAccessor[0][1], outputAccessor[0][2]};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

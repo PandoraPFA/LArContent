@@ -278,12 +278,12 @@ float MLPPrimaryHierarchyTool::ClassifyTrack(const MLPPrimaryNetworkParams &edge
     ////////////////////////////////////////////////////////////
 
     // Invoke branch model for each edge
-    torch::TensorAccessor<float, 2> outputAccessorUp(this->ClassifyTrackEdge(edgeParamsUp, edgeParamsDown));
-    torch::TensorAccessor<float, 2> outputAccessorDown(this->ClassifyTrackEdge(edgeParamsDown, edgeParamsUp));
+    const FloatVector outputUp(this->ClassifyTrackEdge(edgeParamsUp, edgeParamsDown));
+    const FloatVector outputDown(this->ClassifyTrackEdge(edgeParamsDown, edgeParamsUp));
 
     ////////////////////////////////////////////////////////////
-    std::cout << "outputUp: " << outputAccessorUp[0][0] << ", " << outputAccessorUp[0][1] << ", " << outputAccessorUp[0][2] << std::endl;
-    std::cout << "outputDown: " << outputAccessorDown[0][0] << ", " << outputAccessorDown[0][1] << ", " << outputAccessorDown[0][2] << std::endl;
+    std::cout << "outputUp: " << outputUp.at(0) << ", " << outputUp.at(1) << ", " << outputUp.at(2) << std::endl;
+    std::cout << "outputDown: " << outputDown.at(0) << ", " << outputDown.at(1) << ", " << outputDown.at(2) << std::endl;
     ////////////////////////////////////////////////////////////
 
     // Invoke classifier model for final output
@@ -292,11 +292,11 @@ float MLPPrimaryHierarchyTool::ClassifyTrack(const MLPPrimaryNetworkParams &edge
 
     int insertIndex = 0;
 
-    for (const torch::TensorAccessor<float, 2> &accessor : {outputAccessorUp, outputAccessorDown})
+    for (const FloatVector &edgeOutput : {outputUp, outputDown})
     {
-        for (int accessorIndex = 0; accessorIndex < 3; ++accessorIndex)
+        for (int i = 0; i < 3; ++i)
         {
-            input[0][insertIndex] = accessor[0][accessorIndex];
+            input[0][insertIndex] = edgeOutput.at(i);
             ++insertIndex;
         }
     }
@@ -313,7 +313,7 @@ float MLPPrimaryHierarchyTool::ClassifyTrack(const MLPPrimaryNetworkParams &edge
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-torch::TensorAccessor<float, 2> MLPPrimaryHierarchyTool::ClassifyTrackEdge(const MLPPrimaryNetworkParams &edgeParams, 
+FloatVector MLPPrimaryHierarchyTool::ClassifyTrackEdge(const MLPPrimaryNetworkParams &edgeParams, 
     const MLPPrimaryNetworkParams &otherEdgeParams)
 {
     LArDLHelper::TorchInput input;
@@ -326,7 +326,11 @@ torch::TensorAccessor<float, 2> MLPPrimaryHierarchyTool::ClassifyTrackEdge(const
     LArDLHelper::TorchOutput output;
     LArDLHelper::Forward(m_primaryTrackBranchModel, {input}, output);
 
-    return output.accessor<float, 2>();
+    torch::TensorAccessor<float, 2> outputAccessor(output.accessor<float, 2>());
+
+    std::cout << "output: " << outputAccessor[0][0] << ", " << outputAccessor[0][1] << ", " << outputAccessor[0][2] << std::endl;
+
+    return {outputAccessor[0][0], outputAccessor[0][1], outputAccessor[0][2]};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
