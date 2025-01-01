@@ -10,7 +10,6 @@
 #include "Pandora/StatusCodes.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
-
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
 
 #include <torch/script.h>
@@ -23,15 +22,16 @@ namespace lar_dl_content
 {
 
 MLPBaseHierarchyTool::MLPBaseHierarchyTool() :
+    m_bogusFloat(-999.f),
+    m_vertexRegionRadius(5.f),
+    m_pfoListNames({"TrackParticles3D", "ShowerParticles3D"}),
     m_detectorMinX(std::numeric_limits<float>::max()),
     m_detectorMaxX(-std::numeric_limits<float>::max()),
     m_detectorMinY(std::numeric_limits<float>::max()),
     m_detectorMaxY(-std::numeric_limits<float>::max()),
     m_detectorMinZ(std::numeric_limits<float>::max()),
     m_detectorMaxZ(-std::numeric_limits<float>::max()),
-    areBoundariesSet(false),
-    m_vertexRegionRadius(5.f),
-    m_pfoListNames({"TrackParticles3D", "ShowerParticles3D"})
+    areBoundariesSet(false)
 {
 }
 
@@ -75,7 +75,7 @@ bool MLPBaseHierarchyTool::IsInFV(const CartesianVector &position) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float MLPBaseHierarchyTool::GetNSpacepoints(const HierarchyPfo &hierarchyPfo)
+float MLPBaseHierarchyTool::GetNSpacepoints(const HierarchyPfo &hierarchyPfo) const
 {
     ClusterList clusterList3D;
     LArPfoHelper::GetThreeDClusterList(hierarchyPfo.GetPfo(), clusterList3D);
@@ -149,14 +149,14 @@ void MLPBaseHierarchyTool::NormaliseNetworkParam(const float minLimit, const flo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MLPBaseHierarchyTool::IsVectorSet(const CartesianVector &vector)
+bool MLPBaseHierarchyTool::IsVectorSet(const CartesianVector &vector) const
 {
-    return (vector.GetZ() > -990.f);
+    return (vector == CartesianVector(m_bogusFloat, m_bogusFloat, m_bogusFloat));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-int MLPBaseHierarchyTool::AddToInput(const int startIndex, const FloatVector &paramVector, LArDLHelper::TorchInput &modelInput)
+int MLPBaseHierarchyTool::AddToInput(const int startIndex, const FloatVector &paramVector, LArDLHelper::TorchInput &modelInput) const
 {
     int insertIndex(startIndex);
 
@@ -173,8 +173,9 @@ int MLPBaseHierarchyTool::AddToInput(const int startIndex, const FloatVector &pa
 
 StatusCode MLPBaseHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BogusFloat", m_bogusFloat));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionRadius", m_vertexRegionRadius));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
 
     return STATUS_CODE_SUCCESS;
 }
