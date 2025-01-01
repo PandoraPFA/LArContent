@@ -11,6 +11,7 @@
 #include "Pandora/Algorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h"
@@ -47,8 +48,11 @@ private:
 
     void FillTrackShowerVectors();
 
-    bool GetExtremalVerticesAndDirections(const pandora::ParticleFlowObject *const pPfo, pandora::CartesianVector &upstreamVertex, 
-        pandora::CartesianVector &upstreamDirection, pandora::CartesianVector &downstreamVertex, pandora::CartesianVector &downstreamDirection);
+    float GetNSpacepoints(const pandora::ParticleFlowObject *const pPfo);
+
+    bool GetExtremalVerticesAndDirections(const pandora::ParticleFlowObject *const pPfo, const ThreeDSlidingFitResult &slidingFitResult,
+        pandora::CartesianVector &upstreamVertex, pandora::CartesianVector &upstreamDirection, pandora::CartesianVector &downstreamVertex, 
+        pandora::CartesianVector &downstreamDirection);
 
     bool GetShowerDirection(const pandora::ParticleFlowObject *const pPfp, const pandora::CartesianVector &vertex, const float searchRegion, 
         pandora::CartesianVector &direction);

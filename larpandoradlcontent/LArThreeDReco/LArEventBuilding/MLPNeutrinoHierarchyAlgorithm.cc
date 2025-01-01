@@ -10,8 +10,9 @@
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArObjects/LArPfoObjects.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
@@ -145,6 +146,15 @@ bool MLPNeutrinoHierarchyAlgorithm::GetNeutrinoPfo()
 
 void MLPNeutrinoHierarchyAlgorithm::FillTrackShowerVectors()
 {
+    const int MIN_3D_CLUSTER_SIZE = 5;
+
+    // Sliding fit shenanigans
+    const int HALF_WINDOW_LAYERS(20);
+    const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
+    const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
+    const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
+    const float slidingFitPitch(std::max({pitchU, pitchV, pitchW}));
+
     for (const std::string &pfoListName : m_pfoListNames)
     {
         const PfoList *pPfoList(nullptr);
@@ -155,31 +165,35 @@ void MLPNeutrinoHierarchyAlgorithm::FillTrackShowerVectors()
         for (const ParticleFlowObject * pPfo : *pPfoList)
         {
             // Apply hit cut
-            ClusterList clusterList3D;
-            LArPfoHelper::GetThreeDClusterList(pPfo, clusterList3D);
-
-            int total3DHits(0);
-
-            for (const Cluster *const pCluster3D : clusterList3D)
-                total3DHits += pCluster3D->GetNCaloHits();
-
-            if (total3DHits == 0)
+            if (this->GetNSpacepoints(pPfo) < MIN_3D_CLUSTER_SIZE)
                 continue;
 
-            // We need directions...
-            CartesianVector upstreamVertex(-999.f, -999.f, -999.f), upstreamDirection(-999.f, -999.f, -999.f), 
-                downstreamVertex(-999.f, -999.f, -999.f), downstreamDirection(-999.f, -999.f, -999.f);
+            // Attempt sliding linear fit
+            try
+            {
+                CartesianPointVector pointVector;
+                LArPfoHelper::GetCoordinateVector(pPfo, TPC_3D, pointVector);
 
-            if (!this->GetExtremalVerticesAndDirections(pPfo, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection))
-                continue;
+                const ThreeDSlidingFitResult slidingFitResult(&pointVector, HALF_WINDOW_LAYERS, slidingFitPitch);
 
-            // Create track/shower objects
-            if (pPfo->GetParticleId() == 13)
-                m_trackPfos[pPfo] = HierarchyPfo(pPfo, true, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection);
-            else if (pPfo->GetParticleId() == 11) 
-                m_showerPfos[pPfo] = HierarchyPfo(pPfo, false, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection);
-            else
-                std::cout << "IDK what this pfo is" << std::endl;
+                // We need directions...
+                CartesianVector upstreamVertex(-999.f, -999.f, -999.f), upstreamDirection(-999.f, -999.f, -999.f), 
+                    downstreamVertex(-999.f, -999.f, -999.f), downstreamDirection(-999.f, -999.f, -999.f);
+
+                if (!this->GetExtremalVerticesAndDirections(pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection))
+                    continue;
+
+                // Create track/shower objects
+                if (pPfo->GetParticleId() == 13)
+                {
+                    m_trackPfos.insert(HierarchyPfoMapEntry({pPfo, HierarchyPfo(true, pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection)}));
+                }
+                else if (pPfo->GetParticleId() == 11) 
+                {
+                    m_showerPfos.insert(HierarchyPfoMapEntry({pPfo, HierarchyPfo(false, pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection)}));
+                }
+            }
+            catch (...) { continue; }
         }
     }
 
@@ -188,8 +202,23 @@ void MLPNeutrinoHierarchyAlgorithm::FillTrackShowerVectors()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const ParticleFlowObject *const pPfo, CartesianVector &upstreamVertex, 
-    CartesianVector &upstreamDirection, CartesianVector &downstreamVertex, CartesianVector &downstreamDirection)
+float MLPNeutrinoHierarchyAlgorithm::GetNSpacepoints(const ParticleFlowObject *const pPfo)
+{
+    ClusterList clusterList3D;
+    LArPfoHelper::GetThreeDClusterList(pPfo, clusterList3D);
+
+    int total3DHits(0);
+
+    for (const Cluster *const pCluster3D : clusterList3D)
+        total3DHits += pCluster3D->GetNCaloHits();
+
+    return total3DHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const ParticleFlowObject *const pPfo, const ThreeDSlidingFitResult &slidingFitResult,
+    CartesianVector &upstreamVertex, CartesianVector &upstreamDirection, CartesianVector &downstreamVertex, CartesianVector &downstreamDirection)
 {
     if (m_pNeutrinoPfo->GetVertexList().empty())
         return false;
@@ -198,27 +227,11 @@ bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const Parti
     const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(m_pNeutrinoPfo));
     const CartesianVector nuVertex(pNeutrinoVertex->GetPosition().GetX(), pNeutrinoVertex->GetPosition().GetY(), pNeutrinoVertex->GetPosition().GetZ());
 
-    const bool isTrack = pPfo->GetParticleId() == 13;
-
-    ClusterList clusterList3D;
-    LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList3D);
-
-    if (clusterList3D.size() != 1)
-        return false;
-
-    if (isTrack)
+    if (pPfo->GetParticleId() == 13)
     {
         try
         {
-            const int HALF_WINDOW_LAYERS(20);
-            const float pitchU{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)};
-            const float pitchV{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)};
-            const float pitchW{LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)};
-            const float slidingFitPitch(std::max({pitchU, pitchV, pitchW}));
-
-            // This could throw an exception
-            const LArPointingCluster pointingCluster(*(clusterList3D.begin()), HALF_WINDOW_LAYERS, slidingFitPitch);
-
+            const LArPointingCluster pointingCluster(slidingFitResult); // this could throw an exception
             const CartesianVector innerVertex(pointingCluster.GetInnerVertex().GetPosition().GetX(), pointingCluster.GetInnerVertex().GetPosition().GetY(), pointingCluster.GetInnerVertex().GetPosition().GetZ()); 
             CartesianVector innerDirection(pointingCluster.GetInnerVertex().GetDirection().GetX(), pointingCluster.GetInnerVertex().GetDirection().GetY(), pointingCluster.GetInnerVertex().GetDirection().GetZ()); 
             const CartesianVector outerVertex(pointingCluster.GetOuterVertex().GetPosition().GetX(), pointingCluster.GetOuterVertex().GetPosition().GetY(), pointingCluster.GetOuterVertex().GetPosition().GetZ());
@@ -231,7 +244,7 @@ bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const Parti
             if (outerDirection.GetDotProduct(innerVertex - outerVertex) < 0.f)
                 outerDirection *= (-1.f);
 
-            // now find out who is closer
+            // determine upstream/downstream
             if ((innerVertex - nuVertex).GetMagnitudeSquared() < (outerVertex - nuVertex).GetMagnitudeSquared())
             {
                 upstreamVertex = innerVertex;
@@ -251,60 +264,18 @@ bool MLPNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const Parti
     }
     else
     {
-        try
-        {
-            CartesianPointVector pointVector;
-            LArPfoHelper::GetCoordinateVector(pPfo, TPC_3D, pointVector);
+        const float minSepSq((slidingFitResult.GetGlobalMinLayerPosition() - nuVertex).GetMagnitudeSquared());
+        const float maxSepSq((slidingFitResult.GetGlobalMaxLayerPosition() - nuVertex).GetMagnitudeSquared());
 
-            // This could throw an exception
-            const LArShowerPCA showerPCA(LArPfoHelper::GetPrincipalComponents(pointVector, CartesianVector(-999.f, -999.f, -999.f)));
+        upstreamVertex = (minSepSq < maxSepSq) ? slidingFitResult.GetGlobalMinLayerPosition() : slidingFitResult.GetGlobalMaxLayerPosition();
+        downstreamVertex = (minSepSq < maxSepSq) ? slidingFitResult.GetGlobalMaxLayerPosition() : slidingFitResult.GetGlobalMinLayerPosition();
 
-            // Find extremal points
-            float lowestL(std::numeric_limits<float>::max()), highestL(-std::numeric_limits<float>::max());
-            CartesianVector lowestPoint(-999.f, -999.f, -999.f), highestPoint(-999.f, -999.f, -999.f);
-            CartesianVector lowestDirection(-999.f, -999.f, -999.f), highestDirection(-999.f, -999.f, -999.f);
+        // find directions, demand that we have at least one
+        const bool upstreamDirectionSet(this->GetShowerDirection(pPfo, upstreamVertex, 25.f, upstreamDirection));
+        const bool downstreamDirectionSet(this->GetShowerDirection(pPfo, downstreamVertex, 25.f, downstreamDirection));
 
-            for (const CartesianVector &cartesianVector : pointVector)
-            {
-                const float l(showerPCA.GetPrimaryAxis().GetDotProduct(showerPCA.GetCentroid() - cartesianVector));
-
-                if (l < lowestL)
-                {
-                    lowestL = l;
-                    lowestPoint = cartesianVector;
-                }
-
-                if (l > highestL)
-                {
-                    highestL = l;
-                    highestPoint = cartesianVector;
-                }
-            }
-
-            // find directions, demand that we have at least one
-            const bool lowestDirectionSet(this->GetShowerDirection(pPfo, lowestPoint, 25.f, lowestDirection));
-            const bool highestDirectionSet(this->GetShowerDirection(pPfo, highestPoint, 25.f, highestDirection));
-
-            if (!lowestDirectionSet && !highestDirectionSet)
-                return false;
-
-            // now find out who is closer
-            if ((lowestPoint - nuVertex).GetMagnitudeSquared() < (highestPoint - nuVertex).GetMagnitudeSquared())
-            {
-                upstreamVertex = lowestPoint;
-                upstreamDirection = lowestDirection;
-                downstreamVertex = highestPoint;
-                downstreamDirection = highestDirection;
-            }
-            else
-            {
-                upstreamVertex = highestPoint;
-                upstreamDirection = highestDirection;
-                downstreamVertex = lowestPoint;
-                downstreamDirection = lowestDirection;
-            }
-        }
-        catch (...) { return false; }
+        if (!upstreamDirectionSet && !downstreamDirectionSet)
+            return false;
     }
 
     return true;
@@ -519,7 +490,7 @@ void MLPNeutrinoHierarchyAlgorithm::BuildLaterTierPass1()
 float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScoreTrackToTrack(HierarchyPfo &parentPfo, HierarchyPfo &childPfo, 
     int &parentOrientation, int &childOrientation) const
 {
-    m_laterTierHierarchyTool->Run(this, m_pNeutrinoPfo, parentPfo, childPfo);
+    //m_laterTierHierarchyTool->Run(this, m_pNeutrinoPfo, parentPfo, childPfo);
 
     return this->GetRandomNumber();
 }
@@ -529,7 +500,7 @@ float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScoreTrackToTrack(HierarchyPfo 
 float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScoreTrackToShower(HierarchyPfo &parentPfo, HierarchyPfo &childPfo,
     int &parentOrientation, int &childOrientation) const
 {
-    m_laterTierHierarchyTool->Run(this, m_pNeutrinoPfo, parentPfo, childPfo);
+    //m_laterTierHierarchyTool->Run(this, m_pNeutrinoPfo, parentPfo, childPfo);
 
     return this->GetRandomNumber();
 }
@@ -615,12 +586,12 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     if (!m_primaryHierarchyTool)
         return STATUS_CODE_INVALID_PARAMETER;
 
-    pAlgorithmTool = nullptr;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "MLPLaterTierHierarchyTool", pAlgorithmTool));
-    m_laterTierHierarchyTool = dynamic_cast<MLPLaterTierHierarchyTool *>(pAlgorithmTool);
+    // pAlgorithmTool = nullptr;
+    // PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "MLPLaterTierHierarchyTool", pAlgorithmTool));
+    // m_laterTierHierarchyTool = dynamic_cast<MLPLaterTierHierarchyTool *>(pAlgorithmTool);
 
-    if (!m_laterTierHierarchyTool)
-        return STATUS_CODE_INVALID_PARAMETER;
+    // if (!m_laterTierHierarchyTool)
+    //     return STATUS_CODE_INVALID_PARAMETER;
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryThresholdTrackPass1", m_primaryThresholdTrackPass1));
 

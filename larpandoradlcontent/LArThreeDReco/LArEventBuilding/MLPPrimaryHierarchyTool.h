@@ -15,9 +15,6 @@
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
 
-#include <torch/script.h>
-#include <torch/torch.h>
-
 namespace lar_dl_content
 {
 
@@ -79,7 +76,7 @@ private:
 
     float ClassifyTrack(const MLPPrimaryNetworkParams &edgeParamsUp, const MLPPrimaryNetworkParams &edgeParamsDown);
 
-    torch::TensorAccessor<float, 2> ClassifyTrackEdge(const MLPPrimaryNetworkParams &edgeParams, 
+    pandora::FloatVector ClassifyTrackEdge(const MLPPrimaryNetworkParams &edgeParams, 
         const MLPPrimaryNetworkParams &otherEdgeParams);
 
     float ClassifyShower(const MLPPrimaryNetworkParams &primaryNetworkParams);

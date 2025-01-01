@@ -15,9 +15,6 @@
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
 
-#include <torch/script.h>
-#include <torch/torch.h>
-
 namespace lar_dl_content
 {
 
@@ -120,13 +117,13 @@ private:
     float ClassifyTrackTrack(const MLPLaterTierNetworkParams &edgeParamsUpUp, const MLPLaterTierNetworkParams &edgeParamsUpDown, 
         const MLPLaterTierNetworkParams &edgeParamsDownUp, const MLPLaterTierNetworkParams &edgeParamsDownDown);
 
-    torch::TensorAccessor<float, 2> ClassifyTrackTrackEdge(const MLPLaterTierNetworkParams &edgeParams, 
+    pandora::FloatVector ClassifyTrackTrackEdge(const MLPLaterTierNetworkParams &edgeParams, 
         const MLPLaterTierNetworkParams &otherEdgeParams1, const MLPLaterTierNetworkParams &otherEdgeParams2, 
         const MLPLaterTierNetworkParams &otherEdgeParams3);
 
     float ClassifyTrackShower(const MLPLaterTierNetworkParams &edgeParamsUp, const MLPLaterTierNetworkParams &edgeParamsDown);
 
-    torch::TensorAccessor<float, 2> ClassifyTrackShowerEdge(const MLPLaterTierNetworkParams &edgeParams, 
+    pandora::FloatVector ClassifyTrackShowerEdge(const MLPLaterTierNetworkParams &edgeParams, 
         const MLPLaterTierNetworkParams &otherEdgeParams);
 
     // For model
