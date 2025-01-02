@@ -398,7 +398,8 @@ float MLPNeutrinoHierarchyAlgorithm::GetPrimaryScore(const ParticleFlowObject *c
 {
     float primaryScore(m_bogusFloat);
 
-    m_primaryHierarchyTool->Run(this, pNeutrinoPfo, trackPfos, hierarchyPfo, primaryScore);
+    if (m_primaryHierarchyTool->Run(this, pNeutrinoPfo, trackPfos, hierarchyPfo, primaryScore) != STATUS_CODE_SUCCESS)
+        return m_bogusFloat;
 
     return primaryScore;
 }
@@ -535,7 +536,8 @@ float MLPNeutrinoHierarchyAlgorithm::GetLaterTierScore(const ParticleFlowObject 
 {
     float laterTierScore(m_bogusFloat);
 
-    m_laterTierHierarchyTool->Run(this, pNeutrinoPfo, parentPfo, childPfo, laterTierScore);
+    if (m_laterTierHierarchyTool->Run(this, pNeutrinoPfo, parentPfo, childPfo, laterTierScore) != STATUS_CODE_SUCCESS)
+        return m_bogusFloat;
 
     return laterTierScore;
 }
