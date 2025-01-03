@@ -28,6 +28,7 @@ namespace lar_dl_content
 MLPPrimaryHierarchyTool::MLPPrimaryHierarchyTool() :
     MLPBaseHierarchyTool(),
     m_extrapolationStepSize(1.f),
+    m_normalise(true),
     m_nSpacepointsMin(0.f),
     m_nSpacepointsMax(2000.f),
     m_nuSeparationMin(-50.f),
@@ -130,7 +131,8 @@ StatusCode MLPPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *c
     // /////////////////////////////////////////
 
     // Normalise
-    this->NormaliseNetworkParams(primaryNetworkParams);
+    if (m_normalise)
+        this->NormaliseNetworkParams(primaryNetworkParams);
 
     /////////////////////////////////////////
     // std::cout << "-----------------------------------------" << std::endl;
@@ -358,6 +360,7 @@ StatusCode MLPPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionRadius", m_vertexRegionRadius));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ExtrapolationStepSize", m_extrapolationStepSize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Normalise", m_normalise));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMin", m_nSpacepointsMin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMax", m_nSpacepointsMax));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuSeparationMin", m_nuSeparationMin));
