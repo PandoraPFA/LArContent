@@ -14,6 +14,7 @@
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
+#include "larpandoradlcontent/LArCheating/MLPCheatHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPNeutrinoHierarchyAlgorithm.h"
@@ -30,6 +31,7 @@ namespace lar_dl_content
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 MLPNeutrinoHierarchyAlgorithm::MLPNeutrinoHierarchyAlgorithm() :
+    m_trainingMode(false),
     m_bogusFloat(-999.f),
     m_minClusterSize(5),
     m_slidingFitWindow(20),
@@ -66,6 +68,13 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::Run()
     // Fill the track/shower vectors
     HierarchyPfoMap trackPfos, showerPfos;
     this->FillTrackShowerVectors(pNeutrinoPfo, trackPfos, showerPfos);
+
+    if (m_trainingMode)
+    {
+        std::cout << "Got the training wheels on!!" << std::endl;
+        m_cheatHierarchyTool->FillHierarchyMap(this);
+        return STATUS_CODE_SUCCESS;
+    }
 
     // Calculate primary scores
     this->SetPrimaryScores(pNeutrinoPfo, trackPfos, showerPfos);
@@ -616,6 +625,7 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHand
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BogusFloat", m_bogusFloat));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterSize", m_minClusterSize));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
@@ -644,6 +654,16 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHand
 
     if (!m_laterTierHierarchyTool)
         return STATUS_CODE_INVALID_PARAMETER;
+
+    if (m_trainingMode)
+    {
+        pAlgorithmTool = nullptr;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "MLPCheatHierarchyTool", pAlgorithmTool));
+        m_cheatHierarchyTool = dynamic_cast<MLPCheatHierarchyTool *>(pAlgorithmTool);
+
+        if (!m_cheatHierarchyTool)
+            return STATUS_CODE_INVALID_PARAMETER;
+    }
 
     return STATUS_CODE_SUCCESS;
 }
