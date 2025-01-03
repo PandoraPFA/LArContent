@@ -151,7 +151,7 @@ void MLPBaseHierarchyTool::NormaliseNetworkParam(const float minLimit, const flo
 
 bool MLPBaseHierarchyTool::IsVectorSet(const CartesianVector &vector) const
 {
-    return (vector == CartesianVector(m_bogusFloat, m_bogusFloat, m_bogusFloat));
+    return !(vector == CartesianVector(m_bogusFloat, m_bogusFloat, m_bogusFloat));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
