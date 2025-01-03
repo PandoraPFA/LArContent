@@ -13,6 +13,7 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
+#include "larpandoradlcontent/LArCheating/MLPCheatHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h"
@@ -78,6 +79,7 @@ private:
 
     std::string m_neutrinoPfoListName;
     pandora::StringVector m_pfoListNames;
+    bool m_trainingMode;
     float m_bogusFloat;
     int m_minClusterSize;
     int m_slidingFitWindow;
@@ -94,6 +96,7 @@ private:
     float m_laterTierThresholdShowerPass2;
     MLPPrimaryHierarchyTool *m_primaryHierarchyTool;
     MLPLaterTierHierarchyTool *m_laterTierHierarchyTool;
+    MLPCheatHierarchyTool *m_cheatHierarchyTool;
 
     ///////////////////////////
     std::map<const pandora::ParticleFlowObject*, int> m_isobelID;
