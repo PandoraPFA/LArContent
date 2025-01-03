@@ -36,7 +36,11 @@ public:
      */
     MLPNeutrinoHierarchyAlgorithm();
 
+    ~MLPNeutrinoHierarchyAlgorithm();
+
 private:
+    typedef std::map<const pandora::ParticleFlowObject*, const pandora::MCParticle*> PfoToMCParticleMap;
+    typedef std::map<const pandora::ParticleFlowObject*, const pandora::ParticleFlowObject*> PfoToPfoMap;    
     typedef std::vector<pandora::PfoVector> Hierarchy;
 
     pandora::StatusCode Run();
@@ -75,11 +79,25 @@ private:
 
     void CheckForOrphans() const;
 
+    bool ShouldTrainOnEvent(const pandora::ParticleFlowObject *const pNeutrinoPfo) const;
+
+    void FillPrimaryTrees(const PfoToMCParticleMap &matchingMap, const PfoToPfoMap &childToParentPfoMap,
+        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos) const;
+    
+    void FillPrimaryTree(const std::string &treeName, const bool isTrueLink, const bool isOrientationCorrect, 
+        const MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams &primaryNetworkParams) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    bool m_trainingMode;
+    std::string m_trainingFileName;
+    std::string m_primaryTrackTreeName;
+    std::string m_primaryShowerTreeName;
+    std::string m_mcParticleListName;
+    float m_trainingVertexAccuracy;
+    
     std::string m_neutrinoPfoListName;
     pandora::StringVector m_pfoListNames;
-    bool m_trainingMode;
     float m_bogusFloat;
     int m_minClusterSize;
     int m_slidingFitWindow;

@@ -50,11 +50,11 @@ public:
     pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo, 
         const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, float &primaryScore);
 
-private:
-
     pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const bool useUpstream, 
         MLPPrimaryNetworkParams &primaryNetworkParams) const;
+
+private:
 
     void SetVertexRegionParams(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, 
         const pandora::CartesianVector &particleVertex, MLPPrimaryNetworkParams &primaryNetworkParams) const;
@@ -91,6 +91,7 @@ private:
     // For tool
     float m_extrapolationStepSize;
     // For normalisation
+    bool m_normalise;
     float m_nSpacepointsMin;
     float m_nSpacepointsMax;
     float m_nuSeparationMin;

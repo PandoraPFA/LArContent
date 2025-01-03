@@ -38,7 +38,12 @@ public:
         const HierarchyPfo &parentPfo, const HierarchyPfo &childPfo, bool &isTrueLink, bool &trueParentOrientation,
         bool &trueChildOrientation);
 
-    void FillHierarchyMap(const pandora::Algorithm *const pAlgorithm) const;
+    pandora::StatusCode Run(const PfoToMCParticleMap &pfoToMCParticleMap, const PfoToPfoMap &childToParentPfoMap,
+        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfo &childPfo, bool &isTrueLink, 
+        bool &trueChildOrientation);
+
+    void FillHierarchyMap(const pandora::Algorithm *const pAlgorithm, PfoToMCParticleMap &pfoToMCParticleMap,
+        PfoToPfoMap &childToParentPfoMap) const;
 
 private:
 
