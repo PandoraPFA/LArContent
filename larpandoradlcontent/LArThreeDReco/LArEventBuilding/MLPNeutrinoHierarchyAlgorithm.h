@@ -87,12 +87,20 @@ private:
     void FillPrimaryTree(const std::string &treeName, const bool isTrueLink, const bool isOrientationCorrect, 
         const MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams &primaryNetworkParams) const;
 
+    void FillLaterTierTrees(const PfoToMCParticleMap &matchingMap, const PfoToPfoMap &childToParentPfoMap,
+        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos) const;
+
+    void FillLaterTierTree(const std::string &treeName, const bool isTrueLink, const bool isOrientationCorrect, 
+        const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     bool m_trainingMode;
     std::string m_trainingFileName;
     std::string m_primaryTrackTreeName;
     std::string m_primaryShowerTreeName;
+    std::string m_laterTierTrackTrackTreeName;
+    std::string m_laterTierTrackShowerTreeName;
     std::string m_mcParticleListName;
     float m_trainingVertexAccuracy;
     

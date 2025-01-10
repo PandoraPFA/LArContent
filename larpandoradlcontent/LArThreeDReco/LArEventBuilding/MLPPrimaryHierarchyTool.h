@@ -48,7 +48,8 @@ public:
     MLPPrimaryHierarchyTool();
 
     pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo, 
-        const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, float &primaryScore);
+        const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<MLPPrimaryNetworkParams> &networkParamVector, 
+        float &primaryScore);
 
     pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const bool useUpstream, 
