@@ -31,7 +31,7 @@ MLPCheatHierarchyTool::MLPCheatHierarchyTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MLPCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleMap, const PfoToPfoMap &childToParentPfoMap,
+StatusCode MLPCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleMap, const ChildToParentPfoMap &childToParentPfoMap,
     const HierarchyPfo &parentPfo, const HierarchyPfo &childPfo, bool &isTrueLink, bool &trueParentOrientation, bool &trueChildOrientation)
 {
     // If we dont know the Pfo->MCParticle match
@@ -45,7 +45,7 @@ StatusCode MLPCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleM
     if (childToParentPfoMap.find(childPfo.GetPfo()) == childToParentPfoMap.end())
         return STATUS_CODE_NOT_FOUND;
 
-    isTrueLink = childToParentPfoMap.at(childPfo.GetPfo()) == parentPfo.GetPfo();
+    isTrueLink = childToParentPfoMap.at(childPfo.GetPfo().first) == parentPfo.GetPfo();
 
     // What is the true orientation of the parent?
     trueParentOrientation = this->IsUpstreamTrueVertex(pfoToMCParticleMap, parentPfo.GetPfo(),
@@ -60,7 +60,7 @@ StatusCode MLPCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleM
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MLPCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleMap, const PfoToPfoMap &childToParentPfoMap,
+StatusCode MLPCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleMap, const ChildToParentPfoMap &childToParentPfoMap,
     const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfo &childPfo, bool &isTrueLink, bool &trueChildOrientation)
 {
     // If we dont know the Pfo->MCParticle match
@@ -71,12 +71,34 @@ StatusCode MLPCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleM
     if (childToParentPfoMap.find(childPfo.GetPfo()) == childToParentPfoMap.end())
         return STATUS_CODE_NOT_FOUND;
 
-    isTrueLink = childToParentPfoMap.at(childPfo.GetPfo()) == pNeutrinoPfo;
+    isTrueLink = childToParentPfoMap.at(childPfo.GetPfo().first) == pNeutrinoPfo;
 
     // What is the true orientation of the child? 
     trueChildOrientation = this->IsUpstreamTrueVertex(pfoToMCParticleMap, childPfo.GetPfo(),
         childPfo.GetUpstreamVertex(), childPfo.GetDownstreamVertex());
     
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MLPCheatHierarchyTool::IsNeutronChild(const ParticleFlowObject *const pPfo, const PfoToMCParticleMap &pfoToMCParticleMap, 
+    bool &isNeutronChild) const
+{
+    // If we dont know the Pfo->MCParticle match
+    if (pfoToMCParticleMap.find(pPfo) == pfoToMCParticleMap.end())
+        return STATUS_CODE_NOT_FOUND;
+
+    const MCParticleList &parentList(pfoToMCParticleMap.at(pPfo)->GetParentList());
+
+    if (parentList.size() != 1)
+    {
+        std::cout << "No MCParent for MCParticle" << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    }
+
+    isNeutronChild = ((*parentList.begin())->GetParticleId() == 2112);
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -96,7 +118,7 @@ bool MLPCheatHierarchyTool::IsUpstreamTrueVertex(const PfoToMCParticleMap &pfoTo
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void MLPCheatHierarchyTool::FillHierarchyMap(const Algorithm *const pAlgorithm, PfoToMCParticleMap &pfoToMCParticleMap,
-    PfoToPfoMap &childToParentPfoMap) const
+    ChildToParentPfoMap &childToParentPfoMap) const
 {
     pfoToMCParticleMap.clear();
     childToParentPfoMap.clear();
@@ -260,6 +282,9 @@ bool MLPCheatHierarchyTool::IsEMParticle(const MCParticle *const pMCParticle) co
 
 const MCParticle* MLPCheatHierarchyTool::GetLeadEMParticle(const MCParticle *const pMCParticle) const
 {
+    if (!this->IsEMParticle(pThisMCParticle))
+      throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+  
     const MCParticle *pThisMCParticle(pMCParticle);
     const MCParticle *pParentMCParticle(pMCParticle);
 
@@ -289,7 +314,10 @@ float MLPCheatHierarchyTool::SumEnergy(const CaloHitList &caloHitList) const
     float totalEnergy(0.f);
 
     for (const CaloHit *const pCaloHit : caloHitList)
-        totalEnergy += pCaloHit->GetElectromagneticEnergy();
+    {
+        if (pCaloHit->GetHitType() == TPC_VIEW_W)
+	  totalEnergy += pCaloHit->GetElectromagneticEnergy();
+    }
 
     return totalEnergy;
 }
@@ -337,7 +365,7 @@ void MLPCheatHierarchyTool::GetVisibleMCHierarchy(const PfoToMCParticleMap &pfoT
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void MLPCheatHierarchyTool::GetVisiblePfoHierarchy(const ParticleFlowObject *const pNeutrinoPfo, const PfoToMCParticleMap &pfoToMCParticleMap,
-    const MCToMCMap &childToParentMCMap, PfoToPfoMap &childToParentPfoMap) const
+    const MCToMCMap &childToParentMCMap, ChildToParentPfoMap &childToParentPfoMap) const
 {
     std::map<const MCParticle *, PfoList> mcParticleToPfoListMap;
 
@@ -375,7 +403,7 @@ void MLPCheatHierarchyTool::GetVisiblePfoHierarchy(const ParticleFlowObject *con
             if (LArMCParticleHelper::IsNeutrino(pMatchedMCParent))
             {
                 // If primary, great! Assign neutrino pfo
-                childToParentPfoMap[pChildPfo] = pNeutrinoPfo;
+                childToParentPfoMap[pChildPfo] = std::make_pair(pNeutrinoPfo, 0);
             }
             else
             {
@@ -386,9 +414,9 @@ void MLPCheatHierarchyTool::GetVisiblePfoHierarchy(const ParticleFlowObject *con
                 const PfoList &parentPfoList(mcParticleToPfoListMap.at(pMatchedMCParent));
            
                 if (parentPfoList.size() == 1)
-                    childToParentPfoMap[pChildPfo] = *parentPfoList.begin();
+                    childToParentPfoMap[pChildPfo] = std::make_pair(*parentPfoList.begin(), 0);
                 else
-                    childToParentPfoMap[pChildPfo] = this->BestParentInSplitHierarchy(pChildPfo, parentPfoList);
+                    childToParentPfoMap[pChildPfo] = std::make_pair(this->BestParentInSplitHierarchy(pChildPfo, parentPfoList), 0);
             }
         }
     }
@@ -396,7 +424,7 @@ void MLPCheatHierarchyTool::GetVisiblePfoHierarchy(const ParticleFlowObject *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPCheatHierarchyTool::BuildSplitHierarchy(const std::pair<const MCParticle*, PfoList> &splitPfo, PfoToPfoMap &childToParentPfoMap) const
+void MLPCheatHierarchyTool::BuildSplitHierarchy(const std::pair<const MCParticle*, PfoList> &splitPfo, ChildToParentPfoMap &childToParentPfoMap) const
 {
     // Order segments wrt distance to the true vertex
     std::vector<std::pair<const ParticleFlowObject*, float>> pfoComponents;
@@ -419,7 +447,7 @@ void MLPCheatHierarchyTool::BuildSplitHierarchy(const std::pair<const MCParticle
         });
 
     // Now build pfo hierarchy, assuming closest is the leading pfo
-    childToParentPfoMap[pfoComponents.at(1).first] = pfoComponents.at(0).first;
+    childToParentPfoMap[pfoComponents.at(1).first] = std::make_pair(pfoComponents.at(0).first, 0);
 
     for (unsigned int i = 2; i < pfoComponents.size(); ++i)
     {
@@ -442,7 +470,7 @@ void MLPCheatHierarchyTool::BuildSplitHierarchy(const std::pair<const MCParticle
         if (!pParentPfo)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        childToParentPfoMap[pChildPfo] = pParentPfo;
+        childToParentPfoMap[pChildPfo] = std::make_pair(pParentPfo, 0); // Temporarily set generation to 0
     }
 }
 
