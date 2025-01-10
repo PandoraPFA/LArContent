@@ -51,46 +51,35 @@ MLPPrimaryHierarchyTool::MLPPrimaryHierarchyTool() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode MLPPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo, 
-    const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, float &primaryScore)
+    const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<MLPPrimaryNetworkParams> &networkParamVector, float &primaryScore)
 {
+    networkParamVector.clear();
     primaryScore = m_bogusFloat;
 
     this->SetDetectorBoundaries();
 
-    if (hierarchyPfo.GetIsTrack())
-    {
-        // Set network params
-        MLPPrimaryNetworkParams primaryNetworkParamsUp, primaryNetworkParamsDown;
+    std::vector<bool> orientationVector(hierarchyPfo.GetIsTrack() ? std::vector<bool>({true, false}) : 
+        std::vector<bool>({true}));
 
-        const StatusCode statusCodeUp(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, 
-            trackPfos, true, primaryNetworkParamsUp));
-
-        if (statusCodeUp != STATUS_CODE_SUCCESS)
-            return statusCodeUp;
-
-        const StatusCode statusCodeDown(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, 
-            trackPfos, false, primaryNetworkParamsDown));
-
-        if (statusCodeDown != STATUS_CODE_SUCCESS)
-            return statusCodeDown;
-
-        // Now run the model!
-        primaryScore = this->ClassifyTrack(primaryNetworkParamsUp, primaryNetworkParamsDown);
-    }
-    else
+    for (const bool &useUpstream : orientationVector)
     {
         // Set network params
         MLPPrimaryNetworkParams primaryNetworkParams;
 
         const StatusCode statusCode(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, 
-            trackPfos, true, primaryNetworkParams));
+            trackPfos, useUpstream, primaryNetworkParams));
 
         if (statusCode != STATUS_CODE_SUCCESS)
             return statusCode;
 
-        // Now run the model!
-        primaryScore = this->ClassifyShower(primaryNetworkParams);
+        networkParamVector.emplace_back(primaryNetworkParams);
     }
+
+    // Now run the model!
+    if (hierarchyPfo.GetIsTrack())
+        primaryScore = this->ClassifyTrack(networkParamVector.at(0), networkParamVector.at(1));
+    else
+        primaryScore = this->ClassifyShower(networkParamVector.at(0));
 
     return STATUS_CODE_SUCCESS;
 }

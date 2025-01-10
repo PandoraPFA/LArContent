@@ -67,9 +67,7 @@ public:
     MLPLaterTierHierarchyTool();
 
     pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo, 
-        const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, float &laterTierScore);
-
-private:
+                            const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, std::vector<MLPLaterTierNetworkParams> &networkParamVector, float &laterTierScore);
 
     bool IsShowerVertexUpstream(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
 
@@ -77,6 +75,8 @@ private:
         const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo,
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const bool useUpstreamForParent, const bool useUpstreamForChild, 
         MLPLaterTierNetworkParams &laterTierNetworkParams) const;
+
+private:
 
     std::pair<float, float> GetTrackScoreParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
 
@@ -142,6 +142,7 @@ private:
     float m_connectionBuffer;
     float m_searchRegion;
     // For normalisation
+    bool m_normalise;
     float m_trackScoreMin;
     float m_trackScoreMax;
     float m_nSpacepointsMin;

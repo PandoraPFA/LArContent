@@ -32,6 +32,7 @@ MLPLaterTierHierarchyTool::MLPLaterTierHierarchyTool() :
     m_trajectoryStepSize(1.f),
     m_connectionBuffer(50.f),
     m_searchRegion(10.f),
+    m_normalise(true),
     m_trackScoreMin(-1.f),
     m_trackScoreMax(1.f),
     m_nSpacepointsMin(0.f),
@@ -74,8 +75,9 @@ MLPLaterTierHierarchyTool::MLPLaterTierHierarchyTool() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfo &parentHierarchyPfo, 
-    const HierarchyPfo &childHierarchyPfo, float &laterTierScore)
+    const HierarchyPfo &childHierarchyPfo, std::vector<MLPLaterTierNetworkParams> &networkParamVector, float &laterTierScore)
 {
+    networkParamVector.clear();
     laterTierScore = m_bogusFloat;
 
     this->SetDetectorBoundaries();
@@ -85,77 +87,36 @@ StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, con
     const std::pair<float, float> nSpacepointsParams(this->GetNSpacepointsParams(parentHierarchyPfo, childHierarchyPfo));
     const float separation3D(this->GetSeparation3D(parentHierarchyPfo, childHierarchyPfo));
 
+    std::vector<bool> childOrientationVector(childHierarchyPfo.GetIsTrack() ? std::vector<bool>({true, false}) : 
+        std::vector<bool>({this->IsShowerVertexUpstream(parentHierarchyPfo, childHierarchyPfo)}));
+
+    // Set network params 
+    for (const bool &useUpstreamForParent : {true, false})
+    {
+        for (const bool &useUpstreamForChild : childOrientationVector)
+        {
+            MLPLaterTierNetworkParams edgeParams;
+
+            // Set common params
+            this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParams);
+
+            // Get orientation dependent params
+            const StatusCode statusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
+                pNeutrinoPfo, useUpstreamForParent, useUpstreamForChild, edgeParams));
+
+            if (statusCode != STATUS_CODE_SUCCESS)
+                return statusCode;
+
+            // Add these to our output vector
+            networkParamVector.emplace_back(edgeParams);
+        }
+    }
+
+    // Now run the model!
     if (childHierarchyPfo.GetIsTrack())
-    {
-        // Set network params 
-        // Variable name = first parent orientation then child
-        MLPLaterTierNetworkParams edgeParamsUpUp, edgeParamsUpDown;
-        MLPLaterTierNetworkParams edgeParamsDownUp, edgeParamsDownDown;
-
-        // Set common params
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsUpUp);
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsUpDown);
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsDownUp);
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsDownDown);
-
-        // Get orientation dependent params
-        const StatusCode statusCodeUpUp(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, true, true, edgeParamsUpUp));
-
-        if (statusCodeUpUp != STATUS_CODE_SUCCESS)
-            return statusCodeUpUp;
-
-        const StatusCode statusCodeUpDown(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, true, false, edgeParamsUpDown));
-
-        if (statusCodeUpDown != STATUS_CODE_SUCCESS)
-            return statusCodeUpDown;
-
-        const StatusCode statusCodeDownUp(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, false, true, edgeParamsDownUp));
-
-        if (statusCodeDownUp != STATUS_CODE_SUCCESS)
-            return statusCodeDownUp;
-
-        const StatusCode statusCodeDownDown(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, false, false, edgeParamsDownDown));
-
-        if (statusCodeDownDown != STATUS_CODE_SUCCESS)
-            return statusCodeDownDown;
-
-        // Now run the model!
-        laterTierScore = this->ClassifyTrackTrack(edgeParamsUpUp, edgeParamsUpDown, edgeParamsDownUp, edgeParamsDownDown);
-
-        return STATUS_CODE_SUCCESS;
-    }
+        laterTierScore = this->ClassifyTrackTrack(networkParamVector.at(0), networkParamVector.at(1), networkParamVector.at(2), networkParamVector.at(3));
     else
-    {
-        // Get shower vertex
-        const bool isShowerVertexUpstream(this->IsShowerVertexUpstream(parentHierarchyPfo, childHierarchyPfo));
-
-        // Set network params
-        MLPLaterTierNetworkParams edgeParamsUp, edgeParamsDown;
-
-        // Set common params
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsUp);
-        this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParamsDown);
-
-        // Get orientation dependent params
-        const StatusCode statusCodeUp(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, true, isShowerVertexUpstream, edgeParamsUp));
-
-        if (statusCodeUp != STATUS_CODE_SUCCESS)
-            return statusCodeUp;
-
-        const StatusCode statusCodeDown(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-            pNeutrinoPfo, false, isShowerVertexUpstream, edgeParamsDown));
-
-        if (statusCodeDown != STATUS_CODE_SUCCESS)
-            return statusCodeDown;
-
-        // Now run the model!
-        laterTierScore = this->ClassifyTrackShower(edgeParamsUp, edgeParamsDown); 
-    }
+        laterTierScore = this->ClassifyTrackShower(networkParamVector.at(0), networkParamVector.at(1));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -308,7 +269,8 @@ StatusCode MLPLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm 
     /////////////////////////////////////////
 
     // Normalise
-    this->NormaliseNetworkParams(laterTierNetworkParams);
+    if (m_normalise)
+        this->NormaliseNetworkParams(laterTierNetworkParams);
 
     /////////////////////////////////////////
     // std::cout << "-----------------------------------------" << std::endl;
@@ -420,6 +382,7 @@ void MLPLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHi
         {
             if (this->DoesConnect(firstPosition, secondPosition, extrap.first))
             {
+                minDCA = thisDCA;
                 laterTierNetworkParams.m_doesChildConnect = 1.f;
                 laterTierNetworkParams.m_connectionPoint = midPoint;
                 laterTierNetworkParams.m_connectionDirection = (secondPosition - firstPosition).GetUnitVector();
@@ -731,6 +694,9 @@ StatusCode MLPLaterTierHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrajectoryStepSize", m_trajectoryStepSize));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionBuffer", m_connectionBuffer));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SearchRegion", m_searchRegion));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Normalise", m_normalise));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
         XmlHelper::ReadValue(xmlHandle, "TrackScoreMin", m_trackScoreMin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
