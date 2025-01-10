@@ -9,6 +9,8 @@
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/StatusCodes.h"
 
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
 
