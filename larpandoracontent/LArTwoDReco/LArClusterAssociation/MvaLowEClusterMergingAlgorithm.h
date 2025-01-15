@@ -55,7 +55,7 @@ protected:
 
     const pandora::CaloHitList EdgeHitFinder(const pandora::Cluster *const cluster, pandora::CaloHitList &clusterEdgeHits) const;
 
-    bool ClusterTool(std::vector<std::string> featureOrder, LArMvaHelper::MvaFeatureMap featureMap) const;
+    bool ClusterTool(const pandora::StringVector &featureOrder, const LArMvaHelper::MvaFeatureMap &featureMap) const;
 
     pandora::StatusCode EdgeHitComparer(const pandora::ClusterList *const pClusterList, const std::string &listName) const;
 

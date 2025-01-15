@@ -104,7 +104,8 @@ StatusCode DlSNSignalAlgorithm::PrepareTrainingSample()
         const CaloHitList *pCaloHitList{nullptr};
         try
         {
-            PandoraContentApi::GetList(*this, listname, pCaloHitList);
+            if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listname, pCaloHitList))
+                continue;
         }
         catch (const StatusCodeException &e)
         {
@@ -416,7 +417,7 @@ StatusCode DlSNSignalAlgorithm::Infer()
 
         // Run the input through the trained model
         LArDLHelper::TorchInputVector inputs;
-        inputs.push_back(input);
+        inputs.emplace_back(input);
         LArDLHelper::TorchOutput output;
         if (isU)
             LArDLHelper::Forward(m_modelU, inputs, output);

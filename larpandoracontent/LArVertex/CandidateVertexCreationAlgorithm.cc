@@ -50,7 +50,8 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         // INFO: See if there is already a vertex, and quit early if there is.
         //       The vertex has likely already been defined by another algorithm.
         const VertexList *pVertexList(nullptr);
-        PandoraContentApi::GetCurrentList(*this, pVertexList);
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pVertexList))
+             return STATUS_CODE_SUCCESS;
         if (pVertexList != nullptr && !pVertexList->empty())
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())

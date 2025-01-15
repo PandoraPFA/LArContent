@@ -131,20 +131,17 @@ void CheatingClusterMergingAlgorithm::CheatedClusterMerging(const pandora::Clust
         }
     }
 
-    for (auto clusterToMergePair : clustersToMerge)
+    for (const auto &[pCurrentCluster, clusters] : clustersToMerge)
     {
-        const Cluster *currentCluster{clusterToMergePair.first};
-        const auto clusters{clusterToMergePair.second};
-
-        for (auto clusterToMerge : clusters)
+        for (const Cluster *const pClusterToMerge : clusters)
         {
-            if (!clusterToMerge->IsAvailable())
+            if (!pClusterToMerge->IsAvailable())
                 continue;
 
             try
             {
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                    PandoraContentApi::MergeAndDeleteClusters(*this, currentCluster, clusterToMerge, listName, listName));
+                    PandoraContentApi::MergeAndDeleteClusters(*this, pCurrentCluster, pClusterToMerge, listName, listName));
             }
             catch (StatusCodeException)
             {

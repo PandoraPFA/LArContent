@@ -287,7 +287,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(
             const int pfoHierarchyTier(LArPfoHelper::GetHierarchyTier(pfoToSharedHits.first));
             const int pfoId(pfoToIdMap.at(pfoToSharedHits.first));
             const int recoTBId(
-                isRecoTestBeam || isRecoTestBeamHierarchy ? testBeamPfoToIdMap.at(LArPfoHelper::GetParentPfo(pfoToSharedHits.first)) : -1);
+                isRecoTestBeam || isRecoTestBeamHierarchy ? static_cast<int>(testBeamPfoToIdMap.at(LArPfoHelper::GetParentPfo(pfoToSharedHits.first))) : -1);
 
             if (0 == matchIndex++)
             {

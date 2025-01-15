@@ -58,7 +58,7 @@ MvaLowEClusterMergingAlgorithm<T>::~MvaLowEClusterMergingAlgorithm()
 {
     if (m_writeTree)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "RECREATE"));
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName, m_fileName, "RECREATE"));
     }
 }
 
@@ -269,14 +269,14 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 
             if (clusterEdgeHits.size() > otherClusterEdgeHits.size())
             {
-                largestList = clusterEdgeHits;
-                smallestList = otherClusterEdgeHits;
+                largestList.insert(largestList.end(), clusterEdgeHits.begin(),  clusterEdgeHits.end());
+                smallestList.insert(smallestList.end(), otherClusterEdgeHits.begin(), otherClusterEdgeHits.end());
                 vectorTool = centroid2;
             }
             else
             {
-                largestList = otherClusterEdgeHits;
-                smallestList = clusterEdgeHits;
+                largestList.insert(largestList.end(), otherClusterEdgeHits.begin(), otherClusterEdgeHits.end());
+                smallestList.insert(smallestList.end(), clusterEdgeHits.begin(),  clusterEdgeHits.end());
                 vectorTool = centroid1;
             }
             std::vector<float> distanceDistribution;
@@ -429,25 +429,22 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
         }
     }
 
-    for (auto clusterToMergePair : clustersToMerge)
+    for (const auto &[pCurrentCluster, clusters] : clustersToMerge)
     {
-        const Cluster *currentCluster{clusterToMergePair.first};
-        const auto clusters{clusterToMergePair.second};
-
-        for (auto clusterToMerge : clusters)
+        for (const Cluster *const pClusterToMerge : clusters)
         {
-            if (!clusterToMerge->IsAvailable())
+            if (!pClusterToMerge->IsAvailable())
                 continue;
 
             if (m_printOut)
             {
-                std::cout << "Number of hits in clusters: " << currentCluster->GetNCaloHits() << " | " << clusterToMerge->GetNCaloHits() << std::endl;
+                std::cout << "Number of hits in clusters: " << pCurrentCluster->GetNCaloHits() << " | " << pClusterToMerge->GetNCaloHits() << std::endl;
             }
 
             try
             {
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                    PandoraContentApi::MergeAndDeleteClusters(*this, currentCluster, clusterToMerge, listName, listName));
+                    PandoraContentApi::MergeAndDeleteClusters(*this, pCurrentCluster, pClusterToMerge, listName, listName));
             }
             catch (StatusCodeException)
             {
@@ -461,7 +458,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-bool MvaLowEClusterMergingAlgorithm<T>::ClusterTool(std::vector<std::string> featureOrder, LArMvaHelper::MvaFeatureMap featureMap) const
+bool MvaLowEClusterMergingAlgorithm<T>::ClusterTool(const StringVector &featureOrder, const LArMvaHelper::MvaFeatureMap &featureMap) const
 {
     if (!m_enableProbability)
     {
