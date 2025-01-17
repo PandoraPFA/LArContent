@@ -45,7 +45,7 @@ StatusCode MLPCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleM
     if (childToParentPfoMap.find(childPfo.GetPfo()) == childToParentPfoMap.end())
         return STATUS_CODE_NOT_FOUND;
 
-    isTrueLink = childToParentPfoMap.at(childPfo.GetPfo().first) == parentPfo.GetPfo();
+    isTrueLink = (childToParentPfoMap.at(childPfo.GetPfo()).first == parentPfo.GetPfo());
 
     // What is the true orientation of the parent?
     trueParentOrientation = this->IsUpstreamTrueVertex(pfoToMCParticleMap, parentPfo.GetPfo(),
@@ -71,7 +71,7 @@ StatusCode MLPCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleM
     if (childToParentPfoMap.find(childPfo.GetPfo()) == childToParentPfoMap.end())
         return STATUS_CODE_NOT_FOUND;
 
-    isTrueLink = childToParentPfoMap.at(childPfo.GetPfo().first) == pNeutrinoPfo;
+    isTrueLink = (childToParentPfoMap.at(childPfo.GetPfo()).first == pNeutrinoPfo);
 
     // What is the true orientation of the child? 
     trueChildOrientation = this->IsUpstreamTrueVertex(pfoToMCParticleMap, childPfo.GetPfo(),
@@ -282,7 +282,7 @@ bool MLPCheatHierarchyTool::IsEMParticle(const MCParticle *const pMCParticle) co
 
 const MCParticle* MLPCheatHierarchyTool::GetLeadEMParticle(const MCParticle *const pMCParticle) const
 {
-    if (!this->IsEMParticle(pThisMCParticle))
+    if (!this->IsEMParticle(pMCParticle))
       throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
   
     const MCParticle *pThisMCParticle(pMCParticle);
@@ -420,6 +420,9 @@ void MLPCheatHierarchyTool::GetVisiblePfoHierarchy(const ParticleFlowObject *con
             }
         }
     }
+
+    // Now determine each pfo's generation
+    this->AssignGeneration(pNeutrinoPfo, 2, childToParentPfoMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -511,6 +514,26 @@ const ParticleFlowObject* MLPCheatHierarchyTool::BestParentInSplitHierarchy(cons
 
     return pParentPfo;
 
+}
+
+  
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void MLPCheatHierarchyTool::AssignGeneration(const ParticleFlowObject *const pParentPfo, const int generationToFind,
+    ChildToParentPfoMap &childToParentPfoMap) const
+{
+  // Don't want to use a reference here
+  for (ChildToParentPfoMap::value_type &entry : childToParentPfoMap)
+  {
+      const ParticleFlowObject *const pThisPfo(entry.first);
+      const ParticleFlowObject *const pThisParent(entry.second.first);
+      
+      if (pParentPfo == pThisParent)
+      {
+          entry.second.second = generationToFind;
+          this->AssignGeneration(pThisPfo, (generationToFind + 1), childToParentPfoMap);
+      }
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

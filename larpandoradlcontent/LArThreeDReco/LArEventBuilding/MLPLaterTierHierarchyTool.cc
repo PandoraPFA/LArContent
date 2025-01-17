@@ -29,6 +29,7 @@ namespace lar_dl_content
 
 MLPLaterTierHierarchyTool::MLPLaterTierHierarchyTool() :
     MLPBaseHierarchyTool(),
+    m_trainingMode(false),
     m_trajectoryStepSize(1.f),
     m_connectionBuffer(50.f),
     m_searchRegion(10.f),
@@ -113,10 +114,13 @@ StatusCode MLPLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, con
     }
 
     // Now run the model!
-    if (childHierarchyPfo.GetIsTrack())
-        laterTierScore = this->ClassifyTrackTrack(networkParamVector.at(0), networkParamVector.at(1), networkParamVector.at(2), networkParamVector.at(3));
-    else
-        laterTierScore = this->ClassifyTrackShower(networkParamVector.at(0), networkParamVector.at(1));
+    if (!m_trainingMode)
+    {
+        if (childHierarchyPfo.GetIsTrack())
+            laterTierScore = this->ClassifyTrackTrack(networkParamVector.at(0), networkParamVector.at(1), networkParamVector.at(2), networkParamVector.at(3));
+        else
+            laterTierScore = this->ClassifyTrackShower(networkParamVector.at(0), networkParamVector.at(1));
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -691,6 +695,7 @@ FloatVector MLPLaterTierHierarchyTool::ClassifyTrackShowerEdge(const MLPLaterTie
 
 StatusCode MLPLaterTierHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrajectoryStepSize", m_trajectoryStepSize));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionBuffer", m_connectionBuffer));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SearchRegion", m_searchRegion));
@@ -772,7 +777,7 @@ StatusCode MLPLaterTierHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackTrackBranchModelName", m_trackTrackBranchModelName));
 
-    if (!m_trackTrackBranchModelName.empty())
+    if (!m_trainingMode && !m_trackTrackBranchModelName.empty())
     {
         m_trackTrackBranchModelName = LArFileHelper::FindFileInPath(m_trackTrackBranchModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackTrackBranchModelName, m_trackTrackBranchModel));
@@ -780,7 +785,7 @@ StatusCode MLPLaterTierHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackTrackClassifierModelName", m_trackTrackClassifierModelName));
 
-    if (!m_trackTrackClassifierModelName.empty())
+    if (!m_trainingMode && !m_trackTrackClassifierModelName.empty())
     {
         m_trackTrackClassifierModelName = LArFileHelper::FindFileInPath(m_trackTrackClassifierModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackTrackClassifierModelName, m_trackTrackClassifierModel));
@@ -788,7 +793,7 @@ StatusCode MLPLaterTierHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackShowerBranchModelName", m_trackShowerBranchModelName));
 
-    if (!m_trackShowerBranchModelName.empty())
+    if (!m_trainingMode && !m_trackShowerBranchModelName.empty())
     {
         m_trackShowerBranchModelName = LArFileHelper::FindFileInPath(m_trackShowerBranchModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackShowerBranchModelName, m_trackShowerBranchModel));
@@ -796,7 +801,7 @@ StatusCode MLPLaterTierHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackShowerClassifierModelName", m_trackShowerClassifierModelName));
 
-    if (!m_trackShowerClassifierModelName.empty())
+    if (!m_trainingMode && !m_trackShowerClassifierModelName.empty())
     {
         m_trackShowerClassifierModelName = LArFileHelper::FindFileInPath(m_trackShowerClassifierModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackShowerClassifierModelName, m_trackShowerClassifierModel));

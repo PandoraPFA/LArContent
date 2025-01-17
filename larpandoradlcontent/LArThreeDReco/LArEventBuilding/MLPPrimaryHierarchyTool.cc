@@ -27,6 +27,7 @@ namespace lar_dl_content
 
 MLPPrimaryHierarchyTool::MLPPrimaryHierarchyTool() :
     MLPBaseHierarchyTool(),
+    m_trainingMode(false),
     m_extrapolationStepSize(1.f),
     m_normalise(true),
     m_nSpacepointsMin(0.f),
@@ -76,10 +77,13 @@ StatusCode MLPPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const
     }
 
     // Now run the model!
-    if (hierarchyPfo.GetIsTrack())
-        primaryScore = this->ClassifyTrack(networkParamVector.at(0), networkParamVector.at(1));
-    else
-        primaryScore = this->ClassifyShower(networkParamVector.at(0));
+    if (!m_trainingMode)
+    {
+        if (hierarchyPfo.GetIsTrack())
+            primaryScore = this->ClassifyTrack(networkParamVector.at(0), networkParamVector.at(1));
+        else
+            primaryScore = this->ClassifyShower(networkParamVector.at(0));
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -346,6 +350,7 @@ float MLPPrimaryHierarchyTool::ClassifyShower(const MLPPrimaryNetworkParams &pri
 
 StatusCode MLPPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionRadius", m_vertexRegionRadius));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ExtrapolationStepSize", m_extrapolationStepSize));
@@ -369,7 +374,7 @@ StatusCode MLPPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackBranchModelName", m_primaryTrackBranchModelName));
 
-    if (!m_primaryTrackBranchModelName.empty())
+    if (!m_trainingMode && !m_primaryTrackBranchModelName.empty())
     {
         m_primaryTrackBranchModelName = LArFileHelper::FindFileInPath(m_primaryTrackBranchModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryTrackBranchModelName, m_primaryTrackBranchModel));
@@ -377,7 +382,7 @@ StatusCode MLPPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackClassifierModelName", m_primaryTrackClassifierModelName));
 
-    if (!m_primaryTrackClassifierModelName.empty())
+    if (!m_trainingMode && !m_primaryTrackClassifierModelName.empty())
     {
         m_primaryTrackClassifierModelName = LArFileHelper::FindFileInPath(m_primaryTrackClassifierModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryTrackClassifierModelName, m_primaryTrackClassifierModel));
@@ -385,7 +390,7 @@ StatusCode MLPPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryShowerClassifierModelName", m_primaryShowerClassifierModelName));
 
-    if (!m_primaryShowerClassifierModelName.empty())
+    if (!m_trainingMode && !m_primaryShowerClassifierModelName.empty())
     {
         m_primaryShowerClassifierModelName = LArFileHelper::FindFileInPath(m_primaryShowerClassifierModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryShowerClassifierModelName, m_primaryShowerClassifierModel));

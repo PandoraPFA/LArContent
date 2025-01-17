@@ -328,6 +328,7 @@ private:
     LArDLHelper::TorchModel m_trackShowerBranchModel;     ///< the track-shower edge model
     LArDLHelper::TorchModel m_trackShowerClassifierModel; ///< the track-shower classification model
     // For tool
+    bool m_trainingMode;        ///< whether to run the tool in training mode
     float m_trajectoryStepSize; ///< the size of the steps taken to trace the parent trajectory
     float m_connectionBuffer;   ///< the 'is child connected?' threshold
     float m_searchRegion;       ///< the dimensions of the box used to obtain the up/downstream 3D hit groups

@@ -40,7 +40,7 @@ public:
 
 private:
     typedef std::map<const pandora::ParticleFlowObject*, const pandora::MCParticle*> PfoToMCParticleMap;
-    typedef std::map<const pandora::ParticleFlowObject*, const pandora::ParticleFlowObject*> PfoToPfoMap;    
+    typedef std::map<const pandora::ParticleFlowObject*, std::pair<const pandora::ParticleFlowObject*, int>> ChildToParentPfoMap;
     typedef std::vector<pandora::PfoVector> Hierarchy;
 
     pandora::StatusCode Run();
@@ -81,17 +81,20 @@ private:
 
     bool ShouldTrainOnEvent(const pandora::ParticleFlowObject *const pNeutrinoPfo) const;
 
-    void FillPrimaryTrees(const PfoToMCParticleMap &matchingMap, const PfoToPfoMap &childToParentPfoMap,
+    std::pair<float, float> GetTrainingCuts(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo,
+        const bool trueParentOrientation, const bool trueChildOrientation) const;
+
+    void FillPrimaryTrees(const PfoToMCParticleMap &matchingMap, const ChildToParentPfoMap &childToParentPfoMap,
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos) const;
     
     void FillPrimaryTree(const std::string &treeName, const bool isTrueLink, const bool isOrientationCorrect, 
         const MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams &primaryNetworkParams) const;
 
-    void FillLaterTierTrees(const PfoToMCParticleMap &matchingMap, const PfoToPfoMap &childToParentPfoMap,
+    void FillLaterTierTrees(const PfoToMCParticleMap &matchingMap, const ChildToParentPfoMap &childToParentPfoMap,
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos) const;
 
     void FillLaterTierTree(const std::string &treeName, const bool isTrueLink, const bool isOrientationCorrect, 
-        const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams) const;
+        const int childTrueGen, const std::pair<float, float> &trainingCuts, const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

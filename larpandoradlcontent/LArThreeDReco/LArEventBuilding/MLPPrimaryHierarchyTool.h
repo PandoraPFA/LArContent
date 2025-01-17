@@ -63,6 +63,21 @@ public:
      */
     MLPPrimaryHierarchyTool();
 
+    /**
+     *  @brief  Calculate the variables describing the extension of a child particle to a given parent 
+     *          (m_parentConnectionDistance, m_childConnectionDistance)
+     *
+     *  @param  parentVertex the position of the vertex of the parent pfo
+     *  @param  parentDirection the direction at the parent vertex
+     *  @param  childVertex the position of the vertex of the child pfo
+     *  @param  childDirection the direction at the child vertex
+     *  @param  parentConnectionDistance the DCA to the parent vertex
+     *  @param  childConnectionDistance the extension of the child to the DCA point
+     */
+    void CalculateConnectionDistances(const pandora::CartesianVector &parentVertex, const pandora::CartesianVector &parentDirection, 
+        const pandora::CartesianVector &childVertex, const pandora::CartesianVector &childDirection, 
+        float &parentConnectionDistance, float &childConnectionDistance) const;
+
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -122,21 +137,6 @@ private:
         const HierarchyPfoMap &trackPfos, MLPPrimaryNetworkParams &primaryNetworkParams) const;
 
     /**
-     *  @brief  Calculate the variables describing the extension of a child particle to a given parent 
-     *          (m_parentConnectionDistance, m_childConnectionDistance)
-     *
-     *  @param  parentVertex the position of the vertex of the parent pfo
-     *  @param  parentDirection the direction at the parent vertex
-     *  @param  childVertex the position of the vertex of the child pfo
-     *  @param  childDirection the direction at the child vertex
-     *  @param  parentConnectionDistance the DCA to the parent vertex
-     *  @param  childConnectionDistance the extension of the child to the DCA point
-     */
-    void CalculateConnectionDistances(const pandora::CartesianVector &parentVertex, const pandora::CartesianVector &parentDirection, 
-        const pandora::CartesianVector &childVertex, const pandora::CartesianVector &childDirection, 
-        float &parentConnectionDistance, float &childConnectionDistance) const;
-
-    /**
      *  @brief  Shift and normalise the primary network parameters
      *
      *  @param  primaryNetworkParam the input primary network parameters
@@ -175,6 +175,7 @@ private:
     float ClassifyShower(const MLPPrimaryNetworkParams &primaryNetworkParams);
 
     // For model
+    bool m_trainingMode;                                    ///< whether to run the tool in training mode
     std::string m_primaryTrackBranchModelName;              ///< the name of the primary track edge model file
     std::string m_primaryTrackClassifierModelName;          ///< the name of the primary track classification model file 
     std::string m_primaryShowerClassifierModelName;         ///< the name of the primary shower classification model file 
