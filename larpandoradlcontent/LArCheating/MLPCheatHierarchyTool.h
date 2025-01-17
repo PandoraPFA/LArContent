@@ -33,11 +33,11 @@ public:
      */
     MLPCheatHierarchyTool();
 
-    pandora::StatusCode Run(const PfoToMCParticleMap &pfoToMCParticleMap, const PfoToPfoMap &childToParentPfoMap,
+    pandora::StatusCode Run(const PfoToMCParticleMap &pfoToMCParticleMap, const ChildToParentPfoMap &childToParentPfoMap,
         const HierarchyPfo &parentPfo, const HierarchyPfo &childPfo, bool &isTrueLink, bool &trueParentOrientation,
         bool &trueChildOrientation);
 
-    pandora::StatusCode Run(const PfoToMCParticleMap &pfoToMCParticleMap, const PfoToPfoMap &childToParentPfoMap,
+    pandora::StatusCode Run(const PfoToMCParticleMap &pfoToMCParticleMap, const ChildToParentPfoMap &childToParentPfoMap,
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfo &childPfo, bool &isTrueLink, 
         bool &trueChildOrientation);
 
@@ -50,7 +50,7 @@ public:
     *  @param  childToParentPfoMap the pfo->(parentPfo, generation) map to fill
     */
     void FillHierarchyMap(const pandora::Algorithm *const pAlgorithm, PfoToMCParticleMap &pfoToMCParticleMap,
-        PfoToPfoMap &childToParentPfoMap) const;
+        ChildToParentPfoMap &childToParentPfoMap) const;
 
    /**
     *  @brief  Whether the true invisible parent of a particle is a neutron
@@ -160,7 +160,7 @@ private:
     *  @param  childToParentPfoMap the true child->parent pfo visible match map to fill
     */
     void GetVisiblePfoHierarchy(const pandora::ParticleFlowObject *const pNeutrinoPfo, const PfoToMCParticleMap &pfoToMCParticleMap,
-        const MCToMCMap &childToParentMCMap, PfoToPfoMap &childToParentPfoMap) const;
+        const MCToMCMap &childToParentMCMap, ChildToParentPfoMap &childToParentPfoMap) const;
 
    /**
     *  @brief  Determine the 'internal' hierachy of reconstructed particles that match 
@@ -169,7 +169,8 @@ private:
     *  @param  splitPfo the (MCParticle, list of matched pfos) pair
     *  @param  childToParentPfoMap the true child->parent pfo visible match map to fill
     */
-    void BuildSplitHierarchy(const std::pair<const pandora::MCParticle*, pandora::PfoList> &splitPfo, PfoToPfoMap &childToParentPfoMap) const;
+    void BuildSplitHierarchy(const std::pair<const pandora::MCParticle*, pandora::PfoList> &splitPfo, 
+        ChildToParentPfoMap &childToParentPfoMap) const;
 
    /**
     *  @brief  Determine the closest distance between two pfos
@@ -189,10 +190,22 @@ private:
     *  @param  splitParticle the list of pfos forming the split particle
     * 
     *  @return the best parent pfo
-    */  
+    */
     const pandora::ParticleFlowObject* BestParentInSplitHierarchy(const pandora::ParticleFlowObject *const pChildPfo, 
         const pandora::PfoList &splitParticle) const;
 
+   /**
+    *  @brief  Find the children of an input parent pfo in the ChildToParentPfoMap, 
+    *          and assign their generation
+    *
+    *  @param  pParentPfo a pointer to the parent pfo
+    *  @param  generationToFind the generation to assign
+    *  @param  childToParentPfoMap the true child->parent pfo visible match map to modify
+    * 
+    */  
+    void AssignGeneration(const pandora::ParticleFlowObject *const pParentPfo, const int generationToFind,
+        ChildToParentPfoMap &childToParentPfoMap) const;
+  
     std::string m_mcParticleListName;     ///< the MCParticle list name
     std::string m_neutrinoPfoListName;    ///< the neutrino pfo list name
     pandora::StringVector m_pfoListNames; ///< the vector of pfo list names
