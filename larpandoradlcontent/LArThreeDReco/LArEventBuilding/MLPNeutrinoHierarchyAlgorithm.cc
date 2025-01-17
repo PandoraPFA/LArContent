@@ -791,26 +791,72 @@ void MLPNeutrinoHierarchyAlgorithm::FillLaterTierTrees(const PfoToMCParticleMap 
                 if (m_laterTierHierarchyTool->Run(this, pNeutrinoPfo, hierarchyParentTrackPfo, hierarchyChildPfo, networkParamVector, laterTierScore) != STATUS_CODE_SUCCESS)
                     continue;
 
+                // Check that we have an edge with correctLinkOrientation
+                int nCorrectLinkOrientation(0);
+                for (const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams : networkParamVector)
+                {
+                    const bool useParentUpstream(std::fabs(networkParams.m_parentIsPOIClosestToNu - 1.f) < std::numeric_limits<float>::epsilon());
+                    const bool useChildUpstream(std::fabs(networkParams.m_childIsPOIClosestToNu - 1.f) < std::numeric_limits<float>::epsilon());
+                    const bool isOrientationCorrect((useParentUpstream == trueParentOrientation) && (useChildUpstream == trueChildOrientation));
+
+                    if (isOrientationCorrect)
+                        ++nCorrectLinkOrientation;
+                }
+
+                if (nCorrectLinkOrientation != 1)
+                    continue;
+
+                // Get generation info
+                const int trueVisibleGen(childToParentPfoMap.at(hierarchyChildPfo.GetPfo()).second);
+
+                // Get training cut info
+                std::pair<float, float> trainingCuts(this->GetTrainingCuts(hierarchyParentTrackPfo, hierarchyChildPfo, trueParentOrientation, trueChildOrientation));
+
                 for (const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams : networkParamVector)
                 {
                     const std::string treeName(isTrack ? m_laterTierTrackTrackTreeName : m_laterTierTrackShowerTreeName);
                     const bool useParentUpstream(std::fabs(networkParams.m_parentIsPOIClosestToNu - 1.f) < std::numeric_limits<float>::epsilon());
                     const bool useChildUpstream(std::fabs(networkParams.m_childIsPOIClosestToNu - 1.f) < std::numeric_limits<float>::epsilon());
                     const bool isOrientationCorrect((useParentUpstream == trueParentOrientation) && (useChildUpstream == trueChildOrientation));
-                    this->FillLaterTierTree(treeName, isTrueLink, isOrientationCorrect, networkParams);
+                    this->FillLaterTierTree(treeName, isTrueLink, isOrientationCorrect, trueVisibleGen, trainingCuts, networkParams);
                 }
             }
         }
     }
 }
 
-// //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::pair<float, float> MLPNeutrinoHierarchyAlgorithm::GetTrainingCuts(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo,
+    const bool trueParentOrientation, const bool trueChildOrientation) const
+{
+    const CartesianVector &parentEnd(trueParentOrientation ? parentHierarchyPfo.GetUpstreamVertex() : 
+        parentHierarchyPfo.GetDownstreamVertex());
+    const CartesianVector &parentEndDirection(trueParentOrientation ? parentHierarchyPfo.GetUpstreamDirection() : 
+        parentHierarchyPfo.GetDownstreamDirection());
+    const CartesianVector &childStart(trueChildOrientation ? childHierarchyPfo.GetUpstreamVertex() : 
+        childHierarchyPfo.GetDownstreamVertex());
+    const CartesianVector &childStartDirection(trueChildOrientation ? childHierarchyPfo.GetUpstreamDirection() : 
+        childHierarchyPfo.GetDownstreamDirection());
+
+    std::pair<float, float> trainingCuts(std::make_pair(m_bogusFloat, m_bogusFloat));
+
+    m_primaryHierarchyTool->CalculateConnectionDistances(parentEnd, parentEndDirection, childStart, childStartDirection, 
+        trainingCuts.first, trainingCuts.second);
+
+    return trainingCuts;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void MLPNeutrinoHierarchyAlgorithm::FillLaterTierTree(const std::string &treeName, const bool isTrueLink, const bool isOrientationCorrect, 
-    const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams) const
+    const int childTrueGen, const std::pair<float, float> &trainingCuts, const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams) const
 {
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsTrueLink", (isTrueLink ? 1 : 0)));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsOrientationCorrect", (isOrientationCorrect ? 1 : 0)));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ChildTrueVisibleGeneration", childTrueGen));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "TrainingCutL", trainingCuts.first));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "TrainingCutT", trainingCuts.second));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ParentTrackScore", networkParams.m_parentTrackScore));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ChildTrackScore", networkParams.m_childTrackScore));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ParentNSpacepoints", networkParams.m_parentNSpacepoints));
