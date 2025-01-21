@@ -36,6 +36,9 @@ public:
      */
     MLPNeutrinoHierarchyAlgorithm();
 
+    /**
+     *  @brief  Default destructor
+     */
     ~MLPNeutrinoHierarchyAlgorithm();
 
 private:
@@ -45,22 +48,71 @@ private:
 
     pandora::StatusCode Run();
 
-    void DetermineIsobelID();
-
-    void PrintHierarchy(const Hierarchy &hierarchy) const;
-
+    /**
+     *  @brief  Return the neutrino pfo
+     *
+     *  @param  the pointer to the neutrino pfo to fill
+     *
+     *  @return whether the neutrino pfo can be found
+     */
     bool GetNeutrinoPfo(const pandora::ParticleFlowObject *&pNeutrinoPfo) const;
 
-    void FillTrackShowerVectors(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos, HierarchyPfoMap &showerPfos) const;
+    /**
+     *  @brief  Fill the track and shower-like HierarchyPfoVectors
+     *
+     *  @param  pNeutrinoPfo a pointer to the neutrino pfo
+     *  @param  trackPfos the track-like HierarchyPfoVector
+     *  @param  showerPfos the shower-like HierarchyPfoVector
+     */
+    void FillTrackShowerVectors(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos, 
+        HierarchyPfoMap &showerPfos) const;
 
+    /**
+     *  @brief  Get the number of 3D hits owned by a pfo
+     *
+     *  @param  pPfo a pointer to the pfo
+     *
+     *  @return The number of 3D hits
+     */
     float GetNSpacepoints(const pandora::ParticleFlowObject *const pPfo) const;
 
+    /**
+     *  @brief  Identify the upstream (closest to the nu vertex) and downstream (furthest 
+     *          from the nu vertex) endpoints and directions of an input pfo  
+     *
+     *  @param  pNeutrinoPfo a pointer to the neutrino pfo
+     *  @param  pPfo a pointer to the pfo
+     *  @param  slidingFitResult the sliding fit result of the input pfo 
+     *  @param  upstreamVertex the upstream endpoint
+     *  @param  upstreamDirection the direction at the upstream point
+     *  @param  downstreamVertex the downstream endpoint
+     *  @param  downstreamDirection the direction at the downstream point
+     *
+     *  @return whether this was successful
+     */
     bool GetExtremalVerticesAndDirections(const pandora::ParticleFlowObject *const pNeutrinoPfo, const pandora::ParticleFlowObject *const pPfo, 
         const ThreeDSlidingFitResult &slidingFitResult, pandora::CartesianVector &upstreamVertex, pandora::CartesianVector &upstreamDirection, 
         pandora::CartesianVector &downstreamVertex, pandora::CartesianVector &downstreamDirection) const;
 
-    bool GetShowerDirection(const pandora::ParticleFlowObject *const pPfp, const pandora::CartesianVector &vertex, pandora::CartesianVector &direction) const;
+    /**
+     *  @brief  Obtain the direction of a shower at a given endpoint from
+     *          the angular decomposition of the shower's 'close' 3D hits
+     *
+     *  @param  pPfo a pointer to the pfo
+     *  @param  vertex the endpoint at which to find the direction
+     *  @param  direction the found direction
+     *
+     *  @return whether a shower direction could be found
+     */
+    bool GetShowerDirection(const pandora::ParticleFlowObject *const pPfo, const pandora::CartesianVector &vertex, pandora::CartesianVector &direction) const;
 
+    /**
+     *  @brief  Set the primary network score of the HierarchyPfo
+     *
+     *  @param  pNeutrinoPfo a pointer to the neutrino pfo
+     *  @param  trackPfos the track-like HierarchyPfoVector
+     *  @param  showerPfos the shower-like HierarchyPfoVector 
+     */
     void SetPrimaryScores(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos, HierarchyPfoMap &showerPfos) const;
 
     float GetPrimaryScore(const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo) const;
@@ -75,31 +127,39 @@ private:
 
     void BuildPandoraHierarchy(const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos) const;
 
-    void PrintPandoraHierarchy(const pandora::ParticleFlowObject *const pNeutrinoPfo) const;
-
-    void CheckForOrphans() const;
-
     bool ShouldTrainOnEvent(const pandora::ParticleFlowObject *const pNeutrinoPfo) const;
+
+    void GetParticleIDMap(const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
+        std::map<const pandora::ParticleFlowObject *, int> &particleIDMap);
 
     std::pair<float, float> GetTrainingCuts(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo,
         const bool trueParentOrientation, const bool trueChildOrientation) const;
 
+    void FillEventTree(const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, const int nPrimaryTrackLinks,
+        const int nPrimaryShowerLinks, const int nLaterTierTrackTrackLinks, const int nLaterTierTrackShowerLinks) const;
+
     void FillPrimaryTrees(const PfoToMCParticleMap &matchingMap, const ChildToParentPfoMap &childToParentPfoMap,
-        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos) const;
+        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
+        const std::map<const pandora::ParticleFlowObject *, int> &particleIDMap, int &nPrimaryTrackLinks, int &nPrimaryShowerLinks) const;
     
     void FillPrimaryTree(const std::string &treeName, const bool isTrueLink, const bool isOrientationCorrect, 
-        const MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams &primaryNetworkParams) const;
+        const int particleID, const MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams &primaryNetworkParams) const;
 
     void FillLaterTierTrees(const PfoToMCParticleMap &matchingMap, const ChildToParentPfoMap &childToParentPfoMap,
-        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos) const;
+        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
+        const std::map<const pandora::ParticleFlowObject *, int> &particleIDMap,  int &nTrackLinks, int &nShowerLinks) const;
 
     void FillLaterTierTree(const std::string &treeName, const bool isTrueLink, const bool isOrientationCorrect, 
-        const int childTrueGen, const std::pair<float, float> &trainingCuts, const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams) const;
+        const int childTrueGen, const std::pair<float, float> &trainingCuts, const int parentID, const int childID, 
+        const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    int m_eventID;
+
     bool m_trainingMode;
     std::string m_trainingFileName;
+    std::string m_eventTreeName;
     std::string m_primaryTrackTreeName;
     std::string m_primaryShowerTreeName;
     std::string m_laterTierTrackTrackTreeName;
@@ -126,10 +186,6 @@ private:
     MLPPrimaryHierarchyTool *m_primaryHierarchyTool;
     MLPLaterTierHierarchyTool *m_laterTierHierarchyTool;
     MLPCheatHierarchyTool *m_cheatHierarchyTool;
-
-    ///////////////////////////
-    std::map<const pandora::ParticleFlowObject*, int> m_isobelID;
-    ///////////////////////////
 };
 
 } // namespace lar_dl_content
