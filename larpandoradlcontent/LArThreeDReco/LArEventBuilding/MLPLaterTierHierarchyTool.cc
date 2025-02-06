@@ -261,7 +261,7 @@ StatusCode MLPLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm 
     laterTierNetworkParams.m_childIsPOIClosestToNu = useUpstreamForChild ? 1.f : 0.f;
     this->SetVertexParams(nuVertex, parentStart, parentEnd, childStart, laterTierNetworkParams);
     this->SetEndRegionParams(pAlgorithm, parentHierarchyPfo.GetPfo(), parentEnd, laterTierNetworkParams);
-    this->SetConnectionParams(parentHierarchyPfo, childHierarchyPfo, parentStart, childStart, childStartDirection, laterTierNetworkParams);
+    this->SetConnectionParams(parentHierarchyPfo, parentStart, childStart, childStartDirection, laterTierNetworkParams);
     this->SetOvershootParams(parentStart, parentStartDirection, parentEnd, parentEndDirection, childStart, childStartDirection, laterTierNetworkParams);
     this->SetParentConnectionPointVars(parentHierarchyPfo, laterTierNetworkParams);
 
@@ -333,7 +333,7 @@ void MLPLaterTierHierarchyTool::SetEndRegionRToWall(const CartesianVector &paren
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, 
+void MLPLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, 
     const CartesianVector &parentStart, const CartesianVector &childStart, const CartesianVector &childStartDirection, 
     MLPLaterTierNetworkParams &laterTierNetworkParams) const
 {
