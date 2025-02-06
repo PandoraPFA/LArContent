@@ -200,13 +200,12 @@ private:
      *           m_childCPDCA, m_childCPExtrapDistance, m_childCPLRatio)
      *
      *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
-     *  @param  childHierarchyPfo the HierarchyPfo object of the child pfo     
      *  @param  parentStart the assumed parent pfo startpoint
      *  @param  childStart the assumed child pfo startpoint
      *  @param  childStartDirection the direction at the assumed child startpoint
      *  @param  laterTierNetworkParams the later tier network parameters to fill  
      */  
-    void SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, 
+    void SetConnectionParams(const HierarchyPfo &parentHierarchyPfo,
         const pandora::CartesianVector &parentStart, const pandora::CartesianVector &childStart, 
         const pandora::CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
 

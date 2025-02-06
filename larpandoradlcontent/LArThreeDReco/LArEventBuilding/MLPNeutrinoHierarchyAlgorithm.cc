@@ -94,6 +94,8 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::Run()
     HierarchyPfoMap trackPfos, showerPfos;
     this->FillTrackShowerVectors(pNeutrinoPfo, trackPfos, showerPfos);
 
+    #ifdef MONITORING
+    
     if (m_trainingMode)
     {
         std::cout << "Got the training wheels on!!" << std::endl;
@@ -123,6 +125,8 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::Run()
 
         return STATUS_CODE_SUCCESS;
     }
+
+    #endif
 
     // Calculate primary scores
     this->SetPrimaryScores(pNeutrinoPfo, trackPfos, showerPfos);
@@ -627,6 +631,8 @@ void MLPNeutrinoHierarchyAlgorithm::BuildPandoraHierarchy(const ParticleFlowObje
 // Training functions
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+#ifdef MONITORING
+
 bool MLPNeutrinoHierarchyAlgorithm::ShouldTrainOnEvent(const ParticleFlowObject *const pNeutrinoPfo) const
 {
     const MCParticleList *pMCParticleList(nullptr);
@@ -916,6 +922,8 @@ void MLPNeutrinoHierarchyAlgorithm::FillLaterTierTree(const std::string &treeNam
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ChildIsPOIClosestToNu", networkParams.m_childIsPOIClosestToNu));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), treeName.c_str()));
 }
+
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

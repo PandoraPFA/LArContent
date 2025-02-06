@@ -497,7 +497,7 @@ const ParticleFlowObject* MLPCheatHierarchyTool::BestParentInSplitHierarchy(cons
 
     for (const ParticleFlowObject *const pPotentialParent : splitParticle)
     {
-        float thisSep(this->GetClosestDistance(pPotentialParent, pPotentialParent));
+        float thisSep(this->GetClosestDistance(pChildPfo, pPotentialParent));
 
         if (thisSep < closestSep)
         {
