@@ -158,21 +158,6 @@ private:
      */
     pandora::StatusCode MakeCandidateVertexList(const pandora::CartesianPointVector &positions);
 
-    /**
-     *  @brief  Retrieve the true neutrino vertex position.
-     */
-    void GetTrueVertexPosition(float &x, float &y, float &z) const;
-
-    /**
-     *  @brief  Retrieve the true neutrino vertex position.
-     */
-    void GetTrueVertexPosition(float &x, float &u, float &v, float &w) const;
-
-    /**
-     *  @brief  Retrieve the true neutrino vertex.
-     */
-    const pandora::CartesianVector &GetTrueVertex() const;
-
     bool m_trainingMode;                      ///< Training mode
     std::string m_trainingOutputFile;         ///< Output file name for training examples
     std::string m_inputVertexListName;        ///< Input vertex list name if 2nd pass

@@ -272,10 +272,15 @@ StatusCode DlVertexingAlgorithm::Infer()
         if (m_visualise)
         {
             PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
-            try
+            const MCParticleList *pMCParticleList{nullptr};
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
+
+            CartesianVector trueVertex3D(0, 0, 0);
+            if (LArMCParticleHelper::GetTrueVertex(pMCParticleList, trueVertex3D))
             {
                 float x{0.f}, u{0.f}, v{0.f}, w{0.f};
-                this->GetTrueVertexPosition(x, u, v, w);
+                const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+                LArVertexHelper::GetTrueVertexPosition(trueVertex3D, transform, x, u, v, w);
                 if (isU)
                 {
                     const CartesianVector trueVertex(x, 0.f, u);
@@ -291,15 +296,11 @@ StatusCode DlVertexingAlgorithm::Infer()
                     const CartesianVector trueVertex(x, 0.f, w);
                     PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &trueVertex, "W(true)", BLUE, 3));
                 }
-            }
-            catch (StatusCodeException &e)
-            {
-                std::cerr << "DlVertexingAlgorithm: Warning. Couldn't find true vertex." << std::endl;
-            }
-            for (const auto &pos : positionVector)
-            {
-                std::string label{isU ? "U" : isV ? "V" : "W"};
-                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, label, RED, 3));
+                for (const auto &pos : positionVector)
+                {
+                    std::string label{isU ? "U" : isV ? "V" : "W"};
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, label, RED, 3));
+                }
             }
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
@@ -626,53 +627,6 @@ StatusCode DlVertexingAlgorithm::MakeCandidateVertexList(const CartesianPointVec
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
 
     return STATUS_CODE_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-void DlVertexingAlgorithm::GetTrueVertexPosition(float &x, float &y, float &z) const
-{
-    const CartesianVector &trueVertex{this->GetTrueVertex()};
-    x = trueVertex.GetX();
-    y = trueVertex.GetY();
-    z = trueVertex.GetZ();
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-void DlVertexingAlgorithm::GetTrueVertexPosition(float &x, float &u, float &v, float &w) const
-{
-    const CartesianVector &trueVertex{this->GetTrueVertex()};
-    const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
-    x = trueVertex.GetX();
-    u = static_cast<float>(transform->YZtoU(trueVertex.GetY(), trueVertex.GetZ()));
-    v = static_cast<float>(transform->YZtoV(trueVertex.GetY(), trueVertex.GetZ()));
-    w = static_cast<float>(transform->YZtoW(trueVertex.GetY(), trueVertex.GetZ()));
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-const CartesianVector &DlVertexingAlgorithm::GetTrueVertex() const
-{
-    const MCParticleList *pMCParticleList{nullptr};
-    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pMCParticleList) && pMCParticleList)
-    {
-        MCParticleVector primaries;
-        LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
-        if (!primaries.empty())
-        {
-            const MCParticle *primary{primaries.front()};
-            const MCParticleList &parents{primary->GetParentList()};
-            if (parents.size() == 1)
-            {
-                const MCParticle *trueNeutrino{parents.front()};
-                if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
-                    return primaries.front()->GetVertex();
-            }
-        }
-    }
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 #ifdef MONITORING

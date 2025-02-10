@@ -177,6 +177,16 @@ public:
     static void GetTrueTestBeamParticles(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleVector &trueTestBeamParticles);
 
     /**
+     *  @brief  Retrieve the true neutrino vertex.
+     *
+     *  @param  pMCParticleList The list of MC particles to search for the true vertex
+     *  @param  trueVertex The output true vertex position
+     *
+     *  @returns true if a vertex is found, false otherwise
+     */
+    static bool GetTrueVertex(const pandora::MCParticleList *const pMCParticleList, pandora::CartesianVector &trueVertex);
+
+    /**
      *  @brief  Get the first visible MC particles given a root particle. For example, given a neutrino this would return the primaries (the visible
      *          final state particles or the first visible descendents of invisible final state particles - note photons and neutrons are considered
      *          visible for this purpose).
