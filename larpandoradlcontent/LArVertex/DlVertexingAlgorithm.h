@@ -100,26 +100,6 @@ private:
         int &rowOffset, int &width, int &height) const;
 
     /*
-     *  @brief  Retrieve the map from MC to calo hits for reconstructable particles
-     *
-     *  @param  mcToHitsMap The map to populate
-     *
-     *  @return The StatusCode resulting from the function
-     **/
-    pandora::StatusCode GetMCToHitsMap(LArMCParticleHelper::MCContributionMap &mcToHitsMap) const;
-
-    /*
-     *  @brief  Construct a list of the MC particles from the MC to calo hits map, completing the interaction hierarchy with the invisible
-     *          upstream particles.
-     *
-     *  @param  mcToHitsMap The map of reconstructible MC particles to calo hits
-     *  @param  mcHierarchy The output list of MC particles representing the interaction
-     *
-     *  @return The StatusCode resulting from the function
-     **/
-    pandora::StatusCode CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, pandora::MCParticleList &mcHierarchy) const;
-
-    /*
      *  @brief  Determine the physical bounds associated with a CaloHitList.
      *
      *  @param  caloHitList The CaloHitList for which bounds should be determined
