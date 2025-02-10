@@ -62,27 +62,6 @@ private:
     };
 
     typedef std::map<pandora::HitType, Canvas *> CanvasViewMap;
-
-    class VertexTuple
-    {
-    public:
-        VertexTuple(const pandora::Pandora &pandora, const pandora::CartesianVector &vertexU, const pandora::CartesianVector &vertexV,
-            const pandora::CartesianVector &vertexW);
-
-        VertexTuple(const pandora::Pandora &pandora, const pandora::CartesianVector &vertex1, const pandora::CartesianVector &vertex2,
-            const pandora::HitType view1, const pandora::HitType view2);
-
-        const pandora::CartesianVector &GetPosition() const;
-        const pandora::CartesianPointVector &GetComponents() const;
-        float GetChi2() const;
-        std::string ToString() const;
-
-    private:
-        pandora::CartesianVector m_pos; ///< Calculated 3D position
-        float m_chi2;                   ///< Chi squared of calculated position
-        pandora::CartesianPointVector m_components; ///< The 2D vertices that contributed to the 3D vertex
-    };
-
     typedef std::pair<int, int> Pixel; // A Pixel is a row, column pair
     typedef std::vector<Pixel> PixelVector;
 

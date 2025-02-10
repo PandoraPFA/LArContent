@@ -14,6 +14,7 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
+#include "larpandoradlcontent/LArObjects/VertexTuple.h"
 
 #include <random>
 
@@ -37,24 +38,6 @@ public:
     virtual ~DlVertexingAlgorithm();
 
 private:
-    class VertexTuple
-    {
-    public:
-        VertexTuple(const pandora::Pandora &pandora, const pandora::CartesianVector &vertexU, const pandora::CartesianVector &vertexV,
-            const pandora::CartesianVector &vertexW);
-
-        VertexTuple(const pandora::Pandora &pandora, const pandora::CartesianVector &vertex1, const pandora::CartesianVector &vertex2,
-            const pandora::HitType view1, const pandora::HitType view2);
-
-        const pandora::CartesianVector &GetPosition() const;
-        float GetChi2() const;
-        std::string ToString() const;
-
-    private:
-        pandora::CartesianVector m_pos; ///< Calculated 3D position
-        float m_chi2;                   ///< Chi squared of calculated position
-    };
-
     typedef std::pair<int, int> Pixel; // A Pixel is a row, column pair
     typedef std::vector<Pixel> PixelVector;
 
