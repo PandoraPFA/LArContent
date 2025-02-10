@@ -15,6 +15,7 @@
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoradlcontent/LArObjects/VertexTuple.h"
+#include "larpandoradlcontent/LArVertex/DlVertexingBaseAlgorithm.h"
 
 #include <random>
 
@@ -25,22 +26,17 @@ namespace lar_dl_content
 /**
  *  @brief  DeepLearningTrackShowerIdAlgorithm class
  */
-class DlVertexingAlgorithm : public pandora::Algorithm
+class DlVertexingAlgorithm : public DlVertexingBaseAlgorithm
 {
 public:
-    typedef std::map<std::pair<int, int>, std::vector<const pandora::CaloHit *>> PixelToCaloHitsMap;
-
     /**
      *  @brief Default constructor
      */
     DlVertexingAlgorithm();
 
-    virtual ~DlVertexingAlgorithm();
+    ~DlVertexingAlgorithm();
 
 private:
-    typedef std::pair<int, int> Pixel; // A Pixel is a row, column pair
-    typedef std::vector<Pixel> PixelVector;
-
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode PrepareTrainingSample();
@@ -121,11 +117,6 @@ private:
      */
     pandora::StatusCode MakeCandidateVertexList(const pandora::CartesianPointVector &positions);
 
-    /**
-     *  @brief  Retrieve the true neutrino vertex.
-     */
-    const pandora::CartesianVector &GetTrueVertex() const;
-
 #ifdef MONITORING
     /**
      *  @brief  Populate a root true with vertex information.
@@ -134,27 +125,12 @@ private:
         const pandora::CartesianPointVector &vertexCandidatesV, const pandora::CartesianPointVector &vertexCandidatesW) const;
 #endif
 
-    bool m_trainingMode;                      ///< Training mode
-    std::string m_trainingOutputFile;         ///< Output file name for training examples
-    std::string m_inputVertexListName;        ///< Input vertex list name if 2nd pass
-    std::string m_outputVertexListName;       ///< Output vertex list name
-    pandora::StringVector m_caloHitListNames; ///< Names of input calo hit lists
-    LArDLHelper::TorchModel m_modelU;         ///< The model for the U view
-    LArDLHelper::TorchModel m_modelV;         ///< The model for the V view
-    LArDLHelper::TorchModel m_modelW;         ///< The model for the W view
     int m_event;                              ///< The current event number
-    int m_pass;                               ///< The pass of the train/infer step
-    int m_nClasses;                           ///< The number of distance classes
-    int m_height;                             ///< The height of the images
-    int m_width;                              ///< The width of the images
-    float m_driftStep;                        ///< The size of a pixel in the drift direction in cm (most relevant in pass 2)
     bool m_visualise;                         ///< Whether or not to visualise the candidate vertices
     bool m_writeTree;                         ///< Whether or not to write validation details to a ROOT tree
     std::string m_rootTreeName;               ///< The ROOT tree name
     std::string m_rootFileName;               ///< The ROOT file name
     std::mt19937 m_rng;                       ///< The random number generator
-    std::vector<double> m_thresholds;         ///< Distance class thresholds
-    std::string m_volumeType;                 ///< The name of the fiducial volume type for the monitoring output
 };
 
 } // namespace lar_dl_content

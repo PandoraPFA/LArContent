@@ -31,14 +31,7 @@ namespace lar_dl_content
 {
 
 DlSecondaryVertexingAlgorithm::DlSecondaryVertexingAlgorithm() :
-    m_trainingMode{false},
-    m_trainingOutputFile{""},
     m_event{-1},
-    m_pass{1},
-    m_nClasses{0},
-    m_height{256},
-    m_width{256},
-    m_driftStep{0.5f},
     m_visualise{false},
     m_writeTree{false},
     m_rng(static_cast<std::mt19937::result_type>(std::chrono::high_resolution_clock::now().time_since_epoch().count()))
@@ -88,7 +81,7 @@ StatusCode DlSecondaryVertexingAlgorithm::PrepareTrainingSample()
     bool hasFiducialVertex{false};
     for (const CartesianVector &vertex : vertices)
     {
-        if (LArVertexHelper::IsInFiducialVolume(this->GetPandora(), vertex, "dune_fd_hd"))
+        if (LArVertexHelper::IsInFiducialVolume(this->GetPandora(), vertex, m_volumeType))
         {
             hasFiducialVertex = true;
             break;
@@ -743,45 +736,19 @@ StatusCode DlSecondaryVertexingAlgorithm::MakeCandidateVertexList(const Cartesia
 
 StatusCode DlSecondaryVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualise", m_visualise));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Pass", m_pass));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageHeight", m_height));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageWidth", m_width));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DistanceThresholds", m_thresholds));
-    m_nClasses = m_thresholds.size() - 1;
-    if (m_pass > 1)
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_inputVertexListName));
-    }
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, DlVertexingBaseAlgorithm::ReadSettings(xmlHandle));
 
-    if (m_trainingMode)
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualise", m_visualise));
+
+    if (!m_trainingMode)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrainingOutputFileName", m_trainingOutputFile));
-    }
-    else
-    {
-        std::string modelName;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameU", modelName));
-        modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
-        LArDLHelper::LoadModel(modelName, m_modelU);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameV", modelName));
-        modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
-        LArDLHelper::LoadModel(modelName, m_modelV);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameW", modelName));
-        modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
-        LArDLHelper::LoadModel(modelName, m_modelW);
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WriteTree", m_writeTree));
         if (m_writeTree)
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RootTreeName", m_rootTreeName));
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RootFileName", m_rootFileName));
         }
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
     }
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
 
     return STATUS_CODE_SUCCESS;
 }
