@@ -100,8 +100,6 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::Run()
     {
         std::cout << "Got the training wheels on!!" << std::endl;
 
-        this->ShouldTrainOnEvent(pNeutrinoPfo);
-
         // Do ID stuff
         ++m_eventID;
 
@@ -700,9 +698,12 @@ void MLPNeutrinoHierarchyAlgorithm::FillEventTree(const HierarchyPfoMap &trackPf
 void MLPNeutrinoHierarchyAlgorithm::FillPrimaryTrees(const PfoToMCParticleMap &matchingMap, const ChildToParentPfoMap &childToParentPfoMap,
     const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
     const std::map<const ParticleFlowObject *, int> &particleIDMap, int &nPrimaryTrackLinks, int &nPrimaryShowerLinks) const
-{   
+{
+    const bool isTrainingEvent(this->ShouldTrainOnEvent(pNeutrinoPfo));
+  
     for (const bool isTrack : {true, false})
     {
+        const std::string treeName(isTrack ? m_primaryTrackTreeName : m_primaryShowerTreeName);      
         const HierarchyPfoMap &hierarchyPfoMap(isTrack ? trackPfos : showerPfos);
 
         for (const auto& [pPfo, hierarchyPfo] : hierarchyPfoMap)
@@ -713,10 +714,9 @@ void MLPNeutrinoHierarchyAlgorithm::FillPrimaryTrees(const PfoToMCParticleMap &m
 
             const int particleID(particleIDMap.at(pPfo));
 
-            // We don't want visible primaries with neutron parents
+	    // Is training link?
             bool isNeutronChild(false);
-            if ((m_cheatHierarchyTool->IsNeutronChild(pPfo, matchingMap, isNeutronChild) != STATUS_CODE_SUCCESS) || isNeutronChild)
-                continue;
+            bool isTrainingLink(isTrainingEvent && !((m_cheatHierarchyTool->IsNeutronChild(pPfo, matchingMap, isNeutronChild) != STATUS_CODE_SUCCESS) || isNeutronChild));
 
             // Get the true info
             // Orientation == true if true start point is at upstream position
@@ -724,20 +724,24 @@ void MLPNeutrinoHierarchyAlgorithm::FillPrimaryTrees(const PfoToMCParticleMap &m
             if (m_cheatHierarchyTool->Run(matchingMap, childToParentPfoMap, pNeutrinoPfo, hierarchyPfo, 
                 isTrueLink, trueChildOrientation) != STATUS_CODE_SUCCESS)
             {
-                continue;
+	        this->FillPrimaryTreeWithNull(treeName, particleID);
+		continue;
             }
 
+	    // Get reco info
             std::vector<MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams> networkParamVector;
             float primaryScore(m_bogusFloat);
 
             if (m_primaryHierarchyTool->Run(this, pNeutrinoPfo, trackPfos, hierarchyPfo, networkParamVector, primaryScore) != STATUS_CODE_SUCCESS)
-                continue;
+	    {
+	        this->FillPrimaryTreeWithNull(treeName, particleID);
+		continue;
+	    }
 
             for (const MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams &networkParams : networkParamVector)
             {
-                const std::string treeName(isTrack ? m_primaryTrackTreeName : m_primaryShowerTreeName);
                 const bool useChildUpstream(std::fabs(networkParams.m_isPOIClosestToNu - 1.f) < std::numeric_limits<float>::epsilon());
-                this->FillPrimaryTree(treeName, isTrueLink, (useChildUpstream == trueChildOrientation), particleID, networkParams);
+                this->FillPrimaryTree(treeName, isTrainingLink, isTrueLink, (useChildUpstream == trueChildOrientation), particleID, networkParams);
                 isTrack ? ++nPrimaryTrackLinks : ++nPrimaryShowerLinks;                
             }
         }
@@ -746,11 +750,33 @@ void MLPNeutrinoHierarchyAlgorithm::FillPrimaryTrees(const PfoToMCParticleMap &m
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPNeutrinoHierarchyAlgorithm::FillPrimaryTree(const std::string &treeName, const bool isTrueLink, const bool isOrientationCorrect, 
-    const int particleID, const MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams &primaryNetworkParams) const
+void MLPNeutrinoHierarchyAlgorithm::FillPrimaryTreeWithNull(const std::string &treeName, const int particleID) const
 {
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "EventID", m_eventID));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ParticleID", particleID));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsTrainingLink", 0));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsTrueLink", -999));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsOrientationCorrect", -999));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "NSpacepoints", -999.f));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "NuSeparation", -999.f));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "VertexRegionNHits", -999.f));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "VertexRegionNParticles", -999.f));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "DCA", -999.f));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ConnectionExtrapDistance", -999.f));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsPOIClosestToNu", -999.f));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ParentConnectionDistance", -999.f));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ChildConnectionDistance", -999.f));
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), treeName.c_str()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void MLPNeutrinoHierarchyAlgorithm::FillPrimaryTree(const std::string &treeName, const bool isTrainingLink, const bool isTrueLink,
+    const bool isOrientationCorrect, const int particleID, const MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams &primaryNetworkParams) const
+{
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "EventID", m_eventID));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ParticleID", particleID));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsTrainingLink", (isTrainingLink ? 1 : 0)));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsTrueLink", (isTrueLink ? 1 : 0)));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsOrientationCorrect", (isOrientationCorrect ? 1 : 0)));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "NSpacepoints", primaryNetworkParams.m_nSpacepoints));
@@ -771,11 +797,13 @@ void MLPNeutrinoHierarchyAlgorithm::FillLaterTierTrees(const PfoToMCParticleMap 
     const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
     const std::map<const ParticleFlowObject *, int> &particleIDMap, int &nTrackLinks, int &nShowerLinks) const
 {
-    // Does this for tracks -> tracks
+    const bool isTrainingEvent(this->ShouldTrainOnEvent(pNeutrinoPfo));
+  
     for (const auto& [pParentTrackPfo, hierarchyParentTrackPfo] : trackPfos)
     {
         for (const bool isTrack : {true, false})
         {
+  	    const std::string treeName(isTrack ? m_laterTierTrackTrackTreeName : m_laterTierTrackShowerTreeName);	  
             const HierarchyPfoMap &hierarchyPfoMap(isTrack ? trackPfos : showerPfos);
  
             for (const auto& [pChildPfo, hierarchyChildPfo] : hierarchyPfoMap)
@@ -793,7 +821,7 @@ void MLPNeutrinoHierarchyAlgorithm::FillLaterTierTrees(const PfoToMCParticleMap 
                 const int parentID(particleIDMap.at(pParentTrackPfo));
                 const int childID(particleIDMap.at(pChildPfo));
 
-                // Do not train on child primaries
+		// Get true primary info
                 bool isTruePrimaryLink(false), tempBool(false);
                 if (m_cheatHierarchyTool->Run(matchingMap, childToParentPfoMap, pNeutrinoPfo, hierarchyChildPfo, 
                     isTruePrimaryLink, tempBool) != STATUS_CODE_SUCCESS)
@@ -801,8 +829,8 @@ void MLPNeutrinoHierarchyAlgorithm::FillLaterTierTrees(const PfoToMCParticleMap 
                     continue;
                 }
 
-                if (isTruePrimaryLink)
-                    continue;
+		// Do not train on child primaries
+		bool isTrainingLink(isTrainingEvent && !isTruePrimaryLink);
 
                 // Get the true info
                 // Orientation == true if true start point is at upstream position
@@ -835,22 +863,24 @@ void MLPNeutrinoHierarchyAlgorithm::FillLaterTierTrees(const PfoToMCParticleMap 
                         ++nCorrectLinkOrientation;
                 }
 
-                if (nCorrectLinkOrientation != 1)
-                    continue;
+		// For training, make sure we have one correct orientation link
+                isTrainingLink = (isTrainingLink && (nCorrectLinkOrientation == 1));
 
                 // Get generation info
                 const int trueVisibleGen(childToParentPfoMap.at(hierarchyChildPfo.GetPfo()).second);
 
                 // Get training cut info
-                std::pair<float, float> trainingCuts(this->GetTrainingCuts(hierarchyParentTrackPfo, hierarchyChildPfo, trueParentOrientation, trueChildOrientation));
+		std::pair<float, float> trainingCuts({-999.f, -999.f});
+		
+		if (isTrainingLink)
+		  trainingCuts = this->GetTrainingCuts(hierarchyParentTrackPfo, hierarchyChildPfo, trueParentOrientation, trueChildOrientation);
 
                 for (const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams : networkParamVector)
                 {
-                    const std::string treeName(isTrack ? m_laterTierTrackTrackTreeName : m_laterTierTrackShowerTreeName);
                     const bool useParentUpstream(std::fabs(networkParams.m_parentIsPOIClosestToNu - 1.f) < std::numeric_limits<float>::epsilon());
                     const bool useChildUpstream(std::fabs(networkParams.m_childIsPOIClosestToNu - 1.f) < std::numeric_limits<float>::epsilon());
                     const bool isOrientationCorrect((useParentUpstream == trueParentOrientation) && (useChildUpstream == trueChildOrientation));
-                    this->FillLaterTierTree(treeName, isTrueLink, isOrientationCorrect, trueVisibleGen, trainingCuts, parentID, childID, networkParams);
+                    this->FillLaterTierTree(treeName, isTrainingLink, isTrueLink, isOrientationCorrect, trueVisibleGen, trainingCuts, parentID, childID, networkParams);
                     isTrack ? ++nTrackLinks : nShowerLinks;
                 }
             }
@@ -882,13 +912,14 @@ std::pair<float, float> MLPNeutrinoHierarchyAlgorithm::GetTrainingCuts(const Hie
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPNeutrinoHierarchyAlgorithm::FillLaterTierTree(const std::string &treeName, const bool isTrueLink, const bool isOrientationCorrect, 
-    const int childTrueGen, const std::pair<float, float> &trainingCuts, const int parentID, const int childID, 
+void MLPNeutrinoHierarchyAlgorithm::FillLaterTierTree(const std::string &treeName, const bool isTrainingLink, const bool isTrueLink,
+    const bool isOrientationCorrect, const int childTrueGen, const std::pair<float, float> &trainingCuts, const int parentID, const int childID, 
     const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams) const
 {
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "EventID", m_eventID));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ParentParticleID", parentID));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ChildParticleID", childID));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsTrainingLink", (isTrainingLink ? 1 : 0)));    
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsTrueLink", (isTrueLink ? 1 : 0)));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsOrientationCorrect", (isOrientationCorrect ? 1 : 0)));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "ChildTrueVisibleGeneration", childTrueGen));
