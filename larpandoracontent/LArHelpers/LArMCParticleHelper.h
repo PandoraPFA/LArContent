@@ -282,6 +282,27 @@ public:
      */
     static void GetMCToSelfMap(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcToSelfMap);
 
+    /*
+     *  @brief  Retrieve the map from MC to calo hits for reconstructable particles
+     *
+     *  @param  pCaloHitList2D The calo hit list for which MC particle matches are to be determined
+     *  @param  pMCParticleList The MC particle list for which calo hit matches are to be determined
+     *  @param  mcToHitsMap The map to populate
+     **/
+    static void GetMCToHitsMap(const pandora::CaloHitList *const pCaloHitList2S, const pandora::MCParticleList *const pMCParticleList,
+        LArMCParticleHelper::MCContributionMap &mcToHitsMap);
+
+    /*
+     *  @brief  Construct a list of the MC particles from the MC to calo hits map, completing the interaction hierarchy with the invisible
+     *          upstream particles.
+     *
+     *  @param  mcToHitsMap The map of reconstructible MC particles to calo hits
+     *  @param  mcHierarchy The output list of MC particles representing the interaction
+     *
+     *  @return The StatusCode resulting from the function
+     **/
+    static void CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, pandora::MCParticleList &mcHierarchy);
+
     /**
      *  @brief  Find the mc particle making the largest contribution to 2D clusters in a specified pfo
      *

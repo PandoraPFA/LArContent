@@ -472,6 +472,43 @@ void LArMCParticleHelper::GetMCToSelfMap(const MCParticleList *const pMCParticle
     }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetMCToHitsMap(const CaloHitList *const pCaloHitList2D, const MCParticleList *const pMCParticleList,
+    LArMCParticleHelper::MCContributionMap &mcToHitsMap)
+{
+    PrimaryParameters parameters;
+    parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
+    LArMCParticleHelper::SelectReconstructableMCParticles(
+        pMCParticleList, pCaloHitList2D, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcToHitsMap);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, MCParticleList &mcHierarchy)
+{
+    try
+    {
+        for (const auto &[mc, hits] : mcToHitsMap)
+        {
+            mcHierarchy.emplace_back(mc);
+            LArMCParticleHelper::GetAllAncestorMCParticles(mc, mcHierarchy);
+        }
+    }
+    catch (const StatusCodeException &e)
+    {
+        throw;
+    }
+
+    // Move the neutrino to the front of the list
+    auto pivot{
+        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); })};
+    if (pivot != mcHierarchy.end())
+        std::rotate(mcHierarchy.begin(), pivot, std::next(pivot));
+    else
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 const MCParticle *LArMCParticleHelper::GetMainMCParticle(const ParticleFlowObject *const pPfo)

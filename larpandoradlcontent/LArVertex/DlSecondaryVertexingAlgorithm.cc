@@ -98,10 +98,12 @@ StatusCode DlSecondaryVertexingAlgorithm::PrepareTrainingSample()
     if (!hasFiducialVertex)
         return STATUS_CODE_SUCCESS;
 
+    const MCParticleList *pMCParticleList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
     LArMCParticleHelper::MCContributionMap mcToHitsMap;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetMCToHitsMap(mcToHitsMap));
+    LArMCParticleHelper::GetMCToHitsMap(pCaloHitList2D, pMCParticleList, mcToHitsMap);
     MCParticleList hierarchy;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CompleteMCHierarchy(mcToHitsMap, hierarchy));
+    LArMCParticleHelper::CompleteMCHierarchy(mcToHitsMap, hierarchy);
 
     // Get boundaries for hits and make x dimension common
     std::map<HitType, float> wireMin, wireMax;
@@ -661,53 +663,6 @@ void DlSecondaryVertexingAlgorithm::GetCanvasParameters(const LArDLHelper::Torch
     rowOffset = rowOffsetMin < 0 ? -rowOffsetMin : 0;
     width = std::max(colOffsetMax + colOffset + 1, m_width);
     height = std::max(rowOffsetMax + rowOffset + 1, m_height);
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode DlSecondaryVertexingAlgorithm::GetMCToHitsMap(LArMCParticleHelper::MCContributionMap &mcToHitsMap) const
-{
-    const CaloHitList *pCaloHitList2D(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "CaloHitList2D", pCaloHitList2D));
-    const MCParticleList *pMCParticleList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
-
-    LArMCParticleHelper::PrimaryParameters parameters;
-    parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
-    LArMCParticleHelper::SelectReconstructableMCParticles(
-        pMCParticleList, pCaloHitList2D, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcToHitsMap);
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode DlSecondaryVertexingAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, MCParticleList &mcHierarchy) const
-{
-    try
-    {
-        for (const auto &[mc, hits] : mcToHitsMap)
-        {
-            (void)hits;
-            mcHierarchy.push_back(mc);
-            LArMCParticleHelper::GetAllAncestorMCParticles(mc, mcHierarchy);
-        }
-    }
-    catch (const StatusCodeException &e)
-    {
-        return e.GetStatusCode();
-    }
-
-    // Move the neutrino to the front of the list
-    auto pivot =
-        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); });
-    (void)pivot;
-    if (pivot != mcHierarchy.end())
-        std::rotate(mcHierarchy.begin(), pivot, std::next(pivot));
-    else
-        return STATUS_CODE_NOT_FOUND;
-
-    return STATUS_CODE_SUCCESS;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
