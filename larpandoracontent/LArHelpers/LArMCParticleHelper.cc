@@ -227,6 +227,30 @@ void LArMCParticleHelper::GetTrueTestBeamParticles(const MCParticleList *const p
     std::sort(trueTestBeamParticles.begin(), trueTestBeamParticles.end(), LArMCParticleHelper::SortByMomentum);
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::GetTrueVertex(const MCParticleList *const pMCParticleList, CartesianVector &trueVertex)
+{
+    MCParticleVector primaries;
+    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
+    if (!primaries.empty())
+    {
+        const MCParticle *primary{primaries.front()};
+        const MCParticleList &parents{primary->GetParentList()};
+        if (parents.size() == 1)
+        {
+            const MCParticle *trueNeutrino{parents.front()};
+            if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
+            {
+                trueVertex = primaries.front()->GetVertex();
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *const pMCParticle)

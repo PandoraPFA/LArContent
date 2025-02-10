@@ -741,53 +741,6 @@ StatusCode DlSecondaryVertexingAlgorithm::MakeCandidateVertexList(const Cartesia
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void DlSecondaryVertexingAlgorithm::GetTrueVertexPosition(float &x, float &y, float &z) const
-{
-    const CartesianVector &trueVertex{this->GetTrueVertex()};
-    x = trueVertex.GetX();
-    y = trueVertex.GetY();
-    z = trueVertex.GetZ();
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-void DlSecondaryVertexingAlgorithm::GetTrueVertexPosition(float &x, float &u, float &v, float &w) const
-{
-    const CartesianVector &trueVertex{this->GetTrueVertex()};
-    const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
-    x = trueVertex.GetX();
-    u = static_cast<float>(transform->YZtoU(trueVertex.GetY(), trueVertex.GetZ()));
-    v = static_cast<float>(transform->YZtoV(trueVertex.GetY(), trueVertex.GetZ()));
-    w = static_cast<float>(transform->YZtoW(trueVertex.GetY(), trueVertex.GetZ()));
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-const CartesianVector &DlSecondaryVertexingAlgorithm::GetTrueVertex() const
-{
-    const MCParticleList *pMCParticleList{nullptr};
-    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pMCParticleList) && pMCParticleList)
-    {
-        MCParticleVector primaries;
-        LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
-        if (!primaries.empty())
-        {
-            const MCParticle *primary{primaries.front()};
-            const MCParticleList &parents{primary->GetParentList()};
-            if (parents.size() == 1)
-            {
-                const MCParticle *trueNeutrino{parents.front()};
-                if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
-                    return primaries.front()->GetVertex();
-            }
-        }
-    }
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode DlSecondaryVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
