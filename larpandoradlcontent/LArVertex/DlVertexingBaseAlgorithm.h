@@ -43,7 +43,19 @@ protected:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-private:
+    /*
+     *  @brief  Determine the physical bounds associated with a CaloHitList.
+     *
+     *  @param  caloHitList The CaloHitList for which bounds should be determined
+     *  @param  xMin The output minimum x value
+     *  @param  xMax The output maximum x value
+     *  @param  zMin The output minimum z value
+     *  @param  zMax The output maximum z value
+     *
+     *  @return The StatusCode resulting from the function
+     */
+    void GetHitRegion(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax) const;
+
     /**
      *  @brief  Determines the parameters of the canvas for extracting the vertex location.
      *          The network predicts the distance that each pixel associated with a hit is located from the vertex, but says nothing about
@@ -60,7 +72,6 @@ private:
     void GetCanvasParameters(const LArDLHelper::TorchOutput &networkOutput, const PixelVector &pixelVector, int &columnOffset,
         int &rowOffset, int &width, int &height) const;
 
-protected:
     bool m_trainingMode;                      ///< Training mode
     std::string m_trainingOutputFile;         ///< Output file name for training examples
     std::string m_inputVertexListName;        ///< Input vertex list name if 2nd pass
