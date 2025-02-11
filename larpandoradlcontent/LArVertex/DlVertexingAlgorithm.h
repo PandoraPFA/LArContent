@@ -80,35 +80,6 @@ private:
         const float zMax, pandora::CartesianPointVector &positionVector) const;
 
     /**
-     *  @brief  Determines the parameters of the canvas for extracting the vertex location.
-     *          The network predicts the distance that each pixel associated with a hit is located from the vertex, but says nothing about
-     *          the direction. As a result, the ring describing the potential vertices associated with that hit can extend beyond the
-     *          original canvas size. This function returns the size of the required canvas and the offset for the bottom left corner.
-     *
-     *  @param  networkOutput The TorchOutput object populated by the network inference step
-     *  @param  pixelVector The vector of populated pixels
-     *  @param  columnOffset The output column offset for the canvas
-     *  @param  rowOffset The output row offset for the canvas
-     *  @param  width The output width for the canvas
-     *  @param  height The output height for the canvas
-     */
-    void GetCanvasParameters(const LArDLHelper::TorchOutput &networkOutput, const PixelVector &pixelVector, int &columnOffset,
-        int &rowOffset, int &width, int &height) const;
-
-    /*
-     *  @brief  Determine the physical bounds associated with a CaloHitList.
-     *
-     *  @param  caloHitList The CaloHitList for which bounds should be determined
-     *  @param  xMin The output minimum x value
-     *  @param  xMax The output maximum x value
-     *  @param  zMin The output minimum z value
-     *  @param  zMax The output maximum z value
-     *
-     *  @return The StatusCode resulting from the function
-     */
-    void GetHitRegion(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax) const;
-
-    /**
      *  @brief Create a vertex list from the candidate vertices.
      *
      *  @param  candidates The candidate positions with which to create the list.
