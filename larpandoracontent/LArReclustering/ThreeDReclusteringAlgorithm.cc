@@ -16,6 +16,8 @@
 
 #include "larpandoracontent/LArReclustering/ThreeDReclusteringAlgorithm.h"
 
+#include <numeric>
+
 using namespace pandora;
 
 namespace lar_content
@@ -48,10 +50,16 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
 {
     //Only proceed if successfuly get shower pfo list, and it has at least one pfo
     const PfoList *pShowerPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pShowerPfoList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_pfoListName, pShowerPfoList));
+    if (!pShowerPfoList)
+    {
+        return STATUS_CODE_SUCCESS;
+    }
 
     if (pShowerPfoList->empty())
+    {
         return STATUS_CODE_SUCCESS;
+    }
 
     m_PfosForReclusteringListName = "newShowerParticles3D";
     PfoList unchangedPfoList;
@@ -65,7 +73,9 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
     PandoraContentApi::GetList(*this, m_clusterListName, pShowerClusters);
 
     if (!pShowerClusters)
+    {
         return STATUS_CODE_NOT_FOUND;
+    }
 
     for (const Pfo *const pShowerPfo : *pShowerPfoList)
     {
@@ -366,6 +376,7 @@ bool ThreeDReclusteringAlgorithm::PassesCutsForReclustering(const pandora::Parti
 
     if (this->GetFigureOfMerit(caloHitList3D) < m_fomThresholdForReclustering)
         return false;
+
     return true;
 }
 
@@ -378,7 +389,17 @@ float ThreeDReclusteringAlgorithm::GetCheatedFigureOfMerit(const CaloHitList &me
     {
         const CaloHit *const pParentCaloHit2D = static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress());
 
-        const MCParticle *const pMainMCParticle(MCParticleHelper::GetMainMCParticle(pParentCaloHit2D));
+        const MCParticle *pMainMCParticle{nullptr};
+        try
+        {
+            pMainMCParticle = MCParticleHelper::GetMainMCParticle(pParentCaloHit2D);
+        }
+        catch (const StatusCodeException &err) // possible for some hits to have missing truth matching
+        {
+            if (err.GetStatusCode() == STATUS_CODE_NOT_INITIALIZED)
+                continue;
+            throw err;
+        }
 
         std::map<const pandora::MCParticle *, int>::iterator it = mainMcParticleMap.find(pMainMCParticle);
 
@@ -387,9 +408,16 @@ float ThreeDReclusteringAlgorithm::GetCheatedFigureOfMerit(const CaloHitList &me
         else
             mainMcParticleMap.insert(std::make_pair(pMainMCParticle, 1));
     }
+    if (mainMcParticleMap.size() == 0)
+    {
+        std::cout << "Cheated figure of merit is incalculable - found cluster with missing truth matching for all hits" << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    }
     const auto maxSharedHits =
         std::max_element(mainMcParticleMap.begin(), mainMcParticleMap.end(), [](const auto &x, const auto &y) { return x.second < y.second; });
-    const float mainMcParticleFraction = (float)maxSharedHits->second / mergedClusterCaloHitList3D.size();
+    const int totalHits =
+        std::accumulate(mainMcParticleMap.begin(), mainMcParticleMap.end(), 0, [](int tot, const auto &p) { return tot + p.second; });
+    const float mainMcParticleFraction = (float)maxSharedHits->second / (float)totalHits;
     return (1.f - mainMcParticleFraction);
 }
 
