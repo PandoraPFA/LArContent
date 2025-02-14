@@ -48,7 +48,6 @@ private:
 
     pandora::StatusCode Run();
 
-    void RemoveParentChildLinks();
     float GetSeparation(const pandora::ParticleFlowObject *const pParentPfo, const pandora::ParticleFlowObject *const pChildPfo) const;
     
     /**

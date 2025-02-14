@@ -27,7 +27,6 @@ using namespace lar_content;
 namespace lar_dl_content
 {
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -79,48 +78,8 @@ MLPNeutrinoHierarchyAlgorithm::~MLPNeutrinoHierarchyAlgorithm()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-// Remove the parent-child links
-
-void MLPNeutrinoHierarchyAlgorithm::RemoveParentChildLinks()
-{
-    // Get All pfos
-    for (const std::string &pfoListName : m_pfoListNames)
-    {
-        const PfoList *pPfoList(nullptr);
-
-        if (PandoraContentApi::GetList(*this, pfoListName, pPfoList) != STATUS_CODE_SUCCESS)
-            continue;
-
-        for (const ParticleFlowObject *const pPfo : *pPfoList)
-        {
-            PfoList parentList(pPfo->GetParentPfoList());
-            PfoList childList(pPfo->GetDaughterPfoList());
-
-            for (const ParticleFlowObject *const pParentPfo : parentList)
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemovePfoParentDaughterRelationship(*this, pParentPfo, pPfo));
-
-            for (const ParticleFlowObject *const pChildPfo : childList)
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemovePfoParentDaughterRelationship(*this, pPfo, pChildPfo));
-        }
-    }
-
-    // Get neutrino pfo
-    const ParticleFlowObject *pNeutrinoPfo(nullptr);
-    if (this->GetNeutrinoPfo(pNeutrinoPfo))
-    {
-        PfoList nuChildList(pNeutrinoPfo->GetDaughterPfoList());
-
-        for (const ParticleFlowObject *const pNuChild : nuChildList)
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemovePfoParentDaughterRelationship(*this, pNeutrinoPfo, pNuChild));
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode MLPNeutrinoHierarchyAlgorithm::Run()
 {
-    this->RemoveParentChildLinks();
-    
     // Get neutrino pfo
     const ParticleFlowObject *pNeutrinoPfo(nullptr);
     if (!this->GetNeutrinoPfo(pNeutrinoPfo))
@@ -138,8 +97,6 @@ StatusCode MLPNeutrinoHierarchyAlgorithm::Run()
     
     if (m_trainingMode)
     {
-        std::cout << "Got the training wheels on!!" << std::endl;
-
         // Do ID stuff
         ++m_eventID;
 
