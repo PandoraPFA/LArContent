@@ -136,7 +136,7 @@ private:
     std::string m_pfoListName;                  ///< Name of the list of pfos to consider for reclustering
     std::string m_clusterListName;              ///< Name of the list of clusters to consider for reclustering
     pandora::StringVector m_figureOfMeritNames; ///< The names of the figures of merit to use
-    std::string m_PfosForReclusteringListName;  ///< Name of the internal list to contain new Pfos before/after reclustering
+    std::string m_pfosForReclusteringListName;  ///< Name of the internal list to contain new Pfos before/after reclustering
     std::string m_mcParticleListName;           ///< The mc particle list name
     float m_fomThresholdForReclustering;        ///< A threshold on the minimum figure of merit for reclustering
     long unsigned int m_minNumCaloHitsForReclustering;

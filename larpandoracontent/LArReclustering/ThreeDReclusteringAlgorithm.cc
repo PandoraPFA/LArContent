@@ -61,7 +61,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
-    m_PfosForReclusteringListName = "newShowerParticles3D";
+    m_pfosForReclusteringListName = "newShowerParticles3D";
     PfoList changedPfoList;
 
     //Save current pfo list name, so that this can be set as current again at the end of reclustering
@@ -162,10 +162,10 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Pfo>(*this, pfo, m_pfoListName));
     // Any remaining pfos (those that didnt undergo reclustering) get moved to the new pfo list
     if (!pShowerPfoList->empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_pfoListName, m_PfosForReclusteringListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_pfoListName, m_pfosForReclusteringListName));
 
     //Save list of Pfos after reclustering and save into list called m_pfoListName
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_PfosForReclusteringListName, m_pfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_pfosForReclusteringListName, m_pfoListName));
 
     //Set current list to be the same as before reclustering
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Pfo>(*this, initialPfoListName));
@@ -329,7 +329,7 @@ StatusCode ThreeDReclusteringAlgorithm::BuildNewPfos(const Pfo *pPfoToRebuild, C
 
         iCluster++;
     }
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, newPfoListName, m_PfosForReclusteringListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, newPfoListName, m_pfosForReclusteringListName));
 
     return STATUS_CODE_SUCCESS;
 }
