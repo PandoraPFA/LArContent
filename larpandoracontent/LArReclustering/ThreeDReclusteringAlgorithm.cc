@@ -52,14 +52,10 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
     const PfoList *pShowerPfoList(nullptr);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_pfoListName, pShowerPfoList));
     if (!pShowerPfoList)
-    {
         return STATUS_CODE_SUCCESS;
-    }
 
     if (pShowerPfoList->empty())
-    {
         return STATUS_CODE_SUCCESS;
-    }
 
     m_pfosForReclusteringListName = "newShowerParticles3D";
     PfoList changedPfoList;
@@ -73,9 +69,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
     PandoraContentApi::GetList(*this, m_clusterListName, pShowerClusters);
 
     if (!pShowerClusters)
-    {
         return STATUS_CODE_NOT_FOUND;
-    }
 
     for (const Pfo *const pShowerPfo : *pShowerPfoList)
     {
