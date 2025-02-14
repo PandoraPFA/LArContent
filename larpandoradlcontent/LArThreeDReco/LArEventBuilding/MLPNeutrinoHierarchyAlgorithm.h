@@ -48,6 +48,8 @@ private:
 
     pandora::StatusCode Run();
 
+    float GetSeparation(const pandora::ParticleFlowObject *const pParentPfo, const pandora::ParticleFlowObject *const pChildPfo) const;
+    
     /**
      *  @brief  Return the neutrino pfo
      *
@@ -142,17 +144,16 @@ private:
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
         const std::map<const pandora::ParticleFlowObject *, int> &particleIDMap, int &nPrimaryTrackLinks, int &nPrimaryShowerLinks) const;
 
-    void FillPrimaryTreeWithNull(const std::string &treeName, const int particleID) const;
-  
     void FillPrimaryTree(const std::string &treeName, const bool isTrainingLink, const bool isTrueLink, const bool isOrientationCorrect, 
-        const int particleID, const MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams &primaryNetworkParams) const;
+        const int trueVisibleGen, const int trueParentID, const int particleID, const pandora::CartesianVector &upstreamVertex,
+        const pandora::CartesianVector &downstreamVertex, const MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams &primaryNetworkParams) const;
 
     void FillLaterTierTrees(const PfoToMCParticleMap &matchingMap, const ChildToParentPfoMap &childToParentPfoMap,
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
         const std::map<const pandora::ParticleFlowObject *, int> &particleIDMap,  int &nTrackLinks, int &nShowerLinks) const;
 
     void FillLaterTierTree(const std::string &treeName, const bool isTrainingLink, const bool isTrueLink, const bool isOrientationCorrect, 
-        const int childTrueGen, const std::pair<float, float> &trainingCuts, const int parentID, const int childID, 
+        const int childTrueGen, const std::pair<float, float> &trainingCuts, const int parentID, const int childID,
         const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
