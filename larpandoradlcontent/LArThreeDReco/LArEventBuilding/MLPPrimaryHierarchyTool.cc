@@ -264,8 +264,8 @@ void MLPPrimaryHierarchyTool::NormaliseNetworkParams(MLPPrimaryNetworkParams &pr
 float MLPPrimaryHierarchyTool::ClassifyTrack(const MLPPrimaryNetworkParams &edgeParamsUp, const MLPPrimaryNetworkParams &edgeParamsDown)
 {
     ////////////////////////////////////////////////////////////
-    std::cout << "------------------------" << std::endl;
-    std::cout << "Classifying track with " << edgeParamsUp.m_nSpacepoints << " hits" << std::endl;
+    //std::cout << "------------------------" << std::endl;
+    //std::cout << "Classifying track with " << edgeParamsUp.m_nSpacepoints << " hits" << std::endl;
     ////////////////////////////////////////////////////////////
 
     // Invoke branch model for each edge
@@ -273,8 +273,8 @@ float MLPPrimaryHierarchyTool::ClassifyTrack(const MLPPrimaryNetworkParams &edge
     const FloatVector outputDown(this->ClassifyTrackEdge(edgeParamsDown, edgeParamsUp));
 
     ////////////////////////////////////////////////////////////
-    std::cout << "outputUp: " << outputUp.at(0) << ", " << outputUp.at(1) << ", " << outputUp.at(2) << std::endl;
-    std::cout << "outputDown: " << outputDown.at(0) << ", " << outputDown.at(1) << ", " << outputDown.at(2) << std::endl;
+    //std::cout << "outputUp: " << outputUp.at(0) << ", " << outputUp.at(1) << ", " << outputUp.at(2) << std::endl;
+    //std::cout << "outputDown: " << outputDown.at(0) << ", " << outputDown.at(1) << ", " << outputDown.at(2) << std::endl;
     ////////////////////////////////////////////////////////////
 
     // Invoke classifier model for final output
@@ -296,8 +296,10 @@ float MLPPrimaryHierarchyTool::ClassifyTrack(const MLPPrimaryNetworkParams &edge
     LArDLHelper::Forward(m_primaryTrackClassifierModel, {input}, output);
     torch::TensorAccessor<float, 2> outputAccessor = output.accessor<float, 2>();
 
-    std::cout << "Track classification score: " << outputAccessor[0][0] << std::endl;
-    std::cout << "------------------------" << std::endl;
+    ////////////////////////////////////////////////////////////    
+    //std::cout << "Track classification score: " << outputAccessor[0][0] << std::endl;
+    //std::cout << "------------------------" << std::endl;
+    ////////////////////////////////////////////////////////////    
 
     return outputAccessor[0][0];
 }
@@ -319,7 +321,9 @@ FloatVector MLPPrimaryHierarchyTool::ClassifyTrackEdge(const MLPPrimaryNetworkPa
 
     torch::TensorAccessor<float, 2> outputAccessor(output.accessor<float, 2>());
 
-    std::cout << "output: " << outputAccessor[0][0] << ", " << outputAccessor[0][1] << ", " << outputAccessor[0][2] << std::endl;
+    ////////////////////////////////////////////////////////////    
+    //std::cout << "output: " << outputAccessor[0][0] << ", " << outputAccessor[0][1] << ", " << outputAccessor[0][2] << std::endl;
+    ////////////////////////////////////////////////////////////    
 
     return {outputAccessor[0][0], outputAccessor[0][1], outputAccessor[0][2]};
 }
@@ -328,8 +332,10 @@ FloatVector MLPPrimaryHierarchyTool::ClassifyTrackEdge(const MLPPrimaryNetworkPa
 
 float MLPPrimaryHierarchyTool::ClassifyShower(const MLPPrimaryNetworkParams &primaryNetworkParams)
 {
-    std::cout << "------------------------" << std::endl;
-    std::cout << "Classifying shower with " << primaryNetworkParams.m_nSpacepoints << "hits" << std::endl;
+    ////////////////////////////////////////////////////////////    
+    //std::cout << "------------------------" << std::endl;
+    //std::cout << "Classifying shower with " << primaryNetworkParams.m_nSpacepoints << "hits" << std::endl;
+    ////////////////////////////////////////////////////////////    
 
     LArDLHelper::TorchInput input;
     LArDLHelper::InitialiseInput({1, 9}, input);
@@ -341,8 +347,11 @@ float MLPPrimaryHierarchyTool::ClassifyShower(const MLPPrimaryNetworkParams &pri
     LArDLHelper::Forward(m_primaryShowerClassifierModel, {input}, output);
     auto outputAccessor = output.accessor<float, 2>();
 
-    std::cout << "Shower classification score: " << outputAccessor[0][0] << std::endl;
-    std::cout << "------------------------" << std::endl;
+    ////////////////////////////////////////////////////////////    
+    //std::cout << "Shower classification score: " << outputAccessor[0][0] << std::endl;
+    //std::cout << "------------------------" << std::endl;
+    ////////////////////////////////////////////////////////////
+    
     return outputAccessor[0][0];
 }
 
@@ -372,26 +381,17 @@ StatusCode MLPPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChildConnectionDistanceMin", m_childConnectionDistanceMin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChildConnectionDistanceMax", m_childConnectionDistanceMax));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackBranchModelName", m_primaryTrackBranchModelName));
-
-    if (!m_trainingMode && !m_primaryTrackBranchModelName.empty())
+    if (!m_trainingMode)
     {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackBranchModelName", m_primaryTrackBranchModelName));        
         m_primaryTrackBranchModelName = LArFileHelper::FindFileInPath(m_primaryTrackBranchModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryTrackBranchModelName, m_primaryTrackBranchModel));
-    }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackClassifierModelName", m_primaryTrackClassifierModelName));
-
-    if (!m_trainingMode && !m_primaryTrackClassifierModelName.empty())
-    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackClassifierModelName", m_primaryTrackClassifierModelName));        
         m_primaryTrackClassifierModelName = LArFileHelper::FindFileInPath(m_primaryTrackClassifierModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryTrackClassifierModelName, m_primaryTrackClassifierModel));
-    }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryShowerClassifierModelName", m_primaryShowerClassifierModelName));
-
-    if (!m_trainingMode && !m_primaryShowerClassifierModelName.empty())
-    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryShowerClassifierModelName", m_primaryShowerClassifierModelName));        
         m_primaryShowerClassifierModelName = LArFileHelper::FindFileInPath(m_primaryShowerClassifierModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryShowerClassifierModelName, m_primaryShowerClassifierModel));
     }
