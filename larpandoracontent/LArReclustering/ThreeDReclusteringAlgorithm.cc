@@ -62,7 +62,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
     }
 
     m_PfosForReclusteringListName = "newShowerParticles3D";
-    PfoList unchangedPfoList;
+    PfoList changedPfoList;
 
     //Save current pfo list name, so that this can be set as current again at the end of reclustering
     std::string initialPfoListName;
@@ -85,10 +85,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
         //Check if pfo passes cuts for reclustering. Also, some pfos are shower-like and yet are made of track-like 3D clusters. For the moment I don't want to deal with these.
         if ((!this->PassesCutsForReclustering(pShowerPfo)) ||
             (pShowerClusters->end() == std::find(pShowerClusters->begin(), pShowerClusters->end(), clusterList3D.front())))
-        {
-            unchangedPfoList.push_back(pShowerPfo);
             continue;
-        }
 
         CaloHitList initialCaloHitList;
         clusterList3D.front()->GetOrderedCaloHitList().FillCaloHitList(initialCaloHitList);
@@ -132,11 +129,10 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
             newCaloHitListsVector.clear();
         }
 
-        //If the new best calo hit lists outcome is equivalent to original, move pfo to unchanged pfo list. Else, create new vector of 3D clusters
+        //If the new best calo hit lists outcome is equivalent to original, return the clusters to it. Else, create new vector of 3D clusters
         if ((minimumFigureOfMeritCaloHitListsVector.size() == 1) && (minimumFigureOfMeritCaloHitListsVector.at(0) == initialCaloHitList))
         {
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pShowerPfo, clusterList3D.front()));
-            unchangedPfoList.push_back(pShowerPfo);
             continue;
         }
 
@@ -158,12 +154,15 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildPfo(pShowerPfo, newClustersList));
+        changedPfoList.push_back(pShowerPfo);
         newCaloHitListsVector.clear();
     }
-    //If there are any pfos that did not change after reclustering procedure, move them into list of new pfos after reclustering (where there may be some reclustered showers too)
-    if (unchangedPfoList.size() > 0)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            PandoraContentApi::SaveList<PfoList>(*this, m_pfoListName, m_PfosForReclusteringListName, unchangedPfoList));
+    // Delete the original pfos from the reclustering
+    for (const auto &pfo : changedPfoList)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Pfo>(*this, pfo, m_pfoListName));
+    // Any remaining pfos (those that didnt undergo reclustering) get moved to the new pfo list
+    if (!pShowerPfoList->empty())
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_pfoListName, m_PfosForReclusteringListName));
 
     //Save list of Pfos after reclustering and save into list called m_pfoListName
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_PfosForReclusteringListName, m_pfoListName));
