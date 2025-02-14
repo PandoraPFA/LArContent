@@ -113,7 +113,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
             }
             catch (const StatusCodeException &)
             {
-                std::cout << "Exception caught! Cannot run reclustering tool!" << std::endl;
+                std::cout << pTool->GetType() << ": Exception caught! Cannot run reclustering tool!: " << std::endl;
                 continue;
             }
 
@@ -409,7 +409,7 @@ float ThreeDReclusteringAlgorithm::GetCheatedFigureOfMerit(const CaloHitList &me
     }
     if (mainMcParticleMap.size() == 0)
     {
-        std::cout << "Cheated figure of merit is incalculable - found cluster with missing truth matching for all hits" << std::endl;
+        std::cout << "Cheated figure of merit is incalculable - all hits in a cluster have missing truth matching" << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
     }
     const auto maxSharedHits =
