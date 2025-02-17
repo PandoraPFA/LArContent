@@ -591,4 +591,56 @@ float LArGeometryHelper::GetSigmaUVW(const Pandora &pandora, const float maxSigm
     return sigmaUVW;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArGeometryHelper::DetectorBoundaries LArGeometryHelper::GetDetectorBoundaries(const Pandora &pandora)
+{
+    DetectorBoundaries detectorBoundaries;
+
+    const LArTPCMap &larTPCMap(pandora.GetGeometry()->GetLArTPCMap());
+
+    for (const auto &entry : larTPCMap)
+    {
+        detectorBoundaries.m_xBoundaries.first = std::min(detectorBoundaries.m_xBoundaries.first, 
+             entry.second->GetCenterX() - (entry.second->GetWidthX() * 0.5f));
+        detectorBoundaries.m_xBoundaries.second = std::max(detectorBoundaries.m_xBoundaries.second, 
+             entry.second->GetCenterX() + (entry.second->GetWidthX() * 0.5f));
+        detectorBoundaries.m_yBoundaries.first = std::min(detectorBoundaries.m_yBoundaries.first, 
+             entry.second->GetCenterY() - (entry.second->GetWidthY() * 0.5f));
+        detectorBoundaries.m_yBoundaries.second = std::max(detectorBoundaries.m_yBoundaries.second, 
+             entry.second->GetCenterY() + (entry.second->GetWidthY() * 0.5f));
+        detectorBoundaries.m_zBoundaries.first = std::min(detectorBoundaries.m_zBoundaries.first, 
+             entry.second->GetCenterZ() - (entry.second->GetWidthZ() * 0.5f));
+        detectorBoundaries.m_zBoundaries.second = std::max(detectorBoundaries.m_zBoundaries.second, 
+             entry.second->GetCenterZ() + (entry.second->GetWidthZ() * 0.5f));
+    }
+
+    return detectorBoundaries;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArGeometryHelper::IsInDetector(const DetectorBoundaries &detectorBoundaries, const CartesianVector &position)
+{
+    if ((position.GetX() < detectorBoundaries.m_xBoundaries.first) || 
+        (position.GetX() > detectorBoundaries.m_xBoundaries.second))
+    {
+        return false;
+    }
+
+    if ((position.GetY() < detectorBoundaries.m_yBoundaries.first) || 
+        (position.GetY() > detectorBoundaries.m_yBoundaries.second))
+    {
+        return false;
+    }
+
+    if ((position.GetZ() < detectorBoundaries.m_zBoundaries.first) || 
+        (position.GetZ() > detectorBoundaries.m_zBoundaries.second))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 } // namespace lar_content
