@@ -10,12 +10,67 @@
 
 #include "Pandora/PandoraInternal.h"
 
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 using namespace lar_content;
 
 namespace lar_dl_content
 {
+
+/**
+  *  @brief  ExtremalPoint class
+  */
+class ExtremalPoint
+{
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    ExtremalPoint();
+
+    /**
+     *  @brief  Get the position
+     *
+     *  @return the position
+     */
+    const pandora::CartesianVector& GetPosition() const;
+
+    /**
+     *  @brief  Get the direction at the extremal point
+     *
+     *  @return the direction
+     */
+    const pandora::CartesianVector& GetDirection() const;
+
+    /**
+     *  @brief  Set the the extremal point's position and direction
+     *
+     *  @param  position the position
+     *  @param  direction the direction
+     */
+    void Set(const pandora::CartesianVector &position, const pandora::CartesianVector &direction);
+
+    /**
+     *  @brief  Whether extremal point object has been set
+     *
+     *  @return whether the extremal point object has been set
+     */
+    bool IsSet() const;
+
+    /**
+     *  @brief  Assignment operator
+     */
+    ExtremalPoint &operator=(const ExtremalPoint &rhs);
+  
+private:
+
+    bool m_isSet;                              ///< whether the extremal point object has been set
+    pandora::CartesianVector m_position;       ///< the extremal point position
+    pandora::CartesianVector m_direction;      ///< the extremal point direction (pointing into the particle)
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
   *  @brief  HierarchyPfo class
@@ -31,39 +86,14 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  isTrack whether the input pfo is track-like
      *  @param  pPfo pointer to the input pfo
      *  @param  threeDSlidingFitResult 3D sliding fit of the input pfo
-     *  @param  upstreamVertex the particle endpoint that is closest to the neutrino vertex
-     *  @param  upstreamDirection the direction at the upstream vertex (pointing into the particle)
-     *  @param  downstreamVertex the particle endpoint that is furthest from the neutrino vertex
-     *  @param  downstreamDirection the direction at the downstream vertex (pointing into the particle)
+     *  @param  upstreamPoint the extremal point closest to the neutrino vertex
+     *  @param  downstreamPoint the extremal point furthest from the neutrino vertex
      */
-    HierarchyPfo(const bool isTrack, const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &threeDSlidingFitResult, 
-        const pandora::CartesianVector &upstreamVertex, const pandora::CartesianVector &upstreamDirection, 
-        const pandora::CartesianVector &downstreamVertex, const pandora::CartesianVector &downstreamDirection);
-
-    /**
-     *  @brief  HierarchyPfo == operator
-     * 
-     *  @param  otherHierarchyPfo the HierarchyPfo to compare
-     */
-    bool operator== (const HierarchyPfo &otherHierarchyPfo) const;
-
-    /**
-     *  @brief  Return whether the pfo is track-like
-     *
-     *  @return whether the pfo is track-like
-     */
-    bool GetIsTrack() const;
-
-    /**
-     *  @brief  Set whether the pfo is track-like
-     *
-     *  @param  isTrack whether the pfo is track-like
-     */
-    void SetIsTrack(const bool isTrack);
-
+    HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &threeDSlidingFitResult, 
+        const ExtremalPoint &upstreamPoint, const ExtremalPoint &downstreamPoint);
+  
     /**
      *  @brief  Get the pfo
      *
@@ -128,60 +158,32 @@ public:
     void AddChildPfo(const pandora::ParticleFlowObject *const pChildPfo);
 
     /**
-     *  @brief  Get the upstream vertex
+     *  @brief  Get the upstream extremal point
      *
-     *  @return the upstream vertex
+     *  @return the upstream extremal point
      */
-    const pandora::CartesianVector& GetUpstreamVertex() const;
+    const ExtremalPoint& GetUpstreamPoint() const;
 
     /**
-     *  @brief  Set the upstream vertex
+     *  @brief  Set the upstream extremal point
      *
-     *  @param  upstreamVertex the upstream vertex
+     *  @param  upstreamPoint the upstream extremal point
      */
-    void SetUpstreamVertex(const pandora::CartesianVector &upstreamVertex);
+    void SetUpstreamPoint(const ExtremalPoint &upstreamPoint);
 
     /**
-     *  @brief  Get the upstream direction
+     *  @brief  Get the downstream extremal point
      *
-     *  @return the upstream direction
+     *  @return the downstream extremal point
      */
-    const pandora::CartesianVector& GetUpstreamDirection() const;
+    const ExtremalPoint& GetDownstreamPoint() const;
 
     /**
-     *  @brief  Set the upstream direction
+     *  @brief  Set the downstream extremal point
      *
-     *  @param  upstreamDirection the upstream direction
+     *  @param  downstreamPoint the downstream extremal point
      */
-    void SetUpstreamDirection(const pandora::CartesianVector &upstreamDirection);
-
-    /**
-     *  @brief  Get the downstream vertex
-     *
-     *  @return the downstream vertex
-     */
-    const pandora::CartesianVector& GetDownstreamVertex() const;
-
-    /**
-     *  @brief  Set the downstream vertex
-     *
-     *  @param  downstreamVertex the downstream vertex
-     */
-    void SetDownstreamVertex(const pandora::CartesianVector &downstreamVertex);
-
-    /**
-     *  @brief  Get the downstream direction
-     *
-     *  @return the downstream direction
-     */
-    const pandora::CartesianVector& GetDownstreamDirection() const;
-
-    /**
-     *  @brief  Set the downstream direction
-     *
-     *  @param  downstreamDirection the downstream direction
-     */
-    void SetDownstreamDirection(const pandora::CartesianVector &downstreamDirection);
+    void SetDownstreamPoint(const ExtremalPoint &downstreamPoint);
 
     /**
      *  @brief  Get the primary network score
@@ -225,65 +227,101 @@ public:
      */
     void SetIsInHierarchy(const bool isInHierarchy);
 
+    /**
+     *  @brief  HierarchyPfo == operator
+     * 
+     *  @param  rhs the HierarchyPfo to compare
+     */
+    bool operator== (const HierarchyPfo &rhs) const;
+
+    /**
+     *  @brief  HierarchyPfo == operator
+     * 
+     *  @param  rhs the pfo to compare
+     */
+    bool operator== (const pandora::ParticleFlowObject *const rhs) const;
+
 private:
 
-    bool m_isTrack;                                           ///< whether the pfo is track-like
     const pandora::ParticleFlowObject *m_pPfo;                ///< a pointer to the corresponding pfo
     ThreeDSlidingFitResult m_slidingFitResult;                ///< the 3D sliding fit result of the pfo
     const pandora::ParticleFlowObject *m_pPredictedParentPfo; ///< a pointer to the best matched parent pfo
     const pandora::ParticleFlowObject *m_pParentPfo;          ///< a pointer to the assigned parent pfo
     pandora::PfoVector m_childPfoVector;                      ///< the vector of pointers to the assigned child pfos
-    pandora::CartesianVector m_upstreamVertex;                ///< the particle endpoint that is closest to the neutrino vertex
-    pandora::CartesianVector m_upstreamDirection;             ///< the direction at the upstream vertex (pointing into the particle)
-    pandora::CartesianVector m_downstreamVertex;              ///< the particle endpoint that is furthest from the neutrino vertex
-    pandora::CartesianVector m_downstreamDirection;           ///< the direction at the downstream vertex (pointing into the particle)
+    ExtremalPoint m_upstreamPoint;                            ///< The extremal point that lies closest to the neutrino vertex
+    ExtremalPoint m_downstreamPoint;                          ///< The extremal point that lies furthest from the neutrino vertex
     float m_primaryScore;                                     ///< the primary network score 
     float m_laterTierScore;                                   ///< the later tier network score 
     bool m_isInHierarchy;                                     ///< whether the pfo has been assigned to a particle hierarchy
 };
 
-typedef std::map<const pandora::ParticleFlowObject*, HierarchyPfo> HierarchyPfoMap;
+typedef std::vector<HierarchyPfo> HierarchyPfoVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline HierarchyPfo::HierarchyPfo(const bool isTrack, const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &slidingFitResult,
-    const pandora::CartesianVector &upstreamVertex, const pandora::CartesianVector &upstreamDirection, const pandora::CartesianVector &downstreamVertex, 
-    const pandora::CartesianVector &downstreamDirection) :
-        m_isTrack(isTrack),
+inline ExtremalPoint::ExtremalPoint() :
+    m_isSet(false),
+    m_position(-999.f, -999.f, -999.f),
+    m_direction(-999.f, -999.f, -999.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CartesianVector &ExtremalPoint::GetPosition() const
+{
+    return m_position;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CartesianVector &ExtremalPoint::GetDirection() const
+{
+    return m_direction;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void ExtremalPoint::Set(const pandora::CartesianVector &position, const pandora::CartesianVector &direction)
+{
+    m_isSet = true;
+    m_position = position;
+    m_direction = direction;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool ExtremalPoint::IsSet() const
+{
+    return m_isSet;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ExtremalPoint &ExtremalPoint::operator=(const ExtremalPoint &rhs)
+{
+    this->m_isSet = rhs.m_isSet;
+    this->m_position = rhs.m_position;
+    this->m_direction = rhs.m_direction;
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline HierarchyPfo::HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &slidingFitResult,
+    const ExtremalPoint &upstreamPoint, const ExtremalPoint &downstreamPoint) :
         m_pPfo(pPfo),
         m_slidingFitResult(slidingFitResult),
         m_pPredictedParentPfo(nullptr),
         m_pParentPfo(nullptr),
         m_childPfoVector(pandora::PfoVector()),
-        m_upstreamVertex(upstreamVertex),
-        m_upstreamDirection(upstreamDirection),
-        m_downstreamVertex(downstreamVertex),
-        m_downstreamDirection(downstreamDirection),
+        m_upstreamPoint(upstreamPoint),
+        m_downstreamPoint(downstreamPoint),
         m_primaryScore(-std::numeric_limits<float>::max()),
         m_laterTierScore(-std::numeric_limits<float>::max()),
         m_isInHierarchy(false)
 {
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline bool HierarchyPfo::operator== (const HierarchyPfo &otherHierarchyPfo) const
-{
-    return this->GetPfo() == otherHierarchyPfo.GetPfo();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline bool HierarchyPfo::GetIsTrack() const
-{
-    return m_isTrack;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void HierarchyPfo::SetIsTrack(const bool isTrack)
-{
-    m_isTrack = isTrack;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -346,63 +384,35 @@ inline const pandora::PfoVector& HierarchyPfo::GetChildPfoVector() const
 
 inline void HierarchyPfo::AddChildPfo(const pandora::ParticleFlowObject *const pChildPfo)
 {
-    m_childPfoVector.push_back(pChildPfo);
+    m_childPfoVector.emplace_back(pChildPfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CartesianVector& HierarchyPfo::GetUpstreamVertex() const
+inline const ExtremalPoint& HierarchyPfo::GetUpstreamPoint() const
 {
-    return m_upstreamVertex;
+    return m_upstreamPoint;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void HierarchyPfo::SetUpstreamVertex(const pandora::CartesianVector &upstreamVertex)
+inline void HierarchyPfo::SetUpstreamPoint(const ExtremalPoint &upstreamPoint)
 {
-    m_upstreamVertex = upstreamVertex;
+    m_upstreamPoint = upstreamPoint;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CartesianVector& HierarchyPfo::GetUpstreamDirection() const
+inline const ExtremalPoint& HierarchyPfo::GetDownstreamPoint() const
 {
-    return m_upstreamDirection;
+    return m_downstreamPoint;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void HierarchyPfo::SetUpstreamDirection(const pandora::CartesianVector &upstreamDirection)
+inline void HierarchyPfo::SetDownstreamPoint(const ExtremalPoint &downstreamPoint)
 {
-    m_upstreamDirection = upstreamDirection;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::CartesianVector& HierarchyPfo::GetDownstreamVertex() const
-{
-    return m_downstreamVertex;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void HierarchyPfo::SetDownstreamVertex(const pandora::CartesianVector &downstreamVertex)
-{
-    m_downstreamVertex = downstreamVertex;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::CartesianVector& HierarchyPfo::GetDownstreamDirection() const
-{
-    return m_downstreamDirection;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void HierarchyPfo::SetDownstreamDirection(const pandora::CartesianVector &downstreamDirection)
-{
-    m_downstreamDirection = downstreamDirection;
+    m_downstreamPoint = downstreamPoint;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -449,6 +459,20 @@ inline void HierarchyPfo::SetIsInHierarchy(const bool isInHierarchy)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline bool HierarchyPfo::operator== (const HierarchyPfo &rhs) const
+{
+    return this->GetPfo() == rhs.GetPfo();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool HierarchyPfo::operator== (const pandora::ParticleFlowObject *const rhs) const
+{
+    return this->GetPfo() == rhs;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------  
+  
 } // namespace lar_dl_content
 
 #endif // #ifndef LAR_HIERARCHY_PFO_H

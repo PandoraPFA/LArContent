@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPCheatHierarchyTool.h
+ *  @file   larpandoradlcontent/LArCheating/DLCheatHierarchyTool.h
  *
  *  @brief  Header file for the cheat hierarchy tool
  *
  *  $Log: $
  */
-#ifndef LAR_MLP_CHEAT_HIERARCHY_TOOL_H
-#define LAR_MLP_CHEAT_HIERARCHY_TOOL_H 1
+#ifndef LAR_DL_CHEAT_HIERARCHY_TOOL_H
+#define LAR_DL_CHEAT_HIERARCHY_TOOL_H 1
 
 #include "Pandora/PandoraInternal.h"
 
@@ -20,9 +20,9 @@ namespace lar_dl_content
 {
 
 /**
- *   @brief  MLPCheatHierarchyTool to calculate variables related to the initial shower region
+ *   @brief  DLCheatHierarchyTool to calculate variables related to the initial shower region
  */
-class MLPCheatHierarchyTool : public pandora::AlgorithmTool
+class DLCheatHierarchyTool : public pandora::AlgorithmTool
 {
 public:
     typedef std::map<const pandora::ParticleFlowObject*, const pandora::MCParticle*> PfoToMCParticleMap;
@@ -31,7 +31,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    MLPCheatHierarchyTool();
+    DLCheatHierarchyTool();
 
     pandora::StatusCode Run(const PfoToMCParticleMap &pfoToMCParticleMap, const ChildToParentPfoMap &childToParentPfoMap,
         const HierarchyPfo &parentPfo, const HierarchyPfo &childPfo, bool &isTrueLink, bool &trueParentOrientation,
@@ -213,4 +213,4 @@ private:
 
 } // namespace lar_dl_content
 
-#endif // #ifndef LAR_MLP_CHEAT_HIERARCHY_TOOL_H
+#endif // #ifndef LAR_DL_CHEAT_HIERARCHY_TOOL_H
