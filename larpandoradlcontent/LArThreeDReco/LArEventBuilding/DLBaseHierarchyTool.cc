@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.cc
+ *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLBaseHierarchyTool.cc
  *
- *  @brief  Implementation of the MLP base hierarchy tool
+ *  @brief  Implementation of the DL base hierarchy tool
  *
  *  $Log: $
  */
@@ -12,7 +12,7 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLBaseHierarchyTool.h"
 
 #include <torch/script.h>
 #include <torch/torch.h>
@@ -23,23 +23,23 @@ using namespace lar_content;
 namespace lar_dl_content
 {
 
-MLPBaseHierarchyTool::MLPBaseHierarchyTool() :
+DLBaseHierarchyTool::DLBaseHierarchyTool() :
     m_bogusFloat(-999.f),
-    m_vertexRegionRadius(5.f),
+    m_vertexRegionRadiusSq(25.f),
     m_pfoListNames({"TrackParticles3D", "ShowerParticles3D"}),
     m_detectorMinX(std::numeric_limits<float>::max()),
-    m_detectorMaxX(-std::numeric_limits<float>::max()),
+    m_detectorMaxX(std::numeric_limits<float>::lowest()),
     m_detectorMinY(std::numeric_limits<float>::max()),
-    m_detectorMaxY(-std::numeric_limits<float>::max()),
+    m_detectorMaxY(std::numeric_limits<float>::lowest()),
     m_detectorMinZ(std::numeric_limits<float>::max()),
-    m_detectorMaxZ(-std::numeric_limits<float>::max()),
+    m_detectorMaxZ(std::numeric_limits<float>::lowest()),
     areBoundariesSet(false)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPBaseHierarchyTool::SetDetectorBoundaries()
+void DLBaseHierarchyTool::SetDetectorBoundaries()
 {
     if (areBoundariesSet)
         return;
@@ -61,7 +61,7 @@ void MLPBaseHierarchyTool::SetDetectorBoundaries()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MLPBaseHierarchyTool::IsInFV(const CartesianVector &position) const
+bool DLBaseHierarchyTool::IsInDetector(const CartesianVector &position) const
 {
     if ((position.GetX() < m_detectorMinX) or (position.GetX() > m_detectorMaxX))
         return false;
@@ -77,7 +77,7 @@ bool MLPBaseHierarchyTool::IsInFV(const CartesianVector &position) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float MLPBaseHierarchyTool::GetNSpacepoints(const HierarchyPfo &hierarchyPfo) const
+float DLBaseHierarchyTool::GetNSpacepoints(const HierarchyPfo &hierarchyPfo) const
 {
     ClusterList clusterList3D;
     LArPfoHelper::GetThreeDClusterList(hierarchyPfo.GetPfo(), clusterList3D);
@@ -92,11 +92,11 @@ float MLPBaseHierarchyTool::GetNSpacepoints(const HierarchyPfo &hierarchyPfo) co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::pair<float, float> MLPBaseHierarchyTool::GetParticleInfoAboutPfoPosition(const Algorithm *const pAlgorithm, 
+std::pair<float, float> DLBaseHierarchyTool::GetParticleInfoAboutPfoPosition(const Algorithm *const pAlgorithm, 
     const ParticleFlowObject *const pPfo, const CartesianVector &pointOfInterest) const
 { 
-    int hitCount = 0;
-    int particleCount = 0;    
+    int hitCount(0);
+    int particleCount(0);    
 
     for (const std::string &pfoListName : m_pfoListNames)
     {
@@ -116,9 +116,9 @@ std::pair<float, float> MLPBaseHierarchyTool::GetParticleInfoAboutPfoPosition(co
 
             for (const CartesianVector &otherPfoPosition : otherPfoPositions3D)
             {
-                const double sepSq = (otherPfoPosition - pointOfInterest).GetMagnitudeSquared();
+                const double sepSq((otherPfoPosition - pointOfInterest).GetMagnitudeSquared());
 
-                if (sepSq < (m_vertexRegionRadius * m_vertexRegionRadius))
+                if (sepSq < m_vertexRegionRadiusSq)
                 {
                     isClose = true;
                     ++hitCount;
@@ -136,10 +136,16 @@ std::pair<float, float> MLPBaseHierarchyTool::GetParticleInfoAboutPfoPosition(co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPBaseHierarchyTool::NormaliseNetworkParam(const float minLimit, const float maxLimit, float &networkParam) const
+void DLBaseHierarchyTool::NormaliseNetworkParam(const float minLimit, const float maxLimit, float &networkParam) const
 {
-    const float interval(std::fabs(minLimit) + std::fabs(maxLimit));
+    const float interval(std::fabs(maxLimit - minLimit));
 
+    if (interval < std::numeric_limits<float>::epsilon())
+    {
+        networkParam = minLimit;
+        return;
+    }
+    
     if (networkParam < minLimit)
         networkParam = minLimit;
 
@@ -151,14 +157,14 @@ void MLPBaseHierarchyTool::NormaliseNetworkParam(const float minLimit, const flo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MLPBaseHierarchyTool::IsVectorSet(const CartesianVector &vector) const
+bool DLBaseHierarchyTool::IsVectorSet(const CartesianVector &vector) const
 {
     return !(vector == CartesianVector(m_bogusFloat, m_bogusFloat, m_bogusFloat));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-int MLPBaseHierarchyTool::AddToInput(const int startIndex, const FloatVector &paramVector, LArDLHelper::TorchInput &modelInput) const
+int DLBaseHierarchyTool::AddToInput(const int startIndex, const FloatVector &paramVector, LArDLHelper::TorchInput &modelInput) const
 {
     int insertIndex(startIndex);
 
@@ -173,10 +179,21 @@ int MLPBaseHierarchyTool::AddToInput(const int startIndex, const FloatVector &pa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MLPBaseHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode DLBaseHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BogusFloat", m_bogusFloat));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionRadius", m_vertexRegionRadius));
+
+    StatusCode statusCode(XmlHelper::ReadValue(xmlHandle, "VertexRegionRadius", m_vertexRegionRadiusSq));
+    
+    if (statusCode == STATUS_CODE_SUCCESS)
+    {
+        m_vertexRegionRadiusSq = m_vertexRegionRadiusSq * m_vertexRegionRadiusSq;
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_NOT_FOUND, !=, statusCode);
+    }
+    
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
 
     return STATUS_CODE_SUCCESS;

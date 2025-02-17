@@ -31,7 +31,6 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  isTrack whether the input pfo is track-like
      *  @param  pPfo pointer to the input pfo
      *  @param  threeDSlidingFitResult 3D sliding fit of the input pfo
      *  @param  upstreamVertex the particle endpoint that is closest to the neutrino vertex
@@ -39,7 +38,7 @@ public:
      *  @param  downstreamVertex the particle endpoint that is furthest from the neutrino vertex
      *  @param  downstreamDirection the direction at the downstream vertex (pointing into the particle)
      */
-    HierarchyPfo(const bool isTrack, const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &threeDSlidingFitResult, 
+    HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &threeDSlidingFitResult, 
         const pandora::CartesianVector &upstreamVertex, const pandora::CartesianVector &upstreamDirection, 
         const pandora::CartesianVector &downstreamVertex, const pandora::CartesianVector &downstreamDirection);
 
@@ -49,20 +48,6 @@ public:
      *  @param  otherHierarchyPfo the HierarchyPfo to compare
      */
     bool operator== (const HierarchyPfo &otherHierarchyPfo) const;
-
-    /**
-     *  @brief  Return whether the pfo is track-like
-     *
-     *  @return whether the pfo is track-like
-     */
-    bool GetIsTrack() const;
-
-    /**
-     *  @brief  Set whether the pfo is track-like
-     *
-     *  @param  isTrack whether the pfo is track-like
-     */
-    void SetIsTrack(const bool isTrack);
 
     /**
      *  @brief  Get the pfo
@@ -227,7 +212,6 @@ public:
 
 private:
 
-    bool m_isTrack;                                           ///< whether the pfo is track-like
     const pandora::ParticleFlowObject *m_pPfo;                ///< a pointer to the corresponding pfo
     ThreeDSlidingFitResult m_slidingFitResult;                ///< the 3D sliding fit result of the pfo
     const pandora::ParticleFlowObject *m_pPredictedParentPfo; ///< a pointer to the best matched parent pfo
@@ -246,10 +230,9 @@ typedef std::map<const pandora::ParticleFlowObject*, HierarchyPfo> HierarchyPfoM
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline HierarchyPfo::HierarchyPfo(const bool isTrack, const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &slidingFitResult,
+inline HierarchyPfo::HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &slidingFitResult,
     const pandora::CartesianVector &upstreamVertex, const pandora::CartesianVector &upstreamDirection, const pandora::CartesianVector &downstreamVertex, 
     const pandora::CartesianVector &downstreamDirection) :
-        m_isTrack(isTrack),
         m_pPfo(pPfo),
         m_slidingFitResult(slidingFitResult),
         m_pPredictedParentPfo(nullptr),
@@ -270,20 +253,6 @@ inline HierarchyPfo::HierarchyPfo(const bool isTrack, const pandora::ParticleFlo
 inline bool HierarchyPfo::operator== (const HierarchyPfo &otherHierarchyPfo) const
 {
     return this->GetPfo() == otherHierarchyPfo.GetPfo();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline bool HierarchyPfo::GetIsTrack() const
-{
-    return m_isTrack;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void HierarchyPfo::SetIsTrack(const bool isTrack)
-{
-    m_isTrack = isTrack;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -346,7 +315,7 @@ inline const pandora::PfoVector& HierarchyPfo::GetChildPfoVector() const
 
 inline void HierarchyPfo::AddChildPfo(const pandora::ParticleFlowObject *const pChildPfo)
 {
-    m_childPfoVector.push_back(pChildPfo);
+    m_childPfoVector.emplace_back(pChildPfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

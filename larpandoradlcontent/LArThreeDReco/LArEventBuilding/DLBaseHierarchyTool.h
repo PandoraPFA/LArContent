@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h
+ *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLBaseHierarchyTool.h
  *
- *  @brief  Header file for the MLP base hierarchy tool
+ *  @brief  Header file for the DL base hierarchy tool
  *
  *  $Log: $
  */
-#ifndef LAR_MLP_BASE_HIERARCHY_TOOL_H
-#define LAR_MLP_BASE_HIERARCHY_TOOL_H 1
+#ifndef LAR_DL_BASE_HIERARCHY_TOOL_H
+#define LAR_DL_BASE_HIERARCHY_TOOL_H 1
 
 #include "Pandora/PandoraInternal.h"
 
@@ -20,15 +20,15 @@ namespace lar_dl_content
 {
 
 /**
- *   @brief  MLPBaseHierarchyTool to calculate variables related to the initial shower region
+ *   @brief  DLBaseHierarchyTool to calculate variables related to the initial shower region
  */
-class MLPBaseHierarchyTool : public pandora::AlgorithmTool
+class DLBaseHierarchyTool : public pandora::AlgorithmTool
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    MLPBaseHierarchyTool();
+    DLBaseHierarchyTool();
 
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -45,7 +45,7 @@ protected:
      *
      *  @return Whether the input position is within the detector
      */
-    bool IsInFV(const pandora::CartesianVector &position) const;
+    bool IsInDetector(const pandora::CartesianVector &position) const;
 
     /**
      *  @brief  Get the number of 3D hits owned by a pfo
@@ -98,7 +98,7 @@ protected:
     int AddToInput(const int startIndex, const pandora::FloatVector &paramVector, LArDLHelper::TorchInput &modelInput) const;
 
     float m_bogusFloat;                   ///< a default float value
-    float m_vertexRegionRadius;           ///< the radius in which to search for particle hits
+    float m_vertexRegionRadiusSq;         ///< the radius (squared) in which to search for particle hits
     pandora::StringVector m_pfoListNames; ///< the input pfo list name vector
     float m_detectorMinX;                 ///< the minimum x detector boundary
     float m_detectorMaxX;                 ///< the maximum x detector boundary
@@ -111,4 +111,4 @@ protected:
 
 } // namespace lar_dl_content
 
-#endif // #ifndef LAR_MLP_BASE_HIERARCHY_TOOL_H
+#endif // #ifndef LAR_DL_BASE_HIERARCHY_TOOL_H

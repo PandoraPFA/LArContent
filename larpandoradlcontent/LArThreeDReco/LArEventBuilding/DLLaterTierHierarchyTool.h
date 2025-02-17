@@ -1,29 +1,29 @@
 /**
- *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h
+ *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLLaterTierHierarchyTool.h
  *
- *  @brief  Header file for the MLP later hierarchy tool
+ *  @brief  Header file for the DL later hierarchy tool
  *
  *  $Log: $
  */
-#ifndef LAR_MLP_LATER_TIER_HIERARCHY_TOOL_H
-#define LAR_MLP_LATER_TIER_HIERARCHY_TOOL_H 1
+#ifndef LAR_DL_LATER_TIER_HIERARCHY_TOOL_H
+#define LAR_DL_LATER_TIER_HIERARCHY_TOOL_H 1
 
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLBaseHierarchyTool.h"
 
 namespace lar_dl_content
 {
 
 /**
- *   @brief  MLPLaterTierHierarchyTool to apply the later-tier hierarchy MLP networks
+ *   @brief  DLLaterTierHierarchyTool to apply the later-tier hierarchy DL networks
  */
-class MLPLaterTierHierarchyTool : public MLPBaseHierarchyTool
+class DLLaterTierHierarchyTool : public DLBaseHierarchyTool
 {
 public:
-    struct MLPLaterTierNetworkParams  // all floats because they'll be normalised
+    struct DLLaterTierNetworkParams  // all floats because they'll be normalised
     {
         float m_parentTrackScore = -999.f;          ///< the track/shower score of the parent pfo
         float m_childTrackScore = -999.f;           ///< the track/shower score of the child pfo
@@ -57,11 +57,6 @@ public:
         float m_childIsPOIClosestToNu = -999.f;   ///< whether the child POI is that closest to the neutrino vertex
 
         /**
-         *  @brief  Print the value of the MLPLaterTierNetworkParams
-         */
-        void Print() const;
-
-        /**
          *  @brief  Return the vector of orientation independent later tier network parameters
          *
          *  @return The vector of orientation independent later tier network parameters
@@ -77,13 +72,13 @@ public:
     };
 
     pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo, 
-        const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, std::vector<MLPLaterTierNetworkParams> &networkParamVector,
+        const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, std::vector<DLLaterTierNetworkParams> &networkParamVector,
         float &laterTierScore);
   
     /**
      *  @brief  Default constructor
      */
-    MLPLaterTierHierarchyTool();
+    DLLaterTierHierarchyTool();
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -99,7 +94,7 @@ private:
     bool IsShowerVertexUpstream(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
 
     /**
-     *  @brief  Function to calculate the MLPLaterTierNetworkParams
+     *  @brief  Function to calculate the DLLaterTierNetworkParams
      *
      *  @param  pAlgorithm a pointer to the pandora algorithm
      *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
@@ -114,10 +109,10 @@ private:
     pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, 
         const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo,
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const bool useUpstreamForParent, const bool useUpstreamForChild, 
-        MLPLaterTierNetworkParams &laterTierNetworkParams) const;  
+        DLLaterTierNetworkParams &laterTierNetworkParams) const;  
 
     /**
-     *  @brief  Get the track/shower score MLPLaterTierNetworkParams
+     *  @brief  Get the track/shower score DLLaterTierNetworkParams
      *          (m_parentTrackScore, m_childTrackScore)
      *
      *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
@@ -128,7 +123,7 @@ private:
     std::pair<float, float> GetTrackScoreParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
 
     /**
-     *  @brief  Get the number of 3D hit MLPLaterTierNetworkParams
+     *  @brief  Get the number of 3D hit DLLaterTierNetworkParams
      *          (m_parentNSpacepoints, m_childNSpacepoints)
      *
      *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
@@ -139,7 +134,7 @@ private:
     std::pair<float, float> GetNSpacepointsParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
 
     /**
-     *  @brief  Get the m_separation3D MLPLaterTierNetworkParam
+     *  @brief  Get the m_separation3D DLLaterTierNetworkParam
      *
      *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
      *  @param  childHierarchyPfo the HierarchyPfo object of the child pfo     
@@ -149,7 +144,7 @@ private:
     float GetSeparation3D(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
 
    /**
-    *  @brief  Set the orientation independent MLPLaterTierNetworkParams
+    *  @brief  Set the orientation independent DLLaterTierNetworkParams
     *          (m_parentTrackScore, m_childTrackScore, m_parentNSpacepoints, m_childNSpacepoints, m_separation3D)
     *
     *  @param  trackScoreParams the track score (parent, child) pair
@@ -158,10 +153,10 @@ private:
     *  @param  laterTierNetworkParams the later tier network parameters to fill
     */  
     void SetCommonParams(const std::pair<float, float> &trackScoreParams, const std::pair<float, float> &nSpacepointsParams, 
-        const float separation3D, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
+        const float separation3D, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
-     *  @brief  Set the vertex related MLPLaterTierNetworkParams
+     *  @brief  Set the vertex related DLLaterTierNetworkParams
      *          (m_parentNuVertexSep, m_childNuVertexSep, m_vertexSeparation)
      *
      *  @param  nuVertex the neutrino vertex position
@@ -172,10 +167,10 @@ private:
      */  
     void SetVertexParams(const pandora::CartesianVector &nuVertex, const pandora::CartesianVector &parentStart, 
         const pandora::CartesianVector &parentEnd, const pandora::CartesianVector &childStart, 
-        MLPLaterTierNetworkParams &laterTierNetworkParams) const;
+        DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
-     *  @brief  Set the parent endpoint region MLPLaterTierNetworkParams
+     *  @brief  Set the parent endpoint region DLLaterTierNetworkParams
      *          (m_parentEndRegionNHits, m_parentEndRegionNParticles, m_parentEndRegionRToWall)
      *
      *  @param  pAlgorithm a pointer to the pandora algorithm 
@@ -184,18 +179,18 @@ private:
      *  @param  laterTierNetworkParams the later tier network parameters to fill
      */  
     void SetEndRegionParams(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pParentPfo, 
-        const pandora::CartesianVector &parentEnd, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
+        const pandora::CartesianVector &parentEnd, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
-     *  @brief  Set the m_parentEndRegionRToWall MLPLaterTierNetworkParam
+     *  @brief  Set the m_parentEndRegionRToWall DLLaterTierNetworkParam
      *
      *  @param  parentEnd the assumed parent pfo endpoint
      *  @param  laterTierNetworkParams the later tier network parameters to fill  
      */
-    void SetEndRegionRToWall(const pandora::CartesianVector &parentEnd, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
+    void SetEndRegionRToWall(const pandora::CartesianVector &parentEnd, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
-     *  @brief  Set the child connection MLPLaterTierNetworkParams
+     *  @brief  Set the child connection DLLaterTierNetworkParams
      *          (m_doesChildConnect, m_connectionPoint, m_connectionDirection, 
      *           m_childCPDCA, m_childCPExtrapDistance, m_childCPLRatio)
      *
@@ -207,7 +202,7 @@ private:
      */  
     void SetConnectionParams(const HierarchyPfo &parentHierarchyPfo,
         const pandora::CartesianVector &parentStart, const pandora::CartesianVector &childStart, 
-        const pandora::CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
+        const pandora::CartesianVector &childStartDirection, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
      *  @brief  Project the (parentPos - childStart) vector onto the child direction axis 
@@ -235,7 +230,7 @@ private:
         const pandora::CartesianVector &testPoint) const;
 
     /**
-     *  @brief  Set the overshoot MLPLaterTierNetworkParams
+     *  @brief  Set the overshoot DLLaterTierNetworkParams
      *          (m_overshootStartDCA, m_overshootStartL, m_overshootEndDCA, m_overshootEndL)
      *
      *  @param  parentStart the assumed parent pfo startpoint
@@ -248,74 +243,74 @@ private:
      */
     void SetOvershootParams(const pandora::CartesianVector &parentStart, const pandora::CartesianVector &parentStartDirection, 
         const pandora::CartesianVector &parentEnd, const pandora::CartesianVector &parentEndDirection, const pandora::CartesianVector &childStart, 
-        const pandora::CartesianVector &childStartDirection, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
+        const pandora::CartesianVector &childStartDirection, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
-     *  @brief  Set the parent connection point MLPLaterTierNetworkParams
+     *  @brief  Set the parent connection point DLLaterTierNetworkParams
      *          (m_parentCPNUpstreamHits, m_parentCPNDownstreamHits, m_parentCPNHitRatio, 
      *           m_parentCPEigenvalueRatio, m_parentCPOpeningAngle)
      *
      *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
      *  @param  laterTierNetworkParams the later tier network parameters to fill  
      */  
-    void SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, MLPLaterTierNetworkParams &laterTierNetworkParams) const;
+    void SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
      *  @brief  Shift and normalise the later tier network parameters
      *
      *  @param  laterTierNetworkParam the input later tier network parameters
      */  
-    void NormaliseNetworkParams(MLPLaterTierNetworkParams &laterTierNetworkParams) const;
+    void NormaliseNetworkParams(DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
      *  @brief  Apply the track-track parent-child classification network
      *
-     *  @param  edgeParamsUpUp the MLPLaterTierNetworkParams for the parent upstream POI and child upstream POI
-     *  @param  edgeParamsUpDown the MLPLaterTierNetworkParams for the parent upstream POI and child downstream POI
-     *  @param  edgeParamsDownUp the MLPLaterTierNetworkParams for the parent downstream POI and child upstream POI
-     *  @param  edgeParamsDownDown the MLPLaterTierNetworkParams for the parent downstream POI and child downstream POI
+     *  @param  edgeParamsUpUp the DLLaterTierNetworkParams for the parent upstream POI and child upstream POI
+     *  @param  edgeParamsUpDown the DLLaterTierNetworkParams for the parent upstream POI and child downstream POI
+     *  @param  edgeParamsDownUp the DLLaterTierNetworkParams for the parent downstream POI and child upstream POI
+     *  @param  edgeParamsDownDown the DLLaterTierNetworkParams for the parent downstream POI and child downstream POI
      *
      *  @return the network score (how likely to be signal)
      */  
-    float ClassifyTrackTrack(const MLPLaterTierNetworkParams &edgeParamsUpUp, const MLPLaterTierNetworkParams &edgeParamsUpDown, 
-        const MLPLaterTierNetworkParams &edgeParamsDownUp, const MLPLaterTierNetworkParams &edgeParamsDownDown);
+    float ClassifyTrackTrack(const DLLaterTierNetworkParams &edgeParamsUpUp, const DLLaterTierNetworkParams &edgeParamsUpDown, 
+        const DLLaterTierNetworkParams &edgeParamsDownUp, const DLLaterTierNetworkParams &edgeParamsDownDown);
 
     /**
      *  @brief  Apply the track-track orientation edge network - determine whether an edge is
      *          signal (with correct orientation), signal (with the wrong orientation) or background
      *
-     *  @param  edgeParams the MLPLaterTierNetworkParams of the edge to classify
-     *  @param  otherEdgeParams1 the MLPLaterTierNetworkParams of another edge
-     *  @param  otherEdgeParams2 the MLPLaterTierNetworkParams of another another edge
-     *  @param  otherEdgeParams3 the MLPLaterTierNetworkParams of another another another edge
+     *  @param  edgeParams the DLLaterTierNetworkParams of the edge to classify
+     *  @param  otherEdgeParams1 the DLLaterTierNetworkParams of another edge
+     *  @param  otherEdgeParams2 the DLLaterTierNetworkParams of another another edge
+     *  @param  otherEdgeParams3 the DLLaterTierNetworkParams of another another another edge
      *
      *  @return the float vector of (signal, wrong orientation, background) scores
      */
-    pandora::FloatVector ClassifyTrackTrackEdge(const MLPLaterTierNetworkParams &edgeParams, 
-        const MLPLaterTierNetworkParams &otherEdgeParams1, const MLPLaterTierNetworkParams &otherEdgeParams2, 
-        const MLPLaterTierNetworkParams &otherEdgeParams3);
+    pandora::FloatVector ClassifyTrackTrackEdge(const DLLaterTierNetworkParams &edgeParams, 
+        const DLLaterTierNetworkParams &otherEdgeParams1, const DLLaterTierNetworkParams &otherEdgeParams2, 
+        const DLLaterTierNetworkParams &otherEdgeParams3);
 
     /**
      *  @brief  Apply the track-shower parent-child classification network
      *
-     *  @param  edgeParamsUp the MLPLaterTierNetworkParams for the parent upstream POI
-     *  @param  edgeParamsDown the MLPLaterTierNetworkParams for the parent upstream POI
+     *  @param  edgeParamsUp the DLLaterTierNetworkParams for the parent upstream POI
+     *  @param  edgeParamsDown the DLLaterTierNetworkParams for the parent upstream POI
      *
      *  @return the network score (how likely to be signal)
      */    
-    float ClassifyTrackShower(const MLPLaterTierNetworkParams &edgeParamsUp, const MLPLaterTierNetworkParams &edgeParamsDown);
+    float ClassifyTrackShower(const DLLaterTierNetworkParams &edgeParamsUp, const DLLaterTierNetworkParams &edgeParamsDown);
 
     /**
      *  @brief  Apply the track-shower orientation edge network - determine whether an edge is
      *          signal (with correct orientation), signal (with the wrong orientation) or background
      *
-     *  @param  edgeParams the MLPLaterTierNetworkParams of the edge to classify
-     *  @param  otherEdgeParams the MLPLaterTierNetworkParams of another edge
+     *  @param  edgeParams the DLLaterTierNetworkParams of the edge to classify
+     *  @param  otherEdgeParams the DLLaterTierNetworkParams of another edge
      *
      *  @return the float vector of (signal, wrong orientation, background) scores
      */  
-    pandora::FloatVector ClassifyTrackShowerEdge(const MLPLaterTierNetworkParams &edgeParams, 
-        const MLPLaterTierNetworkParams &otherEdgeParams);
+    pandora::FloatVector ClassifyTrackShowerEdge(const DLLaterTierNetworkParams &edgeParams, 
+        const DLLaterTierNetworkParams &otherEdgeParams);
 
     // For model
     std::string m_trackTrackBranchModelName;              ///< the name of the track-track edge model file
@@ -373,46 +368,14 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams::Print() const
-{
-    std::cout << "ParentPOIClosestToNuVertex: " << m_parentIsPOIClosestToNu << std::endl;
-    std::cout << "ChildPOIClosestToNuVertex: " << m_childIsPOIClosestToNu << std::endl;
-    std::cout << "ParentTrackScore: " << m_parentTrackScore << std::endl; 
-    std::cout << "ChildTrackScore: " << m_childTrackScore << std::endl;
-    std::cout << "ParentNSpacepoints: " << m_parentNSpacepoints << std::endl;
-    std::cout << "ChildNSpacepoints: " << m_childNSpacepoints << std::endl;
-    std::cout << "Separation3D: " << m_separation3D << std::endl;
-    std::cout << "ParentNuVertexSep: " << m_parentNuVertexSep << std::endl;
-    std::cout << "ChildNuVertexSep: " << m_childNuVertexSep << std::endl;
-    std::cout << "ParentEndRegionNHits: " << m_parentEndRegionNHits << std::endl;
-    std::cout << "ParentEndRegionNParticles: " << m_parentEndRegionNParticles << std::endl;
-    std::cout << "ParentEndRegionRToWall: " << m_parentEndRegionRToWall << std::endl;
-    std::cout << "VertexSep: " << m_vertexSeparation << std::endl;
-    std::cout << "DoesChildConnect: " << m_doesChildConnect << std::endl;
-    std::cout << "OvershootStartDCA: " << m_overshootStartDCA << std::endl;
-    std::cout << "OvershootStartL: " << m_overshootStartL << std::endl;
-    std::cout << "OvershootEndDCA: " << m_overshootEndDCA << std::endl;
-    std::cout << "OvershootEndL: " << m_overshootEndL << std::endl;
-    std::cout << "ChildCPDCA: " << m_childCPDCA << std::endl;
-    std::cout << "ChildCPExtrapDistance: " << m_childCPExtrapDistance << std::endl;
-    std::cout << "ChildCPLRatio: " << m_childCPLRatio << std::endl;
-    std::cout << "ParentCPNUpstreamHits: " << m_parentCPNUpstreamHits << std::endl;
-    std::cout << "ParentCPNDownstreamHits: " << m_parentCPNDownstreamHits << std::endl;
-    std::cout << "ParentCPNHitRatio: " << m_parentCPNHitRatio << std::endl;
-    std::cout << "ParentCPEigenvalueRatio: " << m_parentCPEigenvalueRatio << std::endl;
-    std::cout << "ParentCPOpeningAngle: " << m_parentCPOpeningAngle << std::endl;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::FloatVector MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams::GetCommonParamsForModel() const
+inline pandora::FloatVector DLLaterTierHierarchyTool::DLLaterTierNetworkParams::GetCommonParamsForModel() const
 {
     return {m_parentTrackScore, m_childTrackScore, m_parentNSpacepoints, m_childNSpacepoints, m_separation3D};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::FloatVector MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams::GetOrientationParamsForModel() const
+inline pandora::FloatVector DLLaterTierHierarchyTool::DLLaterTierNetworkParams::GetOrientationParamsForModel() const
 {
     return {m_parentNuVertexSep, m_childNuVertexSep, m_parentEndRegionNHits, m_parentEndRegionNParticles, m_parentEndRegionRToWall, 
             m_vertexSeparation, m_doesChildConnect, m_overshootStartDCA, m_overshootStartL, m_overshootEndDCA, m_overshootEndL, 
@@ -424,4 +387,4 @@ inline pandora::FloatVector MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams
 
 } // namespace lar_dl_content
 
-#endif // #ifndef LAR_MLP_LATER_TIER_HIERARCHY_TOOL_H
+#endif // #ifndef LAR_DL_LATER_TIER_HIERARCHY_TOOL_H

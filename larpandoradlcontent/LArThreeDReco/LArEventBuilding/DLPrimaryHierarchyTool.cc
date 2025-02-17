@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.cc
+ *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.cc
  *
- *  @brief  Implementation of the MLP primary hierarchy tool
+ *  @brief  Implementation of the DL primary hierarchy tool
  *
  *  $Log: $
  */
@@ -14,7 +14,8 @@
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.h"
+
 
 #include <torch/script.h>
 #include <torch/torch.h>
@@ -25,8 +26,8 @@ using namespace lar_content;
 namespace lar_dl_content
 {
 
-MLPPrimaryHierarchyTool::MLPPrimaryHierarchyTool() :
-    MLPBaseHierarchyTool(),
+DLPrimaryHierarchyTool::DLPrimaryHierarchyTool() :
+    DLBaseHierarchyTool(),
     m_trainingMode(false),
     m_extrapolationStepSize(1.f),
     m_normalise(true),
@@ -51,21 +52,24 @@ MLPPrimaryHierarchyTool::MLPPrimaryHierarchyTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MLPPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo, 
-    const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<MLPPrimaryNetworkParams> &networkParamVector, float &primaryScore)
+StatusCode DLPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo, 
+    const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<DLPrimaryNetworkParams> &networkParamVector, float &primaryScore)
 {
+    std::cout << "m_vertexRegionRadiusSq: " << m_vertexRegionRadiusSq << std::endl;
+    
     networkParamVector.clear();
     primaryScore = m_bogusFloat;
 
     this->SetDetectorBoundaries();
 
-    std::vector<bool> orientationVector(hierarchyPfo.GetIsTrack() ? std::vector<bool>({true, false}) : 
+    const bool isTrack(hierarchyPfo.GetPfo()->GetParticleId() == 13);
+    std::vector<bool> orientationVector(isTrack ? std::vector<bool>({true, false}) : 
         std::vector<bool>({true}));
 
-    for (const bool &useUpstream : orientationVector)
+    for (const bool useUpstream : orientationVector)
     {
         // Set network params
-        MLPPrimaryNetworkParams primaryNetworkParams;
+        DLPrimaryNetworkParams primaryNetworkParams;
 
         const StatusCode statusCode(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, 
             trackPfos, useUpstream, primaryNetworkParams));
@@ -79,7 +83,7 @@ StatusCode MLPPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const
     // Now run the model!
     if (!m_trainingMode)
     {
-        if (hierarchyPfo.GetIsTrack())
+        if (isTrack)
             primaryScore = this->ClassifyTrack(networkParamVector.at(0), networkParamVector.at(1));
         else
             primaryScore = this->ClassifyShower(networkParamVector.at(0));
@@ -90,8 +94,8 @@ StatusCode MLPPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MLPPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
-    const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const bool useUpstream, MLPPrimaryNetworkParams &primaryNetworkParams) const
+StatusCode DLPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
+    const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const bool useUpstream, DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     // Pick out neutrino vertex
     if (pNeutrinoPfo->GetVertexList().empty())
@@ -116,31 +120,17 @@ StatusCode MLPPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *c
     this->SetConnectionParams(particleVertex, particleDirection, nuVertex, primaryNetworkParams);
     this->SetContextParams(hierarchyPfo.GetPfo(), particleVertex, particleDirection, nuVertex, trackPfos, primaryNetworkParams);
 
-    // /////////////////////////////////////////
-    // std::cout << "-----------------------------------------" << std::endl;
-    // std::cout << "BEFORE NORMALISATION" << std::endl;
-    // primaryNetworkParams.Print();
-    // std::cout << "-----------------------------------------" << std::endl;
-    // /////////////////////////////////////////
-
     // Normalise
     if (m_normalise)
         this->NormaliseNetworkParams(primaryNetworkParams);
-
-    /////////////////////////////////////////
-    // std::cout << "-----------------------------------------" << std::endl;
-    // std::cout << "AFTER NORMALISATION" << std::endl;
-    // primaryNetworkParams.Print();
-    // std::cout << "-----------------------------------------" << std::endl;
-    /////////////////////////////////////////
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPPrimaryHierarchyTool::SetVertexRegionParams(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, 
-    const CartesianVector &particleVertex, MLPPrimaryNetworkParams &primaryNetworkParams) const
+void DLPrimaryHierarchyTool::SetVertexRegionParams(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, 
+    const CartesianVector &particleVertex, DLPrimaryNetworkParams &primaryNetworkParams) const
 { 
     std::pair<float, float> vertexRegionParams(this->GetParticleInfoAboutPfoPosition(pAlgorithm, pPfo, particleVertex));
 
@@ -150,8 +140,8 @@ void MLPPrimaryHierarchyTool::SetVertexRegionParams(const Algorithm *const pAlgo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPPrimaryHierarchyTool::SetConnectionParams(const CartesianVector &particleVertex, const CartesianVector &particleDirection, 
-    const CartesianVector &nuVertex, MLPPrimaryNetworkParams &primaryNetworkParams) const
+void DLPrimaryHierarchyTool::SetConnectionParams(const CartesianVector &particleVertex, const CartesianVector &particleDirection, 
+    const CartesianVector &nuVertex, DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     // Extrapolate particle to nuVertex
     const float extrapDistance((nuVertex - particleVertex).GetDotProduct(particleDirection));
@@ -163,8 +153,8 @@ void MLPPrimaryHierarchyTool::SetConnectionParams(const CartesianVector &particl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pPfo, const CartesianVector &particleVertex, const CartesianVector &particleDirection, 
-    const CartesianVector &nuVertex, const HierarchyPfoMap &trackPfos, MLPPrimaryNetworkParams &primaryNetworkParams) const
+void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pPfo, const CartesianVector &particleVertex, const CartesianVector &particleDirection, 
+    const CartesianVector &nuVertex, const HierarchyPfoMap &trackPfos, DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     // What is our nuVertex separation
     const float nuVertexSepSq((particleVertex - nuVertex).GetMagnitudeSquared());
@@ -180,8 +170,7 @@ void MLPPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const p
             continue;
 
         // Upstream position should be closer to nu vertex
-        //const float thisNuVertexSepSq((hierarchyTrackPfo.GetUpstreamVertex() - nuVertex).GetMagnitudeSquared());
-        const float thisNuVertexSepSq((hierarchyTrackPfo.GetDownstreamVertex() - nuVertex).GetMagnitudeSquared()); // recreating bug in jupyter code -.-
+        const float thisNuVertexSepSq((hierarchyTrackPfo.GetUpstreamVertex() - nuVertex).GetMagnitudeSquared());
 
         if (thisNuVertexSepSq > nuVertexSepSq)
             continue;
@@ -208,7 +197,7 @@ void MLPPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPPrimaryHierarchyTool::CalculateConnectionDistances(const CartesianVector &parentEndpoint, const CartesianVector &parentDirection, 
+void DLPrimaryHierarchyTool::CalculateConnectionDistances(const CartesianVector &parentEndpoint, const CartesianVector &parentDirection, 
     const CartesianVector &childVertex, const CartesianVector &childDirection, float &parentConnectionDistance, float &childConnectionDistance) const
 {
     // Loop things
@@ -225,10 +214,10 @@ void MLPPrimaryHierarchyTool::CalculateConnectionDistances(const CartesianVector
         isGettingCloser = false;
         extrapolatedPoint = extrapolatedPoint + (childDirection * ((-1.f) * m_extrapolationStepSize));
 
-        if (!this->IsInFV(extrapolatedPoint))
+        if (!this->IsInDetector(extrapolatedPoint))
             break;
 
-        const float parentT = (parentDirection * (-1.f)).GetCrossProduct((extrapolatedPoint - parentEndpoint)).GetMagnitudeSquared();
+        const float parentT((parentDirection * (-1.f)).GetCrossProduct((extrapolatedPoint - parentEndpoint)).GetMagnitudeSquared());
 
         if (parentT < smallestT)
         {
@@ -247,7 +236,7 @@ void MLPPrimaryHierarchyTool::CalculateConnectionDistances(const CartesianVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MLPPrimaryHierarchyTool::NormaliseNetworkParams(MLPPrimaryNetworkParams &primaryNetworkParams) const
+void DLPrimaryHierarchyTool::NormaliseNetworkParams(DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     this->NormaliseNetworkParam(m_nSpacepointsMin, m_nSpacepointsMax, primaryNetworkParams.m_nSpacepoints);
     this->NormaliseNetworkParam(m_nuSeparationMin, m_nuSeparationMax, primaryNetworkParams.m_nuSeparation);
@@ -261,27 +250,17 @@ void MLPPrimaryHierarchyTool::NormaliseNetworkParams(MLPPrimaryNetworkParams &pr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float MLPPrimaryHierarchyTool::ClassifyTrack(const MLPPrimaryNetworkParams &edgeParamsUp, const MLPPrimaryNetworkParams &edgeParamsDown)
+float DLPrimaryHierarchyTool::ClassifyTrack(const DLPrimaryNetworkParams &edgeParamsUp, const DLPrimaryNetworkParams &edgeParamsDown)
 {
-    ////////////////////////////////////////////////////////////
-    //std::cout << "------------------------" << std::endl;
-    //std::cout << "Classifying track with " << edgeParamsUp.m_nSpacepoints << " hits" << std::endl;
-    ////////////////////////////////////////////////////////////
-
     // Invoke branch model for each edge
     const FloatVector outputUp(this->ClassifyTrackEdge(edgeParamsUp, edgeParamsDown));
     const FloatVector outputDown(this->ClassifyTrackEdge(edgeParamsDown, edgeParamsUp));
-
-    ////////////////////////////////////////////////////////////
-    //std::cout << "outputUp: " << outputUp.at(0) << ", " << outputUp.at(1) << ", " << outputUp.at(2) << std::endl;
-    //std::cout << "outputDown: " << outputDown.at(0) << ", " << outputDown.at(1) << ", " << outputDown.at(2) << std::endl;
-    ////////////////////////////////////////////////////////////
 
     // Invoke classifier model for final output
     LArDLHelper::TorchInput input;
     LArDLHelper::InitialiseInput({1, 6}, input);
 
-    int insertIndex = 0;
+    int insertIndex(0);
 
     for (const FloatVector &edgeOutput : {outputUp, outputDown})
     {
@@ -296,18 +275,13 @@ float MLPPrimaryHierarchyTool::ClassifyTrack(const MLPPrimaryNetworkParams &edge
     LArDLHelper::Forward(m_primaryTrackClassifierModel, {input}, output);
     torch::TensorAccessor<float, 2> outputAccessor = output.accessor<float, 2>();
 
-    ////////////////////////////////////////////////////////////    
-    //std::cout << "Track classification score: " << outputAccessor[0][0] << std::endl;
-    //std::cout << "------------------------" << std::endl;
-    ////////////////////////////////////////////////////////////    
-
     return outputAccessor[0][0];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-FloatVector MLPPrimaryHierarchyTool::ClassifyTrackEdge(const MLPPrimaryNetworkParams &edgeParams, 
-    const MLPPrimaryNetworkParams &otherEdgeParams)
+FloatVector DLPrimaryHierarchyTool::ClassifyTrackEdge(const DLPrimaryNetworkParams &edgeParams, 
+    const DLPrimaryNetworkParams &otherEdgeParams)
 {
     LArDLHelper::TorchInput input;
     LArDLHelper::InitialiseInput({1, 17}, input);
@@ -321,22 +295,13 @@ FloatVector MLPPrimaryHierarchyTool::ClassifyTrackEdge(const MLPPrimaryNetworkPa
 
     torch::TensorAccessor<float, 2> outputAccessor(output.accessor<float, 2>());
 
-    ////////////////////////////////////////////////////////////    
-    //std::cout << "output: " << outputAccessor[0][0] << ", " << outputAccessor[0][1] << ", " << outputAccessor[0][2] << std::endl;
-    ////////////////////////////////////////////////////////////    
-
     return {outputAccessor[0][0], outputAccessor[0][1], outputAccessor[0][2]};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float MLPPrimaryHierarchyTool::ClassifyShower(const MLPPrimaryNetworkParams &primaryNetworkParams)
+float DLPrimaryHierarchyTool::ClassifyShower(const DLPrimaryNetworkParams &primaryNetworkParams)
 {
-    ////////////////////////////////////////////////////////////    
-    //std::cout << "------------------------" << std::endl;
-    //std::cout << "Classifying shower with " << primaryNetworkParams.m_nSpacepoints << "hits" << std::endl;
-    ////////////////////////////////////////////////////////////    
-
     LArDLHelper::TorchInput input;
     LArDLHelper::InitialiseInput({1, 9}, input);
 
@@ -346,22 +311,16 @@ float MLPPrimaryHierarchyTool::ClassifyShower(const MLPPrimaryNetworkParams &pri
     LArDLHelper::TorchOutput output;
     LArDLHelper::Forward(m_primaryShowerClassifierModel, {input}, output);
     auto outputAccessor = output.accessor<float, 2>();
-
-    ////////////////////////////////////////////////////////////    
-    //std::cout << "Shower classification score: " << outputAccessor[0][0] << std::endl;
-    //std::cout << "------------------------" << std::endl;
-    ////////////////////////////////////////////////////////////
     
     return outputAccessor[0][0];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MLPPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode DLPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionRadius", m_vertexRegionRadius));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ExtrapolationStepSize", m_extrapolationStepSize));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Normalise", m_normalise));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMin", m_nSpacepointsMin));
@@ -396,7 +355,7 @@ StatusCode MLPPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryShowerClassifierModelName, m_primaryShowerClassifierModel));
     }
 
-    return MLPBaseHierarchyTool::ReadSettings(xmlHandle);
+    return DLBaseHierarchyTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_dl_content

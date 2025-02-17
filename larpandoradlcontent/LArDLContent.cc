@@ -12,19 +12,18 @@
 #include "Pandora/AlgorithmTool.h"
 #include "Pandora/Pandora.h"
 
+#include "larpandoradlcontent/LArCheating/DLCheatHierarchyTool.h"
 #include "larpandoradlcontent/LArControlFlow/DLMasterAlgorithm.h"
 #include "larpandoradlcontent/LArMonitoring/DlHitValidationAlgorithm.h"
 #include "larpandoradlcontent/LArSignalId/DlSNSignalAlgorithm.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPNeutrinoHierarchyAlgorithm.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLLaterTierHierarchyTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLNeutrinoHierarchyAlgorithm.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlClusterCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlPfoCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTwoDReco/DlTrackShowerStreamSelectionAlgorithm.h"
 #include "larpandoradlcontent/LArVertex/DlVertexingAlgorithm.h"
-
-#include "larpandoradlcontent/LArCheating/MLPCheatHierarchyTool.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h"
 
 #include "larpandoradlcontent/LArDLContent.h"
 
@@ -33,7 +32,7 @@
     d("LArDLMaster",                            DLMasterAlgorithm)                                                                         \
     d("LArDLHitValidation",                     DlHitValidationAlgorithm)                                                                  \
     d("LArDLSNSignal",                          DlSNSignalAlgorithm)                                                                       \
-    d("LArMLPNeutrinoHierarchy",                MLPNeutrinoHierarchyAlgorithm)                                                             \
+    d("LArDLNeutrinoHierarchy",                 DLNeutrinoHierarchyAlgorithm)                                                             \
     d("LArDLClusterCharacterisation",           DlClusterCharacterisationAlgorithm)                                                        \
     d("LArDLHitTrackShowerId",                  DlHitTrackShowerIdAlgorithm)                                                               \
     d("LArDLPfoCharacterisation",               DlPfoCharacterisationAlgorithm)                                                            \
@@ -41,9 +40,9 @@
     d("LArDLVertexing",                         DlVertexingAlgorithm)
 
 #define LAR_DL_ALGORITHM_TOOL_LIST(d)                                                                                                      \
-    d("LArMLPCheatHierarchy",                   MLPCheatHierarchyTool)                                                                     \
-    d("LArMLPLaterTierHierarchy",               MLPLaterTierHierarchyTool)                                                                 \
-    d("LArMLPPrimaryHierarchy",                 MLPPrimaryHierarchyTool)
+    d("LArDLCheatHierarchy",                    DLCheatHierarchyTool)                                                                     \
+    d("LArDLLaterTierHierarchy",                DLLaterTierHierarchyTool)                                                                 \
+    d("LArDLPrimaryHierarchy",                  DLPrimaryHierarchyTool)
 
 #define DL_FACTORY Factory
 

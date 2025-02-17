@@ -1,22 +1,22 @@
 /**
- *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPNeutrinoHierarchyAlgorithm.h
+ *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLNeutrinoHierarchyAlgorithm.h
  *
- *  @brief  Header file for the MLP neutrino hierarchy algorithm class.
+ *  @brief  Header file for the DL neutrino hierarchy algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_MLP_NEUTRINO_HIERARCHY_ALGORITHM_H
-#define LAR_MLP_NEUTRINO_HIERARCHY_ALGORITHM_H 1
+#ifndef LAR_DL_NEUTRINO_HIERARCHY_ALGORITHM_H
+#define LAR_DL_NEUTRINO_HIERARCHY_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "larpandoradlcontent/LArCheating/MLPCheatHierarchyTool.h"
+#include "larpandoradlcontent/LArCheating/DLCheatHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPLaterTierHierarchyTool.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLLaterTierHierarchyTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.h"
 
 using namespace lar_content;
 
@@ -26,20 +26,20 @@ namespace lar_dl_content
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  MLPNeutrinoHierarchyAlgorithm class
+ *  @brief  DLNeutrinoHierarchyAlgorithm class
  */
-class MLPNeutrinoHierarchyAlgorithm : public pandora::Algorithm
+class DLNeutrinoHierarchyAlgorithm : public pandora::Algorithm
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    MLPNeutrinoHierarchyAlgorithm();
+    DLNeutrinoHierarchyAlgorithm();
 
     /**
      *  @brief  Default destructor
      */
-    ~MLPNeutrinoHierarchyAlgorithm();
+    ~DLNeutrinoHierarchyAlgorithm();
 
 private:
     typedef std::map<const pandora::ParticleFlowObject*, const pandora::MCParticle*> PfoToMCParticleMap;
@@ -146,7 +146,7 @@ private:
 
     void FillPrimaryTree(const std::string &treeName, const bool isTrainingLink, const bool isTrueLink, const bool isOrientationCorrect, 
         const int trueVisibleGen, const int trueParentID, const int particleID, const pandora::CartesianVector &upstreamVertex,
-        const pandora::CartesianVector &downstreamVertex, const MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams &primaryNetworkParams) const;
+        const pandora::CartesianVector &downstreamVertex, const DLPrimaryHierarchyTool::DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     void FillLaterTierTrees(const PfoToMCParticleMap &matchingMap, const ChildToParentPfoMap &childToParentPfoMap,
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
@@ -154,7 +154,7 @@ private:
 
     void FillLaterTierTree(const std::string &treeName, const bool isTrainingLink, const bool isTrueLink, const bool isOrientationCorrect, 
         const int childTrueGen, const std::pair<float, float> &trainingCuts, const int parentID, const int childID,
-        const MLPLaterTierHierarchyTool::MLPLaterTierNetworkParams &networkParams) const;
+        const DLLaterTierHierarchyTool::DLLaterTierNetworkParams &networkParams) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -186,11 +186,11 @@ private:
     float m_primaryThresholdShowerPass2;
     float m_laterTierThresholdTrackPass2;
     float m_laterTierThresholdShowerPass2;
-    MLPPrimaryHierarchyTool *m_primaryHierarchyTool;
-    MLPLaterTierHierarchyTool *m_laterTierHierarchyTool;
-    MLPCheatHierarchyTool *m_cheatHierarchyTool;
+    DLPrimaryHierarchyTool *m_primaryHierarchyTool;
+    DLLaterTierHierarchyTool *m_laterTierHierarchyTool;
+    DLCheatHierarchyTool *m_cheatHierarchyTool;
 };
 
 } // namespace lar_dl_content
 
-#endif // #ifndef LAR_MLP_NEUTRINO_HIERARCHY_ALGORITHM_H
+#endif // #ifndef LAR_DL_NEUTRINO_HIERARCHY_ALGORITHM_H

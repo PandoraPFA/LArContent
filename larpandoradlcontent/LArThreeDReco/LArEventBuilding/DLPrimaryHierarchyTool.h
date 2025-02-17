@@ -1,28 +1,28 @@
 /**
- *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPPrimaryHierarchyTool.h
+ *  @file   larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.h
  *
- *  @brief  Header file for the MLP primary hierarchy tool
+ *  @brief  Header file for the DL primary hierarchy tool
  *
  *  $Log: $
  */
-#ifndef LAR_MLP_PRIMARY_HIERARCHY_TOOL_H
-#define LAR_MLP_PRIMARY_HIERARCHY_TOOL_H 1
+#ifndef LAR_DL_PRIMARY_HIERARCHY_TOOL_H
+#define LAR_DL_PRIMARY_HIERARCHY_TOOL_H 1
 
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/MLPBaseHierarchyTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLBaseHierarchyTool.h"
 
 namespace lar_dl_content
 {
 /**
- *   @brief  MLPPrimaryHierarchyTool to apply the primary hierarchy MLP networks
+ *   @brief  DLPrimaryHierarchyTool to apply the primary hierarchy DL networks
  */
-class MLPPrimaryHierarchyTool : public MLPBaseHierarchyTool
+class DLPrimaryHierarchyTool : public DLBaseHierarchyTool
 {
 public:
-    struct MLPPrimaryNetworkParams  // all floats because they'll be normalised
+    struct DLPrimaryNetworkParams  // all floats because they'll be normalised
     {
         float m_nSpacepoints = -999.f;             ///< the number of 3D spacepoints
         float m_nuSeparation = -999.f;             ///< the sep. between the POI and the nu vertex 
@@ -33,11 +33,6 @@ public:
         float m_isPOIClosestToNu = -999.f;         ///< whether the POI is that closest to the nu vertex
         float m_parentConnectionDistance = -999.f; ///< the DCA to the most likely parent pfo endpoint 
         float m_childConnectionDistance = -999.f;  ///< the sep. between the POI and the extension point for m_parentConnectionDistance 
-
-        /**
-         *  @brief  Print the value of the MLPPrimaryNetworkParams 
-         */
-        void Print() const;
 
         /**
          *  @brief  Return the vector of orientation independent primary network parameters
@@ -55,13 +50,13 @@ public:
     };
 
     pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo, 
-        const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<MLPPrimaryNetworkParams> &networkParamVector, 
+        const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<DLPrimaryNetworkParams> &networkParamVector, 
         float &primaryScore);
 
     /**
      *  @brief  Default constructor
      */
-    MLPPrimaryHierarchyTool();
+    DLPrimaryHierarchyTool();
 
     /**
      *  @brief  Calculate the variables describing the extension of a child particle to a given parent 
@@ -82,7 +77,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Function to calculate the MLPPrimaryNetworkParams
+     *  @brief  Function to calculate the DLPrimaryNetworkParams
      *
      *  @param  pAlgorithm a pointer to the pandora algorithm
      *  @param  hierarchyPfo the input hierarchy pfo object
@@ -95,10 +90,10 @@ private:
      */
     pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const bool useUpstream, 
-        MLPPrimaryNetworkParams &primaryNetworkParams) const;
+        DLPrimaryNetworkParams &primaryNetworkParams) const;
   
     /**
-     *  @brief  Set the vertex region MLPPrimaryNetworkParams params
+     *  @brief  Set the vertex region DLPrimaryNetworkParams params
      *          (m_vertexRegionNHits, m_vertexRegionNParticles)
      *
      *  @param  pAlgorithm a pointer to the pandora algorithm
@@ -107,10 +102,10 @@ private:
      *  @param  primaryNetworkParams the primary network parameters
      */
     void SetVertexRegionParams(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, 
-        const pandora::CartesianVector &particleVertex, MLPPrimaryNetworkParams &primaryNetworkParams) const;
+        const pandora::CartesianVector &particleVertex, DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     /**
-     *  @brief  Set the connection region MLPPrimaryNetworkParams params
+     *  @brief  Set the connection region DLPrimaryNetworkParams params
      *          (m_dca, m_connectionExtrapDistance)
      *
      *  @param  particleVertex the position of the pfo vertex
@@ -119,10 +114,10 @@ private:
      *  @param  primaryNetworkParams the primary network parameters
      */
     void SetConnectionParams(const pandora::CartesianVector &particleVertex, const pandora::CartesianVector &particleDirection, 
-        const pandora::CartesianVector &nuVertex, MLPPrimaryNetworkParams &primaryNetworkParams) const;
+        const pandora::CartesianVector &nuVertex, DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     /**
-     *  @brief  Set the event context MLPPrimaryNetworkParams params
+     *  @brief  Set the event context DLPrimaryNetworkParams params
      *          (m_parentConnectionDistance, m_childConnectionDistance)
      *
      *  @param  pPfo a pointer to the input pfo
@@ -134,14 +129,14 @@ private:
      */
     void SetContextParams(const pandora::ParticleFlowObject *const pPfo, const pandora::CartesianVector &particleVertex, 
         const pandora::CartesianVector &particleDirection, const pandora::CartesianVector &nuVertex, 
-        const HierarchyPfoMap &trackPfos, MLPPrimaryNetworkParams &primaryNetworkParams) const;
+        const HierarchyPfoMap &trackPfos, DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     /**
      *  @brief  Shift and normalise the primary network parameters
      *
      *  @param  primaryNetworkParam the input primary network parameters
      */
-    void NormaliseNetworkParams(MLPPrimaryNetworkParams &primaryNetworkParams) const;
+    void NormaliseNetworkParams(DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     /**
      *  @brief  Apply the primary track classification network
@@ -151,7 +146,7 @@ private:
      *
      *  @return the network score
      */
-    float ClassifyTrack(const MLPPrimaryNetworkParams &edgeParamsUp, const MLPPrimaryNetworkParams &edgeParamsDown);
+    float ClassifyTrack(const DLPrimaryNetworkParams &edgeParamsUp, const DLPrimaryNetworkParams &edgeParamsDown);
 
     /**
      *  @brief  Apply the primary track orientation edge network - determine whether an edge is
@@ -162,8 +157,8 @@ private:
      *
      *  @return the float vector of (signal, wrong orientation, background) scores
      */
-    pandora::FloatVector ClassifyTrackEdge(const MLPPrimaryNetworkParams &edgeParams, 
-        const MLPPrimaryNetworkParams &otherEdgeParams);
+    pandora::FloatVector ClassifyTrackEdge(const DLPrimaryNetworkParams &edgeParams, 
+        const DLPrimaryNetworkParams &otherEdgeParams);
 
     /**
      *  @brief  Apply the primary shower classification network
@@ -172,7 +167,7 @@ private:
      *
      *  @return the network score
      */
-    float ClassifyShower(const MLPPrimaryNetworkParams &primaryNetworkParams);
+    float ClassifyShower(const DLPrimaryNetworkParams &primaryNetworkParams);
 
     // For model
     bool m_trainingMode;                                    ///< whether to run the tool in training mode
@@ -206,29 +201,14 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
- inline void MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams::Print() const
-{
-    std::cout << "IsPOIClosestToNu: " << m_isPOIClosestToNu << std::endl;
-    std::cout << "NSpacepoints: " << m_nSpacepoints << std::endl;
-    std::cout << "NuVertexSep: " << m_nuSeparation << std::endl;
-    std::cout << "StartRegionNHits: " << m_vertexRegionNHits << std::endl;
-    std::cout << "StartRegionNParticles: " << m_vertexRegionNParticles << std::endl;
-    std::cout << "DCA: " << m_dca << std::endl;
-    std::cout << "ExtrapDistance: " << m_connectionExtrapDistance << std::endl;
-    std::cout << "parentConnectionDistance: " << m_parentConnectionDistance << std::endl;
-    std::cout << "childConnectionDistance: " << m_childConnectionDistance << std::endl;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::FloatVector MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams::GetCommonParamsForModel() const
+inline pandora::FloatVector DLPrimaryHierarchyTool::DLPrimaryNetworkParams::GetCommonParamsForModel() const
 {
     return { m_nSpacepoints };
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::FloatVector MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams::GetOrientationParamsForModel() const
+inline pandora::FloatVector DLPrimaryHierarchyTool::DLPrimaryNetworkParams::GetOrientationParamsForModel() const
 {
     return { m_nuSeparation, m_vertexRegionNHits, m_vertexRegionNParticles, m_dca, m_connectionExtrapDistance, 
             m_isPOIClosestToNu, m_parentConnectionDistance, m_childConnectionDistance };
@@ -238,4 +218,4 @@ inline pandora::FloatVector MLPPrimaryHierarchyTool::MLPPrimaryNetworkParams::Ge
 
 } // namespace lar_dl_content
 
-#endif // #ifndef LAR_MLP_PRIMARY_HIERARCHY_TOOL_H
+#endif // #ifndef LAR_DL_PRIMARY_HIERARCHY_TOOL_H
