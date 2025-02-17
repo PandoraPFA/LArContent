@@ -124,7 +124,7 @@ private:
      *  @brief  Construct a particle hierarhcy based on the key topological features in an event
      *
      *  @param  pParticle The parent particle relative to which the hierarchy should be constructed
-     *  @param  pRootMC The underlying MC particle associated with the parent particle 
+     *  @param  pRootMC The underlying MC particle associated with the parent particle
      */
     void ConstructVisibleHierarchy(Particle *pParticle, const pandora::MCParticle *const pRootMC);
 

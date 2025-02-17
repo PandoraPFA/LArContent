@@ -30,8 +30,8 @@ public:
     std::string ToString() const;
 
 private:
-    pandora::CartesianVector m_pos; ///< Calculated 3D position
-    float m_chi2;                   ///< Chi squared of calculated position
+    pandora::CartesianVector m_pos;             ///< Calculated 3D position
+    float m_chi2;                               ///< Chi squared of calculated position
     pandora::CartesianPointVector m_components; ///< The 2D vertices that contributed to the 3D vertex
 };
 

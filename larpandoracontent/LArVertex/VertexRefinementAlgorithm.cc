@@ -37,7 +37,8 @@ StatusCode VertexRefinementAlgorithm::Run()
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Vertex>(*this, originalListName));
 
     const VertexList *pInputVertexList{nullptr};
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pInputVertexList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pInputVertexList));
 
     if (!pInputVertexList || pInputVertexList->empty())
     {
@@ -208,7 +209,7 @@ CartesianVector VertexRefinementAlgorithm::RefineVertexTwoD(const CaloHitList &c
             {
                 const float theta0{std::max(lo, static_cast<float>(b))}, theta1{std::min(hi, static_cast<float>(b + 1))};
                 const float frac{(theta1 - theta0) / arc};
-                counts(b) += frac;// * rWeightVector(i);
+                counts(b) += frac;                                                       // * rWeightVector(i);
                 counts2(b > (nBins >> 1) ? b - (nBins >> 1) : b + (nBins >> 1)) -= frac; // * rWeightVector(i);
             }
         }
@@ -221,7 +222,7 @@ CartesianVector VertexRefinementAlgorithm::RefineVertexTwoD(const CaloHitList &c
         if (results(r) > best)
         {
             best = results(r);
-/*            std::cout << "Total: " << results(r) << std::endl;
+            /*            std::cout << "Total: " << results(r) << std::endl;
 
             PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHitList, "near", BLACK));
@@ -257,7 +258,8 @@ StatusCode VertexRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryVertexListName", m_primaryVertexListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "HitRadii", m_hitRadii));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VetoPrimaryRegion", m_vetoPrimaryRegion));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VetoPrimaryRegion", m_vetoPrimaryRegion));
 
     return STATUS_CODE_SUCCESS;
 }

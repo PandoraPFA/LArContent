@@ -58,12 +58,12 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string m_caloHitListName; ///< The name of the input calo hit list
-    std::string m_inputVertexListName; ///< The initial vertex list
-    std::string m_outputVertexListName; ///< The refined vertex list to be outputted
+    std::string m_caloHitListName;       ///< The name of the input calo hit list
+    std::string m_inputVertexListName;   ///< The initial vertex list
+    std::string m_outputVertexListName;  ///< The refined vertex list to be outputted
     std::string m_primaryVertexListName; ///< The primary vertex list
 
-    float m_hitRadii; ///< The search radius to collect hits around the vertex
+    float m_hitRadii;         ///< The search radius to collect hits around the vertex
     bool m_vetoPrimaryRegion; ///< Avoid refinements in the vicinity of the primary vertex
 };
 

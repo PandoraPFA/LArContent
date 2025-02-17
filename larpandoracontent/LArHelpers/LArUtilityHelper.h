@@ -30,7 +30,7 @@ public:
      *  @return The order of indices determined by the sort operation
      */
     template <typename T, typename Comparison>
-    static std::vector<std::size_t> GetSortIndices(const std::vector<T>& input, Comparison& compare);
+    static std::vector<std::size_t> GetSortIndices(const std::vector<T> &input, Comparison &compare);
 
     /**
      *  @brief  Sort a vector in place based on a supplied index ordering
@@ -38,24 +38,23 @@ public:
      *  @param  order the index ordering that should be applied to the vector
      *  @param  vector the vector to be sorted in place
      */
-	template <typename T>
-	static void SortByIndices(const std::vector<std::size_t>& order, std::vector<T>& vector);
+    template <typename T>
+    static void SortByIndices(const std::vector<std::size_t> &order, std::vector<T> &vector);
 };
 
 // ATTN templated static functions need to be defined in the header file or you get a "used by not defined" error
 template <typename T, typename Comparison>
-std::vector<std::size_t> LArUtilityHelper::GetSortIndices(const std::vector<T>& input, Comparison& compare)
+std::vector<std::size_t> LArUtilityHelper::GetSortIndices(const std::vector<T> &input, Comparison &compare)
 {
     std::vector<std::size_t> order(input.size());
     std::iota(order.begin(), order.end(), 0);
-    std::sort(order.begin(), order.end(),
-        [&](std::size_t i, std::size_t j){ return compare(input[i], input[j]); });
+    std::sort(order.begin(), order.end(), [&](std::size_t i, std::size_t j) { return compare(input[i], input[j]); });
 
     return order;
 }
 
 template <typename T>
-void LArUtilityHelper::SortByIndices(const std::vector<std::size_t>& order, std::vector<T>& vector)
+void LArUtilityHelper::SortByIndices(const std::vector<std::size_t> &order, std::vector<T> &vector)
 {
     std::vector<bool> done(vector.size());
     for (std::size_t i = 0; i < vector.size(); ++i)

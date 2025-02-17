@@ -22,7 +22,7 @@ namespace lar_content
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<class T>
+template <class T>
 void LArEigenHelper::Vectorize(const T &caloHitContainer, Eigen::MatrixXf &hitMatrix)
 {
     int i{0};
@@ -37,7 +37,7 @@ void LArEigenHelper::Vectorize(const T &caloHitContainer, Eigen::MatrixXf &hitMa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<class T>
+template <class T>
 void LArEigenHelper::Vectorize(const T &caloHitContainer, Eigen::MatrixXf &centre, Eigen::MatrixXf &low, Eigen::MatrixXf &high)
 {
     LArEigenHelper::Vectorize(caloHitContainer, centre);
@@ -76,4 +76,3 @@ template void LArEigenHelper::Vectorize(const CaloHitList &, Eigen::MatrixXf &, 
 template void LArEigenHelper::Vectorize(const CaloHitVector &, Eigen::MatrixXf &, Eigen::MatrixXf &, Eigen::MatrixXf &);
 
 } // namespace lar_content
-

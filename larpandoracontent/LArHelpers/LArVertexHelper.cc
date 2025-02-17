@@ -124,7 +124,8 @@ void LArVertexHelper::GetTrueVertexPosition(const CartesianVector &trueVertex, f
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void LArVertexHelper::GetTrueVertexPosition(const CartesianVector &trueVertex, const LArTransformationPlugin *const pTransform, float &x, float &u, float &v, float &w)
+void LArVertexHelper::GetTrueVertexPosition(
+    const CartesianVector &trueVertex, const LArTransformationPlugin *const pTransform, float &x, float &u, float &v, float &w)
 {
     x = trueVertex.GetX();
     u = static_cast<float>(pTransform->YZtoU(trueVertex.GetY(), trueVertex.GetZ()));

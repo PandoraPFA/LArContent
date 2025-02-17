@@ -244,7 +244,8 @@ StatusCode DlSecondaryVertexingAlgorithm::Infer()
             {
                 const int inner{static_cast<int>(std::round(std::ceil(scaleFactor * m_thresholds[cls - 1])))};
                 const int outer{static_cast<int>(std::round(std::ceil(scaleFactor * m_thresholds[cls])))};
-                LArCanvasHelper::DrawRing(canvases[view]->m_canvas, row + rowOffset, col + colOffset, inner, outer, 1.f / (outer * outer - inner * inner));
+                LArCanvasHelper::DrawRing(
+                    canvases[view]->m_canvas, row + rowOffset, col + colOffset, inner, outer, 1.f / (outer * outer - inner * inner));
             }
         }
     }
@@ -339,7 +340,7 @@ StatusCode DlSecondaryVertexingAlgorithm::GetNetworkVertices(const CanvasViewMap
 
     std::vector<VertexTuple> vertexTuples;
     int nEmptyLists{(verticesU.empty() ? 1 : 0) + (verticesV.empty() ? 1 : 0) + (verticesW.empty() ? 1 : 0)};
-    
+
     if (nEmptyLists == 0)
     {
         for (const CartesianVector &vertexU : verticesU)
@@ -508,7 +509,7 @@ StatusCode DlSecondaryVertexingAlgorithm::GetVerticesFromCanvas(const Canvas &ca
             bool hasLowNeighbour{false};
             for (int dr = -1; dr <= 1; ++dr)
             {
-                for (int dc = -1; dc <=1; ++dc)
+                for (int dc = -1; dc <= 1; ++dc)
                 {
                     if (dr == 0 && dc == 0)
                         continue;
@@ -559,10 +560,10 @@ StatusCode DlSecondaryVertexingAlgorithm::GetVerticesFromCanvas(const Canvas &ca
 
 bool DlSecondaryVertexingAlgorithm::GrowPeak(const Canvas &canvas, int col, int row, float intensity, std::vector<std::pair<int, int>> &peak) const
 {
-//    if (col >= 0 && col < canvas.m_width && row >= 0 && row < canvas.m_height)
-//    {
-//        std::cout << "Visited: " << canvas.m_visited[row][col] << " " << 
-//    }
+    //    if (col >= 0 && col < canvas.m_width && row >= 0 && row < canvas.m_height)
+    //    {
+    //        std::cout << "Visited: " << canvas.m_visited[row][col] << " " <<
+    //    }
     if (col < 0 || col >= canvas.m_width || row < 0 || row >= canvas.m_height || canvas.m_visited[row][col] || canvas.m_canvas[row][col] < intensity)
         return false;
 
@@ -670,8 +671,8 @@ StatusCode DlSecondaryVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHand
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-DlSecondaryVertexingAlgorithm::Canvas::Canvas(const HitType view, const int width, const int height, const int colOffset, const int rowOffset,
-    const float xMin, const float xMax, const float zMin, const float zMax) :
+DlSecondaryVertexingAlgorithm::Canvas::Canvas(const HitType view, const int width, const int height, const int colOffset,
+    const int rowOffset, const float xMin, const float xMax, const float zMin, const float zMax) :
     m_view{view},
     m_width{width},
     m_height{height},
@@ -682,8 +683,8 @@ DlSecondaryVertexingAlgorithm::Canvas::Canvas(const HitType view, const int widt
     m_zMin{zMin},
     m_zMax{zMax}
 {
-    m_canvas = new float*[m_height];
-    m_visited = new bool*[m_height];
+    m_canvas = new float *[m_height];
+    m_visited = new bool *[m_height];
     for (int r = 0; r < m_height; ++r)
     {
         m_canvas[r] = new float[m_width]{};
@@ -705,4 +706,3 @@ DlSecondaryVertexingAlgorithm::Canvas::~Canvas()
 }
 
 } // namespace lar_dl_content
-

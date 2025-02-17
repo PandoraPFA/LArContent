@@ -273,21 +273,22 @@ StatusCode VertexMonitoringAlgorithm::AssessSecondaryVertices() const
 
         if (m_visualise)
         {
-            std::cout << "(" << matches.back().first.GetX() << "," << matches.back().first.GetY() << "," << matches.back().first.GetZ() << ")" <<
-                " == " << matches.back().second.GetX() << "," << matches.back().second.GetY() << "," << matches.back().second.GetZ() << std::endl;
+            std::cout << "(" << matches.back().first.GetX() << "," << matches.back().first.GetY() << "," << matches.back().first.GetZ() << ")"
+                      << " == " << matches.back().second.GetX() << "," << matches.back().second.GetY() << ","
+                      << matches.back().second.GetZ() << std::endl;
             const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
-            const CartesianVector ur(matches.back().first.GetX(), 0.f, static_cast<float>(transform->YZtoU(matches.back().first.GetY(),
-                matches.back().first.GetZ())));
-            const CartesianVector vr(matches.back().first.GetX(), 0.f, static_cast<float>(transform->YZtoV(matches.back().first.GetY(),
-                matches.back().first.GetZ())));
-            const CartesianVector wr(matches.back().first.GetX(), 0.f, static_cast<float>(transform->YZtoW(matches.back().second.GetY(),
-                matches.back().first.GetZ())));
-            const CartesianVector ut(matches.back().second.GetX(), 0.f, static_cast<float>(transform->YZtoU(matches.back().second.GetY(),
-                matches.back().second.GetZ())));
-            const CartesianVector vt(matches.back().second.GetX(), 0.f, static_cast<float>(transform->YZtoV(matches.back().second.GetY(),
-                matches.back().second.GetZ())));
-            const CartesianVector wt(matches.back().second.GetX(), 0.f, static_cast<float>(transform->YZtoW(matches.back().second.GetY(),
-                matches.back().second.GetZ())));
+            const CartesianVector ur(matches.back().first.GetX(), 0.f,
+                static_cast<float>(transform->YZtoU(matches.back().first.GetY(), matches.back().first.GetZ())));
+            const CartesianVector vr(matches.back().first.GetX(), 0.f,
+                static_cast<float>(transform->YZtoV(matches.back().first.GetY(), matches.back().first.GetZ())));
+            const CartesianVector wr(matches.back().first.GetX(), 0.f,
+                static_cast<float>(transform->YZtoW(matches.back().second.GetY(), matches.back().first.GetZ())));
+            const CartesianVector ut(matches.back().second.GetX(), 0.f,
+                static_cast<float>(transform->YZtoU(matches.back().second.GetY(), matches.back().second.GetZ())));
+            const CartesianVector vt(matches.back().second.GetX(), 0.f,
+                static_cast<float>(transform->YZtoV(matches.back().second.GetY(), matches.back().second.GetZ())));
+            const CartesianVector wt(matches.back().second.GetX(), 0.f,
+                static_cast<float>(transform->YZtoW(matches.back().second.GetY(), matches.back().second.GetZ())));
 
             PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
             PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &ur, "Ur", RED, 1));

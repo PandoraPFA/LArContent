@@ -77,7 +77,8 @@ public:
      *  @param  v The output channel coordinate in the V plane
      *  @param  w The output channel coordinate in the W plane
      */
-    static void GetTrueVertexPosition(const pandora::CartesianVector &vertex, const pandora::LArTransformationPlugin *const pTransform, float &x, float &u, float &v, float &w);
+    static void GetTrueVertexPosition(const pandora::CartesianVector &vertex, const pandora::LArTransformationPlugin *const pTransform,
+        float &x, float &u, float &v, float &w);
 };
 
 } // namespace lar_content
