@@ -126,12 +126,12 @@ private:
      */
     pandora::StatusCode MakeCandidateVertexList(const pandora::CartesianPointVector &positions);
 
-    int m_event;                              ///< The current event number
-    bool m_visualise;                         ///< Whether or not to visualise the candidate vertices
-    bool m_writeTree;                         ///< Whether or not to write validation details to a ROOT tree
-    std::string m_rootTreeName;               ///< The ROOT tree name
-    std::string m_rootFileName;               ///< The ROOT file name
-    std::mt19937 m_rng;                       ///< The random number generator
+    int m_event;                ///< The current event number
+    bool m_visualise;           ///< Whether or not to visualise the candidate vertices
+    bool m_writeTree;           ///< Whether or not to write validation details to a ROOT tree
+    std::string m_rootTreeName; ///< The ROOT tree name
+    std::string m_rootFileName; ///< The ROOT file name
+    std::mt19937 m_rng;         ///< The random number generator
 };
 
 } // namespace lar_dl_content

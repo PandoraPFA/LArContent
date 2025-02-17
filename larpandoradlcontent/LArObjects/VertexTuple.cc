@@ -16,8 +16,7 @@ using namespace lar_content;
 namespace lar_dl_content
 {
 
-VertexTuple::VertexTuple(const Pandora &pandora, const CartesianVector &vertexU, const CartesianVector &vertexV,
-    const CartesianVector &vertexW) :
+VertexTuple::VertexTuple(const Pandora &pandora, const CartesianVector &vertexU, const CartesianVector &vertexV, const CartesianVector &vertexW) :
     m_pos{0.f, 0.f, 0.f},
     m_chi2{0.f}
 {
@@ -41,7 +40,7 @@ VertexTuple::VertexTuple(const Pandora &pandora, const CartesianVector &vertexU,
         CartesianVector vertexVW(0.f, 0.f, 0.f);
         float chi2VW{0.f};
         LArGeometryHelper::MergeTwoPositions3D(pandora, TPC_VIEW_V, TPC_VIEW_W, vertexV, vertexW, vertexVW, chi2VW);
-         
+
         if (chi2UV < m_chi2)
         {
             m_pos = vertexUV;
@@ -110,4 +109,3 @@ std::string VertexTuple::ToString() const
 }
 
 } // namespace lar_dl_content
-

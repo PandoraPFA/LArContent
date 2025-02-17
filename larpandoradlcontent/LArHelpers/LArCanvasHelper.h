@@ -56,4 +56,3 @@ public:
 } // namespace lar_dl_content
 
 #endif // #ifndef LAR_CANVAS_HELPER_H
-

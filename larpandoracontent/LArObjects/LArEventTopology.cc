@@ -81,7 +81,7 @@ void LArEventTopology::GetVertices(CartesianPointVector &vertices) const
         }
     }
 
-    for (auto iter = vertices.begin(); iter != vertices.end(); )
+    for (auto iter = vertices.begin(); iter != vertices.end();)
     {
         if (std::find(forRemoval.begin(), forRemoval.end(), *iter) != forRemoval.end())
             iter = vertices.erase(iter);
@@ -129,7 +129,8 @@ void LArEventTopology::PruneHierarchy()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArEventTopology::Particle::Particle(const MCParticle *const pRoot) : m_fold{false}
+LArEventTopology::Particle::Particle(const MCParticle *const pRoot) :
+    m_fold{false}
 {
     m_particles.emplace_back(pRoot);
 }
@@ -258,7 +259,7 @@ void LArEventTopology::Particle::Prune()
         pChild->Prune();
 
     std::list<Particle> toPrune;
-    for (auto iter = m_children.begin(); iter != m_children.end(); )
+    for (auto iter = m_children.begin(); iter != m_children.end();)
     {
         if ((*iter)->m_fold && (*iter)->m_children.empty())
             iter = m_children.erase(iter);
@@ -266,7 +267,6 @@ void LArEventTopology::Particle::Prune()
             ++iter;
     }
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -292,7 +292,7 @@ const std::string LArEventTopology::Particle::Print(const MCHitMap &mcHitMap, co
                 break;
         }
     }
-    
+
     std::ostringstream os;
     os << indent << pMC->GetParticleId() << ": E: " << pMC->GetEnergy() << " GeV";
     os << " (" << uHits << "," << vHits << "," << wHits << ") " << (m_fold ? "[fold]" : "") << "\n";
@@ -303,4 +303,3 @@ const std::string LArEventTopology::Particle::Print(const MCHitMap &mcHitMap, co
 }
 
 } // namespace lar_content
-

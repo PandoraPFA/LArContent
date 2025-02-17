@@ -56,4 +56,3 @@ public:
 } // namespace lar_content
 
 #endif // #ifndef LAR_EIGEN_HELPER_H
-

@@ -557,4 +557,3 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 }
 
 } // namespace lar_dl_content
-
