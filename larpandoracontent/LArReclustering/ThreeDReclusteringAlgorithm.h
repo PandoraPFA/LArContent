@@ -132,20 +132,22 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    ClusteringToolVector m_algorithmToolVector; ///< The reclustering algorithm tool vector
-    std::string m_pfoListName;                  ///< Name of the list of pfos to consider for reclustering
-    std::string m_clusterListName;              ///< Name of the list of clusters to consider for reclustering
-    pandora::StringVector m_figureOfMeritNames; ///< The names of the figures of merit to use
-    std::string m_pfosForReclusteringListName;  ///< Name of the internal list to contain new Pfos before/after reclustering
-    std::string m_mcParticleListName;           ///< The mc particle list name
-    float m_fomThresholdForReclustering;        ///< A threshold on the minimum figure of merit for reclustering
-    long unsigned int m_minNumCaloHitsForReclustering;
-    std::string m_uClustersListName;
-    std::string m_vClustersListName;
-    std::string m_wClustersListName;                                                                 //Names of U,V and W cluster lists
-    std::map<int, const pandora::Cluster *> m_newClustersUMap, m_newClustersVMap, m_newClustersWMap; ///< Per-view maps associating new 3D clusters with new 2D clusters
+    ClusteringToolVector m_algorithmToolVector;                ///< The reclustering algorithm tool vector
+    std::string m_pfoListName;                                 ///< Name of the list of pfos to consider for reclustering
+    std::string m_clusterListName;                             ///< Name of the list of clusters to consider for reclustering
+    pandora::StringVector m_figureOfMeritNames;                ///< The names of the figures of merit to use
+    std::string m_pfosForReclusteringListName;                 ///< Name of the internal list to contain new Pfos before/after reclustering
+    std::string m_mcParticleListName;                          ///< The mc particle list name
+    float m_fomThresholdForReclustering;                       ///< A threshold on the minimum figure of merit for reclustering
+    long unsigned int m_minNumCaloHitsForReclustering;         ///< Minimum number of 3D hits in the pfo for reclustering
+    std::string m_uClustersListName;                           ///
+    std::string m_vClustersListName;                           ///
+    std::string m_wClustersListName;                           ///< Names of U,V and W cluster lists
+    std::map<int, const pandora::Cluster *> m_newClustersUMap; ///
+    std::map<int, const pandora::Cluster *> m_newClustersVMap; ///
+    std::map<int, const pandora::Cluster *> m_newClustersWMap; ///< Per-view maps associating new 3D clusters with new 2D clusters
 
-    static const std::unordered_map<std::string, ThreeDReclusteringAlgorithm::FigureOfMeritType> m_stringToEnumMap; //Figure of merit type enum to string map
+    static const std::unordered_map<std::string, ThreeDReclusteringAlgorithm::FigureOfMeritType> m_stringToEnumMap; ///< String to figure of merit type enum
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

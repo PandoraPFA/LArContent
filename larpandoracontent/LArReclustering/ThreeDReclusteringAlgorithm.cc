@@ -28,8 +28,6 @@ const std::unordered_map<std::string, ThreeDReclusteringAlgorithm::FigureOfMerit
     {"cheated", ThreeDReclusteringAlgorithm::FigureOfMeritType::CHEATED}};
 
 ThreeDReclusteringAlgorithm::ThreeDReclusteringAlgorithm() :
-    m_pfoListName("ShowerParticles3D"),
-    m_clusterListName("ShowerClusters3D"),
     m_fomThresholdForReclustering(0.3),
     m_minNumCaloHitsForReclustering(2),
     m_uClustersListName("ClustersU"),
@@ -48,37 +46,32 @@ ThreeDReclusteringAlgorithm::~ThreeDReclusteringAlgorithm()
 
 StatusCode ThreeDReclusteringAlgorithm::Run()
 {
-    //Only proceed if successfuly get shower pfo list, and it has at least one pfo
-    const PfoList *pShowerPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_pfoListName, pShowerPfoList));
-    if (!pShowerPfoList)
+    //Only proceed if successfuly get pfo list, and it has at least one pfo
+    const PfoList *pPfoList(nullptr);
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
+    if (!pPfoList || pPfoList->empty())
         return STATUS_CODE_SUCCESS;
 
-    if (pShowerPfoList->empty())
-        return STATUS_CODE_SUCCESS;
-
-    m_pfosForReclusteringListName = "newShowerParticles3D";
+    m_pfosForReclusteringListName = "newParticles3D";
     PfoList changedPfoList;
 
     //Save current pfo list name, so that this can be set as current again at the end of reclustering
     std::string initialPfoListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Pfo>(*this, initialPfoListName));
 
-    //Some pfos are shower-like and yet include track-like 3D clusters. For the moment I don't want to deal with these.
-    const ClusterList *pShowerClusters(nullptr);
-    PandoraContentApi::GetList(*this, m_clusterListName, pShowerClusters);
-
-    if (!pShowerClusters)
+    const ClusterList *pClusters(nullptr);
+    PandoraContentApi::GetList(*this, m_clusterListName, pClusters);
+    if (!pClusters)
         return STATUS_CODE_NOT_FOUND;
 
-    for (const Pfo *const pShowerPfo : *pShowerPfoList)
+    for (const Pfo *const pPfo : *pPfoList)
     {
         ClusterList clusterList3D;
-        LArPfoHelper::GetThreeDClusterList(pShowerPfo, clusterList3D);
+        LArPfoHelper::GetThreeDClusterList(pPfo, clusterList3D);
 
-        //Check if pfo passes cuts for reclustering. Also, some pfos are shower-like and yet are made of track-like 3D clusters. For the moment I don't want to deal with these.
-        if ((!this->PassesCutsForReclustering(pShowerPfo)) ||
-            (pShowerClusters->end() == std::find(pShowerClusters->begin(), pShowerClusters->end(), clusterList3D.front())))
+        //Check if pfo passes cuts for reclustering. Also, some pfos are track/shower-like and yet are made of shower/track-like 3D clusters. For the moment I don't want to deal with these.
+        if ((!this->PassesCutsForReclustering(pPfo)) ||
+            (pClusters->end() == std::find(pClusters->begin(), pClusters->end(), clusterList3D.front())))
             continue;
 
         CaloHitList initialCaloHitList;
@@ -88,7 +81,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
         float minimumFigureOfMerit(this->GetFigureOfMerit(initialCaloHitList));
 
         //Free the hits in this cluster, so that they are not owned by the original pfo, and are available for reclustering
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pShowerPfo, clusterList3D.front()));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pPfo, clusterList3D.front()));
 
         // Initialize reclustering with these local lists
         std::string currentClustersListName;
@@ -126,7 +119,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
         //If the new best calo hit lists outcome is equivalent to original, return the clusters to it. Else, create new vector of 3D clusters
         if ((minimumFigureOfMeritCaloHitListsVector.size() == 1) && (minimumFigureOfMeritCaloHitListsVector.at(0) == initialCaloHitList))
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pShowerPfo, clusterList3D.front()));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo, clusterList3D.front()));
             continue;
         }
 
@@ -145,17 +138,17 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
             newClustersList.push_back(pCluster);
         }
-
+        
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildPfo(pShowerPfo, newClustersList));
-        changedPfoList.push_back(pShowerPfo);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildPfo(pPfo, newClustersList));
+        changedPfoList.push_back(pPfo);
         newCaloHitListsVector.clear();
     }
     // Delete the original pfos from the reclustering
     for (const auto &pfo : changedPfoList)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Pfo>(*this, pfo, m_pfoListName));
     // Any remaining pfos (those that didnt undergo reclustering) get moved to the new pfo list
-    if (!pShowerPfoList->empty())
+    if (!pPfoList->empty())
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_pfoListName, m_pfosForReclusteringListName));
 
     //Save list of Pfos after reclustering and save into list called m_pfoListName
@@ -282,7 +275,7 @@ StatusCode ThreeDReclusteringAlgorithm::BuildNewTwoDClusters(const Pfo *pPfoToRe
 StatusCode ThreeDReclusteringAlgorithm::BuildNewPfos(const Pfo *pPfoToRebuild, ClusterList &newClustersList)
 {
     const PfoList *pNewPfoList(nullptr);
-    std::string newPfoListName = "changedShowerParticles3D";
+    std::string newPfoListName = "changedParticles3D";
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pNewPfoList, newPfoListName));
 
     const std::string originalClusterListName = "InitialCluster";
@@ -345,26 +338,19 @@ StatusCode ThreeDReclusteringAlgorithm::RebuildPfo(const Pfo *pPfoToRebuild, Clu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDReclusteringAlgorithm::PassesCutsForReclustering(const pandora::ParticleFlowObject *const pShowerPfo)
+bool ThreeDReclusteringAlgorithm::PassesCutsForReclustering(const pandora::ParticleFlowObject *const pPfo)
 {
-    if (!LArPfoHelper::IsShower(pShowerPfo))
-        return false;
     ClusterList clusterList3D;
-    LArPfoHelper::GetThreeDClusterList(pShowerPfo, clusterList3D);
+    LArPfoHelper::GetThreeDClusterList(pPfo, clusterList3D);
 
     if (clusterList3D.empty())
         return false;
+
     CaloHitList caloHitList3D;
     clusterList3D.front()->GetOrderedCaloHitList().FillCaloHitList(caloHitList3D);
 
     //Quality cuts
     if (caloHitList3D.size() < m_minNumCaloHitsForReclustering)
-        return false;
-
-    //Some pfos are shower-like and yet include track-like 3D clusters. For the moment I don't want to deal with these.
-    const ClusterList *pShowerClusters(nullptr);
-    PandoraContentApi::GetList(*this, m_clusterListName, pShowerClusters);
-    if (!pShowerClusters)
         return false;
 
     if (this->GetFigureOfMerit(caloHitList3D) < m_fomThresholdForReclustering)
@@ -481,8 +467,8 @@ StatusCode ThreeDReclusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "FigureOfMeritNames", m_figureOfMeritNames));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListName", m_clusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListName", m_clusterListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "FOMThresholdForReclustering", m_fomThresholdForReclustering));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
