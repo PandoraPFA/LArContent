@@ -60,8 +60,8 @@ DLLaterTierHierarchyTool::DLLaterTierHierarchyTool() :
     m_childCPDCAMax(50.f),
     m_childCPExtrapDistanceMin(-500.f),
     m_childCPExtrapDistanceMax(500.f),
-    m_childCPLRatioMin(-5.f),
-    m_childCPLRatioMax(30.f),
+    m_childCPLRatioMin(-1.f),
+    m_childCPLRatioMax(1.f),
     m_parentCPNHitsMin(-10.f),
     m_parentCPNHitsMax(100.f),
     m_parentCPNHitRatioMin(-5.f),
@@ -78,8 +78,6 @@ DLLaterTierHierarchyTool::DLLaterTierHierarchyTool() :
 StatusCode DLLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfo &parentHierarchyPfo, 
     const HierarchyPfo &childHierarchyPfo, std::vector<DLLaterTierNetworkParams> &networkParamVector, float &laterTierScore)
 {
-    std::cout << "m_vertexRegionRadiusSq: " << m_vertexRegionRadiusSq << std::endl;
-    
     networkParamVector.clear();
     laterTierScore = m_bogusFloat;
 

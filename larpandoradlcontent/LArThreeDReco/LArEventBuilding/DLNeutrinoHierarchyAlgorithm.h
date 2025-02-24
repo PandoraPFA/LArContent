@@ -132,7 +132,7 @@ private:
     bool ShouldTrainOnEvent(const pandora::ParticleFlowObject *const pNeutrinoPfo) const;
 
     void GetParticleIDMap(const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
-        std::map<const pandora::ParticleFlowObject *, int> &particleIDMap);
+        std::map<const pandora::ParticleFlowObject *, int> &particleIDMap) const;
 
     std::pair<float, float> GetTrainingCuts(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo,
         const bool trueParentOrientation, const bool trueChildOrientation) const;
@@ -145,8 +145,8 @@ private:
         const std::map<const pandora::ParticleFlowObject *, int> &particleIDMap, int &nPrimaryTrackLinks, int &nPrimaryShowerLinks) const;
 
     void FillPrimaryTree(const std::string &treeName, const bool isTrainingLink, const bool isTrueLink, const bool isOrientationCorrect, 
-        const int trueVisibleGen, const int trueParentID, const int particleID, const pandora::CartesianVector &upstreamVertex,
-        const pandora::CartesianVector &downstreamVertex, const DLPrimaryHierarchyTool::DLPrimaryNetworkParams &primaryNetworkParams) const;
+        const int trueVisibleGen, const int truePDG, const int trueParentID, const int particleID, 
+        const DLPrimaryHierarchyTool::DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     void FillLaterTierTrees(const PfoToMCParticleMap &matchingMap, const ChildToParentPfoMap &childToParentPfoMap,
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 

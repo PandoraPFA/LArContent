@@ -76,7 +76,9 @@ DLNeutrinoHierarchyAlgorithm::~DLNeutrinoHierarchyAlgorithm()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DLNeutrinoHierarchyAlgorithm::Run()
-{    
+{
+    ++m_eventID;
+    
     // Get neutrino pfo
     const ParticleFlowObject *pNeutrinoPfo(nullptr);
     if (!this->GetNeutrinoPfo(pNeutrinoPfo))
@@ -94,9 +96,10 @@ StatusCode DLNeutrinoHierarchyAlgorithm::Run()
     
     if (m_trainingMode)
     {
-        // Do ID stuff
-        ++m_eventID;
+        if ((trackPfos.empty()) && (showerPfos.empty()))
+            return STATUS_CODE_SUCCESS;
 
+        // Do ID
         std::map<const pandora::ParticleFlowObject *, int> particleIDMap;
         this->GetParticleIDMap(trackPfos, showerPfos, particleIDMap);
         
@@ -127,15 +130,6 @@ StatusCode DLNeutrinoHierarchyAlgorithm::Run()
     Hierarchy hierarchy({PfoVector()});
     this->UpdateHierarchy(pNeutrinoPfo, true, true, m_primaryThresholdTrackPass1, m_primaryThresholdShowerPass1, 
         true, trackPfos, showerPfos, hierarchy);
-
-    // If we didn't find any primaries
-    if (hierarchy.at(0).empty())
-    {
-        // Set everything as primary and leave.
-        this->BuildPandoraHierarchy(pNeutrinoPfo, trackPfos, showerPfos);
-
-        return STATUS_CODE_SUCCESS;
-    }
 
     // Set later tier scores
     this->SetLaterTierScores(pNeutrinoPfo, trackPfos, showerPfos);
@@ -446,6 +440,10 @@ void DLNeutrinoHierarchyAlgorithm::UpdateHierarchy(const ParticleFlowObject *con
     {
         found = false;
 
+        // If building later tiers, check that we do have primaries
+        if (!buildPrimaryTier && hierarchy.at(0).empty())
+            return;
+
         std::vector<const ParticleFlowObject*> &thisTier(hierarchy.at(tierIndex));
 
         for (bool isTrack : {true, false})
@@ -536,7 +534,7 @@ void DLNeutrinoHierarchyAlgorithm::SetLaterTierScores(const ParticleFlowObject *
                 continue;
 
             float highestScore(0.f);
-            int highestNHits(0);
+            float minSep(std::numeric_limits<float>::max());
 
             for (auto& [pParentPfo, parentPfo] : trackPfos)
             {
@@ -546,12 +544,12 @@ void DLNeutrinoHierarchyAlgorithm::SetLaterTierScores(const ParticleFlowObject *
                 const float thisScore(this->GetLaterTierScore(pNeutrinoPfo, parentPfo, childPfo));
 
                 const bool best((std::fabs(thisScore - highestScore) < std::numeric_limits<float>::epsilon()) ?
-                                (this->GetSeparation(pParentPfo, pChildPfo) > highestNHits) : (thisScore > highestScore));
+                                (this->GetSeparation(pParentPfo, pChildPfo) < minSep) : (thisScore > highestScore));
                 
                 if (best)
                 {
                     highestScore = thisScore;
-                    highestNHits = this->GetSeparation(pParentPfo, pChildPfo);
+                    minSep = this->GetSeparation(pParentPfo, pChildPfo);
                     childPfo.SetLaterTierScore(thisScore);
                     childPfo.SetPredictedParentPfo(pParentPfo);
                 }
@@ -674,7 +672,7 @@ bool DLNeutrinoHierarchyAlgorithm::ShouldTrainOnEvent(const ParticleFlowObject *
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLNeutrinoHierarchyAlgorithm::GetParticleIDMap(const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
-    std::map<const ParticleFlowObject *, int> &particleIDMap)
+    std::map<const ParticleFlowObject *, int> &particleIDMap) const
 {
     PfoVector pfoVector;
 
@@ -728,7 +726,7 @@ void DLNeutrinoHierarchyAlgorithm::FillPrimaryTrees(const PfoToMCParticleMap &ma
 
             const int particleID(particleIDMap.at(pPfo));
 
-	    // Is training link?
+            // Is training link?
             bool isNeutronChild(false);
             bool isTrainingLink(isTrainingEvent && !((m_cheatHierarchyTool->IsNeutronChild(pPfo, matchingMap, isNeutronChild) != STATUS_CODE_SUCCESS) || isNeutronChild));
 
@@ -738,10 +736,12 @@ void DLNeutrinoHierarchyAlgorithm::FillPrimaryTrees(const PfoToMCParticleMap &ma
             if (m_cheatHierarchyTool->Run(matchingMap, childToParentPfoMap, pNeutrinoPfo, hierarchyPfo, 
                 isTrueLink, trueChildOrientation) != STATUS_CODE_SUCCESS)
             {
-		continue;
+                continue;
             }
 
             // Get true hierarchy info
+            const MCParticle *const pMCParticle(matchingMap.at(pPfo));
+            const int matchedPDG(pMCParticle->GetParticleId());
             const ParticleFlowObject *const pTrueParentPfo(childToParentPfoMap.at(pPfo).first);
             const int trueVisibleGen(childToParentPfoMap.at(pPfo).second);
 
@@ -754,18 +754,18 @@ void DLNeutrinoHierarchyAlgorithm::FillPrimaryTrees(const PfoToMCParticleMap &ma
                 trueParentID = particleIDMap.at(pTrueParentPfo);
             }
 
-	    // Get reco info
+            // Get reco info
             std::vector<DLPrimaryHierarchyTool::DLPrimaryNetworkParams> networkParamVector;
             float primaryScore(m_bogusFloat);
 
             if (m_primaryHierarchyTool->Run(this, pNeutrinoPfo, trackPfos, hierarchyPfo, networkParamVector, primaryScore) != STATUS_CODE_SUCCESS)
-		continue;
+                continue;
 
             for (const DLPrimaryHierarchyTool::DLPrimaryNetworkParams &networkParams : networkParamVector)
             {
                 const bool useChildUpstream(std::fabs(networkParams.m_isPOIClosestToNu - 1.f) < std::numeric_limits<float>::epsilon());
                 this->FillPrimaryTree(treeName, isTrainingLink, isTrueLink, (useChildUpstream == trueChildOrientation), trueVisibleGen,
-                    trueParentID, particleID, hierarchyPfo.GetUpstreamVertex(), hierarchyPfo.GetDownstreamVertex(), networkParams);
+                    matchedPDG, trueParentID, particleID, networkParams);
                 
                 isTrack ? ++nPrimaryTrackLinks : ++nPrimaryShowerLinks;                
             }
@@ -776,8 +776,7 @@ void DLNeutrinoHierarchyAlgorithm::FillPrimaryTrees(const PfoToMCParticleMap &ma
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLNeutrinoHierarchyAlgorithm::FillPrimaryTree(const std::string &treeName, const bool isTrainingLink, const bool isTrueLink,
-    const bool isOrientationCorrect, const int trueVisibleGen, const int trueParentID, const int particleID,
-    const CartesianVector &upstreamVertex, const CartesianVector &downstreamVertex,
+    const bool isOrientationCorrect, const int trueVisibleGen, const int truePDG, const int trueParentID, const int particleID, 
     const DLPrimaryHierarchyTool::DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "EventID", m_eventID));
@@ -786,13 +785,8 @@ void DLNeutrinoHierarchyAlgorithm::FillPrimaryTree(const std::string &treeName, 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsTrueLink", (isTrueLink ? 1 : 0)));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "IsOrientationCorrect", (isOrientationCorrect ? 1 : 0)));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "TrueVisibleGeneration", trueVisibleGen));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "TruePDG", truePDG));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "TrueVisibleParentID", trueParentID));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "UpstreamVertexX", upstreamVertex.GetX()));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "UpstreamVertexY", upstreamVertex.GetY()));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "UpstreamVertexZ", upstreamVertex.GetZ()));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "DownstreamVertexX", downstreamVertex.GetX()));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "DownstreamVertexY", downstreamVertex.GetY()));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "DownstreamVertexZ", downstreamVertex.GetZ()));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "NSpacepoints", primaryNetworkParams.m_nSpacepoints));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "NuSeparation", primaryNetworkParams.m_nuSeparation));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName.c_str(), "VertexRegionNHits", primaryNetworkParams.m_vertexRegionNHits));
@@ -817,7 +811,7 @@ void DLNeutrinoHierarchyAlgorithm::FillLaterTierTrees(const PfoToMCParticleMap &
     {
         for (const bool isTrack : {true, false})
         {
-  	    const std::string treeName(isTrack ? m_laterTierTrackTrackTreeName : m_laterTierTrackShowerTreeName);	  
+            const std::string treeName(isTrack ? m_laterTierTrackTrackTreeName : m_laterTierTrackShowerTreeName);
             const HierarchyPfoMap &hierarchyPfoMap(isTrack ? trackPfos : showerPfos);
  
             for (const auto& [pChildPfo, hierarchyChildPfo] : hierarchyPfoMap)
@@ -835,7 +829,7 @@ void DLNeutrinoHierarchyAlgorithm::FillLaterTierTrees(const PfoToMCParticleMap &
                 const int parentID(particleIDMap.at(pParentTrackPfo));
                 const int childID(particleIDMap.at(pChildPfo));
 
-		// Get true primary info
+                // Get true primary info
                 bool isTruePrimaryLink(false), tempBool(false);
                 if (m_cheatHierarchyTool->Run(matchingMap, childToParentPfoMap, pNeutrinoPfo, hierarchyChildPfo, 
                     isTruePrimaryLink, tempBool) != STATUS_CODE_SUCCESS)
@@ -843,8 +837,8 @@ void DLNeutrinoHierarchyAlgorithm::FillLaterTierTrees(const PfoToMCParticleMap &
                     continue;
                 }
 
-		// Do not train on child primaries
-		bool isTrainingLink(isTrainingEvent && !isTruePrimaryLink);
+                // Do not train on child primaries
+                bool isTrainingLink(isTrainingEvent && !isTruePrimaryLink);
 
                 // Get the true info
                 // Orientation == true if true start point is at upstream position
@@ -880,14 +874,14 @@ void DLNeutrinoHierarchyAlgorithm::FillLaterTierTrees(const PfoToMCParticleMap &
                         ++nCorrectLinkOrientation;
                 }
 
-		// For training, make sure we have one correct orientation link
+                // For training, make sure we have one correct orientation link
                 isTrainingLink = (isTrainingLink && (nCorrectLinkOrientation == 1));
 
                 // Get training cut info
-		std::pair<float, float> trainingCuts({-999.f, -999.f});
+                std::pair<float, float> trainingCuts({-999.f, -999.f});
 		
-		if (isTrainingLink)
-		  trainingCuts = this->GetTrainingCuts(hierarchyParentTrackPfo, hierarchyChildPfo, trueParentOrientation, trueChildOrientation);
+                if (isTrainingLink)
+                    trainingCuts = this->GetTrainingCuts(hierarchyParentTrackPfo, hierarchyChildPfo, trueParentOrientation, trueChildOrientation);
 
                 for (const DLLaterTierHierarchyTool::DLLaterTierNetworkParams &networkParams : networkParamVector)
                 {
