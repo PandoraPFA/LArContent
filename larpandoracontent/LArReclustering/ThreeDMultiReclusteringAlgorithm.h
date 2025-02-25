@@ -35,35 +35,85 @@ public:
     ~ThreeDMultiReclusteringAlgorithm();
 
 private:
-    float GetRandomFom();
-
     pandora::StatusCode Run();
 
+    /**
+     *  @brief Remove clusters from the pfos and store them them in maps
+     *
+     *  @param pfos pfo list
+     *  @param viewToFreeClusters output map of hit type to list of removed clusters
+     *  @param pfoToFreeClusters output map of original pfo to list of removed clusters
+     */
     pandora::StatusCode FreeClustersFromPfos(const pandora::PfoList &pfos,
                                              std::map<pandora::HitType, pandora::ClusterList> &viewToFreeClusters,
                                              std::map<const pandora::Pfo *const, pandora::ClusterList> &pfoToFreeClusters);
+    /**
+     *  @brief Add clusters to existing pfos according to a map
+     *
+     *  @param pfoToClusters map from pfo to a list of clusters
+     */
+    pandora::StatusCode AddClustersToPfos(std::map<const pandora::Pfo *const, pandora::ClusterList> &pfoToClusters);
 
+    /**
+     *  @brief Delete clusters of a single hit type and store the associated hits in a list
+     *
+     *  @param clusters list of clusters to be deleted
+     *  @param view hit type of the clusters
+     *  @param freeCaloHits output hits of the deleted clusters
+     *  @param freeIsoCaloHits output isolated hits of the deleted clusters
+     */
     pandora::StatusCode FreeCaloHitsFromClusters(const pandora::ClusterList &clusters,
                                                  const pandora::HitType &view,
                                                  pandora::CaloHitList &freeCaloHits,
                                                  pandora::CaloHitList &freeIsoCaloHits);
-
-    pandora::StatusCode GetClusterListName(const pandora::HitType &view, std::string &listName);
-
-    pandora::StatusCode AddClustersToPfos(std::map<const pandora::Pfo *const, pandora::ClusterList> &pfoToClusters);
-
+    /**
+     *  @brief Create new pfos from the reclustered 3D clusters and original 2D hits. The original 2D hits are put into new 2D clusters
+     *         that follow the new 3D clusters,
+     *
+     *  @param clusters3D list of reclustered 3D clusters
+     *  @param viewToFreeCaloHits2D map of hit type to original 2D hits that need to be clustered
+     *  @param viewToFreeIsoCaloHits2D map of hit type to original 2D isolated hits that need to be clustered
+     */
     pandora::StatusCode BuildNewPfos(const pandora::ClusterList &clusters3D,
                                      std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeCaloHits2D,
                                      std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeIsoCaloHits2D);
 
+    /**
+     *  @brief Create 2D clusters following a 3D cluster
+     *
+     *  @param pCluster3D a 3D cluster
+     *  @param viewToFreeCaloHits2D map of hit type to original 2D hits that need to be clustered
+     *  @param viewToFreeIsoCaloHits2D map of hit type to original 2D isolated hits that need to be clustered
+     *  @param newClusters2D output list of newly created 2D clusters
+     */
     pandora::StatusCode Build2DClustersFrom3D(const pandora::Cluster *const pCluster3D,
                                               std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeCaloHits2D,
                                               std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeIsoCaloHits2D,
                                               pandora::ClusterList &newClusters2D);
 
+    /**
+     *  @brief Add hits to their nearest cluster
+     *
+     *  @param caloHits list of 2D hits of the same hit type to be added to nearest cluster
+     *  @param clusters list of 2D clusters of the same hit type as the caloHits to have hits added to them
+     *  @param addAsIso bool for adding the hits as isolated or not
+     */
     pandora::StatusCode MopUpCaloHits(const pandora::CaloHitList &caloHits, const pandora::ClusterList &clusters, bool addAsIso);
 
+    /**
+     *  @brief Create a new pfo from a list of clusters
+     *
+     *  @param clusters list of clusters, expect a 3D and up to 3 2D clusters.
+     */
     pandora::StatusCode CreatePfoFromClusters(const pandora::ClusterList &clusters);
+
+    /**
+     *  @brief Get the cluster list name associated with a hit type
+     *
+     *  @param view hit type
+     *  @param listName output list name
+     */
+    pandora::StatusCode GetClusterListName(const pandora::HitType &view, std::string &listName);
 
     pandora::StatusCode DebugCurrentLists();
 
@@ -80,10 +130,8 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float ThreeDMultiReclusteringAlgorithm::GetRandomFom() { return static_cast<float>(rand()) / RAND_MAX; }
-
 inline pandora::StatusCode ThreeDMultiReclusteringAlgorithm::GetClusterListName(const pandora::HitType &view, std::string &listName)
-{ 
+{
     switch (view)
     {
         case pandora::HitType::TPC_3D:

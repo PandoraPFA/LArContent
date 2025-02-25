@@ -32,119 +32,13 @@ ThreeDMultiReclusteringAlgorithm::~ThreeDMultiReclusteringAlgorithm()
 {
 }
 
-StatusCode ThreeDMultiReclusteringAlgorithm::DebugCurrentLists()
-{
-    const PfoList *pPfos {nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfos));
-    const ClusterList *pClusters3D {nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_cluster3DListName, pClusters3D));
-    const ClusterList *pClustersU {nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_clusterUListName, pClustersU));
-    const ClusterList *pClustersV {nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_clusterVListName, pClustersV));
-    const ClusterList *pClustersW {nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_clusterWListName, pClustersW));
-
-    std::cout << "====\n";
-    std::cout << "--- " << pPfos->size() << " pfos ---\n";
-    int totalCaloHits3D {0}, totalCaloHitsU {0}, totalCaloHitsV {0}, totalCaloHitsW {0};
-    int totalIsoCaloHits3D {0}, totalIsoCaloHitsU {0}, totalIsoCaloHitsV {0}, totalIsoCaloHitsW {0};
-    for (const Pfo *const pPfo : *pPfos)
-    {
-        ClusterList clusters3D;
-        LArPfoHelper::GetClusters(pPfo, TPC_3D, clusters3D);
-        ClusterList clustersU;
-        LArPfoHelper::GetClusters(pPfo, TPC_VIEW_U, clustersU);
-        ClusterList clustersV;
-        LArPfoHelper::GetClusters(pPfo, TPC_VIEW_V, clustersV);
-        ClusterList clustersW;
-        LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, clustersW);
-        std::cout << pPfo << ": " << clusters3D.size() << " - ";
-        if (clusters3D.size() != 0)
-        {
-            std::cout << clusters3D.front()->GetNCaloHits() << " / " << clusters3D.front()->GetNIsolatedCaloHits() << " (";
-            totalCaloHits3D += clusters3D.front()->GetNCaloHits();
-            totalIsoCaloHits3D += clusters3D.front()->GetNIsolatedCaloHits();
-        }
-        else
-            std::cout << "0 / 0 (";
-        if (clustersU.size() != 0)
-        {
-            std::cout << clustersU.size() << " - " << clustersU.front()->GetNCaloHits() << " / " << clustersU.front()->GetNIsolatedCaloHits() << ", ";
-            totalCaloHitsU += clustersU.front()->GetNCaloHits();
-            totalIsoCaloHitsU += clustersU.front()->GetNIsolatedCaloHits();
-        }
-        else
-            std::cout << "0 / 0, ";
-        if (clustersV.size() != 0)
-        {
-            std::cout << clustersV.size() << " - " << clustersV.front()->GetNCaloHits() << " / " << clustersV.front()->GetNIsolatedCaloHits() << ", ";
-            totalCaloHitsV += clustersV.front()->GetNCaloHits();
-            totalIsoCaloHitsV += clustersV.front()->GetNIsolatedCaloHits();
-        }
-        else
-            std::cout << "0 / 0, ";
-        if (clustersW.size() != 0)
-        {
-            std::cout << clustersW.size() << " - " << clustersW.front()->GetNCaloHits() << " / " << clustersW.front()->GetNIsolatedCaloHits() << ")\n";
-            totalCaloHitsW += clustersW.front()->GetNCaloHits();
-            totalIsoCaloHitsW += clustersW.front()->GetNIsolatedCaloHits();
-        }
-        else
-            std::cout << "0 / 0)\n";
-    }
-    std::cout << " ---> total: " << totalCaloHits3D << " / " << totalIsoCaloHits3D << " ("
-                                 << totalCaloHitsU << " / " << totalIsoCaloHitsU << ", "
-                                 << totalCaloHitsV << " / " << totalIsoCaloHitsV << ", "
-                                 << totalCaloHitsW << " / " << totalIsoCaloHitsW << ")\n";
-    std::cout << "--- " << pClusters3D->size() << " 3D clusters ---\n";
-    int totalCaloHits {0}, totalIsoCaloHits {0};
-    for (const Cluster *const pCluster : *pClusters3D)
-    {
-        std::cout << pCluster << ": " << pCluster->GetNCaloHits() << " / " << pCluster->GetNIsolatedCaloHits() << "\n";
-        totalCaloHits += pCluster->GetNCaloHits();
-        totalIsoCaloHits += pCluster->GetNIsolatedCaloHits();
-    }
-    std::cout << " ---> total: " << totalCaloHits << " / " << totalIsoCaloHits << "\n";
-    totalCaloHits = 0; totalIsoCaloHits = 0;
-    std::cout << "--- " << pClustersU->size() << " 2D U clusters ---\n";
-    for (const Cluster *const pCluster : *pClustersU)
-    {
-        std::cout << pCluster << ": " << pCluster->GetNCaloHits() << " / " << pCluster->GetNIsolatedCaloHits() << "\n";
-        totalCaloHits += pCluster->GetNCaloHits();
-        totalIsoCaloHits += pCluster->GetNIsolatedCaloHits();
-    }
-    std::cout << " ---> total: " << totalCaloHits << " / " << totalIsoCaloHits << "\n";
-    totalCaloHits = 0; totalIsoCaloHits = 0;
-    std::cout << "--- " << pClustersV->size() << " 2D V clusters ---\n";
-    for (const Cluster *const pCluster : *pClustersV)
-    {
-        std::cout << pCluster << ": " << pCluster->GetNCaloHits() << " / " << pCluster->GetNIsolatedCaloHits() << "\n";
-        totalCaloHits += pCluster->GetNCaloHits();
-        totalIsoCaloHits += pCluster->GetNIsolatedCaloHits();
-    }
-    std::cout << " ---> total: " << totalCaloHits << " / " << totalIsoCaloHits << "\n";
-    totalCaloHits = 0; totalIsoCaloHits = 0;
-    std::cout << "--- " << pClustersW->size() << " 2D W clusters ---\n";
-    for (const Cluster *const pCluster : *pClustersW)
-    {
-        std::cout << pCluster << ": " << pCluster->GetNCaloHits() << " / " << pCluster->GetNIsolatedCaloHits() << "\n";
-        totalCaloHits += pCluster->GetNCaloHits();
-        totalIsoCaloHits += pCluster->GetNIsolatedCaloHits();
-    }
-    std::cout << " ---> total: " << totalCaloHits << " / " << totalIsoCaloHits << "\n";
-    std::cout << "====\n";
-
-    return STATUS_CODE_SUCCESS;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDMultiReclusteringAlgorithm::Run()
 {
     const PfoList *pPfos {nullptr};
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=,
-        PandoraContentApi::GetList(*this, m_pfoListName, pPfos));
+                                    PandoraContentApi::GetList(*this, m_pfoListName, pPfos));
     if (!pPfos || pPfos->empty())
         return STATUS_CODE_SUCCESS;
 
@@ -153,8 +47,6 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pFomAlgTool->GetPfosToRecluster(pPfos, pfosToRecluster));
     if (pfosToRecluster.empty())
         return STATUS_CODE_SUCCESS;
-
-    // DebugCurrentLists();
 
     // Remove clusters from the pfos, keeping track of their original pfo
     std::map<HitType, ClusterList> viewToFreeClusters = { {TPC_3D, {}}, {TPC_VIEW_U, {}}, {TPC_VIEW_V, {}}, {TPC_VIEW_W, {}} };
@@ -166,7 +58,7 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_cluster3DListName));
     std::string originalClusterListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        PandoraContentApi::InitializeReclustering(*this, TrackList(), viewToFreeClusters.at(TPC_3D), originalClusterListName));
+                             PandoraContentApi::InitializeReclustering(*this, TrackList(), viewToFreeClusters.at(TPC_3D), originalClusterListName));
 
     float bestReclusterFom;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pFomAlgTool->CalcClusteringFom(viewToFreeClusters.at(TPC_3D), bestReclusterFom));
@@ -178,7 +70,7 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
         std::string reclusterListName;
         const ClusterList *pReclusterList {nullptr};
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            PandoraContentApi::RunClusteringAlgorithm(*this, clusteringAlg, pReclusterList, reclusterListName));
+                                 PandoraContentApi::RunClusteringAlgorithm(*this, clusteringAlg, pReclusterList, reclusterListName));
         if (!pReclusterList || pReclusterList->empty())
             continue;
 
@@ -192,15 +84,12 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
         }
     }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        PandoraContentApi::TemporarilyReplaceCurrentList<Cluster>(*this, bestReclusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::TemporarilyReplaceCurrentList<Cluster>(*this, bestReclusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndReclustering(*this, bestReclusterListName));
 
     if (bestReclusterListName == originalClusterListName) // Return the clusters to the original pfos as if nothing happened...
     {
-        // std::cout << "No better reclustering found\n";
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, AddClustersToPfos(pfoToFreeClusters));
-        // DebugCurrentLists();
         return STATUS_CODE_SUCCESS;
     }
     else // Delete the original pfos in preparation for making new ones
@@ -208,7 +97,6 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
         for (const Pfo *const pPfo : pfosToRecluster)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfo, m_pfoListName));
     }
-    // std::cout << "Reclustering found: " << pfosToRecluster.size() << " -> " << bestReclusterList.size() << "\n";
 
     // The 3D clusters are reclustered, now need to manually recluster the 2D clusters to be consistent with the 3D reclustering
     // First, remove the original 2D clusters
@@ -220,13 +108,11 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
             continue;
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            FreeCaloHitsFromClusters(freeClusters, view, viewToFreeCaloHits2D.at(view), viewToFreeIsoCaloHits2D.at(view)));
+                                 FreeCaloHitsFromClusters(freeClusters, view, viewToFreeCaloHits2D.at(view), viewToFreeIsoCaloHits2D.at(view)));
     }
 
     // Now make new 2D clusters following the new 3D clusters, and make new corresponding pfos
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, BuildNewPfos(bestReclusterList, viewToFreeCaloHits2D, viewToFreeIsoCaloHits2D));
-
-    // DebugCurrentLists();
 
     return STATUS_CODE_SUCCESS;
 }
@@ -302,7 +188,7 @@ StatusCode ThreeDMultiReclusteringAlgorithm::BuildNewPfos(const ClusterList &clu
     {
         ClusterList newClusters;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            Build2DClustersFrom3D(pCluster3D, viewToFreeCaloHits2D, viewToFreeIsoCaloHits2D, newClusters));
+                                 Build2DClustersFrom3D(pCluster3D, viewToFreeCaloHits2D, viewToFreeIsoCaloHits2D, newClusters));
         for (const Cluster *const pCluster : newClusters)
             viewToNewClusters2D.at(LArClusterHelper::GetClusterHitType(pCluster)).push_back(pCluster);
         newClusters.push_back(pCluster3D);
@@ -319,12 +205,11 @@ StatusCode ThreeDMultiReclusteringAlgorithm::BuildNewPfos(const ClusterList &clu
     // NOTE New pfo characterisation will be required
     const PfoList *pNewPfoList {nullptr};
     std::string tempPfoListName;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pNewPfoList, tempPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                             PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pNewPfoList, tempPfoListName));
     for (const ClusterList &pfoClusters : newPfoClusters)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, CreatePfoFromClusters(pfoClusters));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        PandoraContentApi::SaveList<Pfo>(*this, tempPfoListName, m_pfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, tempPfoListName, m_pfoListName));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -382,12 +267,11 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Build2DClustersFrom3D(const Cluster
 
         std::string tempListName;
         const ClusterList *pTempClusterList {nullptr};
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTempClusterList, tempListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                                 PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTempClusterList, tempListName));
         const Cluster *pNewCluster2D {nullptr};
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, params, pNewCluster2D));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            PandoraContentApi::SaveList<Cluster>(*this, tempListName, cluster2DListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, params, pNewCluster2D));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, tempListName, cluster2DListName));
         newClusters2D.push_back(pNewCluster2D);
     }
 
@@ -413,11 +297,11 @@ StatusCode ThreeDMultiReclusteringAlgorithm::MopUpCaloHits(const CaloHitList &ca
         }
         if (addAsIso)
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, pNearestCluster, pCaloHit));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, pNearestCluster, pCaloHit));
         }
         else
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pNearestCluster, pCaloHit));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pNearestCluster, pCaloHit));
         }
     }
 
@@ -436,7 +320,7 @@ StatusCode ThreeDMultiReclusteringAlgorithm::CreatePfoFromClusters(const Cluster
     params.m_energy = 0.f;
     params.m_momentum = CartesianVector(0.f, 0.f, 0.f);
     const Pfo *pPfo {nullptr};
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, params, pPfo));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, params, pPfo));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -445,19 +329,22 @@ StatusCode ThreeDMultiReclusteringAlgorithm::CreatePfoFromClusters(const Cluster
 
 StatusCode ThreeDMultiReclusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "Cluster3DListName", m_cluster3DListName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "ClusterUListName", m_clusterUListName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "ClusterVListName", m_clusterVListName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "ClusterWListName", m_clusterWListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "PfoListName", m_pfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "Cluster3DListName", m_cluster3DListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusterUListName", m_clusterUListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusterVListName", m_clusterVListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusterWListName", m_clusterWListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        XmlHelper::ProcessAlgorithmList(*this, xmlHandle, "ClusteringAlgorithms", m_clusteringAlgs));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
+        "ClusteringAlgorithms", m_clusteringAlgs));
     AlgorithmTool *pAlgTool {nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "FomAlgorithmTool", pAlgTool));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
+        "FomAlgorithmTool", pAlgTool));
     m_pFomAlgTool = dynamic_cast<ThreeDReclusteringFigureOfMeritBaseTool *>(pAlgTool);
 
     return STATUS_CODE_SUCCESS;
