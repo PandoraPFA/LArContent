@@ -92,8 +92,10 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, AddClustersToPfos(pfoToFreeClusters));
         return STATUS_CODE_SUCCESS;
     }
-    else // Delete the original pfos in preparation for making new ones
+    else
     {
+        // Delete the original pfos in preparation for making new ones
+        // ATTN This will break any existing particle hierarchy
         for (const Pfo *const pPfo : pfosToRecluster)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfo, m_pfoListName));
     }
@@ -196,13 +198,15 @@ StatusCode ThreeDMultiReclusteringAlgorithm::BuildNewPfos(const ClusterList &clu
     }
 
     // Put any remaining 2D hits into the nearest new 2D cluster made in the last step
+    // NOTE Hits added to 2D clusters this way are added as isolated
     for (const auto &[view, caloHits2D] : viewToFreeCaloHits2D)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, MopUpCaloHits(caloHits2D, viewToNewClusters2D.at(view), false));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, MopUpCaloHits(caloHits2D, viewToNewClusters2D.at(view), true));
     for (const auto &[view, caloHits2D] : viewToFreeIsoCaloHits2D)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, MopUpCaloHits(caloHits2D, viewToNewClusters2D.at(view), true));
 
     // Create the new Pfos
-    // NOTE New pfo characterisation will be required
+    // ATTN New pfos will: have no vertex, not be characterised as track/shower, not be part of any particle hierarchy.
+    //      If desired, these these things will need to be added in succeeding algs.
     const PfoList *pNewPfoList {nullptr};
     std::string tempPfoListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
@@ -314,7 +318,7 @@ StatusCode ThreeDMultiReclusteringAlgorithm::CreatePfoFromClusters(const Cluster
 {
     PandoraContentApi::ParticleFlowObject::Parameters params;
     params.m_clusterList = clusters;
-    params.m_particleId = MU_MINUS;
+    params.m_particleId = MU_MINUS; // Arbitrary choice to mark all new pfos as track-like
     params.m_charge = PdgTable::GetParticleCharge(params.m_particleId.Get());
     params.m_mass = PdgTable::GetParticleMass(params.m_particleId.Get());
     params.m_energy = 0.f;

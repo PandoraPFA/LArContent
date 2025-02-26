@@ -35,6 +35,7 @@ public:
     ~ThreeDMultiReclusteringAlgorithm();
 
 private:
+
     pandora::StatusCode Run();
 
     /**
@@ -114,8 +115,6 @@ private:
      *  @param listName output list name
      */
     pandora::StatusCode GetClusterListName(const pandora::HitType &view, std::string &listName);
-
-    pandora::StatusCode DebugCurrentLists();
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
