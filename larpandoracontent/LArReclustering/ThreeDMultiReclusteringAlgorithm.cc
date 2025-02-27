@@ -23,14 +23,12 @@ ThreeDMultiReclusteringAlgorithm::ThreeDMultiReclusteringAlgorithm() :
     m_clusterUListName {"ClustersU"},
     m_clusterVListName {"ClustersV"},
     m_clusterWListName {"ClustersW"}
-{
-}
+{ }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ThreeDMultiReclusteringAlgorithm::~ThreeDMultiReclusteringAlgorithm()
-{
-}
+{ }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -52,6 +50,8 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
     std::map<HitType, ClusterList> viewToFreeClusters = { {TPC_3D, {}}, {TPC_VIEW_U, {}}, {TPC_VIEW_V, {}}, {TPC_VIEW_W, {}} };
     std::map<const Pfo *const, ClusterList> pfoToFreeClusters;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, FreeClustersFromPfos(pfosToRecluster, viewToFreeClusters, pfoToFreeClusters));
+    if (viewToFreeClusters.at(TPC_3D).empty())
+        return STATUS_CODE_SUCCESS;
 
     // Run reclustering algs over the free 3D clusters to see if there is a superior 3D clustering
     // NOTE Temporarily replacing the current list doesn't seem to work
@@ -198,11 +198,35 @@ StatusCode ThreeDMultiReclusteringAlgorithm::BuildNewPfos(const ClusterList &clu
     }
 
     // Put any remaining 2D hits into the nearest new 2D cluster made in the last step
+    // If no 2D clusters for a view could be made in the previous step (happens rarely when no 3D hits get made from one of the cluster views),
+    // just mop up the remaining 2D hits into the old 2D clusters
     // NOTE Hits added to 2D clusters this way are added as isolated
     for (const auto &[view, caloHits2D] : viewToFreeCaloHits2D)
+    {
+        if (viewToNewClusters2D.at(view).empty())
+        {
+            std::string clusterListName;
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, GetClusterListName(view, clusterListName));
+            const ClusterList *pOldClusters2D {nullptr};
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pOldClusters2D));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, MopUpCaloHits(caloHits2D, *pOldClusters2D, true));
+            continue;
+        }
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, MopUpCaloHits(caloHits2D, viewToNewClusters2D.at(view), true));
+    }
     for (const auto &[view, caloHits2D] : viewToFreeIsoCaloHits2D)
+    {
+        if (viewToNewClusters2D.at(view).empty())
+        {
+            std::string clusterListName;
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, GetClusterListName(view, clusterListName));
+            const ClusterList *pOldClusters2D {nullptr};
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pOldClusters2D));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, MopUpCaloHits(caloHits2D, *pOldClusters2D, true));
+            continue;
+        }
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, MopUpCaloHits(caloHits2D, viewToNewClusters2D.at(view), true));
+    }
 
     // Create the new Pfos
     // ATTN New pfos will: have no vertex, not be characterised as track/shower, not be part of any particle hierarchy.
@@ -263,7 +287,7 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Build2DClustersFrom3D(const Cluster
 
     for (const auto &[view, params] : viewToParamsCluster2D)
     {
-        if (params.m_caloHitList.empty())
+        if (params.m_caloHitList.empty() && params.m_isolatedCaloHitList.empty())
             continue;
 
         std::string cluster2DListName;
@@ -299,6 +323,9 @@ StatusCode ThreeDMultiReclusteringAlgorithm::MopUpCaloHits(const CaloHitList &ca
                 pNearestCluster = pCluster;
             }
         }
+        if (!pNearestCluster)
+            return STATUS_CODE_FAILURE;
+
         if (addAsIso)
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, pNearestCluster, pCaloHit));
