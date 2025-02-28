@@ -38,7 +38,7 @@ DLPrimaryHierarchyTool::DLPrimaryHierarchyTool() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DLPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo, 
-    const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<DLPrimaryNetworkParams> &networkParamVector, float &primaryScore)
+    const HierarchyPfoVector &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<DLPrimaryNetworkParams> &networkParamVector, float &primaryScore)
 {
     networkParamVector.clear();
     primaryScore = std::numeric_limits<float>::lowest();
@@ -78,7 +78,7 @@ StatusCode DLPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DLPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
-    const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const bool useUpstream, DLPrimaryNetworkParams &primaryNetworkParams) const
+    const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoVector &trackPfos, const bool useUpstream, DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     // Pick out neutrino vertex
     if (pNeutrinoPfo->GetVertexList().empty())
@@ -135,7 +135,7 @@ void DLPrimaryHierarchyTool::SetConnectionParams(const ExtremalPoint &particlePo
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pPfo, const ExtremalPoint &particlePoint, 
-    const CartesianVector &nuVertex, const HierarchyPfoMap &trackPfos, DLPrimaryNetworkParams &primaryNetworkParams) const
+    const CartesianVector &nuVertex, const HierarchyPfoVector &trackPfos, DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     // What is our nuVertex separation
     const float nuVertexSepSq((particlePoint.GetPosition() - nuVertex).GetMagnitudeSquared());
@@ -145,9 +145,9 @@ void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pP
     float childConnectionDistance(std::numeric_limits<float>::max());
 
     // Look at potential parents
-    for (auto& [pTrackPfo, hierarchyTrackPfo] : trackPfos)
+    for (const HierarchyPfo &hierarchyTrackPfo : trackPfos)
     {
-        if (pTrackPfo == pPfo)
+        if (hierarchyTrackPfo == pPfo)
             continue;
 
         // Upstream position should be closer to nu vertex

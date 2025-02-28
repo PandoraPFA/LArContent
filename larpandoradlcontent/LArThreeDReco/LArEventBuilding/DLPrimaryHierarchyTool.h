@@ -70,7 +70,7 @@ public:
     };
 
     pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo, 
-        const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<DLPrimaryNetworkParams> &networkParamVector, 
+        const HierarchyPfoVector &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<DLPrimaryNetworkParams> &networkParamVector, 
         float &primaryScore);
 
     /**
@@ -99,14 +99,14 @@ private:
      *  @param  pAlgorithm a pointer to the pandora algorithm
      *  @param  hierarchyPfo the input hierarchy pfo object
      *  @param  pNeutrinoPfo a pointer to the neutrino pfo
-     *  @param  trackPfos the <pfo -> HierarchyPfo> map for the track-like particles
+     *  @param  trackPfos the HierachyPfoVector of track-like particles
      *  @param  useUpstream whether the POI is the endpoint closest to the nu vertex
      *  @param  primaryNetworkParams the primary network parameters to fill
      *
      *  @return a StatusCode to signify whether the network variables could be correctly calculated
      */
     pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
-        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const bool useUpstream, 
+        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoVector &trackPfos, const bool useUpstream, 
         DLPrimaryNetworkParams &primaryNetworkParams) const;
   
     /**
@@ -139,11 +139,11 @@ private:
      *  @param  pPfo a pointer to the input pfo
      *  @param  particlePoint the extremal point of the particle
      *  @param  nuVertex the neutrino vertex
-     *  @param  trackPfos the <HierarchyPfo -> pfo> map for the track-like particles
+     *  @param  trackPfos the HierachyPfoVector of track-like particles
      *  @param  primaryNetworkParams the primary network parameters
      */
     void SetContextParams(const pandora::ParticleFlowObject *const pPfo, const ExtremalPoint &particlePoint, 
-        const pandora::CartesianVector &nuVertex, const HierarchyPfoMap &trackPfos, DLPrimaryNetworkParams &primaryNetworkParams) const;
+        const pandora::CartesianVector &nuVertex, const HierarchyPfoVector &trackPfos, DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     /**
      *  @brief  Shift and normalise the primary network parameters

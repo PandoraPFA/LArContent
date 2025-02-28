@@ -10,6 +10,7 @@
 
 #include "Pandora/PandoraInternal.h"
 
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 using namespace lar_content;
@@ -226,12 +227,19 @@ public:
      */
     void SetIsInHierarchy(const bool isInHierarchy);
 
-      /**
+    /**
      *  @brief  HierarchyPfo == operator
      * 
-     *  @param  otherHierarchyPfo the HierarchyPfo to compare
+     *  @param  rhs the HierarchyPfo to compare
      */
-    bool operator== (const HierarchyPfo &otherHierarchyPfo) const;
+    bool operator== (const HierarchyPfo &rhs) const;
+
+    /**
+     *  @brief  HierarchyPfo == operator
+     * 
+     *  @param  rhs the pfo to compare
+     */
+    bool operator== (const pandora::ParticleFlowObject *const rhs) const;
 
 private:
 
@@ -247,7 +255,7 @@ private:
     bool m_isInHierarchy;                                     ///< whether the pfo has been assigned to a particle hierarchy
 };
 
-typedef std::map<const pandora::ParticleFlowObject*, HierarchyPfo> HierarchyPfoMap;
+typedef std::vector<HierarchyPfo> HierarchyPfoVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -451,9 +459,16 @@ inline void HierarchyPfo::SetIsInHierarchy(const bool isInHierarchy)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool HierarchyPfo::operator== (const HierarchyPfo &otherHierarchyPfo) const
+inline bool HierarchyPfo::operator== (const HierarchyPfo &rhs) const
 {
-    return this->GetPfo() == otherHierarchyPfo.GetPfo();
+    return this->GetPfo() == rhs.GetPfo();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool HierarchyPfo::operator== (const pandora::ParticleFlowObject *const rhs) const
+{
+    return this->GetPfo() == rhs;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------  

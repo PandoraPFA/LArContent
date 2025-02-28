@@ -58,14 +58,14 @@ private:
     bool GetNeutrinoPfo(const pandora::ParticleFlowObject *&pNeutrinoPfo) const;
 
     /**
-     *  @brief  Fill the track and shower-like HierarchyPfoMap
+     *  @brief  Fill the track and shower-like HierarchyPfoVector
      *
      *  @param  pNeutrinoPfo a pointer to the neutrino pfo
-     *  @param  trackPfos the track-like HierarchyPfoMap
-     *  @param  showerPfos the shower-like HierarchyPfoMap
+     *  @param  trackPfos the track-like HierarchyPfoVector
+     *  @param  showerPfos the shower-like HierarchyPfoVector
      */
-    void FillTrackShowerVectors(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos, 
-        HierarchyPfoMap &showerPfos) const;
+    void FillTrackShowerVectors(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoVector &trackPfos, 
+        HierarchyPfoVector &showerPfos) const;
 
     /**
      *  @brief  Identify the upstream (closest to the nu vertex) and downstream (furthest 
@@ -100,23 +100,23 @@ private:
      *  @brief  Set the primary network scores of the HierarchyPfos
      *
      *  @param  pNeutrinoPfo a pointer to the neutrino pfo
-     *  @param  trackPfos the track-like HierarchyPfoMap
-     *  @param  showerPfos the shower-like HierarchyPfoMap
+     *  @param  trackPfos the track-like HierarchyPfoVector
+     *  @param  showerPfos the shower-like HierarchyPfoVector
      */
-    void SetPrimaryScores(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos,
-        HierarchyPfoMap &showerPfos) const;
+    void SetPrimaryScores(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoVector &trackPfos,
+        HierarchyPfoVector &showerPfos) const;
 
     /**
      *  @brief  Call the primary network tool to obtain the primary score of a HierarchyPfo
      *
      *  @param  pNeutrinoPfo a pointer to the neutrino pfo
-     *  @param  trackPfos the track-like HierarchyPfoMap
+     *  @param  trackPfos the track-like HierarchyPfoVector
      *  @param  hierarchyPfo the HierarchyPfo object of the input pfo 
      *
      *  @return the primary network score
      */   
     float GetPrimaryScore(const pandora::ParticleFlowObject *const pNeutrinoPfo,
-        const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo) const;
+        const HierarchyPfoVector &trackPfos, const HierarchyPfo &hierarchyPfo) const;
 
     /**
      *  @brief  Add particles to the hierarchy if they satisfy a criteria
@@ -127,24 +127,24 @@ private:
      *  @param  trackThreshold the threshold network score for tracks
      *  @param  showerThreshold the threshold network score for showers
      *  @param  isLowerThreshold whether the threshold is a minimum or maximum requirement
-     *  @param  trackPfos the track-like HierarchyPfoMap
-     *  @param  showerPfos the shower-like HierarchyPfoMap
+     *  @param  trackPfos the track-like HierarchyPfoVector
+     *  @param  showerPfos the shower-like HierarchyPfoVector
      *  @param  hierarchy the hierarchy object to modify
      */    
     void UpdateHierarchy(const pandora::ParticleFlowObject *const pNeutrinoPfo, const bool buildPrimaryTier, const bool usePrimaryScore, 
-        const float trackThreshold, const float showerThreshold, const bool isLowerThreshold, HierarchyPfoMap &trackPfos, 
-        HierarchyPfoMap &showerPfos, Hierarchy &hierarchy) const;
+        const float trackThreshold, const float showerThreshold, const bool isLowerThreshold, HierarchyPfoVector &trackPfos, 
+        HierarchyPfoVector &showerPfos, Hierarchy &hierarchy) const;
 
     /**
      *  @brief  Set the predicted parent and later tier score of the
      *          HierarchyPfos to be considered for the later tiers
      *
      *  @param  pNeutrinoPfo a pointer to the neutrino pfo
-     *  @param  trackPfos the track-like HierarchyPfoMap
-     *  @param  showerPfos the shower-like HierarchyPfoMap
+     *  @param  trackPfos the track-like HierarchyPfoVector
+     *  @param  showerPfos the shower-like HierarchyPfoVector
      */    
-    void SetLaterTierScores(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoMap &trackPfos,
-        HierarchyPfoMap &showerPfos) const;
+    void SetLaterTierScores(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoVector &trackPfos,
+        HierarchyPfoVector &showerPfos) const;
 
     /**
      *  @brief  Call the later tier network tool to obtain the later tier score
@@ -163,10 +163,10 @@ private:
      *  @brief  Register the parent-child relationships in Pandora
      *
      *  @param  pNeutrinoPfo a pointer to the neutrino pfo
-     *  @param  trackPfos the track-like HierarchyPfoMap
-     *  @param  showerPfos the shower-like HierarchyPfoMap
+     *  @param  trackPfos the track-like HierarchyPfoVector
+     *  @param  showerPfos the shower-like HierarchyPfoVector
      */
-    void BuildPandoraHierarchy(const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos) const;
+    void BuildPandoraHierarchy(const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoVector &trackPfos, const HierarchyPfoVector &showerPfos) const;
 
     //------------------------------------------------------------------------------------------------------------------------------------------
     // Training functions
@@ -184,11 +184,11 @@ private:
     /**
      *  @brief  Obtain the [pfo -> unique ID] map
      *
-     *  @param  trackPfos the track-like HierarchyPfoMap
-     *  @param  showerPfos the shower-like HierarchyPfoMap     
+     *  @param  trackPfos the track-like HierarchyPfoVector
+     *  @param  showerPfos the shower-like HierarchyPfoVector     
      *  @param  particleIDMap the [pfo -> unique ID] map to populate
      */
-    void GetParticleIDMap(const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
+    void GetParticleIDMap(const HierarchyPfoVector &trackPfos, const HierarchyPfoVector &showerPfos, 
         std::map<const pandora::ParticleFlowObject *, int> &particleIDMap) const;
 
     /**
@@ -208,14 +208,14 @@ private:
     /**
      *  @brief  Fill the output event tree (containing event-level info)
      *
-     *  @param  trackPfos the track-like HierarchyPfoMap
-     *  @param  showerPfos the shower-like HierarchyPfoMap          
+     *  @param  trackPfos the track-like HierarchyPfoVector
+     *  @param  showerPfos the shower-like HierarchyPfoVector          
      *  @param  nPrimaryTrackLinks the number of recorded primary track links
      *  @param  nPrimaryShowerLinks the number of recorded primary shower links
      *  @param  nLaterTierTrackTrackLinks the number of recorded track-track later tier links
      *  @param  nLaterTierTrackShowerLinks the number of recorded track-shower later tier links     
      */    
-    void FillEventTree(const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, const int nPrimaryTrackLinks,
+    void FillEventTree(const HierarchyPfoVector &trackPfos, const HierarchyPfoVector &showerPfos, const int nPrimaryTrackLinks,
         const int nPrimaryShowerLinks, const int nLaterTierTrackTrackLinks, const int nLaterTierTrackShowerLinks) const;
 
     /**
@@ -224,14 +224,14 @@ private:
      *  @param  matchingMap the [pfo -> mcparticle] matching map
      *  @param  childToParentPfoMap the [child pfo -> true parent pfo] map
      *  @param  pNeutrinoPfo a pointer to the neutrino pfo
-     *  @param  trackPfos the track-like HierarchyPfoMap
-     *  @param  showerPfos the shower-like HierarchyPfoMap
+     *  @param  trackPfos the track-like HierarchyPfoVector
+     *  @param  showerPfos the shower-like HierarchyPfoVector
      *  @param  particleIDMap the [pfo -> unique ID] map
      *  @param  nPrimaryTrackLinks the number of recorded primary track links
      *  @param  nPrimaryShowerLinks the number of recorded primary shower links
      */
     void FillPrimaryTrees(const PfoToMCParticleMap &matchingMap, const ChildToParentPfoMap &childToParentPfoMap,
-        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
+        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoVector &trackPfos, const HierarchyPfoVector &showerPfos, 
         const std::map<const pandora::ParticleFlowObject *, int> &particleIDMap, int &nPrimaryTrackLinks, int &nPrimaryShowerLinks) const;
 
     /**
@@ -257,14 +257,14 @@ private:
      *  @param  matchingMap the [pfo -> mcparticle] matching map
      *  @param  childToParentPfoMap the [child pfo -> true parent pfo] map
      *  @param  pNeutrinoPfo a pointer to the neutrino pfo
-     *  @param  trackPfos the track-like HierarchyPfoMap
-     *  @param  showerPfos the shower-like HierarchyPfoMap
+     *  @param  trackPfos the track-like HierarchyPfoVector
+     *  @param  showerPfos the shower-like HierarchyPfoVector
      *  @param  particleIDMap the [pfo -> unique ID] map
      *  @param  nTrackLinks the number of recorded track-track later tier links
      *  @param  nShowerLinks the number of recorded track-shower later tier links
      */    
     void FillLaterTierTrees(const PfoToMCParticleMap &matchingMap, const ChildToParentPfoMap &childToParentPfoMap,
-        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoMap &trackPfos, const HierarchyPfoMap &showerPfos, 
+        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoVector &trackPfos, const HierarchyPfoVector &showerPfos, 
         const std::map<const pandora::ParticleFlowObject *, int> &particleIDMap,  int &nTrackLinks, int &nShowerLinks) const;
 
     /**
