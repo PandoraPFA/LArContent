@@ -132,9 +132,9 @@ StatusCode DLBaseHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
     {
         m_vertexRegionRadiusSq = m_vertexRegionRadiusSq * m_vertexRegionRadiusSq;
     }
-    else
+    else if (statusCode != STATUS_CODE_NOT_FOUND)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_NOT_FOUND, !=, statusCode);
+        return statusCode;
     }
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
