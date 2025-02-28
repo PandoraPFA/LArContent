@@ -515,8 +515,7 @@ void DLNeutrinoHierarchyAlgorithm::SetLaterTierScores(const ParticleFlowObject *
             if ((childHierarchyPfo.GetUpstreamPoint().GetPosition() - nuVertex).GetMagnitudeSquared() < (m_primaryRegion * m_primaryRegion))
                 continue;
 
-            float highestScore(0.f);
-            float minSep(std::numeric_limits<float>::max());
+            float highestScore(std::numeric_limits<float>::lowest());
 
             for (const HierarchyPfo &parentHierarchyPfo : trackPfos)
             {
@@ -524,16 +523,25 @@ void DLNeutrinoHierarchyAlgorithm::SetLaterTierScores(const ParticleFlowObject *
                     continue;
 
                 const float thisScore(this->GetLaterTierScore(pNeutrinoPfo, parentHierarchyPfo, childHierarchyPfo));
-                const bool best((std::fabs(thisScore - highestScore) < std::numeric_limits<float>::epsilon()) ?
-                    (LArPfoHelper::GetThreeDSeparation(parentHierarchyPfo.GetPfo(), childHierarchyPfo.GetPfo()) < minSep) : (thisScore > highestScore));
-                
-                if (best)
+
+                if ((childHierarchyPfo.GetPredictedParentPfo()) && 
+                    (std::fabs(thisScore - highestScore) < std::numeric_limits<float>::epsilon()))
                 {
-                    highestScore = thisScore;
-                    minSep = LArPfoHelper::GetThreeDSeparation(parentHierarchyPfo.GetPfo(), childHierarchyPfo.GetPfo());
-                    childHierarchyPfo.SetLaterTierScore(thisScore);
-                    childHierarchyPfo.SetPredictedParentPfo(parentHierarchyPfo.GetPfo());
+                    // If tie, pick closest
+                    const float currentSep(LArPfoHelper::GetThreeDSeparation(childHierarchyPfo.GetPredictedParentPfo(), childHierarchyPfo.GetPfo()));
+                    const float thisSep(LArPfoHelper::GetThreeDSeparation(parentHierarchyPfo.GetPfo(), childHierarchyPfo.GetPfo()));
+
+                    if (thisSep > currentSep)
+                        continue;
                 }
+                else if (thisScore < highestScore)
+                {
+                    continue;
+                }
+
+                highestScore = thisScore;
+                childHierarchyPfo.SetLaterTierScore(thisScore);
+                childHierarchyPfo.SetPredictedParentPfo(parentHierarchyPfo.GetPfo());
             }
         }
     }
