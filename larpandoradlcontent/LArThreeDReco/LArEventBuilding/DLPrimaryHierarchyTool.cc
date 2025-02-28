@@ -14,6 +14,7 @@
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
+
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.h"
 
 
@@ -30,23 +31,7 @@ DLPrimaryHierarchyTool::DLPrimaryHierarchyTool() :
     DLBaseHierarchyTool(),
     m_trainingMode(false),
     m_extrapolationStepSize(1.f),
-    m_normalise(true),
-    m_nSpacepointsMin(0.f),
-    m_nSpacepointsMax(2000.f),
-    m_nuSeparationMin(-50.f),
-    m_nuSeparationMax(500.f),
-    m_vertexRegionNHitsMin(-10.f),
-    m_vertexRegionNHitsMax(100.f),
-    m_vertexRegionNParticlesMin(-1.f),
-    m_vertexRegionNParticlesMax(8.f),
-    m_dcaMin(-60.f),
-    m_dcaMax(600.f),
-    m_connectionExtrapDistanceMin(-700.f),
-    m_connectionExtrapDistanceMax(500.f),
-    m_parentConnectionDistanceMin(-150.f),
-    m_parentConnectionDistanceMax(150.f),
-    m_childConnectionDistanceMin(-30.f),
-    m_childConnectionDistanceMax(300.f)
+    m_normalise(true)
 {
 }
 
@@ -55,10 +40,8 @@ DLPrimaryHierarchyTool::DLPrimaryHierarchyTool() :
 StatusCode DLPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo, 
     const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<DLPrimaryNetworkParams> &networkParamVector, float &primaryScore)
 {
-    std::cout << "m_vertexRegionRadiusSq: " << m_vertexRegionRadiusSq << std::endl;
-    
     networkParamVector.clear();
-    primaryScore = m_bogusFloat;
+    primaryScore = std::numeric_limits<float>::lowest();
 
     this->SetDetectorBoundaries();
 
@@ -104,21 +87,19 @@ StatusCode DLPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *co
     const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
     const CartesianVector nuVertex(pNeutrinoVertex->GetPosition().GetX(), pNeutrinoVertex->GetPosition().GetY(), pNeutrinoVertex->GetPosition().GetZ());
 
-    // Pick out the correct pfo vertex/direction
-    const CartesianVector particleVertex(useUpstream ? hierarchyPfo.GetUpstreamVertex() : hierarchyPfo.GetDownstreamVertex());
-    const CartesianVector particleDirection(useUpstream ? hierarchyPfo.GetUpstreamDirection() : hierarchyPfo.GetDownstreamDirection());
+    // Pick out the correct extremal point
+    const ExtremalPoint &particlePoint(useUpstream ? hierarchyPfo.GetUpstreamPoint() : hierarchyPfo.GetDownstreamPoint());
 
     // Check that we could actually calculate pfo vertex/direction, return if not
-    if (!this->IsVectorSet(particleVertex)) { return STATUS_CODE_NOT_INITIALIZED; }
-    if (!this->IsVectorSet(particleDirection)) { return STATUS_CODE_NOT_INITIALIZED; }
+    if (!particlePoint.IsSet()) { return STATUS_CODE_NOT_INITIALIZED; }
 
     // Set primaryNetworkParams
     primaryNetworkParams.m_isPOIClosestToNu = useUpstream ? 1.f : 0.f;
-    primaryNetworkParams.m_nSpacepoints = this->GetNSpacepoints(hierarchyPfo);
-    primaryNetworkParams.m_nuSeparation = (particleVertex - nuVertex).GetMagnitude();
-    this->SetVertexRegionParams(pAlgorithm, hierarchyPfo.GetPfo(), particleVertex, primaryNetworkParams);
-    this->SetConnectionParams(particleVertex, particleDirection, nuVertex, primaryNetworkParams);
-    this->SetContextParams(hierarchyPfo.GetPfo(), particleVertex, particleDirection, nuVertex, trackPfos, primaryNetworkParams);
+    primaryNetworkParams.m_nSpacepoints = LArPfoHelper::GetNumberOfThreeDHits(hierarchyPfo.GetPfo());
+    primaryNetworkParams.m_nuSeparation = (particlePoint.GetPosition() - nuVertex).GetMagnitude();
+    this->SetVertexRegionParams(pAlgorithm, hierarchyPfo.GetPfo(), particlePoint.GetPosition(), primaryNetworkParams);
+    this->SetConnectionParams(particlePoint, nuVertex, primaryNetworkParams);
+    this->SetContextParams(hierarchyPfo.GetPfo(), particlePoint, nuVertex, trackPfos, primaryNetworkParams);
 
     // Normalise
     if (m_normalise)
@@ -140,12 +121,12 @@ void DLPrimaryHierarchyTool::SetVertexRegionParams(const Algorithm *const pAlgor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLPrimaryHierarchyTool::SetConnectionParams(const CartesianVector &particleVertex, const CartesianVector &particleDirection, 
-    const CartesianVector &nuVertex, DLPrimaryNetworkParams &primaryNetworkParams) const
+void DLPrimaryHierarchyTool::SetConnectionParams(const ExtremalPoint &particlePoint, const CartesianVector &nuVertex, 
+    DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     // Extrapolate particle to nuVertex
-    const float extrapDistance((nuVertex - particleVertex).GetDotProduct(particleDirection));
-    const CartesianVector extrapolationPoint(particleVertex + (particleDirection * extrapDistance));
+    const float extrapDistance((nuVertex - particlePoint.GetPosition()).GetDotProduct(particlePoint.GetDirection()));
+    const CartesianVector extrapolationPoint(particlePoint.GetPosition() + (particlePoint.GetDirection() * extrapDistance));
     
     primaryNetworkParams.m_dca = (nuVertex - extrapolationPoint).GetMagnitude();
     primaryNetworkParams.m_connectionExtrapDistance = (extrapDistance * (-1.f)); // backwards extrap. should be +ve
@@ -153,11 +134,11 @@ void DLPrimaryHierarchyTool::SetConnectionParams(const CartesianVector &particle
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pPfo, const CartesianVector &particleVertex, const CartesianVector &particleDirection, 
+void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pPfo, const ExtremalPoint &particlePoint, 
     const CartesianVector &nuVertex, const HierarchyPfoMap &trackPfos, DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     // What is our nuVertex separation
-    const float nuVertexSepSq((particleVertex - nuVertex).GetMagnitudeSquared());
+    const float nuVertexSepSq((particlePoint.GetPosition() - nuVertex).GetMagnitudeSquared());
 
     bool found(false);
     float parentConnectionDistance(std::numeric_limits<float>::max());
@@ -170,15 +151,16 @@ void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pP
             continue;
 
         // Upstream position should be closer to nu vertex
-        const float thisNuVertexSepSq((hierarchyTrackPfo.GetUpstreamVertex() - nuVertex).GetMagnitudeSquared());
+        const float thisNuVertexSepSq((hierarchyTrackPfo.GetUpstreamPoint().GetPosition() - nuVertex).GetMagnitudeSquared());
 
         if (thisNuVertexSepSq > nuVertexSepSq)
             continue;
 
-        float thisParentConnectionDistance(m_bogusFloat), thisChildConnectionDistance(m_bogusFloat);
+        float thisParentConnectionDistance(std::numeric_limits<float>::lowest());
+        float thisChildConnectionDistance(std::numeric_limits<float>::lowest());
 
-        this->CalculateConnectionDistances(hierarchyTrackPfo.GetDownstreamVertex(), hierarchyTrackPfo.GetDownstreamDirection(), 
-            particleVertex, particleDirection, thisParentConnectionDistance, thisChildConnectionDistance);
+        this->CalculateConnectionDistances(hierarchyTrackPfo.GetDownstreamPoint(), particlePoint, 
+            thisParentConnectionDistance, thisChildConnectionDistance);
 
         if ((thisChildConnectionDistance > 0.f) && (std::fabs(thisParentConnectionDistance) < std::fabs(parentConnectionDistance)))
         {
@@ -197,27 +179,27 @@ void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLPrimaryHierarchyTool::CalculateConnectionDistances(const CartesianVector &parentEndpoint, const CartesianVector &parentDirection, 
-    const CartesianVector &childVertex, const CartesianVector &childDirection, float &parentConnectionDistance, float &childConnectionDistance) const
+void DLPrimaryHierarchyTool::CalculateConnectionDistances(const ExtremalPoint &parentPoint, const ExtremalPoint &childPoint, 
+    float &parentConnectionDistance, float &childConnectionDistance) const
 {
     // Loop things
     float smallestT(std::numeric_limits<float>::max());
     bool isGettingCloser(true);
     bool found(false);
-    CartesianVector connectionPoint(m_bogusFloat, m_bogusFloat, m_bogusFloat);
+    CartesianVector connectionPoint(std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest());
 
     // start the seed
-    CartesianVector extrapolatedPoint(childVertex);
+    CartesianVector extrapolatedPoint(childPoint.GetPosition());
 
     while (isGettingCloser)
     {
         isGettingCloser = false;
-        extrapolatedPoint = extrapolatedPoint + (childDirection * ((-1.f) * m_extrapolationStepSize));
+        extrapolatedPoint = extrapolatedPoint + (childPoint.GetDirection() * ((-1.f) * m_extrapolationStepSize));
 
-        if (!this->IsInDetector(extrapolatedPoint))
+        if (!LArGeometryHelper::IsInDetector(m_detectorBoundaries, extrapolatedPoint))
             break;
 
-        const float parentT((parentDirection * (-1.f)).GetCrossProduct((extrapolatedPoint - parentEndpoint)).GetMagnitudeSquared());
+        const float parentT((parentPoint.GetDirection() * (-1.f)).GetCrossProduct((extrapolatedPoint - parentPoint.GetPosition())).GetMagnitudeSquared());
 
         if (parentT < smallestT)
         {
@@ -228,24 +210,26 @@ void DLPrimaryHierarchyTool::CalculateConnectionDistances(const CartesianVector 
         }
     }        
 
-    // Distance from parent end to connection point
-    parentConnectionDistance = found ? (parentDirection * (-1.f)).GetDotProduct(connectionPoint - parentEndpoint) : m_bogusFloat; // need to turn parent direction around
+    // Distance from parent end to connection point - need to turn parent direction around
+    parentConnectionDistance = found ? (parentPoint.GetDirection() * (-1.f)).GetDotProduct(connectionPoint - parentPoint.GetPosition()) :
+        std::numeric_limits<float>::lowest();
     // Distance from child start to connection point
-    childConnectionDistance = found ? (childVertex - connectionPoint).GetMagnitude() : m_bogusFloat;
+    childConnectionDistance = found ? (childPoint.GetPosition() - connectionPoint).GetMagnitude() :
+        std::numeric_limits<float>::lowest();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLPrimaryHierarchyTool::NormaliseNetworkParams(DLPrimaryNetworkParams &primaryNetworkParams) const
 {
-    this->NormaliseNetworkParam(m_nSpacepointsMin, m_nSpacepointsMax, primaryNetworkParams.m_nSpacepoints);
-    this->NormaliseNetworkParam(m_nuSeparationMin, m_nuSeparationMax, primaryNetworkParams.m_nuSeparation);
-    this->NormaliseNetworkParam(m_vertexRegionNHitsMin, m_vertexRegionNHitsMax, primaryNetworkParams.m_vertexRegionNHits);
-    this->NormaliseNetworkParam(m_vertexRegionNParticlesMin, m_vertexRegionNParticlesMax, primaryNetworkParams.m_vertexRegionNParticles);
-    this->NormaliseNetworkParam(m_dcaMin, m_dcaMax, primaryNetworkParams.m_dca);
-    this->NormaliseNetworkParam(m_connectionExtrapDistanceMin, m_connectionExtrapDistanceMax, primaryNetworkParams.m_connectionExtrapDistance);
-    this->NormaliseNetworkParam(m_parentConnectionDistanceMin, m_parentConnectionDistanceMax, primaryNetworkParams.m_parentConnectionDistance);
-    this->NormaliseNetworkParam(m_childConnectionDistanceMin, m_childConnectionDistanceMax, primaryNetworkParams.m_childConnectionDistance);
+    this->NormaliseNetworkParam(m_normLimits.m_nSpacepointsMin, m_normLimits.m_nSpacepointsMax, primaryNetworkParams.m_nSpacepoints);
+    this->NormaliseNetworkParam(m_normLimits.m_nuSeparationMin, m_normLimits.m_nuSeparationMax, primaryNetworkParams.m_nuSeparation);
+    this->NormaliseNetworkParam(m_normLimits.m_vertexRegionNHitsMin, m_normLimits.m_vertexRegionNHitsMax, primaryNetworkParams.m_vertexRegionNHits);
+    this->NormaliseNetworkParam(m_normLimits.m_vertexRegionNParticlesMin, m_normLimits.m_vertexRegionNParticlesMax, primaryNetworkParams.m_vertexRegionNParticles);
+    this->NormaliseNetworkParam(m_normLimits.m_dcaMin, m_normLimits.m_dcaMax, primaryNetworkParams.m_dca);
+    this->NormaliseNetworkParam(m_normLimits.m_connectionExtrapDistanceMin, m_normLimits.m_connectionExtrapDistanceMax, primaryNetworkParams.m_connectionExtrapDistance);
+    this->NormaliseNetworkParam(m_normLimits.m_parentConnectionDistanceMin, m_normLimits.m_parentConnectionDistanceMax, primaryNetworkParams.m_parentConnectionDistance);
+    this->NormaliseNetworkParam(m_normLimits.m_childConnectionDistanceMin, m_normLimits.m_childConnectionDistanceMax, primaryNetworkParams.m_childConnectionDistance);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -323,22 +307,22 @@ StatusCode DLPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ExtrapolationStepSize", m_extrapolationStepSize));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Normalise", m_normalise));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMin", m_nSpacepointsMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMax", m_nSpacepointsMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuSeparationMin", m_nuSeparationMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuSeparationMax", m_nuSeparationMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNHitsMin", m_vertexRegionNHitsMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNHitsMax", m_vertexRegionNHitsMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNParticlesMin", m_vertexRegionNParticlesMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNParticlesMax", m_vertexRegionNParticlesMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DCAMin", m_dcaMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DCAMax", m_dcaMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionExtrapDistanceMin", m_connectionExtrapDistanceMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionExtrapDistanceMax", m_connectionExtrapDistanceMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ParentConnectionDistanceMin", m_parentConnectionDistanceMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ParentConnectionDistanceMax", m_parentConnectionDistanceMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChildConnectionDistanceMin", m_childConnectionDistanceMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChildConnectionDistanceMax", m_childConnectionDistanceMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMin", m_normLimits.m_nSpacepointsMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMax", m_normLimits.m_nSpacepointsMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuSeparationMin", m_normLimits.m_nuSeparationMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuSeparationMax", m_normLimits.m_nuSeparationMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNHitsMin", m_normLimits.m_vertexRegionNHitsMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNHitsMax", m_normLimits.m_vertexRegionNHitsMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNParticlesMin", m_normLimits.m_vertexRegionNParticlesMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNParticlesMax", m_normLimits.m_vertexRegionNParticlesMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DCAMin", m_normLimits.m_dcaMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DCAMax", m_normLimits.m_dcaMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionExtrapDistanceMin", m_normLimits.m_connectionExtrapDistanceMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionExtrapDistanceMax", m_normLimits.m_connectionExtrapDistanceMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ParentConnectionDistanceMin", m_normLimits.m_parentConnectionDistanceMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ParentConnectionDistanceMax", m_normLimits.m_parentConnectionDistanceMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChildConnectionDistanceMin", m_normLimits.m_childConnectionDistanceMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChildConnectionDistanceMax", m_normLimits.m_childConnectionDistanceMax));
 
     if (!m_trainingMode)
     {

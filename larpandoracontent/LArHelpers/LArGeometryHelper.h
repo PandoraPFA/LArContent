@@ -36,6 +36,16 @@ public:
     typedef std::set<unsigned int> UIntSet;
 
     /**
+     *  @brief  Struct to hold detector boundaries
+     */
+    struct DetectorBoundaries
+    {
+        std::pair<float, float> m_xBoundaries = {-999.f, -999.f}; ///< {low, high} x boundaries of the detector
+        std::pair<float, float> m_yBoundaries = {-999.f, -999.f}; ///< {low, high} y boundaries of the detector
+        std::pair<float, float> m_zBoundaries = {-999.f, -999.f}; ///< {low, high} z boundaries of the detector
+    };
+
+    /**
      *  @brief  Merge two views (U,V) to give a third view (Z).
      *
      *  @param  pandora the associated pandora instance
@@ -277,7 +287,25 @@ public:
      *  @param  pCluster2 the second cluster
      */
     static void GetCommonDaughterVolumes(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, UIntSet &intersect);
+
+    /**
+     *  @brief  Get the detector boundaries of the padora instance
+     *
+     *  @param  pandora the pandora instance
+     */
+    static DetectorBoundaries GetDetectorBoundaries(const pandora::Pandora &pandora);
+
+    /**
+     *  @brief  Return whether and input point is within the bounds of the detector
+     *
+     *  @param detectorBoundaries the detector boundaries
+     *  @param  position the input CartesianVector
+     *
+     *  @return Whether the input position is within the detector
+     */
+    static bool IsInDetector(const DetectorBoundaries &detectorBoundaries, const pandora::CartesianVector &position);
 };
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float LArGeometryHelper::GetWireZPitch(const pandora::Pandora &pandora, const float maxWirePitchWDiscrepancy)

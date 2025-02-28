@@ -10,6 +10,8 @@
 
 #include "Pandora/PandoraInternal.h"
 
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 
@@ -39,24 +41,6 @@ protected:
     void SetDetectorBoundaries();
 
     /**
-     *  @brief  Return whether and input point is within the bounds of the detector
-     *
-     *  @param  position the input CartesianVector
-     *
-     *  @return Whether the input position is within the detector
-     */
-    bool IsInDetector(const pandora::CartesianVector &position) const;
-
-    /**
-     *  @brief  Get the number of 3D hits owned by a pfo
-     *
-     *  @param  hierarchyPfo the HierarchyPfo of the corresponding pfo
-     *
-     *  @return The number of 3D hits
-     */
-    float GetNSpacepoints(const HierarchyPfo &hierarchyPfo) const;
-
-    /**
      *  @brief  Return the number of 3D hits and the number of corresponding 
      *          pfos of a given pfo about a point
      *
@@ -79,16 +63,6 @@ protected:
     void NormaliseNetworkParam(const float minLimit, const float maxLimit, float &networkParam) const;
 
     /**
-     *  @brief  Whether an input vector is not equal to a default value, 
-     *          and therefore has been correctly set
-     *
-     *  @param  vector the input vector
-     *
-     *  @return whether the input vector is not equal to a default value
-     */
-    bool IsVectorSet(const pandora::CartesianVector &vector) const;
-
-    /**
      *  @brief  Add a vector of network parameter values to a torch vector 
      *
      *  @param  startIndex the index from which to begin the insert
@@ -97,16 +71,10 @@ protected:
      */
     int AddToInput(const int startIndex, const pandora::FloatVector &paramVector, LArDLHelper::TorchInput &modelInput) const;
 
-    float m_bogusFloat;                   ///< a default float value
-    float m_vertexRegionRadiusSq;         ///< the radius (squared) in which to search for particle hits
-    pandora::StringVector m_pfoListNames; ///< the input pfo list name vector
-    float m_detectorMinX;                 ///< the minimum x detector boundary
-    float m_detectorMaxX;                 ///< the maximum x detector boundary
-    float m_detectorMinY;                 ///< the minimum y detector boundary
-    float m_detectorMaxY;                 ///< the maximum y detector boundary
-    float m_detectorMinZ;                 ///< the minimum z detector boundary
-    float m_detectorMaxZ;                 ///< the maximum z detector boundary
-    bool areBoundariesSet;                ///< whether the detector boundaries have been set
+    float m_vertexRegionRadiusSq;                               ///< the radius (squared) in which to search for particle hits
+    pandora::StringVector m_pfoListNames;                       ///< the input pfo list name vector
+    LArGeometryHelper::DetectorBoundaries m_detectorBoundaries; ///< the detector boundaries
+    bool m_areBoundariesSet;                                    ///< whether the detector boundaries have been set
 };
 
 } // namespace lar_dl_content

@@ -13,8 +13,9 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "larpandoradlcontent/LArCheating/DLCheatHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
+
+#include "larpandoradlcontent/LArCheating/DLCheatHierarchyTool.h"
 
 using namespace pandora;
 using namespace lar_content;
@@ -49,11 +50,11 @@ StatusCode DLCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleMa
 
     // What is the true orientation of the parent?
     trueParentOrientation = this->IsUpstreamTrueVertex(pfoToMCParticleMap, parentPfo.GetPfo(),
-        parentPfo.GetUpstreamVertex(), parentPfo.GetDownstreamVertex());
+        parentPfo.GetUpstreamPoint().GetPosition(), parentPfo.GetDownstreamPoint().GetPosition());
     
     // What is the true orientation of the child? 
     trueChildOrientation = this->IsUpstreamTrueVertex(pfoToMCParticleMap, childPfo.GetPfo(),
-        childPfo.GetUpstreamVertex(), childPfo.GetDownstreamVertex());
+        childPfo.GetUpstreamPoint().GetPosition(), childPfo.GetDownstreamPoint().GetPosition());
     
     return STATUS_CODE_SUCCESS;
 }
@@ -75,7 +76,7 @@ StatusCode DLCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleMa
 
     // What is the true orientation of the child? 
     trueChildOrientation = this->IsUpstreamTrueVertex(pfoToMCParticleMap, childPfo.GetPfo(),
-        childPfo.GetUpstreamVertex(), childPfo.GetDownstreamVertex());
+        childPfo.GetUpstreamPoint().GetPosition(), childPfo.GetDownstreamPoint().GetPosition());
     
     return STATUS_CODE_SUCCESS;
 }

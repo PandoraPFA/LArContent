@@ -81,6 +81,46 @@ public:
     DLLaterTierHierarchyTool();
 
 private:
+    struct NormalisationLimits
+    {
+        float m_trackScoreMin = -1.f;                ///< the m_parent(child)TrackScore minimum range boundary
+        float m_trackScoreMax = 1.f;                 ///< the m_parent(child)TrackScore maximum range boundary
+        float m_nSpacepointsMin = 0.f;               ///< the m_parent(child)NSpacepoints minimum range boundary
+        float m_nSpacepointsMax = 2000.f;            ///< the m_parent(child)NSpacepoints maximum range boundary
+        float m_separation3DMin = -50.f;             ///< the m_separation3D minimum range boundary
+        float m_separation3DMax = 700.f;             ///< the m_separation3D maximum range boundary
+        float m_nuVertexSepMin = -100.f;             ///< the m_parent(child)NuVertexSep minimum range boundary
+        float m_nuVertexSepMax = 750.f;              ///< the m_parent(child)NuVertexSep maximum range boundary
+        float m_parentEndRegionNHitsMin = -10.f;     ///< the m_parentEndRegionNHits minimum range boundary
+        float m_parentEndRegionNHitsMax = 80.f;      ///< the m_parentEndRegionNHits maximum range boundary
+        float m_parentEndRegionNParticlesMin = -1.f; ///< the m_parentEndRegionNParticles minimum range boundary
+        float m_parentEndRegionNParticlesMax = 5.f;  ///< the m_parentEndRegionNParticles maximum range boundary
+        float m_parentEndRegionRToWallMin = -10.f;   ///< the m_parentEndRegionRToWall minimum range boundary
+        float m_parentEndRegionRToWallMax = 400.f;   ///< the m_parentEndRegionRToWall maximum range boundary
+        float m_vertexSepMin = -50.f;                ///< the m_vertexSeparation minimum range boundary
+        float m_vertexSepMax = 700.f;                ///< the m_vertexSeparation maximum range boundary
+        float m_doesChildConnectMin = -1.f;          ///< the m_doesChildConnect minimum range boundary
+        float m_doesChildConnectMax = 1.f;           ///< the m_doesChildConnect maximum range boundary
+        float m_overshootDCAMin = -700.f;            ///< the m_overshootStart(End)DCA minimum range boundary
+        float m_overshootDCAMax = 700.f;             ///< the m_overshootStart(End)DCA maximum range boundary
+        float m_overshootLMin = -100.f;              ///< the m_overshootStart(End)L minimum range boundary
+        float m_overshootLMax = 700.f;               ///< the m_overshootStart(End)L maximum range boundary
+        float m_childCPDCAMin = -5.f;                ///< the m_childCPDCA minimum range boundary
+        float m_childCPDCAMax = 50.f;                ///< the m_childCPDCA maximum range boundary
+        float m_childCPExtrapDistanceMin = -500.f;   ///< the m_childCPExtrapDistance minimum range boundary
+        float m_childCPExtrapDistanceMax = 500.f;    ///< the m_childCPExtrapDistance maximum range boundary
+        float m_childCPLRatioMin = -1.f;             ///< the m_childCPLRatio minimum range boundary
+        float m_childCPLRatioMax = 1.f;              ///< the m_childCPLRatio maximum range boundary
+        float m_parentCPNHitsMin = -10.f;            ///< the m_parentCPNUp(Down)streamHits minimum range boundary
+        float m_parentCPNHitsMax = 100.f;            ///< the m_parentCPNUp(Down)streamHits maximum range boundary
+        float m_parentCPNHitRatioMin = -5.f;         ///< the m_parentCPNHitRatio minimum range boundary
+        float m_parentCPNHitRatioMax = 30.f;         ///< the m_parentCPNHitRatio maximum range boundary
+        float m_parentCPEigenvalueRatioMin = -5.f;   ///< the m_parentCPEigenvalueRatio minimum range boundary
+        float m_parentCPEigenvalueRatioMax = 50.f;   ///< the m_parentCPEigenvalueRatio maximum range boundary
+        float m_parentCPOpeningAngleMin = -10.f;     ///< the m_parentCPOpeningAngle minimum range boundary
+        float m_parentCPOpeningAngleMax = 180.f;     ///< the m_parentCPOpeningAngle maximum range boundary
+    };
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -111,38 +151,6 @@ private:
         const pandora::ParticleFlowObject *const pNeutrinoPfo, const bool useUpstreamForParent, const bool useUpstreamForChild, 
         DLLaterTierNetworkParams &laterTierNetworkParams) const;  
 
-    /**
-     *  @brief  Get the track/shower score DLLaterTierNetworkParams
-     *          (m_parentTrackScore, m_childTrackScore)
-     *
-     *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
-     *  @param  childHierarchyPfo the HierarchyPfo object of the child pfo     
-     *
-     *  @return the (parentTrackScore, childTrackScore) pair
-     */
-    std::pair<float, float> GetTrackScoreParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
-
-    /**
-     *  @brief  Get the number of 3D hit DLLaterTierNetworkParams
-     *          (m_parentNSpacepoints, m_childNSpacepoints)
-     *
-     *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
-     *  @param  childHierarchyPfo the HierarchyPfo object of the child pfo     
-     *
-     *  @return the (parentNSpacepoints, childNSpacepoints) pair
-     */
-    std::pair<float, float> GetNSpacepointsParams(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
-
-    /**
-     *  @brief  Get the m_separation3D DLLaterTierNetworkParam
-     *
-     *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
-     *  @param  childHierarchyPfo the HierarchyPfo object of the child pfo     
-     *
-     *  @return the smallest 3D distance between the parent and child 3D hits
-     */  
-    float GetSeparation3D(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
-
    /**
     *  @brief  Set the orientation independent DLLaterTierNetworkParams
     *          (m_parentTrackScore, m_childTrackScore, m_parentNSpacepoints, m_childNSpacepoints, m_separation3D)
@@ -160,13 +168,13 @@ private:
      *          (m_parentNuVertexSep, m_childNuVertexSep, m_vertexSeparation)
      *
      *  @param  nuVertex the neutrino vertex position
-     *  @param  parentStart the assumed parent pfo startpoint
-     *  @param  parentEnd the assumed parent pfo endpoint
-     *  @param  childStart the assumed child pfo startpoint
+     *  @param  parentStartPos the assumed parent pfo start position
+     *  @param  parentEndPos the assumed parent pfo end position
+     *  @param  childStartPos the assumed child pfo start position
      *  @param  laterTierNetworkParams the later tier network parameters to fill
      */  
-    void SetVertexParams(const pandora::CartesianVector &nuVertex, const pandora::CartesianVector &parentStart, 
-        const pandora::CartesianVector &parentEnd, const pandora::CartesianVector &childStart, 
+    void SetVertexParams(const pandora::CartesianVector &nuVertex, const pandora::CartesianVector &parentStartPos, 
+        const pandora::CartesianVector &parentEndPos, const pandora::CartesianVector &childStartPos, 
         DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
@@ -175,19 +183,19 @@ private:
      *
      *  @param  pAlgorithm a pointer to the pandora algorithm 
      *  @param  pParentPfo a pointer to the parent pfo
-     *  @param  parentEnd the assumed parent pfo endpoint
+     *  @param  parentEndPos the assumed parent pfo end position
      *  @param  laterTierNetworkParams the later tier network parameters to fill
      */  
     void SetEndRegionParams(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pParentPfo, 
-        const pandora::CartesianVector &parentEnd, DLLaterTierNetworkParams &laterTierNetworkParams) const;
+        const pandora::CartesianVector &parentEndPos, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
      *  @brief  Set the m_parentEndRegionRToWall DLLaterTierNetworkParam
      *
-     *  @param  parentEnd the assumed parent pfo endpoint
+     *  @param  parentEndPos the assumed parent pfo end position
      *  @param  laterTierNetworkParams the later tier network parameters to fill  
      */
-    void SetEndRegionRToWall(const pandora::CartesianVector &parentEnd, DLLaterTierNetworkParams &laterTierNetworkParams) const;
+    void SetEndRegionRToWall(const pandora::CartesianVector &parentEndPos, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
      *  @brief  Set the child connection DLLaterTierNetworkParams
@@ -195,33 +203,30 @@ private:
      *           m_childCPDCA, m_childCPExtrapDistance, m_childCPLRatio)
      *
      *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
-     *  @param  parentStart the assumed parent pfo startpoint
-     *  @param  childStart the assumed child pfo startpoint
-     *  @param  childStartDirection the direction at the assumed child startpoint
+     *  @param  parentStartPos the assumed parent pfo start position
+     *  @param  childStart the assumed child startpoint
      *  @param  laterTierNetworkParams the later tier network parameters to fill  
      */  
-    void SetConnectionParams(const HierarchyPfo &parentHierarchyPfo,
-        const pandora::CartesianVector &parentStart, const pandora::CartesianVector &childStart, 
-        const pandora::CartesianVector &childStartDirection, DLLaterTierNetworkParams &laterTierNetworkParams) const;
+    void SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, const pandora::CartesianVector &parentStartPos, 
+        const ExtremalPoint &childStart, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
-     *  @brief  Project the (parentPos - childStart) vector onto the child direction axis 
-     *          to obtain an extrapolation point
+     *  @brief  Project the (parentPos - childStartPos) vector onto the child direction axis 
+     *          to obtain an extrapolation position
      *
      *  @param  parentPosition the parent position
      *  @param  childStart the assumed child pfo startpoint
-     *  @param  childStartDirection the direction at the child startpoint
      *
-     *  @return the (extrapolated point, whether the extrpolation was backwards wrt the child direction) pair
+     *  @return the (extrapolated position, whether the extrpolation was backwards wrt the child direction) pair
      */
     std::pair<pandora::CartesianVector, bool> ExtrapolateChildToParent(const pandora::CartesianVector &parentPosition, 
-        const pandora::CartesianVector &childStart, const pandora::CartesianVector &childStartDirection) const;
+        const ExtremalPoint &childStart) const;
 
     /**
      *  @brief  Return whether an input position connects to a line defined by two endpoints
      * 
-     *  @param  boundary1 one endpoint
-     *  @param  boundary2 the other endpoint
+     *  @param  boundary1 one end position
+     *  @param  boundary2 the other end position
      *  @param  testPoint the input position
      *
      *  @return whether the input position connects to the line defined by the two input endpoints
@@ -234,16 +239,12 @@ private:
      *          (m_overshootStartDCA, m_overshootStartL, m_overshootEndDCA, m_overshootEndL)
      *
      *  @param  parentStart the assumed parent pfo startpoint
-     *  @param  parentStartDirection the direction at the parent startpoint
      *  @param  parentEnd the assumed parent pfo endpoint
-     *  @param  parentEndDirection the direction at the parent endpoint
      *  @param  childStart the assumed child pfo startpoint
-     *  @param  childStartDirection the direction at the child startpoint
      *  @param  laterTierNetworkParams the later tier network parameters to fill  
      */
-    void SetOvershootParams(const pandora::CartesianVector &parentStart, const pandora::CartesianVector &parentStartDirection, 
-        const pandora::CartesianVector &parentEnd, const pandora::CartesianVector &parentEndDirection, const pandora::CartesianVector &childStart, 
-        const pandora::CartesianVector &childStartDirection, DLLaterTierNetworkParams &laterTierNetworkParams) const;
+    void SetOvershootParams(const ExtremalPoint &parentStart, const ExtremalPoint &parentEnd, 
+        const ExtremalPoint &childStart, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
      *  @brief  Set the parent connection point DLLaterTierNetworkParams
@@ -328,42 +329,7 @@ private:
     float m_searchRegion;       ///< the dimensions of the box used to obtain the up/downstream 3D hit groups
     // For normalisation
     bool m_normalise;                     ///< whether to normalise the network parameters
-    float m_trackScoreMin;                ///< the m_parent(child)TrackScore minimum range boundary
-    float m_trackScoreMax;                ///< the m_parent(child)TrackScore maximum range boundary
-    float m_nSpacepointsMin;              ///< the m_parent(child)NSpacepoints minimum range boundary
-    float m_nSpacepointsMax;              ///< the m_parent(child)NSpacepoints maximum range boundary
-    float m_separation3DMin;              ///< the m_separation3D minimum range boundary
-    float m_separation3DMax;              ///< the m_separation3D maximum range boundary
-    float m_nuVertexSepMin;               ///< the m_parent(child)NuVertexSep minimum range boundary
-    float m_nuVertexSepMax;               ///< the m_parent(child)NuVertexSep maximum range boundary
-    float m_parentEndRegionNHitsMin;      ///< the m_parentEndRegionNHits minimum range boundary
-    float m_parentEndRegionNHitsMax;      ///< the m_parentEndRegionNHits maximum range boundary
-    float m_parentEndRegionNParticlesMin; ///< the m_parentEndRegionNParticles minimum range boundary
-    float m_parentEndRegionNParticlesMax; ///< the m_parentEndRegionNParticles maximum range boundary
-    float m_parentEndRegionRToWallMin;    ///< the m_parentEndRegionRToWall minimum range boundary
-    float m_parentEndRegionRToWallMax;    ///< the m_parentEndRegionRToWall maximum range boundary
-    float m_vertexSepMin;                 ///< the m_vertexSeparation minimum range boundary
-    float m_vertexSepMax;                 ///< the m_vertexSeparation maximum range boundary
-    float m_doesChildConnectMin;          ///< the m_doesChildConnect minimum range boundary
-    float m_doesChildConnectMax;          ///< the m_doesChildConnect maximum range boundary
-    float m_overshootDCAMin;              ///< the m_overshootStart(End)DCA minimum range boundary
-    float m_overshootDCAMax;              ///< the m_overshootStart(End)DCA maximum range boundary
-    float m_overshootLMin;                ///< the m_overshootStart(End)L minimum range boundary
-    float m_overshootLMax;                ///< the m_overshootStart(End)L maximum range boundary
-    float m_childCPDCAMin;                ///< the m_childCPDCA minimum range boundary
-    float m_childCPDCAMax;                ///< the m_childCPDCA maximum range boundary
-    float m_childCPExtrapDistanceMin;     ///< the m_childCPExtrapDistance minimum range boundary
-    float m_childCPExtrapDistanceMax;     ///< the m_childCPExtrapDistance maximum range boundary
-    float m_childCPLRatioMin;             ///< the m_childCPLRatio minimum range boundary
-    float m_childCPLRatioMax;             ///< the m_childCPLRatio maximum range boundary
-    float m_parentCPNHitsMin;             ///< the m_parentCPNUp(Down)streamHits minimum range boundary
-    float m_parentCPNHitsMax;             ///< the m_parentCPNUp(Down)streamHits maximum range boundary
-    float m_parentCPNHitRatioMin;         ///< the m_parentCPNHitRatio minimum range boundary
-    float m_parentCPNHitRatioMax;         ///< the m_parentCPNHitRatio maximum range boundary
-    float m_parentCPEigenvalueRatioMin;   ///< the m_parentCPEigenvalueRatio minimum range boundary
-    float m_parentCPEigenvalueRatioMax;   ///< the m_parentCPEigenvalueRatio maximum range boundary
-    float m_parentCPOpeningAngleMin;      ///< the m_parentCPOpeningAngle minimum range boundary
-    float m_parentCPOpeningAngleMax;      ///< the m_parentCPOpeningAngle maximum range boundary
+    NormalisationLimits m_normLimits;     ///< struct of the normalisation limits
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

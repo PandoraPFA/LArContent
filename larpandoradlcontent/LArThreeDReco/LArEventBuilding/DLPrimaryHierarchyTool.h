@@ -49,6 +49,26 @@ public:
         pandora::FloatVector GetOrientationParamsForModel() const;
     };
 
+    struct NormalisationLimits
+    {
+        float m_nSpacepointsMin = 0.f;                ///< the m_nSpacepoints minimum range boundary 
+        float m_nSpacepointsMax = 2000.f;             ///< the m_nSpacepoints maximum range boundary 
+        float m_nuSeparationMin = -50.f;              ///< the m_nuSeparation minimum range boundary
+        float m_nuSeparationMax = 500.f;              ///< the m_nuSeparation maximum range boundary
+        float m_vertexRegionNHitsMin = -10.f;         ///< the m_vertexRegionNHits minimum range boundary
+        float m_vertexRegionNHitsMax = 100.f;         ///< the m_vertexRegionNHits maximum range boundary
+        float m_vertexRegionNParticlesMin = -1.f;     ///< the m_vertexRegionNParticles minimum range boundary
+        float m_vertexRegionNParticlesMax = 8.f;      ///< the m_vertexRegionNParticles maximum range boundary
+        float m_dcaMin = -60.f;                       ///< the m_dca minimum range boundary
+        float m_dcaMax = 600.f;                       ///< the m_dca maximum range boundary
+        float m_connectionExtrapDistanceMin = -700.f; ///< the m_connectionExtrapDistance minimum range boundary
+        float m_connectionExtrapDistanceMax = 500.f;  ///< the m_connectionExtrapDistance maximum range boundary
+        float m_parentConnectionDistanceMin = -150.f; ///< the m_parentConnectionDistance minimum range boundary
+        float m_parentConnectionDistanceMax = 150.f;  ///< the m_parentConnectionDistance maximum range boundary
+        float m_childConnectionDistanceMin = -30.f;   ///< the m_childConnectionDistance minimum range boundary
+        float m_childConnectionDistanceMax = 300.f;   ///< the m_childConnectionDistance maximum range boundary
+    };
+
     pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo, 
         const HierarchyPfoMap &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<DLPrimaryNetworkParams> &networkParamVector, 
         float &primaryScore);
@@ -62,15 +82,12 @@ public:
      *  @brief  Calculate the variables describing the extension of a child particle to a given parent 
      *          (m_parentConnectionDistance, m_childConnectionDistance)
      *
-     *  @param  parentVertex the position of the vertex of the parent pfo
-     *  @param  parentDirection the direction at the parent vertex
-     *  @param  childVertex the position of the vertex of the child pfo
-     *  @param  childDirection the direction at the child vertex
+     *  @param  parentPoint the extremal point of the parent
+     *  @param  childPoint the extremal point of the child
      *  @param  parentConnectionDistance the DCA to the parent vertex
      *  @param  childConnectionDistance the extension of the child to the DCA point
      */
-    void CalculateConnectionDistances(const pandora::CartesianVector &parentVertex, const pandora::CartesianVector &parentDirection, 
-        const pandora::CartesianVector &childVertex, const pandora::CartesianVector &childDirection, 
+    void CalculateConnectionDistances(const ExtremalPoint &parentPoint, const ExtremalPoint &childPoint, 
         float &parentConnectionDistance, float &childConnectionDistance) const;
 
 private:
@@ -108,28 +125,25 @@ private:
      *  @brief  Set the connection region DLPrimaryNetworkParams params
      *          (m_dca, m_connectionExtrapDistance)
      *
-     *  @param  particleVertex the position of the pfo vertex
-     *  @param  particleDirection the direction at the pfo vertex
+     *  @param  particlePoint the extremal point of the particle
      *  @param  nuVertex the neutrino vertex
      *  @param  primaryNetworkParams the primary network parameters
      */
-    void SetConnectionParams(const pandora::CartesianVector &particleVertex, const pandora::CartesianVector &particleDirection, 
-        const pandora::CartesianVector &nuVertex, DLPrimaryNetworkParams &primaryNetworkParams) const;
+    void SetConnectionParams(const ExtremalPoint &particlePoint, const pandora::CartesianVector &nuVertex, 
+        DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     /**
      *  @brief  Set the event context DLPrimaryNetworkParams params
      *          (m_parentConnectionDistance, m_childConnectionDistance)
      *
      *  @param  pPfo a pointer to the input pfo
-     *  @param  particleVertex the position of the pfo vertex
-     *  @param  particleDirection the direction at the pfo vertex
+     *  @param  particlePoint the extremal point of the particle
      *  @param  nuVertex the neutrino vertex
      *  @param  trackPfos the <HierarchyPfo -> pfo> map for the track-like particles
      *  @param  primaryNetworkParams the primary network parameters
      */
-    void SetContextParams(const pandora::ParticleFlowObject *const pPfo, const pandora::CartesianVector &particleVertex, 
-        const pandora::CartesianVector &particleDirection, const pandora::CartesianVector &nuVertex, 
-        const HierarchyPfoMap &trackPfos, DLPrimaryNetworkParams &primaryNetworkParams) const;
+    void SetContextParams(const pandora::ParticleFlowObject *const pPfo, const ExtremalPoint &particlePoint, 
+        const pandora::CartesianVector &nuVertex, const HierarchyPfoMap &trackPfos, DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     /**
      *  @brief  Shift and normalise the primary network parameters
@@ -181,22 +195,7 @@ private:
     float m_extrapolationStepSize;       ///< the step size used to trace back a child particle's path
     // For normalisation
     bool m_normalise;                    ///< whether to normalise the network parameters
-    float m_nSpacepointsMin;             ///< the m_nSpacepoints minimum range boundary 
-    float m_nSpacepointsMax;             ///< the m_nSpacepoints maximum range boundary
-    float m_nuSeparationMin;             ///< the m_nuSeparation minimum range boundary
-    float m_nuSeparationMax;             ///< the m_nuSeparation maximum range boundary
-    float m_vertexRegionNHitsMin;        ///< the m_vertexRegionNHits minimum range boundary
-    float m_vertexRegionNHitsMax;        ///< the m_vertexRegionNHits maximum range boundary
-    float m_vertexRegionNParticlesMin;   ///< the m_vertexRegionNParticles minimum range boundary
-    float m_vertexRegionNParticlesMax;   ///< the m_vertexRegionNParticles maximum range boundary
-    float m_dcaMin;                      ///< the m_dca minimum range boundary
-    float m_dcaMax;                      ///< the m_dca maximum range boundary
-    float m_connectionExtrapDistanceMin; ///< the m_connectionExtrapDistance minimum range boundary
-    float m_connectionExtrapDistanceMax; ///< the m_connectionExtrapDistance maximum range boundary
-    float m_parentConnectionDistanceMin; ///< the m_parentConnectionDistance minimum range boundary
-    float m_parentConnectionDistanceMax; ///< the m_parentConnectionDistance maximum range boundary
-    float m_childConnectionDistanceMin;  ///< the m_childConnectionDistance minimum range boundary
-    float m_childConnectionDistanceMax;  ///< the m_childConnectionDistance maximum range boundary
+    NormalisationLimits m_normLimits;    ///< struct of the normalisation limits
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

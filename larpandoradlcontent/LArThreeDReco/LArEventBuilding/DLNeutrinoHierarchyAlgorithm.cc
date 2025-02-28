@@ -18,8 +18,9 @@
 #include "larpandoradlcontent/LArCheating/DLCheatHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLLaterTierHierarchyTool.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLNeutrinoHierarchyAlgorithm.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.h"
+
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLNeutrinoHierarchyAlgorithm.h"
 
 using namespace pandora;
 using namespace lar_content;
@@ -38,7 +39,6 @@ DLNeutrinoHierarchyAlgorithm::DLNeutrinoHierarchyAlgorithm() :
     m_laterTierTrackShowerTreeName("LaterTierTrackShowerTree"),
     m_mcParticleListName("Input"),
     m_trainingVertexAccuracy(5.f),    
-    m_bogusFloat(-999.f),
     m_minClusterSize(5),
     m_slidingFitWindow(20),
     m_regionForDirFit(25.f),
@@ -193,7 +193,7 @@ void DLNeutrinoHierarchyAlgorithm::FillTrackShowerVectors(const ParticleFlowObje
         for (const ParticleFlowObject * pPfo : *pPfoList)
         {
             // Apply hit cut
-            if (this->GetNSpacepoints(pPfo) < m_minClusterSize)
+            if (LArPfoHelper::GetNumberOfThreeDHits(pPfo) < m_minClusterSize)
                 continue;
 
             // Attempt sliding linear fit
@@ -208,20 +208,19 @@ void DLNeutrinoHierarchyAlgorithm::FillTrackShowerVectors(const ParticleFlowObje
                 const ThreeDSlidingFitResult slidingFitResult(*clusters3D.begin(), m_slidingFitWindow, slidingFitPitch);
 
                 // We need directions...
-                CartesianVector upstreamVertex(m_bogusFloat, m_bogusFloat, m_bogusFloat), upstreamDirection(m_bogusFloat, m_bogusFloat, m_bogusFloat), 
-                    downstreamVertex(m_bogusFloat, m_bogusFloat, m_bogusFloat), downstreamDirection(m_bogusFloat, m_bogusFloat, m_bogusFloat);
+                ExtremalPoint upstreamPoint, downstreamPoint;
 
-                if (!this->GetExtremalVerticesAndDirections(pNeutrinoPfo, pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection))
+                if (!this->GetExtremalVerticesAndDirections(pNeutrinoPfo, pPfo, slidingFitResult, upstreamPoint, downstreamPoint))
                     continue;
 
                 // Create track/shower objects
                 if (pPfo->GetParticleId() == 13)
                 {
-                    trackPfos.insert(std::make_pair(pPfo, HierarchyPfo(pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection)));
+                    trackPfos.insert(std::make_pair(pPfo, HierarchyPfo(pPfo, slidingFitResult, upstreamPoint, downstreamPoint)));
                 }
                 else if (pPfo->GetParticleId() == 11) 
                 {
-                    showerPfos.insert(std::make_pair(pPfo, HierarchyPfo(pPfo, slidingFitResult, upstreamVertex, upstreamDirection, downstreamVertex, downstreamDirection)));
+                    showerPfos.insert(std::make_pair(pPfo, HierarchyPfo(pPfo, slidingFitResult, upstreamPoint, downstreamPoint)));
                 }
             }
             catch (...) { continue; }
@@ -231,47 +230,8 @@ void DLNeutrinoHierarchyAlgorithm::FillTrackShowerVectors(const ParticleFlowObje
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float DLNeutrinoHierarchyAlgorithm::GetNSpacepoints(const ParticleFlowObject *const pPfo) const
-{
-    ClusterList clusterList3D;
-    LArPfoHelper::GetThreeDClusterList(pPfo, clusterList3D);
-
-    int total3DHits(0);
-
-    for (const Cluster *const pCluster3D : clusterList3D)
-        total3DHits += pCluster3D->GetNCaloHits();
-
-    return total3DHits;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float DLNeutrinoHierarchyAlgorithm::GetSeparation(const ParticleFlowObject *const pParentPfo, const ParticleFlowObject *const pChildPfo) const
-{
-    CartesianPointVector parentPositions3D, childPositions3D;
-    LArPfoHelper::GetCoordinateVector(pParentPfo, TPC_3D, parentPositions3D);
-    LArPfoHelper::GetCoordinateVector(pChildPfo, TPC_3D, childPositions3D);
-
-    float sepSq(std::numeric_limits<float>::max());
-
-    for (const CartesianVector &parentPosition3D : parentPositions3D)
-    {
-        for (const CartesianVector &childPosition3D : childPositions3D)
-        {
-            const float thisSepSq((parentPosition3D - childPosition3D).GetMagnitudeSquared());
-
-            sepSq = std::min(thisSepSq, sepSq);
-        }
-    }
-
-    return std::sqrt(sepSq);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool DLNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const ParticleFlowObject *const pNeutrinoPfo, const ParticleFlowObject *const pPfo, 
-    const ThreeDSlidingFitResult &slidingFitResult, CartesianVector &upstreamVertex, CartesianVector &upstreamDirection, CartesianVector &downstreamVertex, 
-    CartesianVector &downstreamDirection) const
+    const ThreeDSlidingFitResult &slidingFitResult, ExtremalPoint &upstreamPoint, ExtremalPoint &downstreamPoint) const
 {
     // First, get the neutrino vertex
     const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
@@ -297,35 +257,41 @@ bool DLNeutrinoHierarchyAlgorithm::GetExtremalVerticesAndDirections(const Partic
             // determine upstream/downstream
             if ((innerVertex - nuVertex).GetMagnitudeSquared() < (outerVertex - nuVertex).GetMagnitudeSquared())
             {
-                upstreamVertex = innerVertex;
-                upstreamDirection = innerDirection;
-                downstreamVertex = outerVertex;
-                downstreamDirection = outerDirection;
+                upstreamPoint.Set(innerVertex, innerDirection);
+                downstreamPoint.Set(outerVertex, outerDirection);
             }
             else
             {
-                upstreamVertex = outerVertex;
-                upstreamDirection = outerDirection;
-                downstreamVertex = innerVertex;
-                downstreamDirection = innerDirection;
+                upstreamPoint.Set(outerVertex, outerDirection);
+                downstreamPoint.Set(innerVertex, innerDirection);
             }
         }
         catch(...) { return false; }        
     }
     else
     {
+        // find directions, demand that we have at least one
+        CartesianVector minLayerDir(0.f, 0.f, 0.f), maxLayerDir(0.f, 0.f, 0.f);
+        const bool minLayerDirSet(this->GetShowerDirection(pPfo, slidingFitResult.GetGlobalMinLayerPosition(), minLayerDir));
+        const bool maxLayerDirSet(this->GetShowerDirection(pPfo, slidingFitResult.GetGlobalMaxLayerPosition(), maxLayerDir));
+
+        if (!minLayerDirSet && !maxLayerDirSet)
+            return false;
+
         const float minSepSq((slidingFitResult.GetGlobalMinLayerPosition() - nuVertex).GetMagnitudeSquared());
         const float maxSepSq((slidingFitResult.GetGlobalMaxLayerPosition() - nuVertex).GetMagnitudeSquared());
 
-        upstreamVertex = (minSepSq < maxSepSq) ? slidingFitResult.GetGlobalMinLayerPosition() : slidingFitResult.GetGlobalMaxLayerPosition();
-        downstreamVertex = (minSepSq < maxSepSq) ? slidingFitResult.GetGlobalMaxLayerPosition() : slidingFitResult.GetGlobalMinLayerPosition();
+        if (minLayerDirSet)
+        {
+            ExtremalPoint &toChange = (minSepSq < maxSepSq) ? upstreamPoint : downstreamPoint;
+            toChange.Set(slidingFitResult.GetGlobalMinLayerPosition(), minLayerDir);
+        }
 
-        // find directions, demand that we have at least one
-        const bool upstreamDirectionSet(this->GetShowerDirection(pPfo, upstreamVertex, upstreamDirection));
-        const bool downstreamDirectionSet(this->GetShowerDirection(pPfo, downstreamVertex, downstreamDirection));
-
-        if (!upstreamDirectionSet && !downstreamDirectionSet)
-            return false;
+        if (maxLayerDirSet)
+        {
+            ExtremalPoint &toChange = (minSepSq < maxSepSq) ? downstreamPoint : upstreamPoint;
+            toChange.Set(slidingFitResult.GetGlobalMaxLayerPosition(), maxLayerDir);
+        }
     }
 
     return true;
@@ -419,10 +385,10 @@ float DLNeutrinoHierarchyAlgorithm::GetPrimaryScore(const ParticleFlowObject *co
     const HierarchyPfo &hierarchyPfo) const
 {
     std::vector<DLPrimaryHierarchyTool::DLPrimaryNetworkParams> networkParamVector;
-    float primaryScore(m_bogusFloat);
+    float primaryScore(std::numeric_limits<float>::lowest());
 
     if (m_primaryHierarchyTool->Run(this, pNeutrinoPfo, trackPfos, hierarchyPfo, networkParamVector, primaryScore) != STATUS_CODE_SUCCESS)
-        return m_bogusFloat;
+        return std::numeric_limits<float>::lowest();
 
     return primaryScore;
 }
@@ -530,7 +496,7 @@ void DLNeutrinoHierarchyAlgorithm::SetLaterTierScores(const ParticleFlowObject *
             const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
             const CartesianVector nuVertex(pNeutrinoVertex->GetPosition().GetX(), pNeutrinoVertex->GetPosition().GetY(), pNeutrinoVertex->GetPosition().GetZ());
 
-            if ((childPfo.GetUpstreamVertex() - nuVertex).GetMagnitudeSquared() < (m_primaryRegion * m_primaryRegion))
+            if ((childPfo.GetUpstreamPoint().GetPosition() - nuVertex).GetMagnitudeSquared() < (m_primaryRegion * m_primaryRegion))
                 continue;
 
             float highestScore(0.f);
@@ -542,14 +508,13 @@ void DLNeutrinoHierarchyAlgorithm::SetLaterTierScores(const ParticleFlowObject *
                     continue;
 
                 const float thisScore(this->GetLaterTierScore(pNeutrinoPfo, parentPfo, childPfo));
-
                 const bool best((std::fabs(thisScore - highestScore) < std::numeric_limits<float>::epsilon()) ?
-                                (this->GetSeparation(pParentPfo, pChildPfo) < minSep) : (thisScore > highestScore));
+                    (LArPfoHelper::GetThreeDSeparation(pParentPfo, pChildPfo) < minSep) : (thisScore > highestScore));
                 
                 if (best)
                 {
                     highestScore = thisScore;
-                    minSep = this->GetSeparation(pParentPfo, pChildPfo);
+                    minSep = LArPfoHelper::GetThreeDSeparation(pParentPfo, pChildPfo);
                     childPfo.SetLaterTierScore(thisScore);
                     childPfo.SetPredictedParentPfo(pParentPfo);
                 }
@@ -564,10 +529,10 @@ float DLNeutrinoHierarchyAlgorithm::GetLaterTierScore(const ParticleFlowObject *
     const HierarchyPfo &childPfo) const
 {
     std::vector<DLLaterTierHierarchyTool::DLLaterTierNetworkParams> networkParamVector;
-    float laterTierScore(m_bogusFloat);
+    float laterTierScore(std::numeric_limits<float>::lowest());
 
     if (m_laterTierHierarchyTool->Run(this, pNeutrinoPfo, parentPfo, childPfo, networkParamVector, laterTierScore) != STATUS_CODE_SUCCESS)
-        return m_bogusFloat;
+        return std::numeric_limits<float>::lowest();
 
     return laterTierScore;
 }
@@ -756,7 +721,7 @@ void DLNeutrinoHierarchyAlgorithm::FillPrimaryTrees(const PfoToMCParticleMap &ma
 
             // Get reco info
             std::vector<DLPrimaryHierarchyTool::DLPrimaryNetworkParams> networkParamVector;
-            float primaryScore(m_bogusFloat);
+            float primaryScore(std::numeric_limits<float>::lowest());
 
             if (m_primaryHierarchyTool->Run(this, pNeutrinoPfo, trackPfos, hierarchyPfo, networkParamVector, primaryScore) != STATUS_CODE_SUCCESS)
                 continue;
@@ -764,6 +729,7 @@ void DLNeutrinoHierarchyAlgorithm::FillPrimaryTrees(const PfoToMCParticleMap &ma
             for (const DLPrimaryHierarchyTool::DLPrimaryNetworkParams &networkParams : networkParamVector)
             {
                 const bool useChildUpstream(std::fabs(networkParams.m_isPOIClosestToNu - 1.f) < std::numeric_limits<float>::epsilon());
+
                 this->FillPrimaryTree(treeName, isTrainingLink, isTrueLink, (useChildUpstream == trueChildOrientation), trueVisibleGen,
                     matchedPDG, trueParentID, particleID, networkParams);
                 
@@ -856,7 +822,7 @@ void DLNeutrinoHierarchyAlgorithm::FillLaterTierTrees(const PfoToMCParticleMap &
                 trueParentOrientation = !trueParentOrientation;
 
                 // Now get DL info for ALL orientations
-                float laterTierScore(m_bogusFloat);
+                float laterTierScore(std::numeric_limits<float>::lowest());
                 std::vector<DLLaterTierHierarchyTool::DLLaterTierNetworkParams> networkParamVector;
 
                 if (m_laterTierHierarchyTool->Run(this, pNeutrinoPfo, hierarchyParentTrackPfo, hierarchyChildPfo, networkParamVector, laterTierScore) != STATUS_CODE_SUCCESS)
@@ -904,19 +870,13 @@ void DLNeutrinoHierarchyAlgorithm::FillLaterTierTrees(const PfoToMCParticleMap &
 std::pair<float, float> DLNeutrinoHierarchyAlgorithm::GetTrainingCuts(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo,
     const bool trueParentOrientation, const bool trueChildOrientation) const
 {
-    const CartesianVector &parentEnd(trueParentOrientation ? parentHierarchyPfo.GetUpstreamVertex() : 
-        parentHierarchyPfo.GetDownstreamVertex());
-    const CartesianVector &parentEndDirection(trueParentOrientation ? parentHierarchyPfo.GetUpstreamDirection() : 
-        parentHierarchyPfo.GetDownstreamDirection());
-    const CartesianVector &childStart(trueChildOrientation ? childHierarchyPfo.GetUpstreamVertex() : 
-        childHierarchyPfo.GetDownstreamVertex());
-    const CartesianVector &childStartDirection(trueChildOrientation ? childHierarchyPfo.GetUpstreamDirection() : 
-        childHierarchyPfo.GetDownstreamDirection());
+    std::pair<float, float> trainingCuts({std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()});
+    const ExtremalPoint &parentEnd(trueParentOrientation ? parentHierarchyPfo.GetUpstreamPoint() : 
+        parentHierarchyPfo.GetDownstreamPoint());
+    const ExtremalPoint &childStart(trueChildOrientation ? childHierarchyPfo.GetUpstreamPoint() : 
+        childHierarchyPfo.GetDownstreamPoint());
 
-    std::pair<float, float> trainingCuts(std::make_pair(m_bogusFloat, m_bogusFloat));
-
-    m_primaryHierarchyTool->CalculateConnectionDistances(parentEnd, parentEndDirection, childStart, childStartDirection, 
-        trainingCuts.first, trainingCuts.second);
+    m_primaryHierarchyTool->CalculateConnectionDistances(parentEnd, childStart, trainingCuts.first, trainingCuts.second);
 
     return trainingCuts;
 }
@@ -985,7 +945,6 @@ StatusCode DLNeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
    
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BogusFloat", m_bogusFloat));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterSize", m_minClusterSize));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "RegionForDirectionFit", m_regionForDirFit));
