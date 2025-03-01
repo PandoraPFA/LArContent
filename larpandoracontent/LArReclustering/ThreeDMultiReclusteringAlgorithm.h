@@ -61,35 +61,29 @@ private:
      *  @param clusters list of clusters to be deleted
      *  @param view hit type of the clusters
      *  @param freeCaloHits output hits of the deleted clusters
-     *  @param freeIsoCaloHits output isolated hits of the deleted clusters
      */
     pandora::StatusCode FreeCaloHitsFromClusters(const pandora::ClusterList &clusters,
                                                  const pandora::HitType &view,
-                                                 pandora::CaloHitList &freeCaloHits,
-                                                 pandora::CaloHitList &freeIsoCaloHits);
+                                                 pandora::CaloHitList &freeCaloHits);
     /**
      *  @brief Create new pfos from the reclustered 3D clusters and original 2D hits. The original 2D hits are put into new 2D clusters
      *         that follow the new 3D clusters,
      *
      *  @param clusters3D list of reclustered 3D clusters
      *  @param viewToFreeCaloHits2D map of hit type to original 2D hits that need to be clustered
-     *  @param viewToFreeIsoCaloHits2D map of hit type to original 2D isolated hits that need to be clustered
      */
     pandora::StatusCode BuildNewPfos(const pandora::ClusterList &clusters3D,
-                                     std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeCaloHits2D,
-                                     std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeIsoCaloHits2D);
+                                     std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeCaloHits2D);
 
     /**
      *  @brief Create 2D clusters following a 3D cluster
      *
      *  @param pCluster3D a 3D cluster
      *  @param viewToFreeCaloHits2D map of hit type to original 2D hits that need to be clustered
-     *  @param viewToFreeIsoCaloHits2D map of hit type to original 2D isolated hits that need to be clustered
      *  @param newClusters2D output list of newly created 2D clusters
      */
     pandora::StatusCode Build2DClustersFrom3D(const pandora::Cluster *const pCluster3D,
                                               std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeCaloHits2D,
-                                              std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeIsoCaloHits2D,
                                               pandora::ClusterList &newClusters2D);
 
     /**
