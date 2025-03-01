@@ -72,8 +72,8 @@
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 #include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
 #include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
-#include "larpandoracontent/LArReclustering/RandomClusteringAlgorithm.h"
-#include "larpandoracontent/LArReclustering/RandomFigureOfMeritTool.h"
+#include "larpandoracontent/LArReclustering/LArExample/RandomClusteringAlgorithm.h"
+#include "larpandoracontent/LArReclustering/LArExample/RandomFigureOfMeritTool.h"
 
 #include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
 #include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"

@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArReclustering/RandomFigureOfMeritTool.h"
+#include "larpandoracontent/LArReclustering/LArExample/RandomFigureOfMeritTool.h"
 
 using namespace pandora;
 

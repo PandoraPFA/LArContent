@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArReclustering/RandomClusteringAlgorithm.h"
+#include "larpandoracontent/LArReclustering/LArExample/RandomClusteringAlgorithm.h"
 
 #include <vector>
 #include <algorithm>
