@@ -151,7 +151,7 @@ void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pP
             continue;
 
         // Upstream position should be closer to nu vertex
-        const float thisNuVertexSepSq((hierarchyTrackPfo.GetUpstreamPoint().GetPosition() - nuVertex).GetMagnitudeSquared());
+        const float thisNuVertexSepSq((hierarchyTrackPfo.GetDownstreamPoint().GetPosition() - nuVertex).GetMagnitudeSquared());
 
         if (thisNuVertexSepSq > nuVertexSepSq)
             continue;

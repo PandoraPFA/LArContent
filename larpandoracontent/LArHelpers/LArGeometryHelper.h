@@ -40,9 +40,12 @@ public:
      */
     struct DetectorBoundaries
     {
-        std::pair<float, float> m_xBoundaries = {-999.f, -999.f}; ///< {low, high} x boundaries of the detector
-        std::pair<float, float> m_yBoundaries = {-999.f, -999.f}; ///< {low, high} y boundaries of the detector
-        std::pair<float, float> m_zBoundaries = {-999.f, -999.f}; ///< {low, high} z boundaries of the detector
+        std::pair<float, float> m_xBoundaries = {std::numeric_limits<float>::max(), 
+            std::numeric_limits<float>::lowest()}; ///< {low, high} x boundaries of the detector
+        std::pair<float, float> m_yBoundaries = {std::numeric_limits<float>::max(), 
+            std::numeric_limits<float>::lowest()}; ///< {low, high} y boundaries of the detector
+        std::pair<float, float> m_zBoundaries = {std::numeric_limits<float>::max(), 
+            std::numeric_limits<float>::lowest()}; ///< {low, high} z boundaries of the detector
     };
 
     /**
