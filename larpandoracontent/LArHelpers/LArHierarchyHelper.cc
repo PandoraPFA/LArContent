@@ -1079,7 +1079,8 @@ int LArHierarchyHelper::RecoHierarchy::Node::GetParticleId() const
 
 const std::string LArHierarchyHelper::RecoHierarchy::Node::ToString(const std::string &prefix) const
 {
-    std::string str(prefix + "PDG: " + std::to_string(m_pdg) + " Tier: " + std::to_string(m_tier) + " Hits: " + std::to_string(m_caloHits.size()) + "\n");
+    std::string str(
+        prefix + "PDG: " + std::to_string(m_pdg) + " Tier: " + std::to_string(m_tier) + " Hits: " + std::to_string(m_caloHits.size()) + "\n");
     for (const Node *pChild : m_children)
         str += pChild->ToString(prefix + "   ");
 
