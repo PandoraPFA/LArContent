@@ -61,65 +61,63 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Retrieve the metrics of every cluster in a view
+     *  @brief Retrieve the metrics of every cluster in a view
      *
-     *  @param hitParents Map of hits being considered to the Cluster/MCParticle they belong to
-     *  @param metrics The output metrics for the clusters in this view
+     *  @param[in]  hitParents Map of hits being considered to the Cluster/MCParticle they belong to
+     *  @param[out] metrics    Metrics for the clusters in this view
      */
-    void GetMetrics(
-        const std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents,
-        ClusterMetrics &metrics
-    ) const;
+    void GetMetrics(const std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents, ClusterMetrics &metrics) const;
 
     /**
-     *  @brief  Calculate Rand Index for the clusters with the clusters of true MCParticles.
+     *  @brief Calculate Rand Index for the clusters with the clusters of true MCParticles.
      *          (Ref. for Adjusted Rand Index: https://link.springer.com/article/10.1007/BF01908075)
      *
-     *  @param hitParents Map of hits being considered to the Cluster/MCParticle they belong to
+     *  @param[in] hitParents Map of hits being considered to the Cluster/MCParticle they belong to
      */
     float CalcRandIndex(std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents) const;
 
     /**
-     *  @brief  Find the cluster and MCParticle each hit belongs to
+     *  @brief Find the cluster and MCParticle each hit belongs to
      *
-     *  @param caloHits list of hits
-     *  @param clusters list of clusters
-     *  @param hitParents Output map of hits to the Cluster/MCParticle they belong to
+     *  @param[in]  caloHits   List of hits
+     *  @param[in]  clusters   List of clusters
+     *  @param[out] hitParents Map of hits to the Cluster/MCParticle they belong to
      */
-    void GetHitParents(
-        const pandora::CaloHitList &caloHits, const pandora::ClusterList &clusters,
-        std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents
-    ) const;
+    void GetHitParents(const pandora::CaloHitList &caloHits,
+                       const pandora::ClusterList &clusters,
+                       std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents) const;
 
     /**
-     *  @brief  Erase hits associated to an MCParticle that does meet a minimum
-     *          number of hits in the view
+     *  @brief Erase hits associated to an MCParticle that does meet a minimum number of hits in the view
      *
-     *  @param hitParents Map of hits to the Cluster/MCParticle they belong to
+     *  @param[in,out] hitParents Map of hits to the Cluster/MCParticle they belong to
      */
-    void ApplyMCParticleMinSumHits(
-        std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents
-    ) const;
+    void ApplyMCParticleMinSumHits(std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents) const;
 
     /**
-     *  @brief  Erase hits not associated with an MCParticle PDG incompatible with track/shower/all
+     *  @brief Erase hits not associated with an MCParticle PDG incompatible with track/shower/all
      *
-     *  @param hitParents Map of hits to the Cluster/MCParticle they belong to
-     *  @param valType Enum for track/shower/all
+     *  @param[in] hitParents Map of hits to the Cluster/MCParticle they belong to
+     *  @param[in] valType    Enum for track/shower/all
      */
-    std::map<const pandora::CaloHit *const, EventClusterValidationAlgorithm::CaloHitParents> ApplyPDGCut(
-        std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents, const ValidationType &valType
-    ) const;
+    std::map<const pandora::CaloHit *const, CaloHitParents> ApplyPDGCut(std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents,
+                                                                        const ValidationType &valType) const;
 
+    /**
+     *  @brief Update the branches of the TTree for this entry
+     *
+     *  @param[in] metrics      Metrics for clusters in a view
+     *  @param[in] randIfx      Adjusted Rand index
+     *  @param[in] branchPrefix Prefix for the branch name
+     */
     void SetBranches(ClusterMetrics &metrics, float randIdx, std::string branchPrefix) const;
 
     int m_eventNumber;                           ///< To track the current event number
     std::string m_fileName;                      ///< The filename of the ROOT output file
     std::string m_treeName;                      ///< The name of the ROOT tree
-    std::string m_caloHitListName;               ///< The name of the hit list containing all hits in all views
-    std::vector<std::string> m_clusterListNames; ///< The names of the lists of clusters to process
-    int m_minMCHitsPerView;                      ///< Threshold on total maint MCParticle hits in each view
-                                                 ///  for consideration in metric calculations
+    std::string m_caloHitListName;               ///< The name of the hit list containing all 2D hits
+    std::vector<std::string> m_clusterListNames; ///< The names of the lists of 2D clusters to process
+    int m_minMCHitsPerView;                      ///< Threshold on total main MCParticle hits in each view for consideration in metric calculations
 };
 
 } // namespace lar_content
