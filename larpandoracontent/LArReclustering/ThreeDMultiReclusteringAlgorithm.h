@@ -116,9 +116,9 @@ private:
     std::string                              m_cluster3DListName; ///< Name of list of 3D clusters that comprise the pfos
     std::vector<std::string>                 m_clusteringAlgs;    ///< The ordered list of clustering algorithms to use
     ThreeDReclusteringFigureOfMeritBaseTool *m_pFomAlgTool;       ///< The address of the figure of merit algorithm tool to use
-    std::string                              m_clusterUListName;  ///
-    std::string                              m_clusterVListName;  ///
-    std::string                              m_clusterWListName;  ///< Name of list of 2D U,V,W clusters that may need to get fragmented after reclustring of 3D clusters
+    std::string                              m_clusterUListName;  ///< Name of list of 2D U clusters that may need reclustering according to new 3D clusters
+    std::string                              m_clusterVListName;  ///< Name of list of 2D V clusters that may need reclustering according to new 3D clusters
+    std::string                              m_clusterWListName;  ///< Name of list of 2D W clusters that may need reclustering according to new 3D clusters
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

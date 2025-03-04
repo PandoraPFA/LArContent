@@ -23,12 +23,14 @@ ThreeDMultiReclusteringAlgorithm::ThreeDMultiReclusteringAlgorithm() :
     m_clusterUListName {"ClustersU"},
     m_clusterVListName {"ClustersV"},
     m_clusterWListName {"ClustersW"}
-{ }
+{
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ThreeDMultiReclusteringAlgorithm::~ThreeDMultiReclusteringAlgorithm()
-{ }
+{
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -57,7 +57,8 @@ StatusCode RandomFigureOfMeritTool::CalcClusteringFom([[maybe_unused]] const Clu
 
 StatusCode RandomFigureOfMeritTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MaxFomToRecluster", m_maxFomToRecluster));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxFomToRecluster", m_maxFomToRecluster));
 
     return STATUS_CODE_SUCCESS;
 }

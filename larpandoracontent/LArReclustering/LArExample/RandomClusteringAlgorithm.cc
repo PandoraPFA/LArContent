@@ -34,8 +34,7 @@ RandomClusteringAlgorithm::~RandomClusteringAlgorithm()
 StatusCode RandomClusteringAlgorithm::Run()
 {
     const CaloHitList *pCaloHits {nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        PandoraContentApi::GetCurrentList(*this, pCaloHits));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHits));
 
     if (pCaloHits->size() < m_numNewClusters)
         return STATUS_CODE_SUCCESS;
@@ -56,16 +55,14 @@ StatusCode RandomClusteringAlgorithm::Run()
         if (splitItr != splitIdxs.cend() && cntr++ > *splitItr)
         {
             const Cluster *pCluster {nullptr};
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                PandoraContentApi::Cluster::Create(*this, params, pCluster));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, params, pCluster));
             params.m_caloHitList.clear();
             splitItr++;
         }
         params.m_caloHitList.push_back(pCaloHit);
     }
     const Cluster *pCluster {nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        PandoraContentApi::Cluster::Create(*this, params, pCluster));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, params, pCluster));
     params.m_caloHitList.clear();
 
     return STATUS_CODE_SUCCESS;
@@ -75,8 +72,8 @@ StatusCode RandomClusteringAlgorithm::Run()
 
 StatusCode RandomClusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        XmlHelper::ReadValue(xmlHandle, "NumNewClusters", m_numNewClusters));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "NumNewClusters", m_numNewClusters));
     if (m_numNewClusters == 0)
         return STATUS_CODE_INVALID_PARAMETER;
 
