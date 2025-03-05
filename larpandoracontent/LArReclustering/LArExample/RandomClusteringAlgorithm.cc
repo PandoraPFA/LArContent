@@ -19,16 +19,6 @@ using namespace pandora;
 namespace lar_content
 {
 
-RandomClusteringAlgorithm::RandomClusteringAlgorithm()
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-RandomClusteringAlgorithm::~RandomClusteringAlgorithm()
-{
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode RandomClusteringAlgorithm::Run()
@@ -41,10 +31,10 @@ StatusCode RandomClusteringAlgorithm::Run()
 
     std::vector<unsigned int> idxs, splitIdxs;
     for (unsigned int i = 0; i < pCaloHits->size(); i++)
-        idxs.push_back(i);
+        idxs.emplace_back(i);
     std::shuffle(idxs.begin(), idxs.end(), std::default_random_engine(0));
     for (unsigned int i = 0; i < m_numNewClusters - 1; i++)
-        splitIdxs.push_back(idxs.at(i));
+        splitIdxs.emplace_back(idxs.at(i));
     std::sort(splitIdxs.begin(), splitIdxs.end());
 
     std::vector<unsigned int>::const_iterator splitItr {splitIdxs.cbegin()};
@@ -59,11 +49,10 @@ StatusCode RandomClusteringAlgorithm::Run()
             params.m_caloHitList.clear();
             splitItr++;
         }
-        params.m_caloHitList.push_back(pCaloHit);
+        params.m_caloHitList.emplace_back(pCaloHit);
     }
     const Cluster *pCluster {nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, params, pCluster));
-    params.m_caloHitList.clear();
 
     return STATUS_CODE_SUCCESS;
 }

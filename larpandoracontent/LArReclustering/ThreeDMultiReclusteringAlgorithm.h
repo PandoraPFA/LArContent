@@ -2,6 +2,9 @@
  *  @file   larpandoracontent/LArReclustering/ThreeDMultiReclusteringAlgorithm.h
  *
  *  @brief  Header file for the reclustering algorithm class.
+ *          Tries multiple 3D clustering algorithms and reclusters Pfos is a good one is found.
+ *          Reclustered Pfos will: have no vertex, not be characterised as track/shower, not be part of any particle hierarchy.
+ *          These properties will need to be added by succeeding algorithms.
  *
  *  $Log: $
  */
@@ -30,9 +33,9 @@ public:
     ThreeDMultiReclusteringAlgorithm();
 
     /**
-    *  @brief  Destructor
+    *  @brief  Default destructor
     */
-    ~ThreeDMultiReclusteringAlgorithm();
+    ~ThreeDMultiReclusteringAlgorithm() = default;
 
 private:
 
@@ -47,13 +50,13 @@ private:
      */
     pandora::StatusCode FreeClustersFromPfos(const pandora::PfoList &pfos,
                                              std::map<pandora::HitType, pandora::ClusterList> &viewToFreeClusters,
-                                             std::map<const pandora::Pfo *const, pandora::ClusterList> &pfoToFreeClusters);
+                                             std::map<const pandora::Pfo *const, pandora::ClusterList> &pfoToFreeClusters) const;
     /**
-     *  @brief Add clusters to existing pfos according to a map
+     *  @brief Remake the original pfos by adding back their removed clusters
      *
      *  @param pfoToClusters map from pfo to a list of clusters
      */
-    pandora::StatusCode AddClustersToPfos(std::map<const pandora::Pfo *const, pandora::ClusterList> &pfoToClusters);
+    pandora::StatusCode RelinkClustersToOriginalPfos(std::map<const pandora::Pfo *const, pandora::ClusterList> &pfoToClusters) const;
 
     /**
      *  @brief Delete clusters of a single hit type and store the associated hits in a list
@@ -64,7 +67,7 @@ private:
      */
     pandora::StatusCode FreeCaloHitsFromClusters(const pandora::ClusterList &clusters,
                                                  const pandora::HitType &view,
-                                                 pandora::CaloHitList &freeCaloHits);
+                                                 pandora::CaloHitList &freeCaloHits) const;
     /**
      *  @brief Create new pfos from the reclustered 3D clusters and original 2D hits. The original 2D hits are put into new 2D clusters
      *         that follow the new 3D clusters,
@@ -73,7 +76,7 @@ private:
      *  @param viewToFreeCaloHits2D map of hit type to original 2D hits that need to be clustered
      */
     pandora::StatusCode BuildNewPfos(const pandora::ClusterList &clusters3D,
-                                     std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeCaloHits2D);
+                                     std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeCaloHits2D) const;
 
     /**
      *  @brief Create 2D clusters following a 3D cluster
@@ -84,7 +87,7 @@ private:
      */
     pandora::StatusCode Build2DClustersFrom3D(const pandora::Cluster *const pCluster3D,
                                               std::map<pandora::HitType, pandora::CaloHitList> &viewToFreeCaloHits2D,
-                                              pandora::ClusterList &newClusters2D);
+                                              pandora::ClusterList &newClusters2D) const;
 
     /**
      *  @brief Add hits to their nearest cluster
@@ -93,57 +96,22 @@ private:
      *  @param clusters list of 2D clusters of the same hit type as the caloHits to have hits added to them
      *  @param addAsIso bool for adding the hits as isolated or not
      */
-    pandora::StatusCode MopUpCaloHits(const pandora::CaloHitList &caloHits, const pandora::ClusterList &clusters, bool addAsIso);
+    pandora::StatusCode MopUpCaloHits(const pandora::CaloHitList &caloHits, const pandora::ClusterList &clusters, bool addAsIso) const;
 
     /**
      *  @brief Create a new pfo from a list of clusters
      *
      *  @param clusters list of clusters, expect a 3D and up to 3 2D clusters.
      */
-    pandora::StatusCode CreatePfoFromClusters(const pandora::ClusterList &clusters);
-
-    /**
-     *  @brief Get the cluster list name associated with a hit type
-     *
-     *  @param view hit type
-     *  @param listName output list name
-     */
-    pandora::StatusCode GetClusterListName(const pandora::HitType &view, std::string &listName);
+    pandora::StatusCode CreatePfoFromClusters(const pandora::ClusterList &clusters) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string                              m_pfoListName;       ///< Name of list of pfos to consider for reclustering
-    std::string                              m_cluster3DListName; ///< Name of list of 3D clusters that comprise the pfos
+    std::map<pandora::HitType, std::string>  m_clusterListNames;  ///< Map of list names for 3D clusters that comprise the pfos and 2D U, V, W clusters that may need reclustering
     std::vector<std::string>                 m_clusteringAlgs;    ///< The ordered list of clustering algorithms to use
     ThreeDReclusteringFigureOfMeritBaseTool *m_pFomAlgTool;       ///< The address of the figure of merit algorithm tool to use
-    std::string                              m_clusterUListName;  ///< Name of list of 2D U clusters that may need reclustering according to new 3D clusters
-    std::string                              m_clusterVListName;  ///< Name of list of 2D V clusters that may need reclustering according to new 3D clusters
-    std::string                              m_clusterWListName;  ///< Name of list of 2D W clusters that may need reclustering according to new 3D clusters
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::StatusCode ThreeDMultiReclusteringAlgorithm::GetClusterListName(const pandora::HitType &view, std::string &listName)
-{
-    switch (view)
-    {
-        case pandora::HitType::TPC_3D:
-            listName = m_cluster3DListName;
-            break;
-        case pandora::HitType::TPC_VIEW_U:
-            listName = m_clusterUListName;
-            break;
-        case pandora::HitType::TPC_VIEW_V:
-            listName = m_clusterVListName;
-            break;
-        case pandora::HitType::TPC_VIEW_W:
-            listName = m_clusterWListName;
-            break;
-        default:
-            return pandora::StatusCode::STATUS_CODE_FAILURE;
-    }
-    return pandora::StatusCode::STATUS_CODE_SUCCESS;
-}
 
 } // namespace lar_content
 

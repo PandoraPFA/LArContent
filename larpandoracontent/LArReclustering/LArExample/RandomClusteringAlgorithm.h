@@ -26,12 +26,12 @@ public:
     /**
      *  @brief  Default constructor
      */
-    RandomClusteringAlgorithm();
+    RandomClusteringAlgorithm() = default;
 
     /**
-    *  @brief  Destructor
+    *  @brief  Default destructor
     */
-    ~RandomClusteringAlgorithm();
+    ~RandomClusteringAlgorithm() = default;
 
 private:
     pandora::StatusCode Run();

@@ -35,7 +35,7 @@ public:
      *  @param clusters input list of clusters
      *  @param fom output value of the clustering goodness, the figure of merit
      */
-    virtual pandora::StatusCode CalcClusteringFom(const pandora::ClusterList clusters, float &fom) = 0;
+    virtual pandora::StatusCode CalcClusteringFom(const pandora::ClusterList &clusters, float &fom) = 0;
 };
 
 } // namespace lar_content

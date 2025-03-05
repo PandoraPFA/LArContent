@@ -27,13 +27,13 @@ public:
     RandomFigureOfMeritTool();
 
     /**
-    *  @brief  Destructor
+    *  @brief  Default destructor
     */
-    ~RandomFigureOfMeritTool();
+    ~RandomFigureOfMeritTool() = default;
 
     pandora::StatusCode GetPfosToRecluster(const pandora::PfoList *pPfos, pandora::PfoList &pfosToRecluster);
 
-    pandora::StatusCode CalcClusteringFom(const pandora::ClusterList clusters, float &fom);
+    pandora::StatusCode CalcClusteringFom(const pandora::ClusterList &clusters, float &fom);
 
 private:
     float GetRandomFom();

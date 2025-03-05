@@ -22,12 +22,6 @@ RandomFigureOfMeritTool::RandomFigureOfMeritTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-RandomFigureOfMeritTool::~RandomFigureOfMeritTool()
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode RandomFigureOfMeritTool::GetPfosToRecluster(const PfoList *pPfos, PfoList &pfosToRecluster)
 {
     if (!pfosToRecluster.empty())
@@ -38,7 +32,7 @@ StatusCode RandomFigureOfMeritTool::GetPfosToRecluster(const PfoList *pPfos, Pfo
         if (pPfo->GetNClusters() == 0)
             continue;
         if (GetRandomFom() < m_maxFomToRecluster)
-            pfosToRecluster.push_back(pPfo);
+            pfosToRecluster.emplace_back(pPfo);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -46,7 +40,7 @@ StatusCode RandomFigureOfMeritTool::GetPfosToRecluster(const PfoList *pPfos, Pfo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode RandomFigureOfMeritTool::CalcClusteringFom([[maybe_unused]] const ClusterList clusters, float &fom)
+StatusCode RandomFigureOfMeritTool::CalcClusteringFom([[maybe_unused]] const ClusterList &clusters, float &fom)
 {
     fom = GetRandomFom();
 
