@@ -178,11 +178,12 @@ void EventClusterValidationAlgorithm::ApplyMCParticleMinSumHits(std::map<const C
         mcSumHits.at(pMainMC)++;
     }
 
-    for (auto it = hitParents.begin(), itNext = it; it != hitParents.end(); it = itNext)
+    for (auto it = hitParents.begin(); it != hitParents.end();)
     {
-      itNext++;
-      if (mcSumHits.at(it->second.m_pMainMC) < m_minMCHitsPerView)
-        hitParents.erase(it);
+        if (mcSumHits.at(it->second.m_pMainMC) < m_minMCHitsPerView)
+            it = hitParents.erase(it);
+        else
+            it++;
     }
 }
 
@@ -200,8 +201,8 @@ EventClusterValidationAlgorithm::ApplyPDGCut(std::map<const CaloHit *const, Calo
         {
             const int pdg {std::abs(pMainMC->GetParticleId())};
             if (
-                (valType == ValidationType::SHOWER && (pdg != 22 && pdg != 11)) ||
-                (valType == ValidationType::TRACK && (pdg == 22 || pdg == 11))
+                (valType == ValidationType::SHOWER && (pdg != PHOTON && pdg != E_MINUS)) ||
+                (valType == ValidationType::TRACK && (pdg == PHOTON || pdg == E_MINUS))
             )
                 continue;
         }
@@ -262,8 +263,8 @@ void EventClusterValidationAlgorithm::GetMetrics(const std::map<const CaloHit *c
                 maxHits = nHits;
             }
         }
-        metrics.m_purities.push_back(maxHits / totalHits);
-        metrics.m_nRecoHits.push_back(totalHits);
+        metrics.m_purities.emplace_back(maxHits / totalHits);
+        metrics.m_nRecoHits.emplace_back(totalHits);
 
         // Calculate cluster completeness
         int nTotalMainMCHits {0};
@@ -272,7 +273,7 @@ void EventClusterValidationAlgorithm::GetMetrics(const std::map<const CaloHit *c
             if (pMainMC == parents.m_pMainMC)
                 nTotalMainMCHits++;
         }
-        metrics.m_completenesses.push_back(maxHits / nTotalMainMCHits);
+        metrics.m_completenesses.emplace_back(maxHits / nTotalMainMCHits);
     }
 }
 
@@ -303,7 +304,7 @@ void EventClusterValidationAlgorithm::SetBranches(ClusterMetrics &metrics, float
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, branchPrefix + "n_clusters", metrics.m_nClusters));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, branchPrefix + "n_mainMCs", metrics.m_nMainMCs));
     double meanPurity = -1.0, meanCompleteness = -1.0, meanNRecoHits = -1.0;
-    if (metrics.m_nClusters > 0)
+    if (!metrics.m_purities.empty() && !metrics.m_completenesses.empty() && !metrics.m_nRecoHits.empty())
     {
         meanPurity = std::accumulate(metrics.m_purities.begin(), metrics.m_purities.end(), 0.0) / metrics.m_purities.size();
         meanCompleteness = std::accumulate(metrics.m_completenesses.begin(), metrics.m_completenesses.end(), 0.0) / metrics.m_completenesses.size();
