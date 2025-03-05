@@ -34,7 +34,7 @@ public:
 
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-  
+
     /**
      *  @brief  Set the detector boundaries 
      */
@@ -50,7 +50,7 @@ protected:
      *
      *  @return std::pair of the number of 3D hits and the number of corresponding pfos
      */
-    std::pair<float, float> GetParticleInfoAboutPfoPosition(const pandora::Algorithm *const pAlgorithm, 
+    std::pair<float, float> GetParticleInfoAboutPfoPosition(const pandora::Algorithm *const pAlgorithm,
         const pandora::ParticleFlowObject *const pPfo, const pandora::CartesianVector &pointOfInterest) const;
 
     /**

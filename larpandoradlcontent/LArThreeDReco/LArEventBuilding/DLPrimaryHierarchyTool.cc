@@ -38,8 +38,8 @@ void DLPrimaryHierarchyTool::DLPrimaryNetworkParams::AddCommonParamsToInput(int 
 
 void DLPrimaryHierarchyTool::DLPrimaryNetworkParams::AddOrientationParamsToInput(int &insertIndex, LArDLHelper::TorchInput &modelInput) const
 {
-    for (const float param : { m_nuSeparation, m_vertexRegionNHits, m_vertexRegionNParticles, m_dca, m_connectionExtrapDistance, 
-                m_isPOIClosestToNu, m_parentConnectionDistance, m_childConnectionDistance })
+    for (const float param : {m_nuSeparation, m_vertexRegionNHits, m_vertexRegionNParticles, m_dca, m_connectionExtrapDistance,
+             m_isPOIClosestToNu, m_parentConnectionDistance, m_childConnectionDistance})
     {
         modelInput[0][insertIndex] = param;
         ++insertIndex;
@@ -59,7 +59,7 @@ DLPrimaryHierarchyTool::DLPrimaryHierarchyTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DLPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo, 
+StatusCode DLPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo,
     const HierarchyPfoVector &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<DLPrimaryNetworkParams> &networkParamVector, float &primaryScore)
 {
     networkParamVector.clear();
@@ -68,16 +68,14 @@ StatusCode DLPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const 
     this->SetDetectorBoundaries();
 
     const bool isTrack(hierarchyPfo.GetPfo()->GetParticleId() == 13);
-    std::vector<bool> orientationVector(isTrack ? std::vector<bool>({true, false}) : 
-        std::vector<bool>({true}));
+    std::vector<bool> orientationVector(isTrack ? std::vector<bool>({true, false}) : std::vector<bool>({true}));
 
     for (const bool useUpstream : orientationVector)
     {
         // Set network params
         DLPrimaryNetworkParams primaryNetworkParams;
 
-        const StatusCode statusCode(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, 
-            trackPfos, useUpstream, primaryNetworkParams));
+        const StatusCode statusCode(this->CalculateNetworkVariables(pAlgorithm, hierarchyPfo, pNeutrinoPfo, trackPfos, useUpstream, primaryNetworkParams));
 
         if (statusCode != STATUS_CODE_SUCCESS)
             return statusCode;
@@ -99,21 +97,26 @@ StatusCode DLPrimaryHierarchyTool::Run(const Algorithm *const pAlgorithm, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DLPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
-    const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoVector &trackPfos, const bool useUpstream, DLPrimaryNetworkParams &primaryNetworkParams) const
+StatusCode DLPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo,
+    const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoVector &trackPfos, const bool useUpstream,
+    DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     // Pick out neutrino vertex
     if (pNeutrinoPfo->GetVertexList().empty())
         return STATUS_CODE_NOT_INITIALIZED;
- 
+
     const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
-    const CartesianVector nuVertex(pNeutrinoVertex->GetPosition().GetX(), pNeutrinoVertex->GetPosition().GetY(), pNeutrinoVertex->GetPosition().GetZ());
+    const CartesianVector nuVertex(
+        pNeutrinoVertex->GetPosition().GetX(), pNeutrinoVertex->GetPosition().GetY(), pNeutrinoVertex->GetPosition().GetZ());
 
     // Pick out the correct extremal point
     const ExtremalPoint &particlePoint(useUpstream ? hierarchyPfo.GetUpstreamPoint() : hierarchyPfo.GetDownstreamPoint());
 
     // Check that we could actually calculate pfo vertex/direction, return if not
-    if (!particlePoint.IsSet()) { return STATUS_CODE_NOT_INITIALIZED; }
+    if (!particlePoint.IsSet())
+    {
+        return STATUS_CODE_NOT_INITIALIZED;
+    }
 
     // Set primaryNetworkParams
     primaryNetworkParams.m_isPOIClosestToNu = useUpstream ? 1.f : 0.f;
@@ -132,9 +135,9 @@ StatusCode DLPrimaryHierarchyTool::CalculateNetworkVariables(const Algorithm *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLPrimaryHierarchyTool::SetVertexRegionParams(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, 
+void DLPrimaryHierarchyTool::SetVertexRegionParams(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pPfo,
     const CartesianVector &particleVertex, DLPrimaryNetworkParams &primaryNetworkParams) const
-{ 
+{
     std::pair<float, float> vertexRegionParams(this->GetParticleInfoAboutPfoPosition(pAlgorithm, pPfo, particleVertex));
 
     primaryNetworkParams.m_vertexRegionNHits = vertexRegionParams.first;
@@ -143,20 +146,20 @@ void DLPrimaryHierarchyTool::SetVertexRegionParams(const Algorithm *const pAlgor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLPrimaryHierarchyTool::SetConnectionParams(const ExtremalPoint &particlePoint, const CartesianVector &nuVertex, 
-    DLPrimaryNetworkParams &primaryNetworkParams) const
+void DLPrimaryHierarchyTool::SetConnectionParams(
+    const ExtremalPoint &particlePoint, const CartesianVector &nuVertex, DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     // Extrapolate particle to nuVertex
     const float extrapDistance((nuVertex - particlePoint.GetPosition()).GetDotProduct(particlePoint.GetDirection()));
     const CartesianVector extrapolationPoint(particlePoint.GetPosition() + (particlePoint.GetDirection() * extrapDistance));
-    
+
     primaryNetworkParams.m_dca = (nuVertex - extrapolationPoint).GetMagnitude();
     primaryNetworkParams.m_connectionExtrapDistance = (extrapDistance * (-1.f)); // backwards extrap. should be +ve
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pPfo, const ExtremalPoint &particlePoint, 
+void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pPfo, const ExtremalPoint &particlePoint,
     const CartesianVector &nuVertex, const HierarchyPfoVector &trackPfos, DLPrimaryNetworkParams &primaryNetworkParams) const
 {
     // What is our nuVertex separation
@@ -181,8 +184,7 @@ void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pP
         float thisParentConnectionDistance(std::numeric_limits<float>::lowest());
         float thisChildConnectionDistance(std::numeric_limits<float>::lowest());
 
-        this->CalculateConnectionDistances(hierarchyTrackPfo.GetDownstreamPoint(), particlePoint, 
-            thisParentConnectionDistance, thisChildConnectionDistance);
+        this->CalculateConnectionDistances(hierarchyTrackPfo.GetDownstreamPoint(), particlePoint, thisParentConnectionDistance, thisChildConnectionDistance);
 
         if ((thisChildConnectionDistance > 0.f) && (std::fabs(thisParentConnectionDistance) < std::fabs(parentConnectionDistance)))
         {
@@ -201,8 +203,8 @@ void DLPrimaryHierarchyTool::SetContextParams(const ParticleFlowObject *const pP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLPrimaryHierarchyTool::CalculateConnectionDistances(const ExtremalPoint &parentPoint, const ExtremalPoint &childPoint, 
-    float &parentConnectionDistance, float &childConnectionDistance) const
+void DLPrimaryHierarchyTool::CalculateConnectionDistances(
+    const ExtremalPoint &parentPoint, const ExtremalPoint &childPoint, float &parentConnectionDistance, float &childConnectionDistance) const
 {
     // Loop things
     float smallestT(std::numeric_limits<float>::max());
@@ -221,7 +223,8 @@ void DLPrimaryHierarchyTool::CalculateConnectionDistances(const ExtremalPoint &p
         if (!LArGeometryHelper::IsInDetector(m_detectorBoundaries, extrapolatedPoint))
             break;
 
-        const float parentT((parentPoint.GetDirection() * (-1.f)).GetCrossProduct((extrapolatedPoint - parentPoint.GetPosition())).GetMagnitudeSquared());
+        const float parentT(
+            (parentPoint.GetDirection() * (-1.f)).GetCrossProduct((extrapolatedPoint - parentPoint.GetPosition())).GetMagnitudeSquared());
 
         if (parentT < smallestT)
         {
@@ -230,14 +233,13 @@ void DLPrimaryHierarchyTool::CalculateConnectionDistances(const ExtremalPoint &p
             isGettingCloser = true;
             found = true;
         }
-    }        
+    }
 
     // Distance from parent end to connection point - need to turn parent direction around
-    parentConnectionDistance = found ? (parentPoint.GetDirection() * (-1.f)).GetDotProduct(connectionPoint - parentPoint.GetPosition()) :
-        std::numeric_limits<float>::lowest();
+    parentConnectionDistance = found ? (parentPoint.GetDirection() * (-1.f)).GetDotProduct(connectionPoint - parentPoint.GetPosition())
+                                     : std::numeric_limits<float>::lowest();
     // Distance from child start to connection point
-    childConnectionDistance = found ? (childPoint.GetPosition() - connectionPoint).GetMagnitude() :
-        std::numeric_limits<float>::lowest();
+    childConnectionDistance = found ? (childPoint.GetPosition() - connectionPoint).GetMagnitude() : std::numeric_limits<float>::lowest();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -247,11 +249,15 @@ void DLPrimaryHierarchyTool::NormaliseNetworkParams(DLPrimaryNetworkParams &prim
     this->NormaliseNetworkParam(m_normLimits.m_nSpacepointsMin, m_normLimits.m_nSpacepointsMax, primaryNetworkParams.m_nSpacepoints);
     this->NormaliseNetworkParam(m_normLimits.m_nuSeparationMin, m_normLimits.m_nuSeparationMax, primaryNetworkParams.m_nuSeparation);
     this->NormaliseNetworkParam(m_normLimits.m_vertexRegionNHitsMin, m_normLimits.m_vertexRegionNHitsMax, primaryNetworkParams.m_vertexRegionNHits);
-    this->NormaliseNetworkParam(m_normLimits.m_vertexRegionNParticlesMin, m_normLimits.m_vertexRegionNParticlesMax, primaryNetworkParams.m_vertexRegionNParticles);
+    this->NormaliseNetworkParam(
+        m_normLimits.m_vertexRegionNParticlesMin, m_normLimits.m_vertexRegionNParticlesMax, primaryNetworkParams.m_vertexRegionNParticles);
     this->NormaliseNetworkParam(m_normLimits.m_dcaMin, m_normLimits.m_dcaMax, primaryNetworkParams.m_dca);
-    this->NormaliseNetworkParam(m_normLimits.m_connectionExtrapDistanceMin, m_normLimits.m_connectionExtrapDistanceMax, primaryNetworkParams.m_connectionExtrapDistance);
-    this->NormaliseNetworkParam(m_normLimits.m_parentConnectionDistanceMin, m_normLimits.m_parentConnectionDistanceMax, primaryNetworkParams.m_parentConnectionDistance);
-    this->NormaliseNetworkParam(m_normLimits.m_childConnectionDistanceMin, m_normLimits.m_childConnectionDistanceMax, primaryNetworkParams.m_childConnectionDistance);
+    this->NormaliseNetworkParam(m_normLimits.m_connectionExtrapDistanceMin, m_normLimits.m_connectionExtrapDistanceMax,
+        primaryNetworkParams.m_connectionExtrapDistance);
+    this->NormaliseNetworkParam(m_normLimits.m_parentConnectionDistanceMin, m_normLimits.m_parentConnectionDistanceMax,
+        primaryNetworkParams.m_parentConnectionDistance);
+    this->NormaliseNetworkParam(m_normLimits.m_childConnectionDistanceMin, m_normLimits.m_childConnectionDistanceMax,
+        primaryNetworkParams.m_childConnectionDistance);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -286,8 +292,7 @@ float DLPrimaryHierarchyTool::ClassifyTrack(const DLPrimaryNetworkParams &edgePa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-FloatVector DLPrimaryHierarchyTool::ClassifyTrackEdge(const DLPrimaryNetworkParams &edgeParams, 
-    const DLPrimaryNetworkParams &otherEdgeParams)
+FloatVector DLPrimaryHierarchyTool::ClassifyTrackEdge(const DLPrimaryNetworkParams &edgeParams, const DLPrimaryNetworkParams &otherEdgeParams)
 {
     LArDLHelper::TorchInput input;
     LArDLHelper::InitialiseInput({1, 17}, input);
@@ -321,7 +326,7 @@ float DLPrimaryHierarchyTool::ClassifyShower(const DLPrimaryNetworkParams &prima
     LArDLHelper::TorchOutput output;
     LArDLHelper::Forward(m_primaryShowerClassifierModel, {input}, output);
     auto outputAccessor = output.accessor<float, 2>();
-    
+
     return outputAccessor[0][0];
 }
 
@@ -330,37 +335,55 @@ float DLPrimaryHierarchyTool::ClassifyShower(const DLPrimaryNetworkParams &prima
 StatusCode DLPrimaryHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ExtrapolationStepSize", m_extrapolationStepSize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ExtrapolationStepSize", m_extrapolationStepSize));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Normalise", m_normalise));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMin", m_normLimits.m_nSpacepointsMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMax", m_normLimits.m_nSpacepointsMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuSeparationMin", m_normLimits.m_nuSeparationMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuSeparationMax", m_normLimits.m_nuSeparationMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNHitsMin", m_normLimits.m_vertexRegionNHitsMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNHitsMax", m_normLimits.m_vertexRegionNHitsMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNParticlesMin", m_normLimits.m_vertexRegionNParticlesMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexRegionNParticlesMax", m_normLimits.m_vertexRegionNParticlesMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMin", m_normLimits.m_nSpacepointsMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMax", m_normLimits.m_nSpacepointsMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuSeparationMin", m_normLimits.m_nuSeparationMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuSeparationMax", m_normLimits.m_nuSeparationMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "VertexRegionNHitsMin", m_normLimits.m_vertexRegionNHitsMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "VertexRegionNHitsMax", m_normLimits.m_vertexRegionNHitsMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "VertexRegionNParticlesMin", m_normLimits.m_vertexRegionNParticlesMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "VertexRegionNParticlesMax", m_normLimits.m_vertexRegionNParticlesMax));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DCAMin", m_normLimits.m_dcaMin));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DCAMax", m_normLimits.m_dcaMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionExtrapDistanceMin", m_normLimits.m_connectionExtrapDistanceMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionExtrapDistanceMax", m_normLimits.m_connectionExtrapDistanceMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ParentConnectionDistanceMin", m_normLimits.m_parentConnectionDistanceMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ParentConnectionDistanceMax", m_normLimits.m_parentConnectionDistanceMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChildConnectionDistanceMin", m_normLimits.m_childConnectionDistanceMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChildConnectionDistanceMax", m_normLimits.m_childConnectionDistanceMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ConnectionExtrapDistanceMin", m_normLimits.m_connectionExtrapDistanceMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ConnectionExtrapDistanceMax", m_normLimits.m_connectionExtrapDistanceMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ParentConnectionDistanceMin", m_normLimits.m_parentConnectionDistanceMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ParentConnectionDistanceMax", m_normLimits.m_parentConnectionDistanceMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ChildConnectionDistanceMin", m_normLimits.m_childConnectionDistanceMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ChildConnectionDistanceMax", m_normLimits.m_childConnectionDistanceMax));
 
     if (!m_trainingMode)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackBranchModelName", m_primaryTrackBranchModelName));        
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackBranchModelName", m_primaryTrackBranchModelName));
         m_primaryTrackBranchModelName = LArFileHelper::FindFileInPath(m_primaryTrackBranchModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryTrackBranchModelName, m_primaryTrackBranchModel));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackClassifierModelName", m_primaryTrackClassifierModelName));        
+        PANDORA_RETURN_RESULT_IF(
+            STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryTrackClassifierModelName", m_primaryTrackClassifierModelName));
         m_primaryTrackClassifierModelName = LArFileHelper::FindFileInPath(m_primaryTrackClassifierModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryTrackClassifierModelName, m_primaryTrackClassifierModel));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryShowerClassifierModelName", m_primaryShowerClassifierModelName));        
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+            XmlHelper::ReadValue(xmlHandle, "PrimaryShowerClassifierModelName", m_primaryShowerClassifierModelName));
         m_primaryShowerClassifierModelName = LArFileHelper::FindFileInPath(m_primaryShowerClassifierModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_primaryShowerClassifierModelName, m_primaryShowerClassifierModel));
     }

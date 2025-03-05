@@ -11,8 +11,8 @@
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLBaseHierarchyTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 
 namespace lar_dl_content
 {
@@ -22,17 +22,17 @@ namespace lar_dl_content
 class DLPrimaryHierarchyTool : public DLBaseHierarchyTool
 {
 public:
-    struct DLPrimaryNetworkParams  // all floats because they'll be normalised
+    struct DLPrimaryNetworkParams // all floats because they'll be normalised
     {
         float m_nSpacepoints = -999.f;             ///< the number of 3D spacepoints
-        float m_nuSeparation = -999.f;             ///< the sep. between the POI and the nu vertex 
+        float m_nuSeparation = -999.f;             ///< the sep. between the POI and the nu vertex
         float m_vertexRegionNHits = -999.f;        ///< the number of 3D hits 'close to' the POI
         float m_vertexRegionNParticles = -999.f;   ///< the number of different particles 'close to' the POI
         float m_dca = -999.f;                      ///< the distance of closest approach from the POI to the nu vertex
         float m_connectionExtrapDistance = -999.f; ///< the sep. between the POI and the DCA point
         float m_isPOIClosestToNu = -999.f;         ///< whether the POI is that closest to the nu vertex
-        float m_parentConnectionDistance = -999.f; ///< the DCA to the most likely parent pfo endpoint 
-        float m_childConnectionDistance = -999.f;  ///< the sep. between the POI and the extension point for m_parentConnectionDistance 
+        float m_parentConnectionDistance = -999.f; ///< the DCA to the most likely parent pfo endpoint
+        float m_childConnectionDistance = -999.f;  ///< the sep. between the POI and the extension point for m_parentConnectionDistance
 
         /**
          *  @brief  Add the orientation independent primary network parameters
@@ -55,8 +55,8 @@ public:
 
     struct NormalisationLimits
     {
-        float m_nSpacepointsMin = 0.f;                ///< the m_nSpacepoints minimum range boundary 
-        float m_nSpacepointsMax = 2000.f;             ///< the m_nSpacepoints maximum range boundary 
+        float m_nSpacepointsMin = 0.f;                ///< the m_nSpacepoints minimum range boundary
+        float m_nSpacepointsMax = 2000.f;             ///< the m_nSpacepoints maximum range boundary
         float m_nuSeparationMin = -50.f;              ///< the m_nuSeparation minimum range boundary
         float m_nuSeparationMax = 500.f;              ///< the m_nuSeparation maximum range boundary
         float m_vertexRegionNHitsMin = -10.f;         ///< the m_vertexRegionNHits minimum range boundary
@@ -73,8 +73,8 @@ public:
         float m_childConnectionDistanceMax = 300.f;   ///< the m_childConnectionDistance maximum range boundary
     };
 
-    pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo, 
-        const HierarchyPfoVector &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<DLPrimaryNetworkParams> &networkParamVector, 
+    pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo,
+        const HierarchyPfoVector &trackPfos, const HierarchyPfo &hierarchyPfo, std::vector<DLPrimaryNetworkParams> &networkParamVector,
         float &primaryScore);
 
     /**
@@ -91,8 +91,8 @@ public:
      *  @param  parentConnectionDistance the DCA to the parent vertex
      *  @param  childConnectionDistance the extension of the child to the DCA point
      */
-    void CalculateConnectionDistances(const ExtremalPoint &parentPoint, const ExtremalPoint &childPoint, 
-        float &parentConnectionDistance, float &childConnectionDistance) const;
+    void CalculateConnectionDistances(const ExtremalPoint &parentPoint, const ExtremalPoint &childPoint, float &parentConnectionDistance,
+        float &childConnectionDistance) const;
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -109,10 +109,10 @@ private:
      *
      *  @return a StatusCode to signify whether the network variables could be correctly calculated
      */
-    pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo, 
-        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoVector &trackPfos, const bool useUpstream, 
+    pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, const HierarchyPfo &hierarchyPfo,
+        const pandora::ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfoVector &trackPfos, const bool useUpstream,
         DLPrimaryNetworkParams &primaryNetworkParams) const;
-  
+
     /**
      *  @brief  Set the vertex region DLPrimaryNetworkParams params
      *          (m_vertexRegionNHits, m_vertexRegionNParticles)
@@ -122,7 +122,7 @@ private:
      *  @param  particleVertex the position of the pfo vertex
      *  @param  primaryNetworkParams the primary network parameters
      */
-    void SetVertexRegionParams(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, 
+    void SetVertexRegionParams(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
         const pandora::CartesianVector &particleVertex, DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     /**
@@ -133,8 +133,8 @@ private:
      *  @param  nuVertex the neutrino vertex
      *  @param  primaryNetworkParams the primary network parameters
      */
-    void SetConnectionParams(const ExtremalPoint &particlePoint, const pandora::CartesianVector &nuVertex, 
-        DLPrimaryNetworkParams &primaryNetworkParams) const;
+    void SetConnectionParams(
+        const ExtremalPoint &particlePoint, const pandora::CartesianVector &nuVertex, DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     /**
      *  @brief  Set the event context DLPrimaryNetworkParams params
@@ -146,7 +146,7 @@ private:
      *  @param  trackPfos the HierachyPfoVector of track-like particles
      *  @param  primaryNetworkParams the primary network parameters
      */
-    void SetContextParams(const pandora::ParticleFlowObject *const pPfo, const ExtremalPoint &particlePoint, 
+    void SetContextParams(const pandora::ParticleFlowObject *const pPfo, const ExtremalPoint &particlePoint,
         const pandora::CartesianVector &nuVertex, const HierarchyPfoVector &trackPfos, DLPrimaryNetworkParams &primaryNetworkParams) const;
 
     /**
@@ -175,8 +175,7 @@ private:
      *
      *  @return the float vector of (signal, wrong orientation, background) scores
      */
-    pandora::FloatVector ClassifyTrackEdge(const DLPrimaryNetworkParams &edgeParams, 
-        const DLPrimaryNetworkParams &otherEdgeParams);
+    pandora::FloatVector ClassifyTrackEdge(const DLPrimaryNetworkParams &edgeParams, const DLPrimaryNetworkParams &otherEdgeParams);
 
     /**
      *  @brief  Apply the primary shower classification network
@@ -190,16 +189,16 @@ private:
     // For model
     bool m_trainingMode;                                    ///< whether to run the tool in training mode
     std::string m_primaryTrackBranchModelName;              ///< the name of the primary track edge model file
-    std::string m_primaryTrackClassifierModelName;          ///< the name of the primary track classification model file 
-    std::string m_primaryShowerClassifierModelName;         ///< the name of the primary shower classification model file 
+    std::string m_primaryTrackClassifierModelName;          ///< the name of the primary track classification model file
+    std::string m_primaryShowerClassifierModelName;         ///< the name of the primary shower classification model file
     LArDLHelper::TorchModel m_primaryTrackBranchModel;      ///< the primary track edge model
     LArDLHelper::TorchModel m_primaryTrackClassifierModel;  ///< the primary track classification model
     LArDLHelper::TorchModel m_primaryShowerClassifierModel; ///< the primary shower classification model
     // For tool
-    float m_extrapolationStepSize;       ///< the step size used to trace back a child particle's path
+    float m_extrapolationStepSize; ///< the step size used to trace back a child particle's path
     // For normalisation
-    bool m_normalise;                    ///< whether to normalise the network parameters
-    NormalisationLimits m_normLimits;    ///< struct of the normalisation limits
+    bool m_normalise;                 ///< whether to normalise the network parameters
+    NormalisationLimits m_normLimits; ///< struct of the normalisation limits
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
