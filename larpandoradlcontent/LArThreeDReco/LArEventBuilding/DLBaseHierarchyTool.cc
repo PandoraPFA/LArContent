@@ -9,8 +9,8 @@
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/StatusCodes.h"
 
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLBaseHierarchyTool.h"
@@ -44,11 +44,11 @@ void DLBaseHierarchyTool::SetDetectorBoundaries()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::pair<float, float> DLBaseHierarchyTool::GetParticleInfoAboutPfoPosition(const Algorithm *const pAlgorithm, 
-    const ParticleFlowObject *const pPfo, const CartesianVector &pointOfInterest) const
-{ 
+std::pair<float, float> DLBaseHierarchyTool::GetParticleInfoAboutPfoPosition(
+    const Algorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CartesianVector &pointOfInterest) const
+{
     int hitCount(0);
-    int particleCount(0);    
+    int particleCount(0);
 
     for (const std::string &pfoListName : m_pfoListNames)
     {
@@ -85,7 +85,6 @@ std::pair<float, float> DLBaseHierarchyTool::GetParticleInfoAboutPfoPosition(con
     return std::pair<float, float>({hitCount, particleCount});
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLBaseHierarchyTool::NormaliseNetworkParam(const float minLimit, const float maxLimit, float &networkParam) const
@@ -97,7 +96,7 @@ void DLBaseHierarchyTool::NormaliseNetworkParam(const float minLimit, const floa
         networkParam = minLimit;
         return;
     }
-    
+
     if (networkParam < minLimit)
         networkParam = minLimit;
 
@@ -112,7 +111,7 @@ void DLBaseHierarchyTool::NormaliseNetworkParam(const float minLimit, const floa
 StatusCode DLBaseHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     StatusCode statusCode(XmlHelper::ReadValue(xmlHandle, "VertexRegionRadius", m_vertexRegionRadiusSq));
-    
+
     if (statusCode == STATUS_CODE_SUCCESS)
     {
         m_vertexRegionRadiusSq = m_vertexRegionRadiusSq * m_vertexRegionRadiusSq;
@@ -121,8 +120,9 @@ StatusCode DLBaseHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
     {
         return statusCode;
     }
-    
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
 
     return STATUS_CODE_SUCCESS;
 }

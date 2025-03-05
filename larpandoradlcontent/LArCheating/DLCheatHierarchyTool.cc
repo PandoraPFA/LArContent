@@ -49,13 +49,13 @@ StatusCode DLCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleMa
     isTrueLink = (childToParentPfoMap.at(childPfo.GetPfo()).first == parentPfo.GetPfo());
 
     // What is the true orientation of the parent?
-    trueParentOrientation = this->IsUpstreamTrueVertex(pfoToMCParticleMap, parentPfo.GetPfo(),
-        parentPfo.GetUpstreamPoint().GetPosition(), parentPfo.GetDownstreamPoint().GetPosition());
-    
-    // What is the true orientation of the child? 
-    trueChildOrientation = this->IsUpstreamTrueVertex(pfoToMCParticleMap, childPfo.GetPfo(),
-        childPfo.GetUpstreamPoint().GetPosition(), childPfo.GetDownstreamPoint().GetPosition());
-    
+    trueParentOrientation = this->IsUpstreamTrueVertex(
+        pfoToMCParticleMap, parentPfo.GetPfo(), parentPfo.GetUpstreamPoint().GetPosition(), parentPfo.GetDownstreamPoint().GetPosition());
+
+    // What is the true orientation of the child?
+    trueChildOrientation = this->IsUpstreamTrueVertex(
+        pfoToMCParticleMap, childPfo.GetPfo(), childPfo.GetUpstreamPoint().GetPosition(), childPfo.GetDownstreamPoint().GetPosition());
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -74,17 +74,16 @@ StatusCode DLCheatHierarchyTool::Run(const PfoToMCParticleMap &pfoToMCParticleMa
 
     isTrueLink = (childToParentPfoMap.at(childPfo.GetPfo()).first == pNeutrinoPfo);
 
-    // What is the true orientation of the child? 
-    trueChildOrientation = this->IsUpstreamTrueVertex(pfoToMCParticleMap, childPfo.GetPfo(),
-        childPfo.GetUpstreamPoint().GetPosition(), childPfo.GetDownstreamPoint().GetPosition());
-    
+    // What is the true orientation of the child?
+    trueChildOrientation = this->IsUpstreamTrueVertex(
+        pfoToMCParticleMap, childPfo.GetPfo(), childPfo.GetUpstreamPoint().GetPosition(), childPfo.GetDownstreamPoint().GetPosition());
+
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DLCheatHierarchyTool::IsNeutronChild(const ParticleFlowObject *const pPfo, const PfoToMCParticleMap &pfoToMCParticleMap, 
-    bool &isNeutronChild) const
+StatusCode DLCheatHierarchyTool::IsNeutronChild(const ParticleFlowObject *const pPfo, const PfoToMCParticleMap &pfoToMCParticleMap, bool &isNeutronChild) const
 {
     // If we dont know the Pfo->MCParticle match
     if (pfoToMCParticleMap.find(pPfo) == pfoToMCParticleMap.end())
@@ -111,19 +110,19 @@ bool DLCheatHierarchyTool::IsUpstreamTrueVertex(const PfoToMCParticleMap &pfoToM
     const MCParticle *const pMatchedMCParticle(pfoToMCParticleMap.at(pPfo));
 
     const float upstreamSepSq((pMatchedMCParticle->GetVertex() - upstreamVertex).GetMagnitudeSquared());
-    const float downstreamSepSq((pMatchedMCParticle->GetVertex() - downstreamVertex).GetMagnitudeSquared());    
+    const float downstreamSepSq((pMatchedMCParticle->GetVertex() - downstreamVertex).GetMagnitudeSquared());
 
     return (upstreamSepSq < downstreamSepSq);
 }
-   
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLCheatHierarchyTool::FillHierarchyMap(const Algorithm *const pAlgorithm, PfoToMCParticleMap &pfoToMCParticleMap,
-    ChildToParentPfoMap &childToParentPfoMap) const
+void DLCheatHierarchyTool::FillHierarchyMap(
+    const Algorithm *const pAlgorithm, PfoToMCParticleMap &pfoToMCParticleMap, ChildToParentPfoMap &childToParentPfoMap) const
 {
     pfoToMCParticleMap.clear();
     childToParentPfoMap.clear();
-    
+
     // Get MCParticles
     const MCParticleList *pMCParticleList(nullptr);
     if (!this->GetMCParticleList(pAlgorithm, pMCParticleList))
@@ -133,8 +132,8 @@ void DLCheatHierarchyTool::FillHierarchyMap(const Algorithm *const pAlgorithm, P
     const ParticleFlowObject *pNeutrinoPfo(nullptr);
     if (!this->GetNeutrinoPfo(pAlgorithm, pNeutrinoPfo))
         return;
-    
-    // Match our PFPs to our MCParticles 
+
+    // Match our PFPs to our MCParticles
     this->MatchPFParticles(pAlgorithm, pfoToMCParticleMap);
 
     // Do MCParticle visible hierarchy building
@@ -147,7 +146,7 @@ void DLCheatHierarchyTool::FillHierarchyMap(const Algorithm *const pAlgorithm, P
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DLCheatHierarchyTool::GetMCParticleList(const Algorithm *const pAlgorithm, const MCParticleList *& pMCParticleList) const
+bool DLCheatHierarchyTool::GetMCParticleList(const Algorithm *const pAlgorithm, const MCParticleList *&pMCParticleList) const
 {
     if (PandoraContentApi::GetList(*pAlgorithm, m_mcParticleListName, pMCParticleList) != STATUS_CODE_SUCCESS)
         return false;
@@ -159,13 +158,13 @@ bool DLCheatHierarchyTool::GetMCParticleList(const Algorithm *const pAlgorithm, 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 bool DLCheatHierarchyTool::GetNeutrinoPfo(const Algorithm *const pAlgorithm, const ParticleFlowObject *&pNeutrinoPfo) const
 {
     const PfoList *pPfoList = nullptr;
 
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, 
-        PandoraContentApi::GetList(*pAlgorithm, m_neutrinoPfoListName, pPfoList));
+    PANDORA_THROW_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm, m_neutrinoPfoListName, pPfoList));
 
     if (!pPfoList || pPfoList->empty())
         return false;
@@ -178,7 +177,7 @@ bool DLCheatHierarchyTool::GetNeutrinoPfo(const Algorithm *const pAlgorithm, con
 
     return true;
 }
-    
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLCheatHierarchyTool::MatchPFParticles(const Algorithm *const pAlgorithm, PfoToMCParticleMap &pfoToMCParticleMap) const
@@ -193,7 +192,7 @@ void DLCheatHierarchyTool::MatchPFParticles(const Algorithm *const pAlgorithm, P
         if (!pPfoList)
             continue;
 
-        for (const ParticleFlowObject * pPfo : *pPfoList)
+        for (const ParticleFlowObject *pPfo : *pPfoList)
         {
             // Demand that we have 3D hits
             if (this->GetNSpacepoints(pPfo) == 0)
@@ -219,7 +218,10 @@ void DLCheatHierarchyTool::MatchPFParticles(const Algorithm *const pAlgorithm, P
 
                         contributionMap[pHitMCParticle].emplace_back(pCaloHit);
                     }
-                    catch (...) { continue; }
+                    catch (...)
+                    {
+                        continue;
+                    }
                 }
             }
 
@@ -281,15 +283,15 @@ bool DLCheatHierarchyTool::IsEMParticle(const MCParticle *const pMCParticle) con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const MCParticle* DLCheatHierarchyTool::GetLeadEMParticle(const MCParticle *const pMCParticle) const
+const MCParticle *DLCheatHierarchyTool::GetLeadEMParticle(const MCParticle *const pMCParticle) const
 {
     if (!this->IsEMParticle(pMCParticle))
-      throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
-  
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+
     const MCParticle *pThisMCParticle(pMCParticle);
     const MCParticle *pParentMCParticle(pMCParticle);
 
-    while (this->IsEMParticle(pParentMCParticle)) 
+    while (this->IsEMParticle(pParentMCParticle))
     {
         const MCParticleList &parentList(pThisMCParticle->GetParentList());
 
@@ -317,7 +319,7 @@ float DLCheatHierarchyTool::SumEnergy(const CaloHitList &caloHitList) const
     for (const CaloHit *const pCaloHit : caloHitList)
     {
         if (pCaloHit->GetHitType() == TPC_VIEW_W)
-	  totalEnergy += pCaloHit->GetElectromagneticEnergy();
+            totalEnergy += pCaloHit->GetElectromagneticEnergy();
     }
 
     return totalEnergy;
@@ -342,7 +344,7 @@ void DLCheatHierarchyTool::GetVisibleMCHierarchy(const PfoToMCParticleMap &pfoTo
         const MCParticle *pParentMCParticle(nullptr);
 
         while (!foundParent)
-        {            
+        {
             const MCParticleList &parentList(pThisMCParticle->GetParentList());
 
             if (parentList.size() != 1)
@@ -352,8 +354,8 @@ void DLCheatHierarchyTool::GetVisibleMCHierarchy(const PfoToMCParticleMap &pfoTo
             }
 
             pParentMCParticle = *parentList.begin();
-            
-            foundParent = (LArMCParticleHelper::IsNeutrino(pParentMCParticle) || 
+
+            foundParent = (LArMCParticleHelper::IsNeutrino(pParentMCParticle) ||
                 (std::find(reconstructedMCList.begin(), reconstructedMCList.end(), pParentMCParticle) != reconstructedMCList.end()));
 
             pThisMCParticle = pParentMCParticle;
@@ -365,8 +367,8 @@ void DLCheatHierarchyTool::GetVisibleMCHierarchy(const PfoToMCParticleMap &pfoTo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLCheatHierarchyTool::GetVisiblePfoHierarchy(const ParticleFlowObject *const pNeutrinoPfo, const PfoToMCParticleMap &pfoToMCParticleMap,
-    const MCToMCMap &childToParentMCMap, ChildToParentPfoMap &childToParentPfoMap) const
+void DLCheatHierarchyTool::GetVisiblePfoHierarchy(const ParticleFlowObject *const pNeutrinoPfo,
+    const PfoToMCParticleMap &pfoToMCParticleMap, const MCToMCMap &childToParentMCMap, ChildToParentPfoMap &childToParentPfoMap) const
 {
     std::map<const MCParticle *, PfoList> mcParticleToPfoListMap;
 
@@ -413,7 +415,7 @@ void DLCheatHierarchyTool::GetVisiblePfoHierarchy(const ParticleFlowObject *cons
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
                 const PfoList &parentPfoList(mcParticleToPfoListMap.at(pMatchedMCParent));
-           
+
                 if (parentPfoList.size() == 1)
                     childToParentPfoMap[pChildPfo] = std::make_pair(*parentPfoList.begin(), 0);
                 else
@@ -428,10 +430,10 @@ void DLCheatHierarchyTool::GetVisiblePfoHierarchy(const ParticleFlowObject *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLCheatHierarchyTool::BuildSplitHierarchy(const std::pair<const MCParticle*, PfoList> &splitPfo, ChildToParentPfoMap &childToParentPfoMap) const
+void DLCheatHierarchyTool::BuildSplitHierarchy(const std::pair<const MCParticle *, PfoList> &splitPfo, ChildToParentPfoMap &childToParentPfoMap) const
 {
     // Order segments wrt distance to the true vertex
-    std::vector<std::pair<const ParticleFlowObject*, float>> pfoComponents;
+    std::vector<std::pair<const ParticleFlowObject *, float>> pfoComponents;
 
     for (const ParticleFlowObject *const pSplitPfo : splitPfo.second)
     {
@@ -440,15 +442,13 @@ void DLCheatHierarchyTool::BuildSplitHierarchy(const std::pair<const MCParticle*
 
         if (clusterList.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
-              
+
         pfoComponents.emplace_back(std::make_pair(pSplitPfo, LArClusterHelper::GetClosestDistance(splitPfo.first->GetVertex(), clusterList)));
     }
 
-    std::sort(pfoComponents.begin(), pfoComponents.end(), 
-        [](const std::pair<const ParticleFlowObject*, float> &a, const std::pair<const ParticleFlowObject*, float> &b)
-        { 
-            return a.second < b.second;
-        });
+    std::sort(pfoComponents.begin(), pfoComponents.end(),
+        [](const std::pair<const ParticleFlowObject *, float> &a, const std::pair<const ParticleFlowObject *, float> &b)
+        { return a.second < b.second; });
 
     // Now build pfo hierarchy, assuming closest is the leading pfo
     childToParentPfoMap[pfoComponents.at(1).first] = std::make_pair(pfoComponents.at(0).first, 0);
@@ -491,7 +491,7 @@ float DLCheatHierarchyTool::GetClosestDistance(const ParticleFlowObject *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const ParticleFlowObject* DLCheatHierarchyTool::BestParentInSplitHierarchy(const ParticleFlowObject *const pChildPfo, const PfoList &splitParticle) const
+const ParticleFlowObject *DLCheatHierarchyTool::BestParentInSplitHierarchy(const ParticleFlowObject *const pChildPfo, const PfoList &splitParticle) const
 {
     float closestSep = std::numeric_limits<float>::max();
     const ParticleFlowObject *pParentPfo(nullptr);
@@ -509,32 +509,30 @@ const ParticleFlowObject* DLCheatHierarchyTool::BestParentInSplitHierarchy(const
 
     if (!pParentPfo)
     {
-        std::cout << "No closest Pfo?" << std::endl; 
+        std::cout << "No closest Pfo?" << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
     return pParentPfo;
-
 }
 
-  
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLCheatHierarchyTool::AssignGeneration(const ParticleFlowObject *const pParentPfo, const int generationToFind,
-    ChildToParentPfoMap &childToParentPfoMap) const
+void DLCheatHierarchyTool::AssignGeneration(
+    const ParticleFlowObject *const pParentPfo, const int generationToFind, ChildToParentPfoMap &childToParentPfoMap) const
 {
-  // Don't want to use a reference here
-  for (ChildToParentPfoMap::value_type &entry : childToParentPfoMap)
-  {
-      const ParticleFlowObject *const pThisPfo(entry.first);
-      const ParticleFlowObject *const pThisParent(entry.second.first);
-      
-      if (pParentPfo == pThisParent)
-      {
-          entry.second.second = generationToFind;
-          this->AssignGeneration(pThisPfo, (generationToFind + 1), childToParentPfoMap);
-      }
-  }
+    // Don't want to use a reference here
+    for (ChildToParentPfoMap::value_type &entry : childToParentPfoMap)
+    {
+        const ParticleFlowObject *const pThisPfo(entry.first);
+        const ParticleFlowObject *const pThisParent(entry.second.first);
+
+        if (pParentPfo == pThisParent)
+        {
+            entry.second.second = generationToFind;
+            this->AssignGeneration(pThisPfo, (generationToFind + 1), childToParentPfoMap);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -542,19 +540,17 @@ void DLCheatHierarchyTool::AssignGeneration(const ParticleFlowObject *const pPar
 StatusCode DLCheatHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoPfoListName));
-    
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
-    
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoPfoListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
+
     return STATUS_CODE_SUCCESS;
 }
-
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

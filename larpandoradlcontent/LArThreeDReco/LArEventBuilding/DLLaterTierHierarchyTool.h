@@ -11,8 +11,8 @@
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
-#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLBaseHierarchyTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/LArHierarchyPfo.h"
 
 namespace lar_dl_content
 {
@@ -23,38 +23,36 @@ namespace lar_dl_content
 class DLLaterTierHierarchyTool : public DLBaseHierarchyTool
 {
 public:
-    struct DLLaterTierNetworkParams  // all floats because they'll be normalised
+    struct DLLaterTierNetworkParams // all floats because they'll be normalised
     {
         float m_parentTrackScore = -999.f;          ///< the track/shower score of the parent pfo
         float m_childTrackScore = -999.f;           ///< the track/shower score of the child pfo
         float m_parentNSpacepoints = -999.f;        ///< the number of 3D hits in the parent pfo
         float m_childNSpacepoints = -999.f;         ///< the number of 3D hits in the child pfo
-        float m_separation3D = -999.f;              ///< the smallest 3D distance between the parent and child 3D hits 
-        float m_parentNuVertexSep = -999.f;         ///< the separation between the neutrino vertex and assumed parent start point 
+        float m_separation3D = -999.f;              ///< the smallest 3D distance between the parent and child 3D hits
+        float m_parentNuVertexSep = -999.f;         ///< the separation between the neutrino vertex and assumed parent start point
         float m_childNuVertexSep = -999.f;          ///< the separation between the neutrino vertex and assumed child start point
         float m_parentEndRegionNHits = -999.f;      ///< the number of 3D hits 'close to' the parent POI
         float m_parentEndRegionNParticles = -999.f; ///< the number of different particles 'close to' the parent POI
         float m_parentEndRegionRToWall = -999.f;    ///< the smallest parent POI to detector boundary separation
         float m_vertexSeparation = -999.f;          ///< the separation between the parent and child POIs
         float m_doesChildConnect = -999.f;          ///< whether the backwards trace of the child's path connects to the parent
-        pandora::CartesianVector m_connectionPoint =
-	    pandora::CartesianVector(-999.f, -999.f, -999.f); ///< the connection point of the child on the parent  
-        pandora::CartesianVector m_connectionDirection =
-	    pandora::CartesianVector(-999.f, -999.f, -999.f); ///< the parent's direction at the connection point
-        float m_overshootStartDCA = -999.f;       ///< the DCA of the child to the parent startpoint (set if the child doesn't connect) 
-        float m_overshootStartL = -999.f;         ///< the extension distance of the child to the DCA point (set if the child doesn't connect)
-        float m_overshootEndDCA = -999.f;         ///< the DCA of the child to the parent endpoint (set if the child doesn't connect)
-        float m_overshootEndL = -999.f;           ///< the extension distance of the child to the DCA point (set if the child doesn't connect) 
-        float m_childCPDCA = -999.f;              ///< the DCA of the child to the connection point (set if the child connects)
-        float m_childCPExtrapDistance = -999.f;   ///< the extension distance of the child to the DCA point (set if the child connects)
-        float m_childCPLRatio = -999.f;           ///< the ratio of the parent length at the connection point and the full parent length (set if the child connects)
-        float m_parentCPNUpstreamHits = -999.f;   ///< the number of 3D parent hits upstream of the connection point (set if the child connects)
+        pandora::CartesianVector m_connectionPoint = pandora::CartesianVector(-999.f, -999.f, -999.f); ///< the connection point of the child on the parent
+        pandora::CartesianVector m_connectionDirection = pandora::CartesianVector(-999.f, -999.f, -999.f); ///< the parent's direction at the connection point
+        float m_overshootStartDCA = -999.f;     ///< the DCA of the child to the parent startpoint (set if the child doesn't connect)
+        float m_overshootStartL = -999.f;       ///< the extension distance of the child to the DCA point (set if the child doesn't connect)
+        float m_overshootEndDCA = -999.f;       ///< the DCA of the child to the parent endpoint (set if the child doesn't connect)
+        float m_overshootEndL = -999.f;         ///< the extension distance of the child to the DCA point (set if the child doesn't connect)
+        float m_childCPDCA = -999.f;            ///< the DCA of the child to the connection point (set if the child connects)
+        float m_childCPExtrapDistance = -999.f; ///< the extension distance of the child to the DCA point (set if the child connects)
+        float m_childCPLRatio = -999.f; ///< the ratio of the parent length at the connection point and the full parent length (set if the child connects)
+        float m_parentCPNUpstreamHits = -999.f; ///< the number of 3D parent hits upstream of the connection point (set if the child connects)
         float m_parentCPNDownstreamHits = -999.f; ///< the number of 3D parent hits downstream of the connection point (set if the child connects)
-        float m_parentCPNHitRatio = -999.f;       ///< the ratio of the number of downstream hits and upstream 3D hits (set if the child connects)
+        float m_parentCPNHitRatio = -999.f; ///< the ratio of the number of downstream hits and upstream 3D hits (set if the child connects)
         float m_parentCPEigenvalueRatio = -999.f; ///< the ratio of the second eigenvalues of the downstream and upstream 3D hit groups (set if the child connects)
-        float m_parentCPOpeningAngle = -999.f;    ///< the opening angle between the first eigenvectors of the downstream and upstream 3D hit groups (set if the child connects)
-        float m_parentIsPOIClosestToNu = -999.f;  ///< whether the parent POI is that closest to the neutrino vertex
-        float m_childIsPOIClosestToNu = -999.f;   ///< whether the child POI is that closest to the neutrino vertex
+        float m_parentCPOpeningAngle = -999.f; ///< the opening angle between the first eigenvectors of the downstream and upstream 3D hit groups (set if the child connects)
+        float m_parentIsPOIClosestToNu = -999.f; ///< whether the parent POI is that closest to the neutrino vertex
+        float m_childIsPOIClosestToNu = -999.f;  ///< whether the child POI is that closest to the neutrino vertex
 
         /**
          *  @brief  Add the orientation independent later tier network parameters
@@ -75,10 +73,10 @@ public:
         void AddOrientationParamsToInput(int &insertIndex, LArDLHelper::TorchInput &modelInput) const;
     };
 
-    pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo, 
-        const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo, std::vector<DLLaterTierNetworkParams> &networkParamVector,
-        float &laterTierScore);
-  
+    pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pNeutrinoPfo,
+        const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo,
+        std::vector<DLLaterTierNetworkParams> &networkParamVector, float &laterTierScore);
+
     /**
      *  @brief  Default constructor
      */
@@ -134,7 +132,7 @@ private:
      *  @param  childHierarchyPfo the HierarchyPfo object of the child pfo
      *
      *  @return whether the shower POI is in the upstream position
-     */          
+     */
     bool IsShowerVertexUpstream(const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo) const;
 
     /**
@@ -150,12 +148,11 @@ private:
      *
      *  @return a StatusCode to signify whether the network variables could be correctly calculated
      */
-    pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, 
-        const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo,
-        const pandora::ParticleFlowObject *const pNeutrinoPfo, const bool useUpstreamForParent, const bool useUpstreamForChild, 
-        DLLaterTierNetworkParams &laterTierNetworkParams) const;  
+    pandora::StatusCode CalculateNetworkVariables(const pandora::Algorithm *const pAlgorithm, const HierarchyPfo &parentHierarchyPfo,
+        const HierarchyPfo &childHierarchyPfo, const pandora::ParticleFlowObject *const pNeutrinoPfo, const bool useUpstreamForParent,
+        const bool useUpstreamForChild, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
-   /**
+    /**
     *  @brief  Set the orientation independent DLLaterTierNetworkParams
     *          (m_parentTrackScore, m_childTrackScore, m_parentNSpacepoints, m_childNSpacepoints, m_separation3D)
     *
@@ -163,8 +160,8 @@ private:
     *  @param  nSpacepointsParams the number of 3D hit (parent, child) pair
     *  @param  separation3D the smallest 3D distance between the parent and child 3D hits
     *  @param  laterTierNetworkParams the later tier network parameters to fill
-    */  
-    void SetCommonParams(const std::pair<float, float> &trackScoreParams, const std::pair<float, float> &nSpacepointsParams, 
+    */
+    void SetCommonParams(const std::pair<float, float> &trackScoreParams, const std::pair<float, float> &nSpacepointsParams,
         const float separation3D, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
@@ -176,9 +173,9 @@ private:
      *  @param  parentEndPos the assumed parent pfo end position
      *  @param  childStartPos the assumed child pfo start position
      *  @param  laterTierNetworkParams the later tier network parameters to fill
-     */  
-    void SetVertexParams(const pandora::CartesianVector &nuVertex, const pandora::CartesianVector &parentStartPos, 
-        const pandora::CartesianVector &parentEndPos, const pandora::CartesianVector &childStartPos, 
+     */
+    void SetVertexParams(const pandora::CartesianVector &nuVertex, const pandora::CartesianVector &parentStartPos,
+        const pandora::CartesianVector &parentEndPos, const pandora::CartesianVector &childStartPos,
         DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
@@ -189,8 +186,8 @@ private:
      *  @param  pParentPfo a pointer to the parent pfo
      *  @param  parentEndPos the assumed parent pfo end position
      *  @param  laterTierNetworkParams the later tier network parameters to fill
-     */  
-    void SetEndRegionParams(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pParentPfo, 
+     */
+    void SetEndRegionParams(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pParentPfo,
         const pandora::CartesianVector &parentEndPos, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
@@ -210,8 +207,8 @@ private:
      *  @param  parentStartPos the assumed parent pfo start position
      *  @param  childStart the assumed child startpoint
      *  @param  laterTierNetworkParams the later tier network parameters to fill  
-     */  
-    void SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, const pandora::CartesianVector &parentStartPos, 
+     */
+    void SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, const pandora::CartesianVector &parentStartPos,
         const ExtremalPoint &childStart, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
@@ -223,8 +220,8 @@ private:
      *
      *  @return the (extrapolated position, whether the extrpolation was backwards wrt the child direction) pair
      */
-    std::pair<pandora::CartesianVector, bool> ExtrapolateChildToParent(const pandora::CartesianVector &parentPosition, 
-        const ExtremalPoint &childStart) const;
+    std::pair<pandora::CartesianVector, bool> ExtrapolateChildToParent(
+        const pandora::CartesianVector &parentPosition, const ExtremalPoint &childStart) const;
 
     /**
      *  @brief  Return whether an input position connects to a line defined by two endpoints
@@ -234,9 +231,8 @@ private:
      *  @param  testPoint the input position
      *
      *  @return whether the input position connects to the line defined by the two input endpoints
-     */  
-    bool DoesConnect(const pandora::CartesianVector &boundary1, const pandora::CartesianVector &boundary2,
-        const pandora::CartesianVector &testPoint) const;
+     */
+    bool DoesConnect(const pandora::CartesianVector &boundary1, const pandora::CartesianVector &boundary2, const pandora::CartesianVector &testPoint) const;
 
     /**
      *  @brief  Set the overshoot DLLaterTierNetworkParams
@@ -247,8 +243,8 @@ private:
      *  @param  childStart the assumed child pfo startpoint
      *  @param  laterTierNetworkParams the later tier network parameters to fill  
      */
-    void SetOvershootParams(const ExtremalPoint &parentStart, const ExtremalPoint &parentEnd, 
-        const ExtremalPoint &childStart, DLLaterTierNetworkParams &laterTierNetworkParams) const;
+    void SetOvershootParams(const ExtremalPoint &parentStart, const ExtremalPoint &parentEnd, const ExtremalPoint &childStart,
+        DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
      *  @brief  Set the parent connection point DLLaterTierNetworkParams
@@ -257,14 +253,14 @@ private:
      *
      *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
      *  @param  laterTierNetworkParams the later tier network parameters to fill  
-     */  
+     */
     void SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
      *  @brief  Shift and normalise the later tier network parameters
      *
      *  @param  laterTierNetworkParam the input later tier network parameters
-     */  
+     */
     void NormaliseNetworkParams(DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
@@ -276,8 +272,8 @@ private:
      *  @param  edgeParamsDownDown the DLLaterTierNetworkParams for the parent downstream POI and child downstream POI
      *
      *  @return the network score (how likely to be signal)
-     */  
-    float ClassifyTrackTrack(const DLLaterTierNetworkParams &edgeParamsUpUp, const DLLaterTierNetworkParams &edgeParamsUpDown, 
+     */
+    float ClassifyTrackTrack(const DLLaterTierNetworkParams &edgeParamsUpUp, const DLLaterTierNetworkParams &edgeParamsUpDown,
         const DLLaterTierNetworkParams &edgeParamsDownUp, const DLLaterTierNetworkParams &edgeParamsDownDown);
 
     /**
@@ -291,9 +287,8 @@ private:
      *
      *  @return the float vector of (signal, wrong orientation, background) scores
      */
-    pandora::FloatVector ClassifyTrackTrackEdge(const DLLaterTierNetworkParams &edgeParams, 
-        const DLLaterTierNetworkParams &otherEdgeParams1, const DLLaterTierNetworkParams &otherEdgeParams2, 
-        const DLLaterTierNetworkParams &otherEdgeParams3);
+    pandora::FloatVector ClassifyTrackTrackEdge(const DLLaterTierNetworkParams &edgeParams, const DLLaterTierNetworkParams &otherEdgeParams1,
+        const DLLaterTierNetworkParams &otherEdgeParams2, const DLLaterTierNetworkParams &otherEdgeParams3);
 
     /**
      *  @brief  Apply the track-shower parent-child classification network
@@ -302,7 +297,7 @@ private:
      *  @param  edgeParamsDown the DLLaterTierNetworkParams for the parent upstream POI
      *
      *  @return the network score (how likely to be signal)
-     */    
+     */
     float ClassifyTrackShower(const DLLaterTierNetworkParams &edgeParamsUp, const DLLaterTierNetworkParams &edgeParamsDown);
 
     /**
@@ -313,9 +308,8 @@ private:
      *  @param  otherEdgeParams the DLLaterTierNetworkParams of another edge
      *
      *  @return the float vector of (signal, wrong orientation, background) scores
-     */  
-    pandora::FloatVector ClassifyTrackShowerEdge(const DLLaterTierNetworkParams &edgeParams, 
-        const DLLaterTierNetworkParams &otherEdgeParams);
+     */
+    pandora::FloatVector ClassifyTrackShowerEdge(const DLLaterTierNetworkParams &edgeParams, const DLLaterTierNetworkParams &otherEdgeParams);
 
     // For model
     std::string m_trackTrackBranchModelName;              ///< the name of the track-track edge model file
@@ -332,8 +326,8 @@ private:
     float m_connectionBuffer;   ///< the 'is child connected?' threshold
     float m_searchRegion;       ///< the dimensions of the box used to obtain the up/downstream 3D hit groups
     // For normalisation
-    bool m_normalise;                     ///< whether to normalise the network parameters
-    NormalisationLimits m_normLimits;     ///< struct of the normalisation limits
+    bool m_normalise;                 ///< whether to normalise the network parameters
+    NormalisationLimits m_normLimits; ///< struct of the normalisation limits
 };
 
 } // namespace lar_dl_content
