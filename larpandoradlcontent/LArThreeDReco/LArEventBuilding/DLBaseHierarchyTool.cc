@@ -110,15 +110,15 @@ void DLBaseHierarchyTool::NormaliseNetworkParam(const float minLimit, const floa
 
 StatusCode DLBaseHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    StatusCode statusCode(XmlHelper::ReadValue(xmlHandle, "VertexRegionRadius", m_vertexRegionRadiusSq));
+    StatusCode statCode(XmlHelper::ReadValue(xmlHandle, "VertexRegionRadius", m_vertexRegionRadiusSq));
 
-    if (statusCode == STATUS_CODE_SUCCESS)
+    if (statCode == STATUS_CODE_SUCCESS)
     {
         m_vertexRegionRadiusSq = m_vertexRegionRadiusSq * m_vertexRegionRadiusSq;
     }
-    else if (statusCode != STATUS_CODE_NOT_FOUND)
+    else if (statCode != STATUS_CODE_NOT_FOUND)
     {
-        return statusCode;
+        return statCode;
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
