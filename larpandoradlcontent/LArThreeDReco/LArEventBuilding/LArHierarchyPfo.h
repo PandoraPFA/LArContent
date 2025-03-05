@@ -30,6 +30,11 @@ public:
     ExtremalPoint();
 
     /**
+     *  @brief  Copy constructor
+     */
+    ExtremalPoint(const ExtremalPoint &extremalPoint);
+
+    /**
      *  @brief  Get the position
      *
      *  @return the position
@@ -261,6 +266,15 @@ inline ExtremalPoint::ExtremalPoint() :
     m_isSet(false),
     m_position(-999.f, -999.f, -999.f),
     m_direction(-999.f, -999.f, -999.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ExtremalPoint::ExtremalPoint(const ExtremalPoint &extremalPoint) :
+    m_isSet(extremalPoint.m_isSet),
+    m_position(extremalPoint.m_position),
+    m_direction(extremalPoint.m_direction)
 {
 }
 
