@@ -106,26 +106,7 @@ StatusCode EventClusterValidationAlgorithm::Run()
             ClusterMetrics metrics;
             GetMetrics(hitParentsValid, metrics);
 
-            // Get adjusted Rand index
-            ContingencyTable cTable;
-            CaloHitList theseCaloHits;
-            // std::cout << "1" << std::endl;
-            for (const auto&[pCaloHit, parents] : hitParentsValid)
-                theseCaloHits.push_back(pCaloHit);
-            // float adjustedRandI(theseCaloHits, clusters);
-            LArMonitoringHelper::FillContingencyTable(theseCaloHits, clusters, cTable);
-            // std::cout << "2" << std::endl;
-            // for (const auto &[pCluster, pMCToVal] : cTable)
-            // {
-            //     std::cout << pCluster << ":\n";
-            //     for (const auto &[pMC, val] : pMCToVal)
-            //     {
-            //         std::cout << pMC << " -> " << val << "\n";
-            //     }
-            // }
-            float adjustedRandI {LArMonitoringHelper::CalcRandIndex(cTable)};
-            // std::cout << "3" << std::endl;
-            // float adjustedRandI {CalcRandIndex(hitParentsValid)};
+            float adjustedRandI {CalcRandIndex(hitParentsValid)};
 
             std::string branchPrefix;
             if (valType == ValidationType::ALL)
@@ -312,43 +293,6 @@ float EventClusterValidationAlgorithm::CalcRandIndex(std::map<const CaloHit *con
     }
 
     return LArMonitoringHelper::CalcRandIndex(cTable);
-
-    // // Calculate Adjusted Rand Index
-    // double aTerm {0.};
-    // for (const auto &[pCluster, mcValMap] : cTable)
-    // {
-    //     int a {0};
-    //     for (const auto &[pMC, val] : mcValMap)
-    //         a += val;
-    //     aTerm += static_cast<double>(a * (a - 1)) / 2.;
-    // }
-    // double bTerm {0.};
-    // std::set<const MCParticle *> mcs;
-    // for (const auto &[pCluster, mcValMap] : cTable)
-    // {
-    //     for (const auto &[pMC, val] : mcValMap)
-    //         mcs.insert(pMC);
-    // }
-    // for (const MCParticle *pMC : mcs)
-    // {
-    //     int b {0};
-    //     for (const auto &[pCluster, mcValMap] : cTable)
-    //     {
-    //         if (mcValMap.find(pMC) != mcValMap.end())
-    //             b += cTable[pCluster][pMC];
-    //     }
-    //     bTerm += static_cast<double>(b * (b - 1)) / 2.;
-    // }
-    // double indexTerm {0.};
-    // for (const auto &[pCluster, mcValMap] : cTable)
-    //     for (const auto &[pMC, val] : mcValMap)
-    //         indexTerm += static_cast<double>(val * (val - 1)) / 2.;
-    // int n {static_cast<int>(hitParents.size())};
-    // double expIndexTerm {(aTerm * bTerm) / static_cast<double>(n * (n - 1)) / 2.};
-    // double maxIndexTerm {0.5 * (aTerm + bTerm)};
-    // double adjustedRandIndex {(indexTerm - expIndexTerm) / (maxIndexTerm - expIndexTerm)};
-
-    // return adjustedRandIndex;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
