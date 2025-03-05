@@ -52,7 +52,10 @@ public:
     */
     EventClusterValidationAlgorithm();
 
-    virtual ~EventClusterValidationAlgorithm();
+    /**
+     *  @brief  Destructor saves the validation TTree along with making and saving a metadata TTree
+     */
+    ~EventClusterValidationAlgorithm();
 
 private:
     typedef std::map<const pandora::Cluster *const, std::map<const pandora::MCParticle *const, int>> ContingencyTable;

@@ -80,8 +80,9 @@ public:
 
     /**
      *  @brief  Calculate the adjusted Rand Index for a given contingency table that summarises two clusterings A and B.
-     *          Adjusted Rand Index is a measure of the similarity of two clusterings that is bounded above by 1 (identical)
-     *          and is 0 when the two clusterings are as similar as two random clusterings with the same number of clusters.
+     *          Adjusted Rand Index is a measure of the similarity of two clusterings that is bounded above by 1 (identical),
+     *          is 0 when the two clusterings are as similar as two random clusterings with the same number of clusters,
+     *          and has no lower bound. An index < 0 means very discordant clusterings and is rare in most cases.
      *          Reference - https://link.springer.com/article/10.1007/BF01908075
      *
      *  @param[in] cTable Contingency table as a map of the object that defines the clustering A (e.g. pandora::Cluster)
@@ -93,8 +94,9 @@ public:
 
     /**
      *  @brief  Calculate the adjusted Rand Index for the clustering defined by MCPartices and by CaloHits.
-     *          Adjusted Rand Index is a measure of the similarity of two clusterings that is bounded above by 1 (identical)
-     *          and is 0 when the two clusterings are as similar as two random clusterings with the same number of clusters.
+     *          Adjusted Rand Index is a measure of the similarity of two clusterings that is bounded above by 1 (identical),
+     *          is 0 when the two clusterings are as similar as two random clusterings with the same number of clusters,
+     *          and has no lower bound. An index < 0 means very discordant clusterings and is rare in most cases.
      *          Reference - https://link.springer.com/article/10.1007/BF01908075
      *
      *  @param[in] caloHits List of hits
