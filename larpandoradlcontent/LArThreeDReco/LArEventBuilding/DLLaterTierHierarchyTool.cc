@@ -43,10 +43,10 @@ void DLLaterTierHierarchyTool::DLLaterTierNetworkParams::AddCommonParamsToInput(
 
 void DLLaterTierHierarchyTool::DLLaterTierNetworkParams::AddOrientationParamsToInput(int &insertIndex, LArDLHelper::TorchInput &modelInput) const
 {
-    for (const float param : {m_parentNuVertexSep, m_childNuVertexSep, m_parentEndRegionNHits, m_parentEndRegionNParticles, m_parentEndRegionRToWall, 
-            m_vertexSeparation, m_doesChildConnect, m_overshootStartDCA, m_overshootStartL, m_overshootEndDCA, m_overshootEndL, 
-            m_childCPDCA, m_childCPExtrapDistance, m_childCPLRatio, m_parentCPNUpstreamHits, m_parentCPNDownstreamHits, 
-            m_parentCPNHitRatio, m_parentCPEigenvalueRatio, m_parentCPOpeningAngle, m_parentIsPOIClosestToNu, m_childIsPOIClosestToNu})
+    for (const float param : {m_parentNuVertexSep, m_childNuVertexSep, m_parentEndRegionNHits, m_parentEndRegionNParticles,
+             m_parentEndRegionRToWall, m_vertexSeparation, m_doesChildConnect, m_overshootStartDCA, m_overshootStartL, m_overshootEndDCA,
+             m_overshootEndL, m_childCPDCA, m_childCPExtrapDistance, m_childCPLRatio, m_parentCPNUpstreamHits, m_parentCPNDownstreamHits,
+             m_parentCPNHitRatio, m_parentCPEigenvalueRatio, m_parentCPOpeningAngle, m_parentIsPOIClosestToNu, m_childIsPOIClosestToNu})
     {
         modelInput[0][insertIndex] = param;
         ++insertIndex;
@@ -68,8 +68,9 @@ DLLaterTierHierarchyTool::DLLaterTierHierarchyTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DLLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo, const HierarchyPfo &parentHierarchyPfo, 
-    const HierarchyPfo &childHierarchyPfo, std::vector<DLLaterTierNetworkParams> &networkParamVector, float &laterTierScore)
+StatusCode DLLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pNeutrinoPfo,
+    const HierarchyPfo &parentHierarchyPfo, const HierarchyPfo &childHierarchyPfo,
+    std::vector<DLLaterTierNetworkParams> &networkParamVector, float &laterTierScore)
 {
     networkParamVector.clear();
     laterTierScore = std::numeric_limits<float>::lowest();
@@ -77,17 +78,17 @@ StatusCode DLLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, cons
     this->SetDetectorBoundaries();
 
     // Get the common params i.e. independent of postulated orientation
-    const std::pair<float, float> trackScoreParams({LArPfoHelper::GetTrackScore(parentHierarchyPfo.GetPfo()),
-        LArPfoHelper::GetTrackScore(childHierarchyPfo.GetPfo())});
-    const std::pair<float, float> nSpacepointsParams({LArPfoHelper::GetNumberOfThreeDHits(parentHierarchyPfo.GetPfo()),
-        LArPfoHelper::GetNumberOfThreeDHits(childHierarchyPfo.GetPfo())});
+    const std::pair<float, float> trackScoreParams(
+        {LArPfoHelper::GetTrackScore(parentHierarchyPfo.GetPfo()), LArPfoHelper::GetTrackScore(childHierarchyPfo.GetPfo())});
+    const std::pair<float, float> nSpacepointsParams(
+        {LArPfoHelper::GetNumberOfThreeDHits(parentHierarchyPfo.GetPfo()), LArPfoHelper::GetNumberOfThreeDHits(childHierarchyPfo.GetPfo())});
     const float separation3D(LArPfoHelper::GetThreeDSeparation(parentHierarchyPfo.GetPfo(), childHierarchyPfo.GetPfo()));
 
     const bool isChildTrack(childHierarchyPfo.GetPfo()->GetParticleId() == 13);
-    std::vector<bool> childOrientationVector(isChildTrack ? std::vector<bool>({true, false}) : 
-        std::vector<bool>({this->IsShowerVertexUpstream(parentHierarchyPfo, childHierarchyPfo)}));
+    std::vector<bool> childOrientationVector(
+        isChildTrack ? std::vector<bool>({true, false}) : std::vector<bool>({this->IsShowerVertexUpstream(parentHierarchyPfo, childHierarchyPfo)}));
 
-    // Set network params 
+    // Set network params
     for (const bool &useUpstreamForParent : {true, false})
     {
         for (const bool &useUpstreamForChild : childOrientationVector)
@@ -98,8 +99,8 @@ StatusCode DLLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, cons
             this->SetCommonParams(trackScoreParams, nSpacepointsParams, separation3D, edgeParams);
 
             // Get orientation dependent params
-            const StatusCode statusCode(this->CalculateNetworkVariables(pAlgorithm, parentHierarchyPfo, childHierarchyPfo, 
-                pNeutrinoPfo, useUpstreamForParent, useUpstreamForChild, edgeParams));
+            const StatusCode statusCode(this->CalculateNetworkVariables(
+                pAlgorithm, parentHierarchyPfo, childHierarchyPfo, pNeutrinoPfo, useUpstreamForParent, useUpstreamForChild, edgeParams));
 
             if (statusCode != STATUS_CODE_SUCCESS)
                 return statusCode;
@@ -113,7 +114,8 @@ StatusCode DLLaterTierHierarchyTool::Run(const Algorithm *const pAlgorithm, cons
     if (!m_trainingMode)
     {
         if (isChildTrack)
-            laterTierScore = this->ClassifyTrackTrack(networkParamVector.at(0), networkParamVector.at(1), networkParamVector.at(2), networkParamVector.at(3));
+            laterTierScore =
+                this->ClassifyTrackTrack(networkParamVector.at(0), networkParamVector.at(1), networkParamVector.at(2), networkParamVector.at(3));
         else
             laterTierScore = this->ClassifyTrackShower(networkParamVector.at(0), networkParamVector.at(1));
     }
@@ -158,8 +160,8 @@ bool DLLaterTierHierarchyTool::IsShowerVertexUpstream(const HierarchyPfo &parent
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLLaterTierHierarchyTool::SetCommonParams(const std::pair<float, float> &trackScoreParams, const std::pair<float, float> &nSpacepointsParams, 
-    const float separation3D, DLLaterTierNetworkParams &laterTierNetworkParams) const
+void DLLaterTierHierarchyTool::SetCommonParams(const std::pair<float, float> &trackScoreParams,
+    const std::pair<float, float> &nSpacepointsParams, const float separation3D, DLLaterTierNetworkParams &laterTierNetworkParams) const
 {
     laterTierNetworkParams.m_parentTrackScore = trackScoreParams.first;
     laterTierNetworkParams.m_childTrackScore = trackScoreParams.second;
@@ -170,16 +172,17 @@ void DLLaterTierHierarchyTool::SetCommonParams(const std::pair<float, float> &tr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DLLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm *const pAlgorithm, const HierarchyPfo &parentHierarchyPfo, 
-    const HierarchyPfo &childHierarchyPfo, const ParticleFlowObject *const pNeutrinoPfo, const bool useUpstreamForParent, const bool useUpstreamForChild, 
-    DLLaterTierNetworkParams &laterTierNetworkParams) const
+StatusCode DLLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm *const pAlgorithm, const HierarchyPfo &parentHierarchyPfo,
+    const HierarchyPfo &childHierarchyPfo, const ParticleFlowObject *const pNeutrinoPfo, const bool useUpstreamForParent,
+    const bool useUpstreamForChild, DLLaterTierNetworkParams &laterTierNetworkParams) const
 {
     // Pick out neutrino vertex
     if (pNeutrinoPfo->GetVertexList().empty())
         return STATUS_CODE_NOT_INITIALIZED;
- 
+
     const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
-    const CartesianVector nuVertex(pNeutrinoVertex->GetPosition().GetX(), pNeutrinoVertex->GetPosition().GetY(), pNeutrinoVertex->GetPosition().GetZ());
+    const CartesianVector nuVertex(
+        pNeutrinoVertex->GetPosition().GetX(), pNeutrinoVertex->GetPosition().GetY(), pNeutrinoVertex->GetPosition().GetZ());
 
     // Pick out the correct pfo vertex/direction
     // Parent POI is a postulate endpoint
@@ -189,9 +192,18 @@ StatusCode DLLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm *
     const ExtremalPoint &childStart(useUpstreamForChild ? childHierarchyPfo.GetUpstreamPoint() : childHierarchyPfo.GetDownstreamPoint());
 
     // Check that we could actually calculate pfo vertex/direction, return if not
-    if (!parentStart.IsSet()) { return STATUS_CODE_NOT_INITIALIZED; }
-    if (!parentEnd.IsSet()) { return STATUS_CODE_NOT_INITIALIZED; }
-    if (!childStart.IsSet()) { return STATUS_CODE_NOT_INITIALIZED; }
+    if (!parentStart.IsSet())
+    {
+        return STATUS_CODE_NOT_INITIALIZED;
+    }
+    if (!parentEnd.IsSet())
+    {
+        return STATUS_CODE_NOT_INITIALIZED;
+    }
+    if (!childStart.IsSet())
+    {
+        return STATUS_CODE_NOT_INITIALIZED;
+    }
 
     // Set laterTierNetworkParams
     laterTierNetworkParams.m_parentIsPOIClosestToNu = useUpstreamForParent ? 1.f : 0.f;
@@ -211,7 +223,7 @@ StatusCode DLLaterTierHierarchyTool::CalculateNetworkVariables(const Algorithm *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLLaterTierHierarchyTool::SetVertexParams(const CartesianVector &nuVertex, const CartesianVector &parentStartPos, 
+void DLLaterTierHierarchyTool::SetVertexParams(const CartesianVector &nuVertex, const CartesianVector &parentStartPos,
     const CartesianVector &parentEndPos, const CartesianVector &childStartPos, DLLaterTierNetworkParams &laterTierNetworkParams) const
 {
     laterTierNetworkParams.m_parentNuVertexSep = (parentStartPos - nuVertex).GetMagnitude();
@@ -221,9 +233,9 @@ void DLLaterTierHierarchyTool::SetVertexParams(const CartesianVector &nuVertex, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLLaterTierHierarchyTool::SetEndRegionParams(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pParentPfo, 
+void DLLaterTierHierarchyTool::SetEndRegionParams(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pParentPfo,
     const CartesianVector &parentEndPos, DLLaterTierNetworkParams &laterTierNetworkParams) const
-{ 
+{
     std::pair<float, float> endRegionParams(this->GetParticleInfoAboutPfoPosition(pAlgorithm, pParentPfo, parentEndPos));
 
     laterTierNetworkParams.m_parentEndRegionNHits = endRegionParams.first;
@@ -241,8 +253,9 @@ void DLLaterTierHierarchyTool::SetEndRegionRToWall(const CartesianVector &parent
     for (int iAxis : {0, 1, 2})
     {
         const float parentCoord(iAxis == 0 ? parentEndPos.GetX() : iAxis == 1 ? parentEndPos.GetY() : parentEndPos.GetZ());
-        const std::pair<float, float> &boundary(iAxis == 0 ? m_detectorBoundaries.m_xBoundaries : iAxis == 1 ? 
-            m_detectorBoundaries.m_yBoundaries : m_detectorBoundaries.m_zBoundaries);
+        const std::pair<float, float> &boundary(iAxis == 0 ? m_detectorBoundaries.m_xBoundaries
+                : iAxis == 1                               ? m_detectorBoundaries.m_yBoundaries
+                                                           : m_detectorBoundaries.m_zBoundaries);
         const float dimensionMin(std::min((parentCoord - boundary.first), (boundary.second - parentCoord)));
 
         closestDistance = std::min(closestDistance, dimensionMin);
@@ -253,9 +266,8 @@ void DLLaterTierHierarchyTool::SetEndRegionRToWall(const CartesianVector &parent
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, 
-    const CartesianVector &parentStartPos, const ExtremalPoint &childStart, 
-    DLLaterTierNetworkParams &laterTierNetworkParams) const
+void DLLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, const CartesianVector &parentStartPos,
+    const ExtremalPoint &childStart, DLLaterTierNetworkParams &laterTierNetworkParams) const
 {
     // Get fit of parent
     const ThreeDSlidingFitResult &slidingFitResult(parentHierarchyPfo.GetSlidingFitResult());
@@ -263,7 +275,7 @@ void DLLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHie
     // Now walk along track, starting from parentStartPos
     // I want this to be interpreted as l = 0 so have to alter pandora def
     const bool startFromMin((parentStartPos - slidingFitResult.GetGlobalMinLayerPosition()).GetMagnitudeSquared() <
-                            (parentStartPos - slidingFitResult.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
+        (parentStartPos - slidingFitResult.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
     const float minL(slidingFitResult.GetLongitudinalDisplacement(slidingFitResult.GetGlobalMinLayerPosition()));
     const float maxL(slidingFitResult.GetLongitudinalDisplacement(slidingFitResult.GetGlobalMaxLayerPosition()));
 
@@ -311,17 +323,18 @@ void DLLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHie
                 laterTierNetworkParams.m_connectionPoint = midPoint;
                 laterTierNetworkParams.m_connectionDirection = (secondPosition - firstPosition).GetUnitVector();
                 laterTierNetworkParams.m_childCPDCA = thisDCA;
-                laterTierNetworkParams.m_childCPExtrapDistance = (extrap.first - childStart.GetPosition()).GetMagnitude() * (extrap.second ? 1.f : (-1.f));
+                laterTierNetworkParams.m_childCPExtrapDistance =
+                    (extrap.first - childStart.GetPosition()).GetMagnitude() * (extrap.second ? 1.f : (-1.f));
                 lengthAtConnection = trackLength + (midPoint - firstPosition).GetMagnitude();
             }
         }
-            
+
         slidingL += m_trajectoryStepSize;
         trackLength += (secondPosition - firstPosition).GetMagnitude();
     }
 
-    if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) < std::numeric_limits<float>::epsilon()) 
-       laterTierNetworkParams.m_childCPLRatio = lengthAtConnection / trackLength; 
+    if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) < std::numeric_limits<float>::epsilon())
+        laterTierNetworkParams.m_childCPLRatio = lengthAtConnection / trackLength;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -337,8 +350,7 @@ std::pair<CartesianVector, bool> DLLaterTierHierarchyTool::ExtrapolateChildToPar
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DLLaterTierHierarchyTool::DoesConnect(const CartesianVector &boundary1, const CartesianVector &boundary2, 
-    const CartesianVector &testPoint) const
+bool DLLaterTierHierarchyTool::DoesConnect(const CartesianVector &boundary1, const CartesianVector &boundary2, const CartesianVector &testPoint) const
 {
     const CartesianVector displacement(boundary2 - boundary1);
     const double segmentLength(displacement.GetMagnitude());
@@ -358,7 +370,7 @@ bool DLLaterTierHierarchyTool::DoesConnect(const CartesianVector &boundary1, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLLaterTierHierarchyTool::SetOvershootParams(const ExtremalPoint &parentStart, const ExtremalPoint &parentEnd, 
+void DLLaterTierHierarchyTool::SetOvershootParams(const ExtremalPoint &parentStart, const ExtremalPoint &parentEnd,
     const ExtremalPoint &childStart, DLLaterTierNetworkParams &laterTierNetworkParams) const
 {
     if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) < std::numeric_limits<float>::epsilon())
@@ -366,19 +378,21 @@ void DLLaterTierHierarchyTool::SetOvershootParams(const ExtremalPoint &parentSta
 
     // Let's start at the very beginning, a very good place to start
     const std::pair<CartesianVector, bool> extrapStart(this->ExtrapolateChildToParent(parentStart.GetPosition(), childStart));
-    laterTierNetworkParams.m_overshootStartDCA = (extrapStart.first - parentStart.GetPosition()).GetMagnitude() * (extrapStart.second ? 1.f : (-1.f));
-    laterTierNetworkParams.m_overshootStartL = std::fabs((childStart.GetPosition() - parentStart.GetPosition()).GetDotProduct(parentStart.GetDirection()));
+    laterTierNetworkParams.m_overshootStartDCA =
+        (extrapStart.first - parentStart.GetPosition()).GetMagnitude() * (extrapStart.second ? 1.f : (-1.f));
+    laterTierNetworkParams.m_overshootStartL =
+        std::fabs((childStart.GetPosition() - parentStart.GetPosition()).GetDotProduct(parentStart.GetDirection()));
 
     // Now end
     const std::pair<CartesianVector, bool> extrapEnd(this->ExtrapolateChildToParent(parentEnd.GetPosition(), childStart));
     laterTierNetworkParams.m_overshootEndDCA = (extrapEnd.first - parentEnd.GetPosition()).GetMagnitude() * (extrapEnd.second ? 1.f : (-1.f));
-    laterTierNetworkParams.m_overshootEndL = std::fabs((childStart.GetPosition() - parentEnd.GetPosition()).GetDotProduct(parentEnd.GetDirection()));
+    laterTierNetworkParams.m_overshootEndL =
+        std::fabs((childStart.GetPosition() - parentEnd.GetPosition()).GetDotProduct(parentEnd.GetDirection()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLLaterTierHierarchyTool::SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, 
-    DLLaterTierNetworkParams &laterTierNetworkParams) const
+void DLLaterTierHierarchyTool::SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, DLLaterTierNetworkParams &laterTierNetworkParams) const
 {
     if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) > std::numeric_limits<float>::epsilon())
         return;
@@ -412,8 +426,7 @@ void DLLaterTierHierarchyTool::SetParentConnectionPointVars(const HierarchyPfo &
     if (upstreamGroup.empty() || downstreamGroup.empty())
         return;
 
-    laterTierNetworkParams.m_parentCPNHitRatio = 
-        laterTierNetworkParams.m_parentCPNDownstreamHits / laterTierNetworkParams.m_parentCPNUpstreamHits;
+    laterTierNetworkParams.m_parentCPNHitRatio = laterTierNetworkParams.m_parentCPNDownstreamHits / laterTierNetworkParams.m_parentCPNUpstreamHits;
 
     // Now PCA magic
     try
@@ -434,69 +447,51 @@ void DLLaterTierHierarchyTool::SetParentConnectionPointVars(const HierarchyPfo &
         const float avTransEVaUp((eigenValuesUp.GetY() + eigenValuesUp.GetZ()) * 0.5f);
         const float avTransEVaDown((eigenValuesDown.GetY() + eigenValuesDown.GetZ()) * 0.5f);
 
-        laterTierNetworkParams.m_parentCPEigenvalueRatio = avTransEVaUp < std::numeric_limits<double>::epsilon() ? 0.f : 
-            avTransEVaDown / avTransEVaUp;
+        laterTierNetworkParams.m_parentCPEigenvalueRatio = avTransEVaUp < std::numeric_limits<double>::epsilon() ? 0.f : avTransEVaDown / avTransEVaUp;
     }
-    catch (...) { return; }
+    catch (...)
+    {
+        return;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLLaterTierHierarchyTool::NormaliseNetworkParams(DLLaterTierNetworkParams &laterTierNetworkParams) const
 {
-    this->NormaliseNetworkParam(m_normLimits.m_trackScoreMin, m_normLimits.m_trackScoreMax, 
-        laterTierNetworkParams.m_parentTrackScore);
-    this->NormaliseNetworkParam(m_normLimits.m_trackScoreMin, m_normLimits.m_trackScoreMax, 
-        laterTierNetworkParams.m_childTrackScore);
-    this->NormaliseNetworkParam(m_normLimits.m_nSpacepointsMin, m_normLimits.m_nSpacepointsMax, 
-        laterTierNetworkParams.m_parentNSpacepoints);
-    this->NormaliseNetworkParam(m_normLimits.m_nSpacepointsMin, m_normLimits.m_nSpacepointsMax, 
-        laterTierNetworkParams.m_childNSpacepoints);
-    this->NormaliseNetworkParam(m_normLimits.m_separation3DMin, m_normLimits.m_separation3DMax, 
-        laterTierNetworkParams.m_separation3D);
-    this->NormaliseNetworkParam(m_normLimits.m_nuVertexSepMin, m_normLimits.m_nuVertexSepMax, 
-        laterTierNetworkParams.m_parentNuVertexSep); 
-    this->NormaliseNetworkParam(m_normLimits.m_nuVertexSepMin, m_normLimits.m_nuVertexSepMax, 
-        laterTierNetworkParams.m_childNuVertexSep);
-    this->NormaliseNetworkParam(m_normLimits.m_parentEndRegionNHitsMin, m_normLimits.m_parentEndRegionNHitsMax, 
-        laterTierNetworkParams.m_parentEndRegionNHits);
-    this->NormaliseNetworkParam(m_normLimits.m_parentEndRegionNParticlesMin, m_normLimits.m_parentEndRegionNParticlesMax, 
+    this->NormaliseNetworkParam(m_normLimits.m_trackScoreMin, m_normLimits.m_trackScoreMax, laterTierNetworkParams.m_parentTrackScore);
+    this->NormaliseNetworkParam(m_normLimits.m_trackScoreMin, m_normLimits.m_trackScoreMax, laterTierNetworkParams.m_childTrackScore);
+    this->NormaliseNetworkParam(m_normLimits.m_nSpacepointsMin, m_normLimits.m_nSpacepointsMax, laterTierNetworkParams.m_parentNSpacepoints);
+    this->NormaliseNetworkParam(m_normLimits.m_nSpacepointsMin, m_normLimits.m_nSpacepointsMax, laterTierNetworkParams.m_childNSpacepoints);
+    this->NormaliseNetworkParam(m_normLimits.m_separation3DMin, m_normLimits.m_separation3DMax, laterTierNetworkParams.m_separation3D);
+    this->NormaliseNetworkParam(m_normLimits.m_nuVertexSepMin, m_normLimits.m_nuVertexSepMax, laterTierNetworkParams.m_parentNuVertexSep);
+    this->NormaliseNetworkParam(m_normLimits.m_nuVertexSepMin, m_normLimits.m_nuVertexSepMax, laterTierNetworkParams.m_childNuVertexSep);
+    this->NormaliseNetworkParam(m_normLimits.m_parentEndRegionNHitsMin, m_normLimits.m_parentEndRegionNHitsMax, laterTierNetworkParams.m_parentEndRegionNHits);
+    this->NormaliseNetworkParam(m_normLimits.m_parentEndRegionNParticlesMin, m_normLimits.m_parentEndRegionNParticlesMax,
         laterTierNetworkParams.m_parentEndRegionNParticles);
-    this->NormaliseNetworkParam(m_normLimits.m_parentEndRegionRToWallMin, m_normLimits.m_parentEndRegionRToWallMax, 
-        laterTierNetworkParams.m_parentEndRegionRToWall);
-    this->NormaliseNetworkParam(m_normLimits.m_vertexSepMin, m_normLimits.m_vertexSepMax, 
-        laterTierNetworkParams.m_vertexSeparation);
-    this->NormaliseNetworkParam(m_normLimits.m_doesChildConnectMin, m_normLimits.m_doesChildConnectMax, 
-        laterTierNetworkParams.m_doesChildConnect);
-    this->NormaliseNetworkParam(m_normLimits.m_overshootDCAMin, m_normLimits.m_overshootDCAMax, 
-        laterTierNetworkParams.m_overshootStartDCA);
-    this->NormaliseNetworkParam(m_normLimits.m_overshootLMin, m_normLimits.m_overshootLMax, 
-        laterTierNetworkParams.m_overshootStartL);
-    this->NormaliseNetworkParam(m_normLimits.m_overshootDCAMin, m_normLimits.m_overshootDCAMax, 
-        laterTierNetworkParams.m_overshootEndDCA);
-    this->NormaliseNetworkParam(m_normLimits.m_overshootLMin, m_normLimits.m_overshootLMax, 
-        laterTierNetworkParams.m_overshootEndL);
-    this->NormaliseNetworkParam(m_normLimits.m_childCPDCAMin, m_normLimits.m_childCPDCAMax, 
-        laterTierNetworkParams.m_childCPDCA);
-    this->NormaliseNetworkParam(m_normLimits.m_childCPExtrapDistanceMin, m_normLimits.m_childCPExtrapDistanceMax, 
-        laterTierNetworkParams.m_childCPExtrapDistance);
-    this->NormaliseNetworkParam(m_normLimits.m_childCPLRatioMin, m_normLimits.m_childCPLRatioMax, 
-        laterTierNetworkParams.m_childCPLRatio);
-    this->NormaliseNetworkParam(m_normLimits.m_parentCPNHitsMin, m_normLimits.m_parentCPNHitsMax, 
-        laterTierNetworkParams.m_parentCPNUpstreamHits);
-    this->NormaliseNetworkParam(m_normLimits.m_parentCPNHitsMin, m_normLimits.m_parentCPNHitsMax, 
-        laterTierNetworkParams.m_parentCPNDownstreamHits);
-    this->NormaliseNetworkParam(m_normLimits.m_parentCPNHitRatioMin, m_normLimits.m_parentCPNHitRatioMax, 
-        laterTierNetworkParams.m_parentCPNHitRatio);
-    this->NormaliseNetworkParam(m_normLimits.m_parentCPEigenvalueRatioMin, m_normLimits.m_parentCPEigenvalueRatioMax, 
+    this->NormaliseNetworkParam(
+        m_normLimits.m_parentEndRegionRToWallMin, m_normLimits.m_parentEndRegionRToWallMax, laterTierNetworkParams.m_parentEndRegionRToWall);
+    this->NormaliseNetworkParam(m_normLimits.m_vertexSepMin, m_normLimits.m_vertexSepMax, laterTierNetworkParams.m_vertexSeparation);
+    this->NormaliseNetworkParam(m_normLimits.m_doesChildConnectMin, m_normLimits.m_doesChildConnectMax, laterTierNetworkParams.m_doesChildConnect);
+    this->NormaliseNetworkParam(m_normLimits.m_overshootDCAMin, m_normLimits.m_overshootDCAMax, laterTierNetworkParams.m_overshootStartDCA);
+    this->NormaliseNetworkParam(m_normLimits.m_overshootLMin, m_normLimits.m_overshootLMax, laterTierNetworkParams.m_overshootStartL);
+    this->NormaliseNetworkParam(m_normLimits.m_overshootDCAMin, m_normLimits.m_overshootDCAMax, laterTierNetworkParams.m_overshootEndDCA);
+    this->NormaliseNetworkParam(m_normLimits.m_overshootLMin, m_normLimits.m_overshootLMax, laterTierNetworkParams.m_overshootEndL);
+    this->NormaliseNetworkParam(m_normLimits.m_childCPDCAMin, m_normLimits.m_childCPDCAMax, laterTierNetworkParams.m_childCPDCA);
+    this->NormaliseNetworkParam(
+        m_normLimits.m_childCPExtrapDistanceMin, m_normLimits.m_childCPExtrapDistanceMax, laterTierNetworkParams.m_childCPExtrapDistance);
+    this->NormaliseNetworkParam(m_normLimits.m_childCPLRatioMin, m_normLimits.m_childCPLRatioMax, laterTierNetworkParams.m_childCPLRatio);
+    this->NormaliseNetworkParam(m_normLimits.m_parentCPNHitsMin, m_normLimits.m_parentCPNHitsMax, laterTierNetworkParams.m_parentCPNUpstreamHits);
+    this->NormaliseNetworkParam(m_normLimits.m_parentCPNHitsMin, m_normLimits.m_parentCPNHitsMax, laterTierNetworkParams.m_parentCPNDownstreamHits);
+    this->NormaliseNetworkParam(m_normLimits.m_parentCPNHitRatioMin, m_normLimits.m_parentCPNHitRatioMax, laterTierNetworkParams.m_parentCPNHitRatio);
+    this->NormaliseNetworkParam(m_normLimits.m_parentCPEigenvalueRatioMin, m_normLimits.m_parentCPEigenvalueRatioMax,
         laterTierNetworkParams.m_parentCPEigenvalueRatio);
-    this->NormaliseNetworkParam(m_normLimits.m_parentCPOpeningAngleMin, m_normLimits.m_parentCPOpeningAngleMax, 
-        laterTierNetworkParams.m_parentCPOpeningAngle);
+    this->NormaliseNetworkParam(m_normLimits.m_parentCPOpeningAngleMin, m_normLimits.m_parentCPOpeningAngleMax, laterTierNetworkParams.m_parentCPOpeningAngle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float DLLaterTierHierarchyTool::ClassifyTrackTrack(const DLLaterTierNetworkParams &edgeParamsUpUp, const DLLaterTierNetworkParams &edgeParamsUpDown, 
+float DLLaterTierHierarchyTool::ClassifyTrackTrack(const DLLaterTierNetworkParams &edgeParamsUpUp, const DLLaterTierNetworkParams &edgeParamsUpDown,
     const DLLaterTierNetworkParams &edgeParamsDownUp, const DLLaterTierNetworkParams &edgeParamsDownDown)
 {
     // Invoke branch model for each edge
@@ -529,7 +524,7 @@ float DLLaterTierHierarchyTool::ClassifyTrackTrack(const DLLaterTierNetworkParam
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-FloatVector DLLaterTierHierarchyTool::ClassifyTrackTrackEdge(const DLLaterTierNetworkParams &edgeParams, 
+FloatVector DLLaterTierHierarchyTool::ClassifyTrackTrackEdge(const DLLaterTierNetworkParams &edgeParams,
     const DLLaterTierNetworkParams &otherEdgeParams1, const DLLaterTierNetworkParams &otherEdgeParams2, const DLLaterTierNetworkParams &otherEdgeParams3)
 {
     LArDLHelper::TorchInput input;
@@ -582,8 +577,7 @@ float DLLaterTierHierarchyTool::ClassifyTrackShower(const DLLaterTierNetworkPara
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-FloatVector DLLaterTierHierarchyTool::ClassifyTrackShowerEdge(const DLLaterTierNetworkParams &edgeParams, 
-    const DLLaterTierNetworkParams &otherEdgeParams)
+FloatVector DLLaterTierHierarchyTool::ClassifyTrackShowerEdge(const DLLaterTierNetworkParams &edgeParams, const DLLaterTierNetworkParams &otherEdgeParams)
 {
     LArDLHelper::TorchInput input;
     LArDLHelper::InitialiseInput({1, 47}, input);
@@ -606,91 +600,94 @@ FloatVector DLLaterTierHierarchyTool::ClassifyTrackShowerEdge(const DLLaterTierN
 StatusCode DLLaterTierHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrajectoryStepSize", m_trajectoryStepSize));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionBuffer", m_connectionBuffer));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrajectoryStepSize", m_trajectoryStepSize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConnectionBuffer", m_connectionBuffer));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SearchRegion", m_searchRegion));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Normalise", m_normalise));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "TrackScoreMin", m_normLimits.m_trackScoreMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "TrackScoreMax", m_normLimits.m_trackScoreMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "NSpacepointsMin", m_normLimits.m_nSpacepointsMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "NSpacepointsMax", m_normLimits.m_nSpacepointsMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "Separation3DMin", m_normLimits.m_separation3DMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "Separation3DMax", m_normLimits.m_separation3DMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "NuVertexSepMin", m_normLimits.m_nuVertexSepMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "NuVertexSepMax", m_normLimits.m_nuVertexSepMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrackScoreMin", m_normLimits.m_trackScoreMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrackScoreMax", m_normLimits.m_trackScoreMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMin", m_normLimits.m_nSpacepointsMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSpacepointsMax", m_normLimits.m_nSpacepointsMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Separation3DMin", m_normLimits.m_separation3DMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Separation3DMax", m_normLimits.m_separation3DMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuVertexSepMin", m_normLimits.m_nuVertexSepMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuVertexSepMax", m_normLimits.m_nuVertexSepMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentEndRegionNHitsMin", m_normLimits.m_parentEndRegionNHitsMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentEndRegionNHitsMax", m_normLimits.m_parentEndRegionNHitsMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentEndRegionNParticlesMin", m_normLimits.m_parentEndRegionNParticlesMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentEndRegionNParticlesMax", m_normLimits.m_parentEndRegionNParticlesMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentEndRegionRToWallMin", m_normLimits.m_parentEndRegionRToWallMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentEndRegionRToWallMax", m_normLimits.m_parentEndRegionRToWallMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "VertexSepMin", m_normLimits.m_vertexSepMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "VertexSepMax", m_normLimits.m_vertexSepMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexSepMin", m_normLimits.m_vertexSepMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexSepMax", m_normLimits.m_vertexSepMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "DoesChildConnectMin", m_normLimits.m_doesChildConnectMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "DoesChildConnectMax", m_normLimits.m_doesChildConnectMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "OvershootDCAMin", m_normLimits.m_overshootDCAMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "OvershootDCAMax", m_normLimits.m_overshootDCAMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "OvershootLMin", m_normLimits.m_overshootLMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "OvershootLMax", m_normLimits.m_overshootLMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "ChildCPDCAMin", m_normLimits.m_childCPDCAMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "ChildCPDCAMax", m_normLimits.m_childCPDCAMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OvershootDCAMin", m_normLimits.m_overshootDCAMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OvershootDCAMax", m_normLimits.m_overshootDCAMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OvershootLMin", m_normLimits.m_overshootLMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OvershootLMax", m_normLimits.m_overshootLMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChildCPDCAMin", m_normLimits.m_childCPDCAMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChildCPDCAMax", m_normLimits.m_childCPDCAMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ChildCPExtrapDistanceMin", m_normLimits.m_childCPExtrapDistanceMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ChildCPExtrapDistanceMax", m_normLimits.m_childCPExtrapDistanceMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ChildCPLRatioMin", m_normLimits.m_childCPLRatioMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ChildCPLRatioMax", m_normLimits.m_childCPLRatioMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentCPNHitsMin", m_normLimits.m_parentCPNHitsMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentCPNHitsMax", m_normLimits.m_parentCPNHitsMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentCPNHitRatioMin", m_normLimits.m_parentCPNHitRatioMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentCPNHitRatioMax", m_normLimits.m_parentCPNHitRatioMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentCPEigenvalueRatioMin", m_normLimits.m_parentCPEigenvalueRatioMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentCPEigenvalueRatioMax", m_normLimits.m_parentCPEigenvalueRatioMax));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentCPOpeningAngleMin", m_normLimits.m_parentCPOpeningAngleMin));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ParentCPOpeningAngleMax", m_normLimits.m_parentCPOpeningAngleMax));
 
     if (!m_trainingMode)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackTrackBranchModelName", m_trackTrackBranchModelName));        
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackTrackBranchModelName", m_trackTrackBranchModelName));
         m_trackTrackBranchModelName = LArFileHelper::FindFileInPath(m_trackTrackBranchModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackTrackBranchModelName, m_trackTrackBranchModel));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackTrackClassifierModelName", m_trackTrackClassifierModelName));        
+        PANDORA_RETURN_RESULT_IF(
+            STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackTrackClassifierModelName", m_trackTrackClassifierModelName));
         m_trackTrackClassifierModelName = LArFileHelper::FindFileInPath(m_trackTrackClassifierModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackTrackClassifierModelName, m_trackTrackClassifierModel));
 
@@ -698,7 +695,8 @@ StatusCode DLLaterTierHierarchyTool::ReadSettings(const TiXmlHandle xmlHandle)
         m_trackShowerBranchModelName = LArFileHelper::FindFileInPath(m_trackShowerBranchModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackShowerBranchModelName, m_trackShowerBranchModel));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackShowerClassifierModelName", m_trackShowerClassifierModelName));        
+        PANDORA_RETURN_RESULT_IF(
+            STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackShowerClassifierModelName", m_trackShowerClassifierModelName));
         m_trackShowerClassifierModelName = LArFileHelper::FindFileInPath(m_trackShowerClassifierModelName, "FW_SEARCH_PATH");
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_trackShowerClassifierModelName, m_trackShowerClassifierModel));
     }

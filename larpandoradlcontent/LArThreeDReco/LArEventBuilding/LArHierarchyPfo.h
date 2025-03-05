@@ -34,14 +34,14 @@ public:
      *
      *  @return the position
      */
-    const pandora::CartesianVector& GetPosition() const;
+    const pandora::CartesianVector &GetPosition() const;
 
     /**
      *  @brief  Get the direction at the extremal point
      *
      *  @return the direction
      */
-    const pandora::CartesianVector& GetDirection() const;
+    const pandora::CartesianVector &GetDirection() const;
 
     /**
      *  @brief  Set the the extremal point's position and direction
@@ -62,12 +62,11 @@ public:
      *  @brief  Assignment operator
      */
     ExtremalPoint &operator=(const ExtremalPoint &rhs);
-  
-private:
 
-    bool m_isSet;                              ///< whether the extremal point object has been set
-    pandora::CartesianVector m_position;       ///< the extremal point position
-    pandora::CartesianVector m_direction;      ///< the extremal point direction (pointing into the particle)
+private:
+    bool m_isSet;                         ///< whether the extremal point object has been set
+    pandora::CartesianVector m_position;  ///< the extremal point position
+    pandora::CartesianVector m_direction; ///< the extremal point direction (pointing into the particle)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -91,15 +90,15 @@ public:
      *  @param  upstreamPoint the extremal point closest to the neutrino vertex
      *  @param  downstreamPoint the extremal point furthest from the neutrino vertex
      */
-    HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &threeDSlidingFitResult, 
+    HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &threeDSlidingFitResult,
         const ExtremalPoint &upstreamPoint, const ExtremalPoint &downstreamPoint);
-  
+
     /**
      *  @brief  Get the pfo
      *
      *  @return a pointer to the pfo
      */
-    const pandora::ParticleFlowObject* GetPfo() const;
+    const pandora::ParticleFlowObject *GetPfo() const;
 
     /**
      *  @brief  Set the pfo
@@ -113,14 +112,14 @@ public:
      *
      *  @return the 3D sliding fit result
      */
-    const ThreeDSlidingFitResult& GetSlidingFitResult() const;
+    const ThreeDSlidingFitResult &GetSlidingFitResult() const;
 
     /**
      *  @brief  Get the best matched parent pfo
      *
      *  @return a pointer to the best matched parent pfo
      */
-    const pandora::ParticleFlowObject* GetPredictedParentPfo() const;
+    const pandora::ParticleFlowObject *GetPredictedParentPfo() const;
 
     /**
      *  @brief  Set the best matched parent pfo
@@ -134,7 +133,7 @@ public:
      *
      *  @return a pointer to the parent pfo
      */
-    const pandora::ParticleFlowObject* GetParentPfo() const;
+    const pandora::ParticleFlowObject *GetParentPfo() const;
 
     /**
      *  @brief  Set the parent pfo
@@ -148,7 +147,7 @@ public:
      *
      *  @return the vector of pointers to child pfos
      */
-    const pandora::PfoVector& GetChildPfoVector() const;
+    const pandora::PfoVector &GetChildPfoVector() const;
 
     /**
      *  @brief  Add a child pfo to the child pfo vector
@@ -162,7 +161,7 @@ public:
      *
      *  @return the upstream extremal point
      */
-    const ExtremalPoint& GetUpstreamPoint() const;
+    const ExtremalPoint &GetUpstreamPoint() const;
 
     /**
      *  @brief  Set the upstream extremal point
@@ -176,7 +175,7 @@ public:
      *
      *  @return the downstream extremal point
      */
-    const ExtremalPoint& GetDownstreamPoint() const;
+    const ExtremalPoint &GetDownstreamPoint() const;
 
     /**
      *  @brief  Set the downstream extremal point
@@ -232,17 +231,16 @@ public:
      * 
      *  @param  rhs the HierarchyPfo to compare
      */
-    bool operator== (const HierarchyPfo &rhs) const;
+    bool operator==(const HierarchyPfo &rhs) const;
 
     /**
      *  @brief  HierarchyPfo == operator
      * 
      *  @param  rhs the pfo to compare
      */
-    bool operator== (const pandora::ParticleFlowObject *const rhs) const;
+    bool operator==(const pandora::ParticleFlowObject *const rhs) const;
 
 private:
-
     const pandora::ParticleFlowObject *m_pPfo;                ///< a pointer to the corresponding pfo
     ThreeDSlidingFitResult m_slidingFitResult;                ///< the 3D sliding fit result of the pfo
     const pandora::ParticleFlowObject *m_pPredictedParentPfo; ///< a pointer to the best matched parent pfo
@@ -250,8 +248,8 @@ private:
     pandora::PfoVector m_childPfoVector;                      ///< the vector of pointers to the assigned child pfos
     ExtremalPoint m_upstreamPoint;                            ///< The extremal point that lies closest to the neutrino vertex
     ExtremalPoint m_downstreamPoint;                          ///< The extremal point that lies furthest from the neutrino vertex
-    float m_primaryScore;                                     ///< the primary network score 
-    float m_laterTierScore;                                   ///< the later tier network score 
+    float m_primaryScore;                                     ///< the primary network score
+    float m_laterTierScore;                                   ///< the later tier network score
     bool m_isInHierarchy;                                     ///< whether the pfo has been assigned to a particle hierarchy
 };
 
@@ -311,71 +309,71 @@ inline ExtremalPoint &ExtremalPoint::operator=(const ExtremalPoint &rhs)
 
 inline HierarchyPfo::HierarchyPfo(const pandora::ParticleFlowObject *pPfo, const ThreeDSlidingFitResult &slidingFitResult,
     const ExtremalPoint &upstreamPoint, const ExtremalPoint &downstreamPoint) :
-        m_pPfo(pPfo),
-        m_slidingFitResult(slidingFitResult),
-        m_pPredictedParentPfo(nullptr),
-        m_pParentPfo(nullptr),
-        m_childPfoVector(pandora::PfoVector()),
-        m_upstreamPoint(upstreamPoint),
-        m_downstreamPoint(downstreamPoint),
-        m_primaryScore(-std::numeric_limits<float>::max()),
-        m_laterTierScore(-std::numeric_limits<float>::max()),
-        m_isInHierarchy(false)
+    m_pPfo(pPfo),
+    m_slidingFitResult(slidingFitResult),
+    m_pPredictedParentPfo(nullptr),
+    m_pParentPfo(nullptr),
+    m_childPfoVector(pandora::PfoVector()),
+    m_upstreamPoint(upstreamPoint),
+    m_downstreamPoint(downstreamPoint),
+    m_primaryScore(-std::numeric_limits<float>::max()),
+    m_laterTierScore(-std::numeric_limits<float>::max()),
+    m_isInHierarchy(false)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::ParticleFlowObject* HierarchyPfo::GetPfo() const
+inline const pandora::ParticleFlowObject *HierarchyPfo::GetPfo() const
 {
     return m_pPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void HierarchyPfo::SetPfo(const pandora::ParticleFlowObject* pPfo)
+inline void HierarchyPfo::SetPfo(const pandora::ParticleFlowObject *pPfo)
 {
     m_pPfo = pPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const ThreeDSlidingFitResult& HierarchyPfo::GetSlidingFitResult() const
+inline const ThreeDSlidingFitResult &HierarchyPfo::GetSlidingFitResult() const
 {
     return m_slidingFitResult;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::ParticleFlowObject* HierarchyPfo::GetPredictedParentPfo() const
+inline const pandora::ParticleFlowObject *HierarchyPfo::GetPredictedParentPfo() const
 {
     return m_pPredictedParentPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void HierarchyPfo::SetPredictedParentPfo(const pandora::ParticleFlowObject* pPredictedParentPfo)
+inline void HierarchyPfo::SetPredictedParentPfo(const pandora::ParticleFlowObject *pPredictedParentPfo)
 {
     m_pPredictedParentPfo = pPredictedParentPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::ParticleFlowObject* HierarchyPfo::GetParentPfo() const
+inline const pandora::ParticleFlowObject *HierarchyPfo::GetParentPfo() const
 {
     return m_pParentPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void HierarchyPfo::SetParentPfo(const pandora::ParticleFlowObject* pParentPfo)
+inline void HierarchyPfo::SetParentPfo(const pandora::ParticleFlowObject *pParentPfo)
 {
     m_pParentPfo = pParentPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::PfoVector& HierarchyPfo::GetChildPfoVector() const
+inline const pandora::PfoVector &HierarchyPfo::GetChildPfoVector() const
 {
     return m_childPfoVector;
 }
@@ -389,7 +387,7 @@ inline void HierarchyPfo::AddChildPfo(const pandora::ParticleFlowObject *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const ExtremalPoint& HierarchyPfo::GetUpstreamPoint() const
+inline const ExtremalPoint &HierarchyPfo::GetUpstreamPoint() const
 {
     return m_upstreamPoint;
 }
@@ -403,7 +401,7 @@ inline void HierarchyPfo::SetUpstreamPoint(const ExtremalPoint &upstreamPoint)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const ExtremalPoint& HierarchyPfo::GetDownstreamPoint() const
+inline const ExtremalPoint &HierarchyPfo::GetDownstreamPoint() const
 {
     return m_downstreamPoint;
 }
@@ -459,20 +457,20 @@ inline void HierarchyPfo::SetIsInHierarchy(const bool isInHierarchy)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool HierarchyPfo::operator== (const HierarchyPfo &rhs) const
+inline bool HierarchyPfo::operator==(const HierarchyPfo &rhs) const
 {
     return this->GetPfo() == rhs.GetPfo();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool HierarchyPfo::operator== (const pandora::ParticleFlowObject *const rhs) const
+inline bool HierarchyPfo::operator==(const pandora::ParticleFlowObject *const rhs) const
 {
     return this->GetPfo() == rhs;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------  
-  
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 } // namespace lar_dl_content
 
 #endif // #ifndef LAR_HIERARCHY_PFO_H
