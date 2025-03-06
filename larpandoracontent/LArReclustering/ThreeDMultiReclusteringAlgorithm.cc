@@ -84,7 +84,7 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::TemporarilyReplaceCurrentList<Cluster>(*this, bestReclusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndReclustering(*this, bestReclusterListName));
 
-    if (bestReclusterListName == originalClusterListName) // No 3D clusters to work with, rebuild original pfos as if nothing happened...
+    if (bestReclusterListName == originalClusterListName) // No clustering alg has better 3D clusters, rebuild original pfos as if nothing happened...
     {
         return RelinkClustersToOriginalPfos(pfoToFreeClusters);
     }
