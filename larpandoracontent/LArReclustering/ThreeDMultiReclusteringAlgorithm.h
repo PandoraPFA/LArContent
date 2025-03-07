@@ -107,10 +107,11 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string                              m_pfoListName;       ///< Name of list of pfos to consider for reclustering
-    std::map<pandora::HitType, std::string>  m_clusterListNames;  ///< Map of list names for 3D clusters that comprise the pfos and 2D U, V, W clusters that may need reclustering
-    std::vector<std::string>                 m_clusteringAlgs;    ///< The ordered list of clustering algorithms to use
-    ThreeDReclusteringFigureOfMeritBaseTool *m_pFomAlgTool;       ///< The address of the figure of merit algorithm tool to use
+    std::string                              m_pfoListName;      ///< Name of list of pfos to consider for reclustering
+    std::map<pandora::HitType, std::string>  m_clusterListNames; ///< Map of list names for 3D clusters that comprise the pfos and 2D U, V, W clusters that may need reclustering
+    bool                                     m_mopUp2DCaloHits;  ///< Add hits from reclustered 2D clusters without an associated 3D hit to the nearest new 2D cluster in their view
+    std::vector<std::string>                 m_clusteringAlgs;   ///< The ordered list of clustering algorithms to use
+    ThreeDReclusteringFigureOfMeritBaseTool *m_pFomAlgTool;      ///< The address of the figure of merit algorithm tool to use
 };
 
 } // namespace lar_content

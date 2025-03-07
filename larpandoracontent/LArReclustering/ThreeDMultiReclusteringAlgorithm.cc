@@ -23,6 +23,7 @@ namespace lar_content
 
 ThreeDMultiReclusteringAlgorithm::ThreeDMultiReclusteringAlgorithm() :
     m_clusterListNames {{TPC_3D, {}}, {TPC_VIEW_U, "ClustersU"}, {TPC_VIEW_V, "ClustersV"}, {TPC_VIEW_W, "ClustersW"}},
+    m_mopUp2DCaloHits {true},
     m_pFomAlgTool {nullptr}
 {
 }
@@ -187,24 +188,27 @@ StatusCode ThreeDMultiReclusteringAlgorithm::BuildNewPfos(const ClusterList &clu
     }
 
     // Put any remaining 2D hits into the nearest new 2D cluster made in the last step
-    // If no 2D clusters for a view could be made in the previous step (happens rarely when no 3D hits get made from one of the cluster views),
-    // just mop up the remaining 2D hits into the old 2D clusters
     // NOTE Hits added to 2D clusters this way are added as isolated
-    for (const auto &[view, caloHits2D] : viewToFreeCaloHits2D)
+    if (m_mopUp2DCaloHits)
     {
-        if (viewToNewClusters2D.at(view).empty())
+        for (const auto &[view, caloHits2D] : viewToFreeCaloHits2D)
         {
-            std::string clusterListName {m_clusterListNames.at(view)};
-            const ClusterList *pOldClusters2D {nullptr};
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pOldClusters2D));
-            // This means no hits in this view made any 3D hits, this happens very rarely for events with few hits.
-            // In this case, just leave these hits unclustered. Could also consider putting them in their own isolated hit-only cluster?
-            if (pOldClusters2D->empty())
+            // If no 2D clusters for a view could be made in the previous step (happens rarely when no 3D hits get made from a cluster view),
+            // just mop up the remaining 2D hits into the old 2D clusters
+            if (viewToNewClusters2D.at(view).empty())
+            {
+                std::string clusterListName {m_clusterListNames.at(view)};
+                const ClusterList *pOldClusters2D {nullptr};
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pOldClusters2D));
+                // This means no hits in this view made any 3D hits, this happens very rarely for events with few hits.
+                // In this case, just leave these hits unclustered. Could also consider putting them in their own isolated hit-only cluster?
+                if (pOldClusters2D->empty())
+                    continue;
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, MopUpCaloHits(caloHits2D, *pOldClusters2D, true));
                 continue;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, MopUpCaloHits(caloHits2D, *pOldClusters2D, true));
-            continue;
+            }
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, MopUpCaloHits(caloHits2D, viewToNewClusters2D.at(view), true));
         }
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, MopUpCaloHits(caloHits2D, viewToNewClusters2D.at(view), true));
     }
 
     // Create the new Pfos
@@ -338,6 +342,9 @@ StatusCode ThreeDMultiReclusteringAlgorithm::ReadSettings(const TiXmlHandle xmlH
         "ClusterVListName", m_clusterListNames.at(TPC_VIEW_V)));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterWListName", m_clusterListNames.at(TPC_VIEW_W)));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MopUp2DCaloHits", m_mopUp2DCaloHits));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
         "ClusteringAlgorithms", m_clusteringAlgs));
