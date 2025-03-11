@@ -73,6 +73,8 @@
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 #include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
 #include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
+#include "larpandoracontent/LArReclustering/LArExample/RandomClusteringAlgorithm.h"
+#include "larpandoracontent/LArReclustering/LArExample/RandomFigureOfMeritTool.h"
 
 #include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
 #include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
@@ -221,6 +223,7 @@
 #include "larpandoracontent/LArUtility/PfoHitCleaningAlgorithm.h"
 
 #include "larpandoracontent/LArReclustering/ThreeDReclusteringAlgorithm.h"
+#include "larpandoracontent/LArReclustering/ThreeDMultiReclusteringAlgorithm.h"
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/HitAngleVertexSelectionAlgorithm.h"
@@ -341,6 +344,8 @@
     d("LArPfoHitCleaning",                      PfoHitCleaningAlgorithm)                                                        \
     d("LArListPruning",                         ListPruningAlgorithm)                                                           \
     d("LArThreeDReclustering",                  ThreeDReclusteringAlgorithm)                                                    \
+    d("LArThreeDMultiReclustering",             ThreeDMultiReclusteringAlgorithm)                                               \
+    d("LArRandomClustering",                    RandomClusteringAlgorithm)                                                      \
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
@@ -349,6 +354,7 @@
     d("LArVertexRefinement",                    VertexRefinementAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
+    d("LArRandomFigureOfMeritTool",             RandomFigureOfMeritTool)                                                        \
     d("LArCheatedThreeDClusteringTool",         CheatedThreeDClusteringTool)                                                    \
     d("LArSimplePCAThreeDClusteringTool",       SimplePCAThreeDClusteringTool)                                                  \
     d("LArConnectionRegionFeatureTool",         ConnectionRegionFeatureTool)                                                    \
