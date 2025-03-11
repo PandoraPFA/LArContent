@@ -22,7 +22,6 @@ namespace lar_content
 class RandomClusteringAlgorithm : public pandora::Algorithm
 {
 public:
-
     /**
      *  @brief  Default constructor
      */

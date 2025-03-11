@@ -10,9 +10,9 @@
 
 #include "larpandoracontent/LArReclustering/LArExample/RandomClusteringAlgorithm.h"
 
-#include <vector>
 #include <algorithm>
 #include <random>
+#include <vector>
 
 using namespace pandora;
 
@@ -23,7 +23,7 @@ namespace lar_content
 
 StatusCode RandomClusteringAlgorithm::Run()
 {
-    const CaloHitList *pCaloHits {nullptr};
+    const CaloHitList *pCaloHits{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHits));
 
     if (pCaloHits->size() < m_numNewClusters)
@@ -37,21 +37,21 @@ StatusCode RandomClusteringAlgorithm::Run()
         splitIdxs.emplace_back(idxs.at(i));
     std::sort(splitIdxs.begin(), splitIdxs.end());
 
-    std::vector<unsigned int>::const_iterator splitItr {splitIdxs.cbegin()};
+    std::vector<unsigned int>::const_iterator splitItr{splitIdxs.cbegin()};
     PandoraContentApi::Cluster::Parameters params;
-    unsigned int cntr {0};
+    unsigned int cntr{0};
     for (const CaloHit *const pCaloHit : *pCaloHits)
     {
         if (splitItr != splitIdxs.cend() && cntr++ > *splitItr)
         {
-            const Cluster *pCluster {nullptr};
+            const Cluster *pCluster{nullptr};
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, params, pCluster));
             params.m_caloHitList.clear();
             splitItr++;
         }
         params.m_caloHitList.emplace_back(pCaloHit);
     }
-    const Cluster *pCluster {nullptr};
+    const Cluster *pCluster{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, params, pCluster));
 
     return STATUS_CODE_SUCCESS;
@@ -61,8 +61,7 @@ StatusCode RandomClusteringAlgorithm::Run()
 
 StatusCode RandomClusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "NumNewClusters", m_numNewClusters));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NumNewClusters", m_numNewClusters));
     if (m_numNewClusters == 0)
         return STATUS_CODE_INVALID_PARAMETER;
 

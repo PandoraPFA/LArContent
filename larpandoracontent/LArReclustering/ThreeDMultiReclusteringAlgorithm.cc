@@ -11,8 +11,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArReclustering/ThreeDMultiReclusteringAlgorithm.h"
 
@@ -22,9 +22,9 @@ namespace lar_content
 {
 
 ThreeDMultiReclusteringAlgorithm::ThreeDMultiReclusteringAlgorithm() :
-    m_clusterListNames {{TPC_3D, {}}, {TPC_VIEW_U, "ClustersU"}, {TPC_VIEW_V, "ClustersV"}, {TPC_VIEW_W, "ClustersW"}},
-    m_mopUp2DCaloHits {true},
-    m_pFomAlgTool {nullptr}
+    m_clusterListNames{{TPC_3D, {}}, {TPC_VIEW_U, "ClustersU"}, {TPC_VIEW_V, "ClustersV"}, {TPC_VIEW_W, "ClustersW"}},
+    m_mopUp2DCaloHits{true},
+    m_pFomAlgTool{nullptr}
 {
 }
 
@@ -32,9 +32,8 @@ ThreeDMultiReclusteringAlgorithm::ThreeDMultiReclusteringAlgorithm() :
 
 StatusCode ThreeDMultiReclusteringAlgorithm::Run()
 {
-    const PfoList *pPfos {nullptr};
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=,
-                                    PandoraContentApi::GetList(*this, m_pfoListName, pPfos));
+    const PfoList *pPfos{nullptr};
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfos));
     if (!pPfos || pPfos->empty())
         return STATUS_CODE_SUCCESS;
 
@@ -45,7 +44,7 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
 
     // Remove clusters from the pfos, keeping track of their original pfo
-    std::map<HitType, ClusterList> viewToFreeClusters = { {TPC_3D, {}}, {TPC_VIEW_U, {}}, {TPC_VIEW_V, {}}, {TPC_VIEW_W, {}} };
+    std::map<HitType, ClusterList> viewToFreeClusters = {{TPC_3D, {}}, {TPC_VIEW_U, {}}, {TPC_VIEW_V, {}}, {TPC_VIEW_W, {}}};
     std::map<const Pfo *const, ClusterList> pfoToFreeClusters;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, FreeClustersFromPfos(pfosToRecluster, viewToFreeClusters, pfoToFreeClusters));
     if (viewToFreeClusters.at(TPC_3D).empty()) // No 3D clusters to work with, rebuild original pfos as if nothing happened...
@@ -56,23 +55,23 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(TPC_3D)));
     std::string originalClusterListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                             PandoraContentApi::InitializeReclustering(*this, TrackList(), viewToFreeClusters.at(TPC_3D), originalClusterListName));
+        PandoraContentApi::InitializeReclustering(*this, TrackList(), viewToFreeClusters.at(TPC_3D), originalClusterListName));
 
-    float bestReclusterFom {std::numeric_limits<float>::lowest()};
+    float bestReclusterFom{std::numeric_limits<float>::lowest()};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pFomAlgTool->CalcClusteringFom(viewToFreeClusters.at(TPC_3D), bestReclusterFom));
-    std::string bestReclusterListName {originalClusterListName};
+    std::string bestReclusterListName{originalClusterListName};
     ClusterList bestReclusterList;
 
     for (const std::string &clusteringAlg : m_clusteringAlgs)
     {
         std::string reclusterListName;
-        const ClusterList *pReclusterList {nullptr};
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                                 PandoraContentApi::RunClusteringAlgorithm(*this, clusteringAlg, pReclusterList, reclusterListName));
+        const ClusterList *pReclusterList{nullptr};
+        PANDORA_RETURN_RESULT_IF(
+            STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, clusteringAlg, pReclusterList, reclusterListName));
         if (!pReclusterList || pReclusterList->empty())
             continue;
 
-        float reclusterFom {std::numeric_limits<float>::lowest()};
+        float reclusterFom{std::numeric_limits<float>::lowest()};
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pFomAlgTool->CalcClusteringFom(*pReclusterList, reclusterFom));
         if (reclusterFom > bestReclusterFom)
         {
@@ -99,7 +98,7 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
 
     // The 3D clusters are reclustered, now need to manually recluster the 2D clusters to be consistent with the 3D reclustering
     // First, remove the original 2D clusters
-    std::map<HitType, CaloHitList> viewToFreeCaloHits2D = { {TPC_VIEW_U, {}}, {TPC_VIEW_V, {}}, {TPC_VIEW_W, {}} };
+    std::map<HitType, CaloHitList> viewToFreeCaloHits2D = {{TPC_VIEW_U, {}}, {TPC_VIEW_V, {}}, {TPC_VIEW_W, {}}};
     for (const auto &[view, freeClusters] : viewToFreeClusters)
     {
         if (view == TPC_3D)
@@ -115,9 +114,8 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDMultiReclusteringAlgorithm::FreeClustersFromPfos(const PfoList &pfos,
-                                                                  std::map<HitType, ClusterList> &viewToFreeClusters,
-                                                                  std::map<const Pfo *const, ClusterList> &pfoToFreeClusters) const
+StatusCode ThreeDMultiReclusteringAlgorithm::FreeClustersFromPfos(const PfoList &pfos, std::map<HitType, ClusterList> &viewToFreeClusters,
+    std::map<const Pfo *const, ClusterList> &pfoToFreeClusters) const
 {
     for (const Pfo *const pPfo : pfos)
     {
@@ -152,12 +150,10 @@ StatusCode ThreeDMultiReclusteringAlgorithm::RelinkClustersToOriginalPfos(std::m
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDMultiReclusteringAlgorithm::FreeCaloHitsFromClusters(const ClusterList &clusters,
-                                                                      const HitType &view,
-                                                                      CaloHitList &freeCaloHits) const
+StatusCode ThreeDMultiReclusteringAlgorithm::FreeCaloHitsFromClusters(const ClusterList &clusters, const HitType &view, CaloHitList &freeCaloHits) const
 {
-    std::string clusterListName {m_clusterListNames.at(view)};
-    for (const Cluster *const pCluster: clusters)
+    std::string clusterListName{m_clusterListNames.at(view)};
+    for (const Cluster *const pCluster : clusters)
     {
         CaloHitList caloHits;
         pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHits);
@@ -171,11 +167,10 @@ StatusCode ThreeDMultiReclusteringAlgorithm::FreeCaloHitsFromClusters(const Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDMultiReclusteringAlgorithm::BuildNewPfos(const ClusterList &clusters,
-                                                          std::map<HitType, CaloHitList> &viewToFreeCaloHits2D) const
+StatusCode ThreeDMultiReclusteringAlgorithm::BuildNewPfos(const ClusterList &clusters, std::map<HitType, CaloHitList> &viewToFreeCaloHits2D) const
 {
     // Cluster any 2D hits directly associated with 3D hits in the same way as the 3D clusters
-    std::map<HitType, ClusterList> viewToNewClusters2D = { {TPC_VIEW_U, {}}, {TPC_VIEW_V, {}}, {TPC_VIEW_W, {}} };
+    std::map<HitType, ClusterList> viewToNewClusters2D = {{TPC_VIEW_U, {}}, {TPC_VIEW_V, {}}, {TPC_VIEW_W, {}}};
     std::vector<ClusterList> newPfoClusters;
     for (const Cluster *const pCluster3D : clusters)
     {
@@ -197,8 +192,8 @@ StatusCode ThreeDMultiReclusteringAlgorithm::BuildNewPfos(const ClusterList &clu
             // just mop up the remaining 2D hits into the old 2D clusters
             if (viewToNewClusters2D.at(view).empty())
             {
-                std::string clusterListName {m_clusterListNames.at(view)};
-                const ClusterList *pOldClusters2D {nullptr};
+                std::string clusterListName{m_clusterListNames.at(view)};
+                const ClusterList *pOldClusters2D{nullptr};
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pOldClusters2D));
                 // This means no hits in this view made any 3D hits, this happens very rarely for events with few hits.
                 // In this case, just leave these hits unclustered. Could also consider putting them in their own isolated hit-only cluster?
@@ -214,10 +209,9 @@ StatusCode ThreeDMultiReclusteringAlgorithm::BuildNewPfos(const ClusterList &clu
     // Create the new Pfos
     // ATTN New pfos will: have no vertex, not be characterised as track/shower, not be part of any particle hierarchy.
     //      If desired, these these things will need to be added in succeeding algs.
-    const PfoList *pNewPfoList {nullptr};
+    const PfoList *pNewPfoList{nullptr};
     std::string tempPfoListName;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                             PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pNewPfoList, tempPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pNewPfoList, tempPfoListName));
     for (const ClusterList &pfoClusters : newPfoClusters)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, CreatePfoFromClusters(pfoClusters));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, tempPfoListName, m_pfoListName));
@@ -227,19 +221,17 @@ StatusCode ThreeDMultiReclusteringAlgorithm::BuildNewPfos(const ClusterList &clu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDMultiReclusteringAlgorithm::Build2DClustersFrom3D(const Cluster *const pCluster3D,
-                                                                   std::map<HitType, CaloHitList> &viewToFreeCaloHits2D,
-                                                                   ClusterList &newClusters2D) const
+StatusCode ThreeDMultiReclusteringAlgorithm::Build2DClustersFrom3D(
+    const Cluster *const pCluster3D, std::map<HitType, CaloHitList> &viewToFreeCaloHits2D, ClusterList &newClusters2D) const
 {
-    std::map<HitType, PandoraContentApi::Cluster::Parameters> viewToParamsCluster2D = {
-        {TPC_VIEW_U, {}}, {TPC_VIEW_V, {}}, {TPC_VIEW_W, {}} };
+    std::map<HitType, PandoraContentApi::Cluster::Parameters> viewToParamsCluster2D = {{TPC_VIEW_U, {}}, {TPC_VIEW_V, {}}, {TPC_VIEW_W, {}}};
 
     CaloHitList cluster3DCaloHits3D;
     pCluster3D->GetOrderedCaloHitList().FillCaloHitList(cluster3DCaloHits3D);
     for (const CaloHit *const pCaloHit3D : cluster3DCaloHits3D)
     {
-        const CaloHit *const pCaloHit3DParent2D {static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress())};
-        const HitType view {pCaloHit3DParent2D->GetHitType()};
+        const CaloHit *const pCaloHit3DParent2D{static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress())};
+        const HitType view{pCaloHit3DParent2D->GetHitType()};
         if (std::find(viewToFreeCaloHits2D.at(view).begin(), viewToFreeCaloHits2D.at(view).end(), pCaloHit3DParent2D) ==
             viewToFreeCaloHits2D.at(view).end())
             return STATUS_CODE_FAILURE;
@@ -247,11 +239,11 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Build2DClustersFrom3D(const Cluster
         viewToFreeCaloHits2D.at(view).remove(pCaloHit3DParent2D);
     }
 
-    CaloHitList cluster3DIsoCaloHits3D {pCluster3D->GetIsolatedCaloHitList()};
+    CaloHitList cluster3DIsoCaloHits3D{pCluster3D->GetIsolatedCaloHitList()};
     for (const CaloHit *const pCaloHit3D : cluster3DIsoCaloHits3D)
     {
-        const CaloHit *const pCaloHit3DParent2D {static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress())};
-        const HitType view {pCaloHit3DParent2D->GetHitType()};
+        const CaloHit *const pCaloHit3DParent2D{static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress())};
+        const HitType view{pCaloHit3DParent2D->GetHitType()};
         if (std::find(viewToFreeCaloHits2D.at(view).begin(), viewToFreeCaloHits2D.at(view).end(), pCaloHit3DParent2D) ==
             viewToFreeCaloHits2D.at(view).end())
             return STATUS_CODE_FAILURE;
@@ -265,12 +257,11 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Build2DClustersFrom3D(const Cluster
             continue;
 
         std::string tempListName;
-        const ClusterList *pTempClusterList {nullptr};
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                                 PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTempClusterList, tempListName));
-        const Cluster *pNewCluster2D {nullptr};
+        const ClusterList *pTempClusterList{nullptr};
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTempClusterList, tempListName));
+        const Cluster *pNewCluster2D{nullptr};
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, params, pNewCluster2D));
-        std::string cluster2DListName {m_clusterListNames.at(view)};
+        std::string cluster2DListName{m_clusterListNames.at(view)};
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, tempListName, cluster2DListName));
         newClusters2D.push_back(pNewCluster2D);
     }
@@ -284,8 +275,8 @@ StatusCode ThreeDMultiReclusteringAlgorithm::MopUpCaloHits(const CaloHitList &ca
 {
     for (const CaloHit *const pCaloHit : caloHits)
     {
-        const Cluster *pNearestCluster {nullptr};
-        double minimumDistance {std::numeric_limits<float>::max()};
+        const Cluster *pNearestCluster{nullptr};
+        double minimumDistance{std::numeric_limits<float>::max()};
         for (const Cluster *const pCluster : clusters)
         {
             double dist = LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), pCluster);
@@ -322,7 +313,7 @@ StatusCode ThreeDMultiReclusteringAlgorithm::CreatePfoFromClusters(const Cluster
     params.m_mass = PdgTable::GetParticleMass(params.m_particleId.Get());
     params.m_energy = 0.f;
     params.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    const Pfo *pPfo {nullptr};
+    const Pfo *pPfo{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, params, pPfo));
 
     return STATUS_CODE_SUCCESS;
@@ -332,26 +323,21 @@ StatusCode ThreeDMultiReclusteringAlgorithm::CreatePfoFromClusters(const Cluster
 
 StatusCode ThreeDMultiReclusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "PfoListName", m_pfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "Cluster3DListName", m_clusterListNames.at(TPC_3D)));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterUListName", m_clusterListNames.at(TPC_VIEW_U)));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterVListName", m_clusterListNames.at(TPC_VIEW_V)));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterWListName", m_clusterListNames.at(TPC_VIEW_W)));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "Cluster3DListName", m_clusterListNames.at(TPC_3D)));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ClusterUListName", m_clusterListNames.at(TPC_VIEW_U)));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ClusterVListName", m_clusterListNames.at(TPC_VIEW_V)));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ClusterWListName", m_clusterListNames.at(TPC_VIEW_W)));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MopUp2DCaloHits", m_mopUp2DCaloHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MopUp2DCaloHits", m_mopUp2DCaloHits));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
-        "ClusteringAlgorithms", m_clusteringAlgs));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle, "ClusteringAlgorithms", m_clusteringAlgs));
 
-    AlgorithmTool *pAlgTool {nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
-        "FomAlgorithmTool", pAlgTool));
+    AlgorithmTool *pAlgTool{nullptr};
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "FomAlgorithmTool", pAlgTool));
     m_pFomAlgTool = dynamic_cast<ThreeDReclusteringFigureOfMeritBaseTool *>(pAlgTool);
     if (!m_pFomAlgTool)
         return STATUS_CODE_INVALID_PARAMETER;

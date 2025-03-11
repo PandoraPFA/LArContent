@@ -50,8 +50,8 @@
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArMonitoring/EventClusterValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
+#include "larpandoracontent/LArMonitoring/EventClusterValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/HierarchyMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/HierarchyValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/MCParticleMonitoringAlgorithm.h"
@@ -72,9 +72,9 @@
 
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 #include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
-#include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
 #include "larpandoracontent/LArReclustering/LArExample/RandomClusteringAlgorithm.h"
 #include "larpandoracontent/LArReclustering/LArExample/RandomFigureOfMeritTool.h"
+#include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
 
 #include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
 #include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
@@ -222,8 +222,8 @@
 #include "larpandoracontent/LArUtility/ListPruningAlgorithm.h"
 #include "larpandoracontent/LArUtility/PfoHitCleaningAlgorithm.h"
 
-#include "larpandoracontent/LArReclustering/ThreeDReclusteringAlgorithm.h"
 #include "larpandoracontent/LArReclustering/ThreeDMultiReclusteringAlgorithm.h"
+#include "larpandoracontent/LArReclustering/ThreeDReclusteringAlgorithm.h"
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/HitAngleVertexSelectionAlgorithm.h"

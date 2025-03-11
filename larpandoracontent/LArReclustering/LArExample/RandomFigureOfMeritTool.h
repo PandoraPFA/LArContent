@@ -20,7 +20,6 @@ namespace lar_content
 class RandomFigureOfMeritTool : public ThreeDReclusteringFigureOfMeritBaseTool
 {
 public:
-
     /**
      *  @brief  Default constructor
      */
@@ -45,7 +44,10 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float RandomFigureOfMeritTool::GetRandomFom() { return static_cast<float>(rand()) / RAND_MAX; }
+inline float RandomFigureOfMeritTool::GetRandomFom()
+{
+    return static_cast<float>(rand()) / RAND_MAX;
+}
 
 } // namespace lar_content
 
