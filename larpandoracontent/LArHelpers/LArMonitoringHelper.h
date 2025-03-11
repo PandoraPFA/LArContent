@@ -89,7 +89,7 @@ public:
      *                    to a map of the object that defines the clustering B (e.g. pandora::MCParticle)
      *                    to the value of the table at this entry (which is the intersection of the two clusters)
      */
-    template<typename Ti, typename Tj>
+    template <typename Ti, typename Tj>
     static float CalcRandIndex(const std::map<const Ti, std::map<const Tj, int>> &cTable);
 
     /**
@@ -112,9 +112,8 @@ public:
      *  @param[out] cTable   Contingency table as a map of Cluster to a map of MCParticle to the value of the table at this entry
      *                       which is the intersection of clusterings defined by each object
      */
-    static void FillContingencyTable(const pandora::CaloHitList &caloHits,
-                                     const pandora::ClusterList &clusters,
-                                     std::map<const pandora::Cluster *const, std::map<const pandora::MCParticle *const, int>> &cTable);
+    static void FillContingencyTable(const pandora::CaloHitList &caloHits, const pandora::ClusterList &clusters,
+        std::map<const pandora::Cluster *const, std::map<const pandora::MCParticle *const, int>> &cTable);
 
     // --
 };

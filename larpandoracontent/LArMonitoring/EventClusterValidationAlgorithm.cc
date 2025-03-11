@@ -21,29 +21,29 @@ namespace lar_content
 {
 
 EventClusterValidationAlgorithm::CaloHitParents::CaloHitParents() :
-    m_pMainMC {nullptr},
-    m_pCluster {nullptr}
+    m_pMainMC{nullptr},
+    m_pCluster{nullptr}
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 EventClusterValidationAlgorithm::ClusterMetrics::ClusterMetrics() :
-    m_nRecoHits {std::vector<int> {}},
-    m_purities {std::vector<float> {}},
-    m_completenesses {std::vector<float> {}},
-    m_nHits {0},
-    m_nClusters {0},
-    m_nMainMCs {0}
+    m_nRecoHits{std::vector<int>{}},
+    m_purities{std::vector<float>{}},
+    m_completenesses{std::vector<float>{}},
+    m_nHits{0},
+    m_nClusters{0},
+    m_nMainMCs{0}
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 EventClusterValidationAlgorithm::EventClusterValidationAlgorithm() :
-    m_eventNumber {0},
-    m_caloHitListName {"CaloHitList2D"},
-    m_minMCHitsPerView {0}
+    m_eventNumber{0},
+    m_caloHitListName{"CaloHitList2D"},
+    m_minMCHitsPerView{0}
 {
 }
 
@@ -65,7 +65,7 @@ StatusCode EventClusterValidationAlgorithm::Run()
     m_eventNumber++;
 
     // Gather hits by view
-    const CaloHitList *pFullCaloHitList {nullptr};
+    const CaloHitList *pFullCaloHitList{nullptr};
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pFullCaloHitList));
     std::map<HitType, CaloHitList> viewToCaloHits;
     for (const CaloHit *const pCaloHit : *pFullCaloHitList)
@@ -75,19 +75,19 @@ StatusCode EventClusterValidationAlgorithm::Run()
     std::map<HitType, ClusterList> viewToClusters;
     for (std::string listName : m_clusterListNames)
     {
-        const ClusterList *pClusterList {nullptr};
+        const ClusterList *pClusterList{nullptr};
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listName, pClusterList));
         for (const Cluster *const pCluster : *pClusterList)
         {
-            const HitType view {LArClusterHelper::GetClusterHitType(pCluster)};
+            const HitType view{LArClusterHelper::GetClusterHitType(pCluster)};
             viewToClusters[view].emplace_back(pCluster);
         }
     }
 
-    const std::vector<ValidationType> valTypes {ValidationType::ALL, ValidationType::SHOWER, ValidationType::TRACK};
+    const std::vector<ValidationType> valTypes{ValidationType::ALL, ValidationType::SHOWER, ValidationType::TRACK};
     for (const auto &[view, caloHits] : viewToCaloHits)
     {
-        const ClusterList &clusters {viewToClusters[view]};
+        const ClusterList &clusters{viewToClusters[view]};
 
         // For each hit, get the main MCParticle and the cluster it belongs to (if the truth matching is not missing)
         // NOTE Using hitParents map to track which hits are being considered in metric calculations
@@ -101,12 +101,12 @@ StatusCode EventClusterValidationAlgorithm::Run()
         for (const ValidationType valType : valTypes)
         {
             // Apply the track/shower/all criteria
-            std::map<const CaloHit *const, CaloHitParents> hitParentsValid {ApplyPDGCut(hitParents, valType)};
+            std::map<const CaloHit *const, CaloHitParents> hitParentsValid{ApplyPDGCut(hitParents, valType)};
 
             ClusterMetrics metrics;
             GetMetrics(hitParentsValid, metrics);
 
-            float adjustedRandI {CalcRandIndex(hitParentsValid)};
+            float adjustedRandI{CalcRandIndex(hitParentsValid)};
 
             std::string branchPrefix;
             if (valType == ValidationType::ALL)
@@ -128,15 +128,14 @@ StatusCode EventClusterValidationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventClusterValidationAlgorithm::GetHitParents(const CaloHitList &caloHits,
-                                                    const ClusterList &clusters,
-                                                    std::map<const CaloHit *const, CaloHitParents> &hitParents) const
+void EventClusterValidationAlgorithm::GetHitParents(
+    const CaloHitList &caloHits, const ClusterList &clusters, std::map<const CaloHit *const, CaloHitParents> &hitParents) const
 {
     for (const CaloHit *const pCaloHit : caloHits)
     {
-        const MCParticle *pMainMC {nullptr};
-        const MCParticleWeightMap &weightMap {pCaloHit->GetMCParticleWeightMap()};
-        float maxWeight {std::numeric_limits<float>::lowest()};
+        const MCParticle *pMainMC{nullptr};
+        const MCParticleWeightMap &weightMap{pCaloHit->GetMCParticleWeightMap()};
+        float maxWeight{std::numeric_limits<float>::lowest()};
         for (const auto &[pMC, weight] : weightMap)
         {
             if (weight > maxWeight)
@@ -151,7 +150,7 @@ void EventClusterValidationAlgorithm::GetHitParents(const CaloHitList &caloHits,
 
     for (const Cluster *const pCluster : clusters)
     {
-        const CaloHitList &isolatedHits {pCluster->GetIsolatedCaloHitList()};
+        const CaloHitList &isolatedHits{pCluster->GetIsolatedCaloHitList()};
         CaloHitList clusterCaloHits;
         pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHits);
         clusterCaloHits.insert(clusterCaloHits.end(), isolatedHits.begin(), isolatedHits.end());
@@ -172,7 +171,7 @@ void EventClusterValidationAlgorithm::ApplyMCParticleMinSumHits(std::map<const C
     std::map<const MCParticle *const, int> mcSumHits;
     for (const auto &[pCaloHit, parents] : hitParents)
     {
-        const MCParticle *const pMainMC {parents.m_pMainMC};
+        const MCParticle *const pMainMC{parents.m_pMainMC};
         if (mcSumHits.find(pMainMC) == mcSumHits.end())
             mcSumHits[pMainMC] = 0;
         mcSumHits.at(pMainMC)++;
@@ -189,21 +188,18 @@ void EventClusterValidationAlgorithm::ApplyMCParticleMinSumHits(std::map<const C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::map<const CaloHit *const, EventClusterValidationAlgorithm::CaloHitParents>
-EventClusterValidationAlgorithm::ApplyPDGCut(std::map<const CaloHit *const, CaloHitParents> &hitParents,
-                                             const ValidationType &valType) const
+std::map<const CaloHit *const, EventClusterValidationAlgorithm::CaloHitParents> EventClusterValidationAlgorithm::ApplyPDGCut(
+    std::map<const CaloHit *const, CaloHitParents> &hitParents, const ValidationType &valType) const
 {
     std::map<const CaloHit *const, CaloHitParents> hitParentsValid;
     for (const auto &[pCaloHit, parents] : hitParents)
     {
-        const MCParticle *const pMainMC {parents.m_pMainMC};
+        const MCParticle *const pMainMC{parents.m_pMainMC};
         if (valType != ValidationType::ALL)
         {
-            const int pdg {std::abs(pMainMC->GetParticleId())};
-            if (
-                (valType == ValidationType::SHOWER && (pdg != PHOTON && pdg != E_MINUS)) ||
-                (valType == ValidationType::TRACK && (pdg == PHOTON || pdg == E_MINUS))
-            )
+            const int pdg{std::abs(pMainMC->GetParticleId())};
+            if ((valType == ValidationType::SHOWER && (pdg != PHOTON && pdg != E_MINUS)) ||
+                (valType == ValidationType::TRACK && (pdg == PHOTON || pdg == E_MINUS)))
                 continue;
         }
         hitParentsValid[pCaloHit] = parents;
@@ -214,8 +210,7 @@ EventClusterValidationAlgorithm::ApplyPDGCut(std::map<const CaloHit *const, Calo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventClusterValidationAlgorithm::GetMetrics(const std::map<const CaloHit *const, CaloHitParents> &hitParents,
-                                                 ClusterMetrics &metrics) const
+void EventClusterValidationAlgorithm::GetMetrics(const std::map<const CaloHit *const, CaloHitParents> &hitParents, ClusterMetrics &metrics) const
 {
     // Adapted from Andy's code for calculating cluster purity and completeness (ClusterValidationAlgorithm)
     std::set<const Cluster *> validClusters;
@@ -231,13 +226,13 @@ void EventClusterValidationAlgorithm::GetMetrics(const std::map<const CaloHit *c
 
     for (const Cluster *const pCluster : validClusters)
     {
-        const CaloHitList &isolatedHits {pCluster->GetIsolatedCaloHitList()};
+        const CaloHitList &isolatedHits{pCluster->GetIsolatedCaloHitList()};
         CaloHitList clusterCaloHits;
         pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHits);
         clusterCaloHits.insert(clusterCaloHits.end(), isolatedHits.begin(), isolatedHits.end());
 
         std::map<const MCParticle *const, int> mainMCParticleHits;
-        float totalHits {0};
+        float totalHits{0};
         for (const CaloHit *const pCaloHit : clusterCaloHits)
         {
             if (hitParents.find(pCaloHit) == hitParents.end())
@@ -253,8 +248,8 @@ void EventClusterValidationAlgorithm::GetMetrics(const std::map<const CaloHit *c
             continue;
 
         // Determine which MC particle contributes the most weight across the cluster
-        const MCParticle *pMainMC {nullptr};
-        int maxHits {0};
+        const MCParticle *pMainMC{nullptr};
+        int maxHits{0};
         for (const auto &[pMC, nHits] : mainMCParticleHits)
         {
             if (nHits > maxHits)
@@ -267,7 +262,7 @@ void EventClusterValidationAlgorithm::GetMetrics(const std::map<const CaloHit *c
         metrics.m_nRecoHits.emplace_back(totalHits);
 
         // Calculate cluster completeness
-        int nTotalMainMCHits {0};
+        int nTotalMainMCHits{0};
         for (const auto &[pCaloHit, parents] : hitParents)
         {
             if (pMainMC == parents.m_pMainMC)
@@ -298,18 +293,21 @@ float EventClusterValidationAlgorithm::CalcRandIndex(std::map<const CaloHit *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventClusterValidationAlgorithm::SetBranches(ClusterMetrics &metrics, float randIndex, std::string branchPrefix) const
+void EventClusterValidationAlgorithm::SetBranches(
+    [[maybe_unused]] ClusterMetrics &metrics, [[maybe_unused]] float randIndex, [[maybe_unused]] std::string branchPrefix) const
 {
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, branchPrefix + "n_hits", metrics.m_nHits ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, branchPrefix + "n_hits", metrics.m_nHits));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, branchPrefix + "n_clusters", metrics.m_nClusters));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, branchPrefix + "n_mainMCs", metrics.m_nMainMCs));
-    double meanPurity = -1.0, meanCompleteness = -1.0, meanNRecoHits = -1.0;
+#ifdef MONITORING
+    double meanPurity{-1.0}, meanCompleteness{-1.0}, meanNRecoHits{-1.0};
     if (!metrics.m_purities.empty() && !metrics.m_completenesses.empty() && !metrics.m_nRecoHits.empty())
     {
         meanPurity = std::accumulate(metrics.m_purities.begin(), metrics.m_purities.end(), 0.0) / metrics.m_purities.size();
         meanCompleteness = std::accumulate(metrics.m_completenesses.begin(), metrics.m_completenesses.end(), 0.0) / metrics.m_completenesses.size();
         meanNRecoHits = std::accumulate(metrics.m_nRecoHits.begin(), metrics.m_nRecoHits.end(), 0.0) / metrics.m_nRecoHits.size();
     }
+#endif
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, branchPrefix + "mean_purity", meanPurity));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, branchPrefix + "mean_completeness", meanCompleteness));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, branchPrefix + "mean_n_reco_hits", meanNRecoHits));
@@ -320,19 +318,14 @@ void EventClusterValidationAlgorithm::SetBranches(ClusterMetrics &metrics, float
 
 StatusCode EventClusterValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "FileName", m_fileName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "treeName", m_treeName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CaloHitListName", m_caloHitListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "ClusterListNames", m_clusterListNames));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMCHitsPerView", m_minMCHitsPerView));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FileName", m_fileName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "treeName", m_treeName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "ClusterListNames", m_clusterListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMCHitsPerView", m_minMCHitsPerView));
 
     return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar_content
-

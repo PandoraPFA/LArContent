@@ -86,9 +86,8 @@ private:
      *  @param[in]  clusters   List of clusters
      *  @param[out] hitParents Map of hits to the Cluster/MCParticle they belong to
      */
-    void GetHitParents(const pandora::CaloHitList &caloHits,
-                       const pandora::ClusterList &clusters,
-                       std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents) const;
+    void GetHitParents(const pandora::CaloHitList &caloHits, const pandora::ClusterList &clusters,
+        std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents) const;
 
     /**
      *  @brief Erase hits associated to an MCParticle that does meet a minimum number of hits in the view
@@ -103,8 +102,8 @@ private:
      *  @param[in] hitParents Map of hits to the Cluster/MCParticle they belong to
      *  @param[in] valType    Enum for track/shower/all
      */
-    std::map<const pandora::CaloHit *const, CaloHitParents> ApplyPDGCut(std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents,
-                                                                        const ValidationType &valType) const;
+    std::map<const pandora::CaloHit *const, CaloHitParents> ApplyPDGCut(
+        std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents, const ValidationType &valType) const;
 
     /**
      *  @brief Update the branches of the TTree for this entry
@@ -120,7 +119,7 @@ private:
     std::string m_treeName;                      ///< The name of the ROOT tree
     std::string m_caloHitListName;               ///< The name of the hit list containing all 2D hits
     std::vector<std::string> m_clusterListNames; ///< The names of the lists of 2D clusters to process
-    int m_minMCHitsPerView;                      ///< Threshold on total main MCParticle hits in each view for consideration in metric calculations
+    int m_minMCHitsPerView; ///< Threshold on total main MCParticle hits in each view for consideration in metric calculations
 };
 
 } // namespace lar_content

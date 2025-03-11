@@ -315,14 +315,14 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename Ti, typename Tj>
+template <typename Ti, typename Tj>
 float LArMonitoringHelper::CalcRandIndex(const std::map<const Ti, std::map<const Tj, int>> &cTable)
 {
-    double aTerm {0.}; // Term made from summing over columns
-    int n {0}; // Total entries in table
+    double aTerm{0.}; // Term made from summing over columns
+    int n{0};         // Total entries in table
     for (const auto &[i, jToVal] : cTable)
     {
-        int a {0};
+        int a{0};
         for (const auto &[j, val] : jToVal)
         {
             a += val;
@@ -333,7 +333,7 @@ float LArMonitoringHelper::CalcRandIndex(const std::map<const Ti, std::map<const
     if (n == 0 || n == 1) // Clustering of a set with cardinality 0 or 1 can only be perfect
         return 1.f;
 
-    double bTerm {0.}; // Term made from summing over rows
+    double bTerm{0.}; // Term made from summing over rows
     std::set<Tj> js;
     for (const auto &[i, jToVal] : cTable)
     {
@@ -344,7 +344,7 @@ float LArMonitoringHelper::CalcRandIndex(const std::map<const Ti, std::map<const
     }
     for (const auto j : js)
     {
-        int b {0};
+        int b{0};
         for (const auto &[i, jToVal] : cTable)
         {
             if (jToVal.find(j) != jToVal.end())
@@ -353,7 +353,7 @@ float LArMonitoringHelper::CalcRandIndex(const std::map<const Ti, std::map<const
         bTerm += static_cast<double>(b * (b - 1)) / 2.;
     }
 
-    double indexTerm {0.};
+    double indexTerm{0.};
     for (const auto &[i, jToVal] : cTable)
     {
         for (const auto &[j, val] : jToVal)
@@ -362,11 +362,11 @@ float LArMonitoringHelper::CalcRandIndex(const std::map<const Ti, std::map<const
         }
     }
 
-    double expIndexTerm {(aTerm * bTerm) / static_cast<double>(n * (n - 1)) / 2.};
-    double maxIndexTerm {0.5 * (aTerm + bTerm)};
+    double expIndexTerm{(aTerm * bTerm) / static_cast<double>(n * (n - 1)) / 2.};
+    double maxIndexTerm{0.5 * (aTerm + bTerm)};
     if (std::abs(maxIndexTerm - expIndexTerm) < std::numeric_limits<double>::epsilon())
         return indexTerm >= expIndexTerm ? 1.f : -1.f;
-    double adjustedRandIndex {(indexTerm - expIndexTerm) / (maxIndexTerm - expIndexTerm)};
+    double adjustedRandIndex{(indexTerm - expIndexTerm) / (maxIndexTerm - expIndexTerm)};
 
     return adjustedRandIndex;
 }
@@ -382,25 +382,26 @@ float LArMonitoringHelper::CalcRandIndex(const CaloHitList &caloHits, const Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::FillContingencyTable(const CaloHitList &caloHits,
-                                               const ClusterList &clusters,
-                                               std::map<const Cluster *const, std::map<const MCParticle *const, int>> &cTable)
+void LArMonitoringHelper::FillContingencyTable(
+    const CaloHitList &caloHits, const ClusterList &clusters, std::map<const Cluster *const, std::map<const MCParticle *const, int>> &cTable)
 {
     struct CaloHitParents
     {
         const pandora::MCParticle *m_pMainMC;
         const pandora::Cluster *m_pCluster;
 
-        CaloHitParents() : m_pMainMC {nullptr}, m_pCluster {nullptr} {};
+        CaloHitParents() :
+            m_pMainMC{nullptr},
+            m_pCluster{nullptr} {};
     };
     std::map<const CaloHit *const, CaloHitParents> hitParents;
 
     // Track the parent MC particle of each hit
     for (const CaloHit *const pCaloHit : caloHits)
     {
-        const MCParticle *pMainMC {nullptr};
-        const MCParticleWeightMap &weightMap {pCaloHit->GetMCParticleWeightMap()};
-        float maxWeight {std::numeric_limits<float>::lowest()};
+        const MCParticle *pMainMC{nullptr};
+        const MCParticleWeightMap &weightMap{pCaloHit->GetMCParticleWeightMap()};
+        float maxWeight{std::numeric_limits<float>::lowest()};
         for (const auto &[pMC, weight] : weightMap)
         {
             if (weight > maxWeight)
@@ -416,7 +417,7 @@ void LArMonitoringHelper::FillContingencyTable(const CaloHitList &caloHits,
     // Also track the reco cluster the hits are in
     for (const Cluster *const pCluster : clusters)
     {
-        const CaloHitList &isolatedHits {pCluster->GetIsolatedCaloHitList()};
+        const CaloHitList &isolatedHits{pCluster->GetIsolatedCaloHitList()};
         CaloHitList clusterCaloHits;
         pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHits);
         clusterCaloHits.insert(clusterCaloHits.end(), isolatedHits.begin(), isolatedHits.end());
