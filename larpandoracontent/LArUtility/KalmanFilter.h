@@ -54,6 +54,13 @@ public:
     const Eigen::VectorXd &GetState() const;
 
     /**
+     * @brief  Get the current direction vector
+     *
+     * @return The current direction vector
+     */
+    const Eigen::VectorXd GetDirection() const;
+
+    /**
      * @brief  Get the temporary state vector
      *
      * @return The temporary state vector
@@ -111,6 +118,13 @@ public:
      * @return The current state vector
      */
     const Eigen::VectorXd &GetState() const;
+
+    /**
+     * @brief  Get the current direction vector
+     *
+     * @return The current direction vector
+     */
+    const Eigen::VectorXd GetDirection() const;
 
     /**
      * @brief  Get the temporary state vector
