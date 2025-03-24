@@ -73,6 +73,13 @@ const VectorXd &KalmanFilter3D::GetState() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const VectorXd KalmanFilter3D::GetPosition() const
+{
+    return m_x.head(3);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const VectorXd KalmanFilter3D::GetDirection() const
 {
     return m_x.tail(3).normalized();
@@ -144,6 +151,13 @@ void KalmanFilter2D::Update(const VectorXd &z)
 const VectorXd &KalmanFilter2D::GetState() const
 {
     return m_x;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const VectorXd KalmanFilter2D::GetPosition() const
+{
+    return m_x.head(2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
