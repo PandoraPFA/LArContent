@@ -279,7 +279,7 @@ void EventClusterValidationAlgorithm::GetMetrics(const std::map<const CaloHit *c
             if (pMainMC == parents.m_pMainMC)
                 nTotalMainMCHits++;
         }
-        metrics.m_completenesses.emplace_back(maxHits / nTotalMainMCHits);
+        metrics.m_completenesses.emplace_back(maxHits / static_cast<float>(nTotalMainMCHits));
     }
 }
 
