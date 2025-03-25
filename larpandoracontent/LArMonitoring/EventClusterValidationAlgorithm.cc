@@ -226,10 +226,21 @@ void EventClusterValidationAlgorithm::GetMetrics(const std::map<const CaloHit *c
 
     for (const Cluster *const pCluster : validClusters)
     {
-        const CaloHitList &isolatedHits{pCluster->GetIsolatedCaloHitList()};
         CaloHitList clusterCaloHits;
-        pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHits);
-        clusterCaloHits.insert(clusterCaloHits.end(), isolatedHits.begin(), isolatedHits.end());
+        if (pCluster)
+        {
+            const CaloHitList &isolatedHits{pCluster->GetIsolatedCaloHitList()};
+            pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHits);
+            clusterCaloHits.insert(clusterCaloHits.end(), isolatedHits.begin(), isolatedHits.end());
+        }
+        else // The hit has a null cluster ie. it is unclustered, treat all such hits as being clustered together
+        {
+            for (const auto &[pCaloHit, parents] : hitParents)
+            {
+                if (!parents.m_pCluster)
+                    clusterCaloHits.emplace_back(pCaloHit);
+            }
+        }
 
         std::map<const MCParticle *const, int> mainMCParticleHits;
         float totalHits{0};
