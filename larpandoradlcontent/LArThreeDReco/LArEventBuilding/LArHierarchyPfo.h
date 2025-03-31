@@ -233,14 +233,14 @@ public:
 
     /**
      *  @brief  HierarchyPfo == operator
-     * 
+     *
      *  @param  rhs the HierarchyPfo to compare
      */
     bool operator==(const HierarchyPfo &rhs) const;
 
     /**
      *  @brief  HierarchyPfo == operator
-     * 
+     *
      *  @param  rhs the pfo to compare
      */
     bool operator==(const pandora::ParticleFlowObject *const rhs) const;

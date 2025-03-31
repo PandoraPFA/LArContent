@@ -182,7 +182,7 @@ private:
      *  @brief  Set the parent endpoint region DLLaterTierNetworkParams
      *          (m_parentEndRegionNHits, m_parentEndRegionNParticles, m_parentEndRegionRToWall)
      *
-     *  @param  pAlgorithm a pointer to the pandora algorithm 
+     *  @param  pAlgorithm a pointer to the pandora algorithm
      *  @param  pParentPfo a pointer to the parent pfo
      *  @param  parentEndPos the assumed parent pfo end position
      *  @param  laterTierNetworkParams the later tier network parameters to fill
@@ -194,25 +194,25 @@ private:
      *  @brief  Set the m_parentEndRegionRToWall DLLaterTierNetworkParam
      *
      *  @param  parentEndPos the assumed parent pfo end position
-     *  @param  laterTierNetworkParams the later tier network parameters to fill  
+     *  @param  laterTierNetworkParams the later tier network parameters to fill
      */
     void SetEndRegionRToWall(const pandora::CartesianVector &parentEndPos, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
      *  @brief  Set the child connection DLLaterTierNetworkParams
-     *          (m_doesChildConnect, m_connectionPoint, m_connectionDirection, 
+     *          (m_doesChildConnect, m_connectionPoint, m_connectionDirection,
      *           m_childCPDCA, m_childCPExtrapDistance, m_childCPLRatio)
      *
      *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
      *  @param  parentStartPos the assumed parent pfo start position
      *  @param  childStart the assumed child startpoint
-     *  @param  laterTierNetworkParams the later tier network parameters to fill  
+     *  @param  laterTierNetworkParams the later tier network parameters to fill
      */
     void SetConnectionParams(const HierarchyPfo &parentHierarchyPfo, const pandora::CartesianVector &parentStartPos,
         const ExtremalPoint &childStart, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
-     *  @brief  Project the (parentPos - childStartPos) vector onto the child direction axis 
+     *  @brief  Project the (parentPos - childStartPos) vector onto the child direction axis
      *          to obtain an extrapolation position
      *
      *  @param  parentPosition the parent position
@@ -225,7 +225,7 @@ private:
 
     /**
      *  @brief  Return whether an input position connects to a line defined by two endpoints
-     * 
+     *
      *  @param  boundary1 one end position
      *  @param  boundary2 the other end position
      *  @param  testPoint the input position
@@ -241,18 +241,18 @@ private:
      *  @param  parentStart the assumed parent pfo startpoint
      *  @param  parentEnd the assumed parent pfo endpoint
      *  @param  childStart the assumed child pfo startpoint
-     *  @param  laterTierNetworkParams the later tier network parameters to fill  
+     *  @param  laterTierNetworkParams the later tier network parameters to fill
      */
     void SetOvershootParams(const ExtremalPoint &parentStart, const ExtremalPoint &parentEnd, const ExtremalPoint &childStart,
         DLLaterTierNetworkParams &laterTierNetworkParams) const;
 
     /**
      *  @brief  Set the parent connection point DLLaterTierNetworkParams
-     *          (m_parentCPNUpstreamHits, m_parentCPNDownstreamHits, m_parentCPNHitRatio, 
+     *          (m_parentCPNUpstreamHits, m_parentCPNDownstreamHits, m_parentCPNHitRatio,
      *           m_parentCPEigenvalueRatio, m_parentCPOpeningAngle)
      *
      *  @param  parentHierarchyPfo the HierarchyPfo object of the parent pfo
-     *  @param  laterTierNetworkParams the later tier network parameters to fill  
+     *  @param  laterTierNetworkParams the later tier network parameters to fill
      */
     void SetParentConnectionPointVars(const HierarchyPfo &parentHierarchyPfo, DLLaterTierNetworkParams &laterTierNetworkParams) const;
 

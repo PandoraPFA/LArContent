@@ -36,12 +36,12 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Set the detector boundaries 
+     *  @brief  Set the detector boundaries
      */
     void SetDetectorBoundaries();
 
     /**
-     *  @brief  Return the number of 3D hits and the number of corresponding 
+     *  @brief  Return the number of 3D hits and the number of corresponding
      *          pfos of a given pfo about a point
      *
      *  @param  pAlgorithm a pointer to the pandora algorithm calling the tool

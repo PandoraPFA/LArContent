@@ -67,12 +67,12 @@ private:
     void FillTrackShowerVectors(const pandora::ParticleFlowObject *const pNeutrinoPfo, HierarchyPfoVector &trackPfos, HierarchyPfoVector &showerPfos) const;
 
     /**
-     *  @brief  Identify the upstream (closest to the nu vertex) and downstream (furthest 
-     *          from the nu vertex) endpoints and directions of an input pfo  
+     *  @brief  Identify the upstream (closest to the nu vertex) and downstream (furthest
+     *          from the nu vertex) endpoints and directions of an input pfo
      *
      *  @param  pNeutrinoPfo a pointer to the neutrino pfo
      *  @param  pPfo a pointer to the pfo
-     *  @param  slidingFitResult the sliding fit result of the input pfo 
+     *  @param  slidingFitResult the sliding fit result of the input pfo
      *  @param  upstreamPoint the upstream endpoint
      *  @param  downstreamPoint the downstream endpoint
      *
@@ -108,7 +108,7 @@ private:
      *
      *  @param  pNeutrinoPfo a pointer to the neutrino pfo
      *  @param  trackPfos the track-like HierarchyPfoVector
-     *  @param  hierarchyPfo the HierarchyPfo object of the input pfo 
+     *  @param  hierarchyPfo the HierarchyPfo object of the input pfo
      *
      *  @return the primary network score
      */
@@ -148,7 +148,7 @@ private:
      *
      *  @param  pNeutrinoPfo a pointer to the neutrino pfo
      *  @param  parentPfo the HierarchyPfo object of the parent pfo
-     *  @param  childPfo the HierarchyPfo object of the child pfo     
+     *  @param  childPfo the HierarchyPfo object of the child pfo
      *
      *  @return the parent-child network score
      */
@@ -181,7 +181,7 @@ private:
      *  @brief  Obtain the [pfo -> unique ID] map
      *
      *  @param  trackPfos the track-like HierarchyPfoVector
-     *  @param  showerPfos the shower-like HierarchyPfoVector     
+     *  @param  showerPfos the shower-like HierarchyPfoVector
      *  @param  particleIDMap the [pfo -> unique ID] map to populate
      */
     void GetParticleIDMap(const HierarchyPfoVector &trackPfos, const HierarchyPfoVector &showerPfos,
@@ -205,11 +205,11 @@ private:
      *  @brief  Fill the output event tree (containing event-level info)
      *
      *  @param  trackPfos the track-like HierarchyPfoVector
-     *  @param  showerPfos the shower-like HierarchyPfoVector          
+     *  @param  showerPfos the shower-like HierarchyPfoVector
      *  @param  nPrimaryTrackLinks the number of recorded primary track links
      *  @param  nPrimaryShowerLinks the number of recorded primary shower links
      *  @param  nLaterTierTrackTrackLinks the number of recorded track-track later tier links
-     *  @param  nLaterTierTrackShowerLinks the number of recorded track-shower later tier links     
+     *  @param  nLaterTierTrackShowerLinks the number of recorded track-shower later tier links
      */
     void FillEventTree(const HierarchyPfoVector &trackPfos, const HierarchyPfoVector &showerPfos, const int nPrimaryTrackLinks,
         const int nPrimaryShowerLinks, const int nLaterTierTrackTrackLinks, const int nLaterTierTrackShowerLinks) const;
@@ -240,7 +240,7 @@ private:
      *  @param  trueVisibleGen the true visible generation of the particle
      *  @param  truePDG the PDG of the matched MCParticle
      *  @param  trueParentID the unique ID of the true parent
-     *  @param  particleID the unique ID of the particle     
+     *  @param  particleID the unique ID of the particle
      *  @param  primaryNetworkParams the network parameter variable values of the input link
      */
     void FillPrimaryTree(const std::string &treeName, const bool isTrainingLink, const bool isTrueLink, const bool isOrientationCorrect,
@@ -273,7 +273,7 @@ private:
      *  @param  trueChildGen the true visible generation of the child particle
      *  @param  the training cut pair of the parent-child link
      *  @param  parentID the unique ID of the parent particle
-     *  @param  childID the unique ID of the child particle     
+     *  @param  childID the unique ID of the child particle
      *  @param  networkParams the network parameter variable values of the input link
      */
     void FillLaterTierTree(const std::string &treeName, const bool isTrainingLink, const bool isTrueLink, const bool isOrientationCorrect,

@@ -601,18 +601,18 @@ LArGeometryHelper::DetectorBoundaries LArGeometryHelper::GetDetectorBoundaries(c
 
     for (const auto &entry : larTPCMap)
     {
-        detectorBoundaries.m_xBoundaries.first = std::min(detectorBoundaries.m_xBoundaries.first, 
-             entry.second->GetCenterX() - (entry.second->GetWidthX() * 0.5f));
-        detectorBoundaries.m_xBoundaries.second = std::max(detectorBoundaries.m_xBoundaries.second, 
-             entry.second->GetCenterX() + (entry.second->GetWidthX() * 0.5f));
-        detectorBoundaries.m_yBoundaries.first = std::min(detectorBoundaries.m_yBoundaries.first, 
-             entry.second->GetCenterY() - (entry.second->GetWidthY() * 0.5f));
-        detectorBoundaries.m_yBoundaries.second = std::max(detectorBoundaries.m_yBoundaries.second, 
-             entry.second->GetCenterY() + (entry.second->GetWidthY() * 0.5f));
-        detectorBoundaries.m_zBoundaries.first = std::min(detectorBoundaries.m_zBoundaries.first, 
-             entry.second->GetCenterZ() - (entry.second->GetWidthZ() * 0.5f));
-        detectorBoundaries.m_zBoundaries.second = std::max(detectorBoundaries.m_zBoundaries.second, 
-             entry.second->GetCenterZ() + (entry.second->GetWidthZ() * 0.5f));
+        detectorBoundaries.m_xBoundaries.first =
+            std::min(detectorBoundaries.m_xBoundaries.first, entry.second->GetCenterX() - (entry.second->GetWidthX() * 0.5f));
+        detectorBoundaries.m_xBoundaries.second =
+            std::max(detectorBoundaries.m_xBoundaries.second, entry.second->GetCenterX() + (entry.second->GetWidthX() * 0.5f));
+        detectorBoundaries.m_yBoundaries.first =
+            std::min(detectorBoundaries.m_yBoundaries.first, entry.second->GetCenterY() - (entry.second->GetWidthY() * 0.5f));
+        detectorBoundaries.m_yBoundaries.second =
+            std::max(detectorBoundaries.m_yBoundaries.second, entry.second->GetCenterY() + (entry.second->GetWidthY() * 0.5f));
+        detectorBoundaries.m_zBoundaries.first =
+            std::min(detectorBoundaries.m_zBoundaries.first, entry.second->GetCenterZ() - (entry.second->GetWidthZ() * 0.5f));
+        detectorBoundaries.m_zBoundaries.second =
+            std::max(detectorBoundaries.m_zBoundaries.second, entry.second->GetCenterZ() + (entry.second->GetWidthZ() * 0.5f));
     }
 
     return detectorBoundaries;
@@ -622,20 +622,17 @@ LArGeometryHelper::DetectorBoundaries LArGeometryHelper::GetDetectorBoundaries(c
 
 bool LArGeometryHelper::IsInDetector(const DetectorBoundaries &detectorBoundaries, const CartesianVector &position)
 {
-    if ((position.GetX() < detectorBoundaries.m_xBoundaries.first) || 
-        (position.GetX() > detectorBoundaries.m_xBoundaries.second))
+    if ((position.GetX() < detectorBoundaries.m_xBoundaries.first) || (position.GetX() > detectorBoundaries.m_xBoundaries.second))
     {
         return false;
     }
 
-    if ((position.GetY() < detectorBoundaries.m_yBoundaries.first) || 
-        (position.GetY() > detectorBoundaries.m_yBoundaries.second))
+    if ((position.GetY() < detectorBoundaries.m_yBoundaries.first) || (position.GetY() > detectorBoundaries.m_yBoundaries.second))
     {
         return false;
     }
 
-    if ((position.GetZ() < detectorBoundaries.m_zBoundaries.first) || 
-        (position.GetZ() > detectorBoundaries.m_zBoundaries.second))
+    if ((position.GetZ() < detectorBoundaries.m_zBoundaries.first) || (position.GetZ() > detectorBoundaries.m_zBoundaries.second))
     {
         return false;
     }

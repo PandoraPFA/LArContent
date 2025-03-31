@@ -83,7 +83,7 @@ public:
     DLPrimaryHierarchyTool();
 
     /**
-     *  @brief  Calculate the variables describing the extension of a child particle to a given parent 
+     *  @brief  Calculate the variables describing the extension of a child particle to a given parent
      *          (m_parentConnectionDistance, m_childConnectionDistance)
      *
      *  @param  parentPoint the extremal point of the parent
