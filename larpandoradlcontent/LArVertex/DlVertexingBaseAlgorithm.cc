@@ -133,11 +133,50 @@ void DlVertexingBaseAlgorithm::GetHitRegion(const CaloHitList &caloHitList, floa
         const float zAsymmetry{nHitsUpstream / static_cast<float>(nHitsViewTotal)};
 
         const float xSpan{m_driftStep * (m_width - 1)};
-        xMin = xVtx - xAsymmetry * xSpan;
-        xMax = xMin + (m_driftStep * (m_width - 1));
+        if (xAsymmetry <= 0.5f)
+        {
+            xMin = xVtx - xAsymmetry * xSpan;
+            xMax = xMin + xSpan;
+        }
+        else
+        {
+            xMax = xVtx + (1 - xAsymmetry) * xSpan;
+            xMin = xMax - xSpan;
+        }
         const float zSpan{pitch * (m_height - 1)};
-        zMin = zVtx - zAsymmetry * zSpan;
-        zMax = zMin + zSpan;
+        if (zAsymmetry <= 0.5f)
+        {
+            zMin = zVtx - zAsymmetry * zSpan;
+            zMax = zMin + zSpan;
+        }
+        else
+        {
+            zMax = zVtx + (1 - zAsymmetry) * zSpan;
+            zMin = zMax - zSpan;
+        }
+
+        // Avoid the estimated vertex being too close to edges (resolution might push the true vertex outside of the frame)
+        const float tol{5.f};
+        if ((xVtx - xMin) < tol)
+        {
+            xMax -= tol - (xVtx - xMin);
+            xMin -= tol - (xVtx - xMin);
+        }
+        if ((zVtx - zMin) < tol)
+        {
+            zMax -= tol - (zVtx - zMin);
+            zMin -= tol - (zVtx - zMin);
+        }
+        if ((xMax - xVtx) < 10.f)
+        {
+            xMin += tol - (xMax - xVtx);
+            xMax += tol - (xMax - xVtx);
+        }
+        if ((zMax - zVtx) < 10.f)
+        {
+            zMin += tol - (zMax - zVtx);
+            zMax += tol - (zMax - zVtx);
+        }
     }
 
     // Avoid unreasonable rescaling of very small hit regions, pixels are assumed to be 0.5cm in x and wire pitch in z
