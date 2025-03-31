@@ -405,7 +405,10 @@ void LArMonitoringHelper::FillContingencyTable(
         for (const auto &[pMC, weight] : weightMap)
         {
             if (weight > maxWeight)
+            {
                 pMainMC = pMC;
+                maxWeight = weight;
+            }
         }
         if (pMainMC)
         {
