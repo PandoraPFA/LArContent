@@ -51,7 +51,7 @@ void OverlapMatrix<T>::GetUnambiguousElements(const bool ignoreUnavailable, Elem
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         Element element(pCluster1, pCluster2, iter2->second);
-        elementList.push_back(element);
+        elementList.emplace_back(element);
     }
 
     std::sort(elementList.begin(), elementList.end());
@@ -90,7 +90,7 @@ template <typename T>
 void OverlapMatrix<T>::GetSortedKeyClusters(ClusterVector &sortedKeyClusters) const
 {
     for (typename TheMatrix::const_iterator iter1 = this->begin(), iter1End = this->end(); iter1 != iter1End; ++iter1)
-        sortedKeyClusters.push_back(iter1->first);
+        sortedKeyClusters.emplace_back(iter1->first);
 
     std::sort(sortedKeyClusters.begin(), sortedKeyClusters.end(), LArClusterHelper::SortByNHits);
 }
@@ -113,9 +113,9 @@ void OverlapMatrix<T>::SetOverlapResult(const pandora::Cluster *const pCluster1,
     ClusterList &navigation21(m_clusterNavigationMap21[pCluster2]);
 
     if (navigation12.end() == std::find(navigation12.begin(), navigation12.end(), pCluster2))
-        navigation12.push_back(pCluster2);
+        navigation12.emplace_back(pCluster2);
     if (navigation21.end() == std::find(navigation21.begin(), navigation21.end(), pCluster1))
-        navigation21.push_back(pCluster1);
+        navigation21.emplace_back(pCluster1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -159,7 +159,7 @@ void OverlapMatrix<T>::RemoveCluster(const pandora::Cluster *const pCluster)
                 thisIter->second.erase(listIter);
 
             if (thisIter->second.empty())
-                additionalRemovals.push_back(thisIter->first);
+                additionalRemovals.emplace_back(thisIter->first);
         }
     }
 
@@ -182,7 +182,7 @@ void OverlapMatrix<T>::RemoveCluster(const pandora::Cluster *const pCluster)
                 thisIter->second.erase(listIter);
 
             if (thisIter->second.empty())
-                additionalRemovals.push_back(thisIter->first);
+                additionalRemovals.emplace_back(thisIter->first);
         }
     }
 
@@ -217,12 +217,12 @@ void OverlapMatrix<T>::GetConnectedElements(const Cluster *const pCluster, const
                 continue;
 
             Element element(iter1->first, iter2->first, iter2->second);
-            elementList.push_back(element);
+            elementList.emplace_back(element);
 
             if (clusterList1.end() == std::find(clusterList1.begin(), clusterList1.end(), iter1->first))
-                clusterList1.push_back(iter1->first);
+                clusterList1.emplace_back(iter1->first);
             if (clusterList2.end() == std::find(clusterList2.begin(), clusterList2.end(), iter2->first))
-                clusterList2.push_back(iter2->first);
+                clusterList2.emplace_back(iter2->first);
         }
     }
 
@@ -253,7 +253,7 @@ void OverlapMatrix<T>::ExploreConnections(
     if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pCluster))
         return;
 
-    clusterList.push_back(pCluster);
+    clusterList.emplace_back(pCluster);
     ClusterNavigationMap::const_iterator iter = navigationMap.find(pCluster);
 
     if (navigationMap.end() == iter)
