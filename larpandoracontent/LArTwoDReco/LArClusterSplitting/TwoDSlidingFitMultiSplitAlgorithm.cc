@@ -102,7 +102,7 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitClusters(
 {
     ClusterList clusterList;
     for (const auto &mapEntry : clusterSplittingMap)
-        clusterList.push_back(mapEntry.first);
+        clusterList.emplace_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : clusterList)
@@ -142,12 +142,12 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitCluster(const TwoDSlidingFitR
 
         float rL(0.f), rT(0.f);
         slidingFitResult.GetLocalPosition(splitPosition, rL, rT);
-        displacementVector.push_back(rL);
+        displacementVector.emplace_back(rL);
     }
 
     const float bigL(2.f * slidingFitResult.GetL(slidingFitResult.GetMaxLayer()));
-    displacementVector.push_back(-bigL);
-    displacementVector.push_back(+bigL);
+    displacementVector.emplace_back(-bigL);
+    displacementVector.emplace_back(+bigL);
 
     std::sort(displacementVector.begin(), displacementVector.end());
 
@@ -181,7 +181,7 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitCluster(const TwoDSlidingFitR
                 slidingFitResult.GetLocalPosition(pCaloHit->GetPositionVector(), rL, rT);
 
                 if (rL >= prevL && rL < nextL)
-                    newCaloHitList.push_back(pCaloHit);
+                    newCaloHitList.emplace_back(pCaloHit);
             }
 
             if (newCaloHitList.empty())
@@ -189,7 +189,7 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitCluster(const TwoDSlidingFitR
 
             // Create new cluster
             PandoraContentApi::Cluster::Parameters newParameters;
-            newParameters.m_caloHitList = newCaloHitList;
+            newParameters.m_caloHitList = std::move(newCaloHitList);
 
             const Cluster *pNewCluster(NULL);
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, newParameters, pNewCluster));
