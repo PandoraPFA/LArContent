@@ -45,6 +45,8 @@ bool DlClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pClus
         for (const CaloHit *pCaloHit : caloHits)
         {
             const LArCaloHit *pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
+            if (!pLArCaloHit)
+                continue;
             const float pTrack{pLArCaloHit->GetTrackProbability()};
             const float pShower{pLArCaloHit->GetShowerProbability()};
             if ((pTrack + pShower) > std::numeric_limits<float>::epsilon())
