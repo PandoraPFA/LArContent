@@ -111,7 +111,7 @@ jobs:
       - name: Build PandoraSDK
         run: |
           mkdir -p /pandora/PandoraSDK/build && cd /pandora/PandoraSDK/build
-          cmake -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules /pandora/PandoraSDK/
+          cmake -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules -DCMAKE_POLICY_VERSION_MINIMUM=3.5 /pandora/PandoraSDK/
           make -j$(nproc) install
 
       - name: Build PandoraMonitoring
@@ -119,7 +119,7 @@ jobs:
         run: |
           mkdir -p /pandora/PandoraMonitoring/build && cd /pandora/PandoraMonitoring/build
           cmake \
-            -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules \
+            -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DROOT_DIR=/pandora/root/cmake \
             -DPandoraSDK_DIR=/pandora/PandoraSDK \
             /pandora/PandoraMonitoring/
@@ -130,7 +130,7 @@ jobs:
         run: |
           mkdir -p /pandora/LArContent/build && cd /pandora/LArContent/build
           cmake \
-            -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules \
+            -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DPandoraSDK_DIR=/pandora/PandoraSDK \
             -DEigen3_DIR=/pandora/Eigen3/share/eigen3/cmake \
             -DROOT_DIR=/pandora/root/cmake \
@@ -147,7 +147,7 @@ jobs:
         run: |
           mkdir -p /pandora/LArReco/build && cd /pandora/LArReco/build
           cmake \
-            -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules \
+            -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DPandoraSDK_DIR=/pandora/PandoraSDK \
             -DEigen3_DIR=/pandora/Eigen3/share/eigen3/cmake \
             -DROOT_DIR=/pandora/root/cmake \
