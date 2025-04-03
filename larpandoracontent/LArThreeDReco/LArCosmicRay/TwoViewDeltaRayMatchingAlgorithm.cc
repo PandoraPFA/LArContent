@@ -250,7 +250,8 @@ bool TwoViewDeltaRayMatchingAlgorithm::CreatePfo(const MatrixType::Element &prot
     if (pBestMatchedCluster)
         this->FormThirdViewCluster(protoParticleElement, protoParticle);
 
-    ProtoParticleVector protoParticleVector({protoParticle});
+    ProtoParticleVector protoParticleVector;
+    protoParticleVector.emplace_back(protoParticle);
 
     return (this->CreatePfos(protoParticleVector));
 }

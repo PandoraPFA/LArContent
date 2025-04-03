@@ -124,7 +124,7 @@ void CosmicRayShowerMatchingAlgorithm::SetPfoParameters(const Particle &particle
     pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
     pfoParameters.m_energy = 0.f;
     pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    pfoParameters.m_clusterList = clusterList;
+    pfoParameters.m_clusterList = std::move(clusterList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

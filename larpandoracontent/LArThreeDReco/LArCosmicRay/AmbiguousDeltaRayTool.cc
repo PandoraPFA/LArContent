@@ -114,10 +114,10 @@ void AmbiguousDeltaRayTool::PickOutGoodMatches(
             usedClusters.insert(pBestClusterW);
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterList.push_back(pBestClusterU);
-            protoParticle.m_clusterList.push_back(pBestClusterV);
-            protoParticle.m_clusterList.push_back(pBestClusterW);
-            protoParticleVector.push_back(protoParticle);
+            protoParticle.m_clusterList.emplace_back(pBestClusterU);
+            protoParticle.m_clusterList.emplace_back(pBestClusterV);
+            protoParticle.m_clusterList.emplace_back(pBestClusterW);
+            protoParticleVector.emplace_back(protoParticle);
         }
     } while (found);
 }
