@@ -71,7 +71,7 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
         pfoParameters.m_energy = 0.f;
         pfoParameters.m_momentum = pInputPfo->GetMomentum();
         pfoParameters.m_propertiesToAdd = pInputPfo->GetPropertiesMap();
-        pfoParameters.m_trackStateVector = trackStateVector;
+        pfoParameters.m_trackStateVector = std::move(trackStateVector);
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pOutputPfo, trackFactory));
 

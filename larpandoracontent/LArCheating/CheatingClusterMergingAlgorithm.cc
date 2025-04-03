@@ -131,10 +131,10 @@ void CheatingClusterMergingAlgorithm::CheatedClusterMerging(const pandora::Clust
         }
     }
 
-    for (auto clusterToMergePair : clustersToMerge)
+    for (const auto &clusterToMergePair : clustersToMerge)
     {
         const Cluster *currentCluster{clusterToMergePair.first};
-        const auto clusters{clusterToMergePair.second};
+        const auto &clusters{clusterToMergePair.second};
 
         for (auto clusterToMerge : clusters)
         {
