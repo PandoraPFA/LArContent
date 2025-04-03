@@ -790,11 +790,11 @@ void ShowerRegionFeatureTool::CalculateViewShowerStartConsistencyVariables(const
         showerStartEnergyAsymmetry += (thisL < 0.f) ? (-1.f * hitEnergy) : hitEnergy;
     }
 
-    showerStartEnergyAsymmetry = (totalEnergy < std::numeric_limits<float>::epsilon()) ? m_defaultRatio : (showerStartEnergyAsymmetry / totalEnergy);
-    showerStartEnergyAsymmetry = std::fabs(showerStartEnergyAsymmetry);
+    if (totalEnergy < std::numeric_limits<float>::epsilon())
+        return;
 
-    // showerStartMoliereRadius
-    showerStartMoliereRadius = m_defaultFloat;
+    showerStartEnergyAsymmetry = showerStartEnergyAsymmetry / totalEnergy;
+    showerStartEnergyAsymmetry = std::fabs(showerStartEnergyAsymmetry);
 
     CaloHitVector showerStartPostShowerHitVector(postShowerHitList.begin(), postShowerHitList.end());
 
@@ -1083,7 +1083,7 @@ void AmbiguousRegionFeatureTool::BuildAmbiguousSpines(const Algorithm *const pAl
         CaloHitList continuousSpine(this->FindAmbiguousContinuousSpine(entry.second, protoShower.GetAmbiguousHitList(), nuVertex2D));
 
         if (continuousSpine.size() > 0)
-            ambiguousHitSpines[entry.first] = continuousSpine;
+            ambiguousHitSpines[entry.first] = std::move(continuousSpine);
     }
 }
 
