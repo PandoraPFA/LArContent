@@ -319,7 +319,6 @@ void NeutrinoHierarchyAlgorithm::DisplayPfoInfoMap(const ParticleFlowObject *con
     {
         PANDORA_MONITORING_API(VisualizeVertices(this->GetPandora(), &(pNeutrinoPfo->GetVertexList()), "NeutrinoVertex", ORANGE));
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-        display = false;
     }
 
     for (const Pfo *const pPfo : sortedPfos)

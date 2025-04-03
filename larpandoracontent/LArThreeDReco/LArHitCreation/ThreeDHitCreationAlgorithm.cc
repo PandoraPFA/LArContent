@@ -170,7 +170,7 @@ void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVect
 
             currentChi2 = newChi2;
             currentPoints3D = newPoints3D;
-            protoHitVector = newProtoHitVector;
+            protoHitVector = std::move(newProtoHitVector);
         }
     }
     catch (const StatusCodeException &)

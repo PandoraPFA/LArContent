@@ -62,7 +62,7 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
                 this->GetBestPosition3D(hitType1, hitType2, fitPosition1, fitPosition2, thisProtoHit);
 
                 if (!protoHit.IsPositionSet() || (thisProtoHit.GetChi2() < protoHit.GetChi2()))
-                    protoHit = thisProtoHit;
+                    protoHit = std::move(thisProtoHit);
             }
         }
     }

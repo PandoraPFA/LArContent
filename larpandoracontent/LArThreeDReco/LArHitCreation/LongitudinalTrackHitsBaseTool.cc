@@ -41,7 +41,7 @@ void LongitudinalTrackHitsBaseTool::GetTrackHits3D(
             this->GetLongitudinalTrackHit3D(matchedSlidingFitMap, vtx3D, end3D, protoHit);
 
             if (protoHit.IsPositionSet() && (protoHit.GetChi2() < m_chiSquaredCut))
-                protoHitVector.push_back(protoHit);
+                protoHitVector.emplace_back(protoHit);
         }
         catch (StatusCodeException &)
         {

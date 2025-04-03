@@ -52,7 +52,7 @@ void ThreeViewShowerHitsTool::GetShowerHit3D(const CaloHitVector &caloHitVector1
             this->GetBestPosition3D(hitType1, hitType2, position1, position2, thisProtoHit);
 
             if (!protoHit.IsPositionSet() || (thisProtoHit.GetChi2() < protoHit.GetChi2()))
-                protoHit = thisProtoHit;
+                protoHit = std::move(thisProtoHit);
         }
     }
 }

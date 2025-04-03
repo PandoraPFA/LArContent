@@ -30,7 +30,7 @@ void TransverseTrackHitsBaseTool::GetTrackHits3D(
             this->AddTransverseChi2(matchedSlidingFitMap, protoHit);
 
             if (protoHit.IsPositionSet() && (protoHit.GetChi2() < m_chiSquaredCut))
-                protoHitVector.push_back(protoHit);
+                protoHitVector.emplace_back(protoHit);
         }
         catch (StatusCodeException &)
         {
