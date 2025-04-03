@@ -38,10 +38,10 @@ void ClearRemnantsTool::CreateThreeDParticles(ThreeViewRemnantsAlgorithm *const 
     for (TensorType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
         ProtoParticle protoParticle;
-        protoParticle.m_clusterList.push_back(iter->GetClusterU());
-        protoParticle.m_clusterList.push_back(iter->GetClusterV());
-        protoParticle.m_clusterList.push_back(iter->GetClusterW());
-        protoParticleVector.push_back(protoParticle);
+        protoParticle.m_clusterList.emplace_back(iter->GetClusterU());
+        protoParticle.m_clusterList.emplace_back(iter->GetClusterV());
+        protoParticle.m_clusterList.emplace_back(iter->GetClusterW());
+        protoParticleVector.emplace_back(protoParticle);
     }
 
     particlesMade |= pAlgorithm->CreateThreeDParticles(protoParticleVector);

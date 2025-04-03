@@ -123,10 +123,10 @@ void ClearShowersTool::FindClearShowers(const TensorType &overlapTensor, ProtoPa
             }
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterU());
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterV());
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterW());
-            protoParticleVector.push_back(protoParticle);
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterU());
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterV());
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterW());
+            protoParticleVector.emplace_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetClusterU());
             usedClusters.insert((*iIter)->GetClusterV());
