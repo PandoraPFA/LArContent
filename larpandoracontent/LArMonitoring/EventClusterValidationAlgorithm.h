@@ -112,7 +112,7 @@ private:
      *  @param[in] randIfx      Adjusted Rand index
      *  @param[in] branchPrefix Prefix for the branch name
      */
-    void SetBranches(ClusterMetrics &metrics, float randIdx, std::string branchPrefix) const;
+    void SetBranches(const ClusterMetrics &metrics, const float randIdx, const std::string &branchPrefix) const;
 
     int m_eventNumber;                           ///< To track the current event number
     std::string m_fileName;                      ///< The filename of the ROOT output file

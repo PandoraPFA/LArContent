@@ -145,7 +145,7 @@ bool EventValidationBaseAlgorithm::GetStrongestPfoMatch(const ValidationInfo &va
     if (!pBestMCParticle || !bestPfoHitPair.first)
         return false;
 
-    interpretedMCToPfoHitSharingMap[pBestMCParticle].push_back(bestPfoHitPair);
+    interpretedMCToPfoHitSharingMap[pBestMCParticle].emplace_back(bestPfoHitPair);
     usedPfos.insert(bestPfoHitPair.first);
     return true;
 }

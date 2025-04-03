@@ -783,7 +783,7 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 #ifdef MONITORING
-void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList caloHitList, const bool isCR) const
+void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList &caloHitList, const bool isCR) const
 {
     const std::string stringTag(isCR ? "MC_CR" : "MC_DR");
 
@@ -802,8 +802,8 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList caloHitLis
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 #ifdef MONITORING
-void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList totalCaloHitList, const CaloHitList otherShowerCaloHitList,
-    const CaloHitList otherTrackCaloHitList, const CaloHitList parentTrackCaloHitList, const std::string &stringTag) const
+void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList &totalCaloHitList, const CaloHitList &otherShowerCaloHitList,
+    const CaloHitList &otherTrackCaloHitList, const CaloHitList &parentTrackCaloHitList, const std::string &stringTag) const
 {
     for (const CaloHit *const pCaloHit : totalCaloHitList)
     {
@@ -843,7 +843,7 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList totalCaloH
 
 #ifdef MONITORING
 void MuonLeadingEventValidationAlgorithm::PrintHits(
-    const CaloHitList totalCaloHitList, const CaloHitList leadingCaloHitList, const std::string &stringTag) const
+    const CaloHitList &totalCaloHitList, const CaloHitList &leadingCaloHitList, const std::string &stringTag) const
 {
     for (const CaloHit *const pCaloHit : totalCaloHitList)
     {

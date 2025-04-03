@@ -51,11 +51,18 @@ EventClusterValidationAlgorithm::EventClusterValidationAlgorithm() :
 
 EventClusterValidationAlgorithm::~EventClusterValidationAlgorithm()
 {
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName, m_fileName, "UPDATE"));
+    try
+    {
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName, m_fileName, "UPDATE"));
 
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_meta", "min_mc_hits_per_view", m_minMCHitsPerView));
-    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName + "_meta"));
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName + "_meta", m_fileName, "UPDATE"));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_meta", "min_mc_hits_per_view", m_minMCHitsPerView));
+        PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName + "_meta"));
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName + "_meta", m_fileName, "UPDATE"));
+    }
+    catch (StatusCodeException e)
+    {
+        std::cout << "EventClusterValidationAlgorithm: Unable to write to ROOT tree" << std::endl;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -305,7 +312,7 @@ float EventClusterValidationAlgorithm::CalcRandIndex(std::map<const CaloHit *con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventClusterValidationAlgorithm::SetBranches(
-    [[maybe_unused]] ClusterMetrics &metrics, [[maybe_unused]] float randIndex, [[maybe_unused]] std::string branchPrefix) const
+    [[maybe_unused]] const ClusterMetrics &metrics, [[maybe_unused]] const float randIndex, [[maybe_unused]] const std::string &branchPrefix) const
 {
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, branchPrefix + "n_hits", metrics.m_nHits));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, branchPrefix + "n_clusters", metrics.m_nClusters));
