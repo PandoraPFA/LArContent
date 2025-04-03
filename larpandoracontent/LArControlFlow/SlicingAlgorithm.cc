@@ -107,17 +107,17 @@ StatusCode SlicingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameU", caloHitListNameU));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameV", caloHitListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameW", caloHitListNameW));
-    m_caloHitListNames[TPC_VIEW_U] = caloHitListNameU;
-    m_caloHitListNames[TPC_VIEW_V] = caloHitListNameV;
-    m_caloHitListNames[TPC_VIEW_W] = caloHitListNameW;
+    m_caloHitListNames[TPC_VIEW_U] = std::move(caloHitListNameU);
+    m_caloHitListNames[TPC_VIEW_V] = std::move(caloHitListNameV);
+    m_caloHitListNames[TPC_VIEW_W] = std::move(caloHitListNameW);
 
     std::string clusterListNameU, clusterListNameV, clusterListNameW;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", clusterListNameU));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", clusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", clusterListNameW));
-    m_clusterListNames[TPC_VIEW_U] = clusterListNameU;
-    m_clusterListNames[TPC_VIEW_V] = clusterListNameV;
-    m_clusterListNames[TPC_VIEW_W] = clusterListNameW;
+    m_clusterListNames[TPC_VIEW_U] = std::move(clusterListNameU);
+    m_clusterListNames[TPC_VIEW_V] = std::move(clusterListNameV);
+    m_clusterListNames[TPC_VIEW_W] = std::move(clusterListNameW);
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListName", m_sliceClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_slicePfoListName));
