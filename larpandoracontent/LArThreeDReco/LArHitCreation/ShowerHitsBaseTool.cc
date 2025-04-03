@@ -67,7 +67,7 @@ void ShowerHitsBaseTool::GetShowerHits3D(const CaloHitVector &inputTwoDHits, con
             this->GetShowerHit3D(filteredHits1, filteredHits2, protoHit);
 
             if (protoHit.IsPositionSet() && (protoHit.GetChi2() < m_chiSquaredCut))
-                protoHitVector.push_back(protoHit);
+                protoHitVector.emplace_back(protoHit);
         }
         catch (StatusCodeException &)
         {
@@ -84,7 +84,7 @@ void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, c
         const float deltaX(pCaloHit->GetPositionVector().GetX() - x);
 
         if (std::fabs(deltaX) < xTolerance)
-            outputCaloHitVector.push_back(pCaloHit);
+            outputCaloHitVector.emplace_back(pCaloHit);
     }
 }
 

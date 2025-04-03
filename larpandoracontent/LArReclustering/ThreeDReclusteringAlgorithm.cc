@@ -62,7 +62,7 @@ StatusCode ThreeDReclusteringAlgorithm::Run()
 
     //Some pfos are shower-like and yet include track-like 3D clusters. For the moment I don't want to deal with these.
     const ClusterList *pShowerClusters(nullptr);
-    PandoraContentApi::GetList(*this, m_clusterListName, pShowerClusters);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_clusterListName, pShowerClusters));
 
     if (!pShowerClusters)
         return STATUS_CODE_NOT_FOUND;
@@ -360,8 +360,8 @@ bool ThreeDReclusteringAlgorithm::PassesCutsForReclustering(const pandora::Parti
 
     //Some pfos are shower-like and yet include track-like 3D clusters. For the moment I don't want to deal with these.
     const ClusterList *pShowerClusters(nullptr);
-    PandoraContentApi::GetList(*this, m_clusterListName, pShowerClusters);
-    if (!pShowerClusters)
+    const StatusCode status{PandoraContentApi::GetList(*this, m_clusterListName, pShowerClusters)};
+    if (status != STATUS_CODE_SUCCESS || !pShowerClusters)
         return false;
 
     if (this->GetFigureOfMerit(caloHitList3D) < m_fomThresholdForReclustering)
@@ -419,7 +419,7 @@ float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::string &figureOfM
 float ThreeDReclusteringAlgorithm::GetFigureOfMerit(const std::string &figureOfMeritName, const std::vector<CaloHitList> &newClustersCaloHitLists3D)
 {
     std::vector<float> newClustersFigureOfMeritVector;
-    for (auto clusterCaloHitLists3D : newClustersCaloHitLists3D)
+    for (const auto &clusterCaloHitLists3D : newClustersCaloHitLists3D)
     {
         newClustersFigureOfMeritVector.push_back(this->GetFigureOfMerit(figureOfMeritName, clusterCaloHitLists3D));
     }

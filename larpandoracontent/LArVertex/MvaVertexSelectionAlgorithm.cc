@@ -161,7 +161,7 @@ const pandora::Vertex *MvaVertexSelectionAlgorithm<T>::CompareVertices(const Ver
             if (LArMvaHelper::Classify(t, LArMvaHelper::ConcatenateFeatureLists(eventFeatureList, featureList, chosenFeatureList)))
             {
                 pBestVertex = pVertex;
-                chosenFeatureList = featureList;
+                chosenFeatureList = std::move(featureList);
             }
         }
     }

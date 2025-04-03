@@ -73,28 +73,28 @@ void OvershootTracksTool::GetIteratorListModifications(
 
                 if (m_splitMode)
                 {
-                    modification.m_splitPositionMap[particle.m_pCommonCluster].push_back(particle.m_splitPosition);
+                    modification.m_splitPositionMap[particle.m_pCommonCluster].emplace_back(particle.m_splitPosition);
                 }
                 else
                 {
                     const bool vertex1AIsLowX(vertexA1.GetPosition().GetX() < vertexB1.GetPosition().GetX());
                     const Cluster *const pLowXCluster1(vertex1AIsLowX ? particle.m_pClusterA1 : particle.m_pClusterB1);
                     const Cluster *const pHighXCluster1(vertex1AIsLowX ? particle.m_pClusterB1 : particle.m_pClusterA1);
-                    modification.m_clusterMergeMap[pLowXCluster1].push_back(pHighXCluster1);
+                    modification.m_clusterMergeMap[pLowXCluster1].emplace_back(pHighXCluster1);
 
                     const bool vertex2AIsLowX(vertexA2.GetPosition().GetX() < vertexB2.GetPosition().GetX());
                     const Cluster *const pLowXCluster2(vertex2AIsLowX ? particle.m_pClusterA2 : particle.m_pClusterB2);
                     const Cluster *const pHighXCluster2(vertex2AIsLowX ? particle.m_pClusterB2 : particle.m_pClusterA2);
-                    modification.m_clusterMergeMap[pLowXCluster2].push_back(pHighXCluster2);
+                    modification.m_clusterMergeMap[pLowXCluster2].emplace_back(pHighXCluster2);
                 }
 
-                modification.m_affectedClusters.push_back(particle.m_pCommonCluster);
-                modification.m_affectedClusters.push_back(particle.m_pClusterA1);
-                modification.m_affectedClusters.push_back(particle.m_pClusterA2);
-                modification.m_affectedClusters.push_back(particle.m_pClusterB1);
-                modification.m_affectedClusters.push_back(particle.m_pClusterB2);
+                modification.m_affectedClusters.emplace_back(particle.m_pCommonCluster);
+                modification.m_affectedClusters.emplace_back(particle.m_pClusterA1);
+                modification.m_affectedClusters.emplace_back(particle.m_pClusterA2);
+                modification.m_affectedClusters.emplace_back(particle.m_pClusterB1);
+                modification.m_affectedClusters.emplace_back(particle.m_pClusterB2);
 
-                modificationList.push_back(modification);
+                modificationList.emplace_back(modification);
             }
             catch (StatusCodeException &statusCodeException)
             {

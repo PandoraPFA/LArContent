@@ -114,7 +114,7 @@ private:
      *  @param  isCR whether the hits belong to a MC cosmic ray or delta ray/michel electron
      */
 #ifdef MONITORING
-    void PrintHits(const pandora::CaloHitList caloHitList, const bool isCR) const;
+    void PrintHits(const pandora::CaloHitList &caloHitList, const bool isCR) const;
 #endif
 
     /**
@@ -127,8 +127,8 @@ private:
      *  @param  stringTag the event display marker string
      */
 #ifdef MONITORING
-    void PrintHits(const pandora::CaloHitList totalCaloHitList, const pandora::CaloHitList otherShowerCaloHitList,
-        const pandora::CaloHitList otherTrackCaloHitList, const pandora::CaloHitList parentTrackCaloHitList, const std::string &stringTag) const;
+    void PrintHits(const pandora::CaloHitList &totalCaloHitList, const pandora::CaloHitList &otherShowerCaloHitList,
+        const pandora::CaloHitList &otherTrackCaloHitList, const pandora::CaloHitList &parentTrackCaloHitList, const std::string &stringTag) const;
 #endif
 
     /**
@@ -138,7 +138,7 @@ private:
      *  @param  leadingCaloHitList the list of hits that in truth belong to the child hierarchy
      *  @param  stringTag the event display marker string
      */
-    void PrintHits(const pandora::CaloHitList totalCaloHitList, const pandora::CaloHitList leadingCaloHitList, const std::string &stringTag) const;
+    void PrintHits(const pandora::CaloHitList &totalCaloHitList, const pandora::CaloHitList &leadingCaloHitList, const std::string &stringTag) const;
 
     /**
      *  @brief  Fill an input contamination hit distance vector with the closest distance of each contaminant hit to the true leading particle hits

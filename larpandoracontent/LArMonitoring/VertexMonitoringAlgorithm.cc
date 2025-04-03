@@ -38,7 +38,14 @@ VertexMonitoringAlgorithm::~VertexMonitoringAlgorithm()
 {
     if (m_writeFile)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treename.c_str(), m_filename.c_str(), "UPDATE"));
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treename, m_filename, "UPDATE"));
+        }
+        catch (StatusCodeException e)
+        {
+            std::cout << "VertexMonitoringAlgorithm: Unable to write to ROOT tree" << std::endl;
+        }
     }
 }
 
