@@ -32,7 +32,7 @@ StatusCode LArMvaHelper::ProcessAlgorithmToolListToMap(const Algorithm &algorith
         // If already exists, then make the second have the instance name attached
         if (algorithmToolMap.find(toolName) != algorithmToolMap.end())
             toolName += "_" + pAlgorithmTool->GetInstanceName();
-        algorithmToolMap[toolName] = pAlgorithmTool;
+        algorithmToolMap[toolName] = std::move(pAlgorithmTool);
         algorithmToolNameVector.push_back(toolName);
     }
 
