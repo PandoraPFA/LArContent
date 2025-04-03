@@ -510,7 +510,7 @@ void VertexBasedPfoRecoveryAlgorithm::BuildParticles(const ParticleList &particl
         pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
         pfoParameters.m_energy = 0.f;
         pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-        pfoParameters.m_clusterList = clusterList;
+        pfoParameters.m_clusterList = std::move(clusterList);
 
         const ParticleFlowObject *pPfo(NULL);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));

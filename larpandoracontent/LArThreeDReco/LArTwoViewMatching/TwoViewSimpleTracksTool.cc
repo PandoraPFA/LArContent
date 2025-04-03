@@ -63,9 +63,9 @@ void TwoViewSimpleTracksTool::FindBestTrack(const MatrixType &overlapMatrix, Pro
                     continue;
 
                 ProtoParticle protoParticle;
-                protoParticle.m_clusterList.push_back(iIter->GetCluster1());
-                protoParticle.m_clusterList.push_back(iIter->GetCluster2());
-                protoParticleVector.push_back(protoParticle);
+                protoParticle.m_clusterList.emplace_back(iIter->GetCluster1());
+                protoParticle.m_clusterList.emplace_back(iIter->GetCluster2());
+                protoParticleVector.emplace_back(protoParticle);
 
                 return;
             }
