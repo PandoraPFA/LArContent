@@ -85,9 +85,9 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeViewTrackFragmentsAlgorith
 
         // ATTN For safety, remove all clusters associated with this fragment particle from the tensor
         ClusterList fragmentClusterList, affectedKeyClusters;
-        fragmentClusterList.push_back(pClusterU);
-        fragmentClusterList.push_back(pClusterV);
-        fragmentClusterList.push_back(pClusterW);
+        fragmentClusterList.emplace_back(pClusterU);
+        fragmentClusterList.emplace_back(pClusterV);
+        fragmentClusterList.emplace_back(pClusterW);
         this->GetAffectedKeyClusters(overlapTensor, fragmentClusterList, affectedKeyClusters);
 
         for (const Cluster *const pCluster : affectedKeyClusters)
@@ -96,10 +96,10 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeViewTrackFragmentsAlgorith
         // Now make the particle
         ProtoParticle protoParticle;
         ProtoParticleVector protoParticleVector;
-        protoParticle.m_clusterList.push_back(pClusterU);
-        protoParticle.m_clusterList.push_back(pClusterV);
-        protoParticle.m_clusterList.push_back(pClusterW);
-        protoParticleVector.push_back(protoParticle);
+        protoParticle.m_clusterList.emplace_back(pClusterU);
+        protoParticle.m_clusterList.emplace_back(pClusterV);
+        protoParticle.m_clusterList.emplace_back(pClusterW);
+        protoParticleVector.emplace_back(protoParticle);
         return pAlgorithm->CreateThreeDParticles(protoParticleVector);
     }
 

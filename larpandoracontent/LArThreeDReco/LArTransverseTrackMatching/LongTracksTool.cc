@@ -110,10 +110,10 @@ void LongTracksTool::FindLongTracks(const TensorType &overlapTensor, ProtoPartic
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterU());
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterV());
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterW());
-            protoParticleVector.push_back(protoParticle);
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterU());
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterV());
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterW());
+            protoParticleVector.emplace_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetClusterU());
             usedClusters.insert((*iIter)->GetClusterV());
@@ -143,7 +143,7 @@ void LongTracksTool::SelectLongElements(const TensorType::ElementList &elementLi
             (xOverlap.GetXSpanV() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanV() > m_minXOverlapFraction) &&
             (xOverlap.GetXSpanW() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanW() > m_minXOverlapFraction))
         {
-            iteratorList.push_back(eIter);
+            iteratorList.emplace_back(eIter);
         }
     }
 }

@@ -89,10 +89,10 @@ void MissingTrackSegmentTool::FindTracks(ThreeViewTransverseTracksAlgorithm *con
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterU());
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterV());
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterW());
-            protoParticleVector.push_back(protoParticle);
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterU());
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterV());
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterW());
+            protoParticleVector.emplace_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetClusterU());
             usedClusters.insert((*iIter)->GetClusterV());
@@ -130,7 +130,7 @@ void MissingTrackSegmentTool::SelectElements(
         if (((shortSpan / xOverlap.GetXOverlapSpan()) < m_minInitialXOverlapFraction) || ((longSpan2 / longSpan1) < m_minInitialXOverlapFraction))
             continue;
 
-        iteratorList.push_back(eIter);
+        iteratorList.emplace_back(eIter);
     }
 }
 
@@ -186,7 +186,7 @@ void MissingTrackSegmentTool::GetCandidateClusters(
         if (pCluster->GetNCaloHits() < m_minCaloHitsInCandidateCluster)
             continue;
 
-        candidateClusters.push_back(pCluster);
+        candidateClusters.emplace_back(pCluster);
     }
 }
 
@@ -237,7 +237,7 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeViewTransverseTracksAlgo
 
     ClusterList clusterList;
     for (const auto &mapEntry : slidingFitResultMap)
-        clusterList.push_back(mapEntry.first);
+        clusterList.emplace_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (unsigned n = 0; n <= nPoints; ++n)
@@ -297,7 +297,7 @@ bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const TwoD
 
     ClusterVector sortedClusters;
     for (const auto &mapEntry : segmentOverlapMap)
-        sortedClusters.push_back(mapEntry.first);
+        sortedClusters.emplace_back(mapEntry.first);
     std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : sortedClusters)
@@ -318,7 +318,7 @@ bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const TwoD
         if (!this->IsPossibleMerge(pCluster, particle, segmentOverlap, slidingFitResultMap))
             continue;
 
-        possibleMerges.push_back(pCluster);
+        possibleMerges.emplace_back(pCluster);
     }
 
     if (std::fabs(particle.m_longMaxX - particle.m_longMinX) < std::numeric_limits<float>::epsilon())

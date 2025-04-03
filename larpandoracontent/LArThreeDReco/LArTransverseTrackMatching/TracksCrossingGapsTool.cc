@@ -78,10 +78,10 @@ void TracksCrossingGapsTool::FindTracks(
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterU());
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterV());
-            protoParticle.m_clusterList.push_back((*iIter)->GetClusterW());
-            protoParticleVector.push_back(protoParticle);
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterU());
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterV());
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetClusterW());
+            protoParticleVector.emplace_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetClusterU());
             usedClusters.insert((*iIter)->GetClusterV());
@@ -119,7 +119,7 @@ void TracksCrossingGapsTool::SelectElements(ThreeViewTransverseTracksAlgorithm *
             (xOverlap.GetXSpanV() > std::numeric_limits<float>::epsilon()) && (xOverlapFractionV > m_minXOverlapFraction) &&
             (xOverlap.GetXSpanW() > std::numeric_limits<float>::epsilon()) && (xOverlapFractionW > m_minXOverlapFraction))
         {
-            iteratorList.push_back(eIter);
+            iteratorList.emplace_back(eIter);
         }
     }
 }
