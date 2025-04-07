@@ -75,13 +75,13 @@ public:
     const Eigen::VectorXd &GetTemporaryState() const;
 
 private:
-    double m_dt; ///< Time step
-    Eigen::VectorXd m_x; ///< State vector (tracks position and 'velocity')
-    Eigen::MatrixXd m_P; ///< Covariance matrix
-    Eigen::MatrixXd m_F; ///< State transition matrix
-    Eigen::MatrixXd m_H; ///< Measurement matrix
-    Eigen::MatrixXd m_R; ///< Measurement covariance matrix
-    Eigen::MatrixXd m_Q; ///< Process covariance matrix
+    double m_dt;             ///< Time step
+    Eigen::VectorXd m_x;     ///< State vector (tracks position and 'velocity')
+    Eigen::MatrixXd m_P;     ///< Covariance matrix
+    Eigen::MatrixXd m_F;     ///< State transition matrix
+    Eigen::MatrixXd m_H;     ///< Measurement matrix
+    Eigen::MatrixXd m_R;     ///< Measurement covariance matrix
+    Eigen::MatrixXd m_Q;     ///< Process covariance matrix
     Eigen::VectorXd m_xTemp; ///< Temporary state vector
     Eigen::MatrixXd m_PTemp; ///< Temporary covariance matrix
 };
@@ -148,17 +148,16 @@ public:
     const Eigen::VectorXd &GetTemporaryState() const;
 
 private:
-    double m_dt; ///< Time step
-    Eigen::VectorXd m_x; ///< State vector (tracks position and 'velocity')
-    Eigen::MatrixXd m_P; ///< Covariance matrix
-    Eigen::MatrixXd m_F; ///< State transition matrix
-    Eigen::MatrixXd m_H; ///< Measurement matrix
-    Eigen::MatrixXd m_R; ///< Measurement covariance matrix
-    Eigen::MatrixXd m_Q; ///< Process covariance matrix
+    double m_dt;             ///< Time step
+    Eigen::VectorXd m_x;     ///< State vector (tracks position and 'velocity')
+    Eigen::MatrixXd m_P;     ///< Covariance matrix
+    Eigen::MatrixXd m_F;     ///< State transition matrix
+    Eigen::MatrixXd m_H;     ///< Measurement matrix
+    Eigen::MatrixXd m_R;     ///< Measurement covariance matrix
+    Eigen::MatrixXd m_Q;     ///< Process covariance matrix
     Eigen::VectorXd m_xTemp; ///< Temporary state vector
     Eigen::MatrixXd m_PTemp; ///< Temporary covariance matrix
 };
-
 
 } // namespace lar_content
 

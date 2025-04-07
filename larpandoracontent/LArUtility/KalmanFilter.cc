@@ -25,7 +25,7 @@ KalmanFilter3D::KalmanFilter3D(double dt, double processVariance, double measure
         m_F(i, i + 3) = dt;
     }
     m_H = MatrixXd::Zero(3, 6);
-    m_H.block<3,3>(0,0) = MatrixXd::Identity(3,3);
+    m_H.block<3, 3>(0, 0) = MatrixXd::Identity(3, 3);
     m_Q = MatrixXd::Zero(6, 6);
     for (int i = 0; i < 3; ++i)
     {
@@ -107,7 +107,7 @@ KalmanFilter2D::KalmanFilter2D(double dt, double processVariance, double measure
         m_F(i, i + 2) = dt;
     }
     m_H = MatrixXd::Zero(2, 4);
-    m_H.block<2,2>(0,0) = MatrixXd::Identity(3,3);
+    m_H.block<2, 2>(0, 0) = MatrixXd::Identity(3, 3);
     m_Q = MatrixXd::Zero(4, 4);
     for (int i = 0; i < 2; ++i)
     {
