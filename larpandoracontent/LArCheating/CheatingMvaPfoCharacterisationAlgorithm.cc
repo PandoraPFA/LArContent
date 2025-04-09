@@ -68,13 +68,6 @@ bool CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack(const pandora::Partic
         }
     }
 
-    /* M. Sotgia: This flag enable a "cheating" mode for which the pfp features are computed, and their values 
-      * are saved, but the track score is forced to be the cheated version of himself
-      * 
-      * TODO: make this a LArCheating indipendent module, with less overhead 
-      * 
-     */
-
     bool isTrueTrack(false);
     bool isMainMCParticleSet(false);
 
@@ -88,14 +81,21 @@ bool CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack(const pandora::Partic
         isTrueTrack = ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())));
         isMainMCParticleSet = (pMCParticle->GetParticleId() != 0);
 
-        std::cout << "** --> DEV : [CheatingMvaPfoCharacterisationAlgorithm<T>::IsClearTrack] "
-                  << "The MC particle found is with PID = " << pMCParticle->GetParticleId() << ", PHOTON == " << PHOTON
-                  << ", E_MINUS == " << E_MINUS << ", assigned TrackScore == " << static_cast<int>(isTrueTrack) << " ("
-                  << (isTrueTrack ? "track" : "shower") << ")" << std::endl;
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "CheatingMvaPfoCharacterisationAlgorithm: "
+                      << "The MC particle found is with PID = " << pMCParticle->GetParticleId() 
+                      << ", assigned TrackScore == " << static_cast<int>(isTrueTrack) << " ("
+                      << (isTrueTrack ? "track" : "shower") << ")" << std::endl;
     }
     catch (const StatusCodeException &)
     {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "CheatingMvaPfoCharacterisationAlgorithm: WARNING: I was unable to find the main MC particle for this Pfo" << std::endl;
+
     }
+
+    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo() && !isMainMCParticleSet)
+        std::cout << "CheatingMvaPfoCharacterisationAlgorithm: WARNING: No MC main particle found..." << std::endl;
 
     if (isMainMCParticleSet)
     {
@@ -107,16 +107,16 @@ bool CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack(const pandora::Partic
         const double score = static_cast<int>(isTrueTrack);
         metadata.m_propertiesToAdd["TrackScore"] = score;
 
-        std::cout << "** --> DEV : [CheatingMvaPfoCharacterisationAlgorithm<T>::IsClearTrack] "
-                  << "score == " << score << std::endl;
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "CheatingMvaPfoCharacterisationAlgorithm: assigned score == " << score << std::endl;
 
         if (m_persistFeatures)
         {
             for (auto const &[name, value] : featureMap)
             {
                 metadata.m_propertiesToAdd[name] = value.Get();
-                std::cout << "** --> DEV : [CheatingMvaPfoCharacterisationAlgorithm<T>::IsClearTrack] "
-                          << "addinng property : " << name << " with value " << value.Get() << std::endl;
+                if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                    std::cout << "CheatingMvaPfoCharacterisationAlgorithm: adding property : " << name << " with value " << value.Get() << std::endl;
             }
         }
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
