@@ -21,7 +21,8 @@ namespace lar_content
 {
 
 CheatingMvaPfoCharacterisationAlgorithm::CheatingMvaPfoCharacterisationAlgorithm() :
-    m_persistFeatures(false)
+    m_persistFeatures(false),
+    m_useCaloHitsMatching(false)
 {
 }
 
@@ -70,9 +71,7 @@ bool CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack(const pandora::Partic
 
     bool isTrueTrack(false);
     bool isMainMCParticleSet(false);
-
-    std::cout << "** --> DEV : [CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack] "
-              << "Starting the cheating of the BDT" << std::endl;
+    bool isTrueTrackFromHits(false);
 
     try
     {
@@ -86,6 +85,7 @@ bool CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack(const pandora::Partic
                       << "The MC particle found is with PID = " << pMCParticle->GetParticleId() 
                       << ", assigned TrackScore == " << static_cast<int>(isTrueTrack) << " ("
                       << (isTrueTrack ? "track" : "shower") << ")" << std::endl;
+
     }
     catch (const StatusCodeException &)
     {
@@ -94,14 +94,36 @@ bool CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack(const pandora::Partic
 
     }
 
+    CaloHitList pHitListAll;
+    LArPfoHelper::GetAllCaloHits(pPfo, pHitListAll);
+    
+    const MCParticle *const pMCParticleFromHits(MCParticleHelper::GetMainMCParticle(&pHitListAll));
+    isTrueTrackFromHits = (
+        (PHOTON != pMCParticleFromHits->GetParticleId()) && (E_MINUS != std::abs(pMCParticleFromHits->GetParticleId())));
+    
+    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+        std::cout << "CheatingMvaPfoCharacterisationAlgorithm: using calo hits matching: "
+                  << " assigned TrackScore (from hits) == " << static_cast<int>(isTrueTrackFromHits) << " ("
+                  << (isTrueTrackFromHits ? "track" : "shower") << ")" << std::endl;
+    
+
     if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo() && !isMainMCParticleSet)
         std::cout << "CheatingMvaPfoCharacterisationAlgorithm: WARNING: No MC main particle found..." << std::endl;
 
-    if (isMainMCParticleSet)
+    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+        std::cout << "CheatingMvaPfoCharacterisationAlgorithm: DEBUG: "
+                  << " isTrueTrack == " << (isTrueTrack ? "true" : "false") 
+                  << ", isTrueTrackFromHits == " << (isTrueTrackFromHits ? "true" : "false") 
+                  << std::endl;
+
+    if (isMainMCParticleSet && !m_useCaloHitsMatching)
     {
         // I found a MC particle (the main MC particle is set) so I can return the correct value
         // SIDE NOTE: if this association do not happen, the track score is not present in the pfp metadata,
         // so CAFAna will assign a default value of -5
+
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "CheatingMvaPfoCharacterisationAlgorithm: DEBUG: using pPfo truth matching" << std::endl;
 
         object_creation::ParticleFlowObject::Metadata metadata;
         const double score = static_cast<int>(isTrueTrack);
@@ -109,6 +131,31 @@ bool CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack(const pandora::Partic
 
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
             std::cout << "CheatingMvaPfoCharacterisationAlgorithm: assigned score == " << score << std::endl;
+
+        if (m_persistFeatures)
+        {
+            for (auto const &[name, value] : featureMap)
+            {
+                metadata.m_propertiesToAdd[name] = value.Get();
+                if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                    std::cout << "CheatingMvaPfoCharacterisationAlgorithm: adding property : " << name << " with value " << value.Get() << std::endl;
+            }
+        }
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+        return isTrueTrack;
+    }
+    else
+    {
+        /* Here the LArMCParticleHelper::GetMainMCParticle somewhat failed, and so the reconstruction needs a more sofisticated procedure */
+
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "CheatingMvaPfoCharacterisationAlgorithm: DEBUG: using pHitListAll truth matching" << std::endl;
+        
+        isTrueTrack = isTrueTrackFromHits;
+
+        object_creation::ParticleFlowObject::Metadata metadata;
+        const double score = static_cast<int>(isTrueTrack);
+        metadata.m_propertiesToAdd["TrackScore"] = score;
 
         if (m_persistFeatures)
         {
@@ -130,7 +177,10 @@ bool CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack(const pandora::Partic
 
 StatusCode CheatingMvaPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    // Optional XML labels
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PersistFeatures", m_persistFeatures));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "UseCaloHitsMatching", m_useCaloHitsMatching));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
