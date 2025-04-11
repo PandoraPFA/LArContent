@@ -42,7 +42,8 @@ protected:
     pandora::StringVector m_algorithmToolNames; ///< Vector of strings saving feature tool order for use in feature calculation
     pandora::StringVector m_algorithmToolNamesNoChargeInfo; ///< Vector of strings saving feature tool order for use in feature calculation (missing W view)
 
-    bool m_persistFeatures;               ///< Whether to write the features to the properties map
+    bool m_persistFeatures;             ///< Whether to write the features to the properties map
+    bool m_useCaloHitsMatching;         ///< Wheter to use calorimetric hits for the truth matching (Andy C. suggestion)  
 
     std::string m_caloHitListName;    ///< Name of input calo hit list
     std::string m_mcParticleListName; ///< Name of input MC particle list
