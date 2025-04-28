@@ -74,10 +74,10 @@ void ConnectedRemnantsTool::FindConnectedShowers(
         const Cluster *const pClusterW = clusterVectorW.front();
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterList.push_back(pClusterU);
-        protoParticle.m_clusterList.push_back(pClusterV);
-        protoParticle.m_clusterList.push_back(pClusterW);
-        protoParticleVector.push_back(protoParticle);
+        protoParticle.m_clusterList.emplace_back(pClusterU);
+        protoParticle.m_clusterList.emplace_back(pClusterV);
+        protoParticle.m_clusterList.emplace_back(pClusterW);
+        protoParticleVector.emplace_back(protoParticle);
 
         this->FillMergeMap(pClusterU, clusterVectorU, clusterMergeMap);
         this->FillMergeMap(pClusterV, clusterVectorV, clusterMergeMap);

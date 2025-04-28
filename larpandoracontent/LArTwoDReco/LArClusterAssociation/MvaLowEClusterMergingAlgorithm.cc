@@ -58,7 +58,14 @@ MvaLowEClusterMergingAlgorithm<T>::~MvaLowEClusterMergingAlgorithm()
 {
     if (m_writeTree)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "RECREATE"));
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName, m_fileName, "RECREATE"));
+        }
+        catch (StatusCodeException e)
+        {
+            std::cout << "VertexAssessmentAlgorithm: Unable to write to ROOT tree" << std::endl;
+        }
     }
 }
 
@@ -429,10 +436,10 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
         }
     }
 
-    for (auto clusterToMergePair : clustersToMerge)
+    for (const auto &clusterToMergePair : clustersToMerge)
     {
         const Cluster *currentCluster{clusterToMergePair.first};
-        const auto clusters{clusterToMergePair.second};
+        const auto &clusters{clusterToMergePair.second};
 
         for (auto clusterToMerge : clusters)
         {
@@ -461,7 +468,7 @@ StatusCode MvaLowEClusterMergingAlgorithm<T>::EdgeHitComparer(const pandora::Clu
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-bool MvaLowEClusterMergingAlgorithm<T>::ClusterTool(std::vector<std::string> featureOrder, LArMvaHelper::MvaFeatureMap featureMap) const
+bool MvaLowEClusterMergingAlgorithm<T>::ClusterTool(const StringVector &featureOrder, LArMvaHelper::MvaFeatureMap featureMap) const
 {
     if (!m_enableProbability)
     {

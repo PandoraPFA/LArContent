@@ -25,7 +25,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    RandomClusteringAlgorithm() = default;
+    RandomClusteringAlgorithm();
 
     /**
     *  @brief  Default destructor

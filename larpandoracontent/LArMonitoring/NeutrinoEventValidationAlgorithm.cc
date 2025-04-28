@@ -219,7 +219,7 @@ void NeutrinoEventValidationAlgorithm::ProcessOutput(
             const bool isGoodMatch(this->IsGoodMatch(mcPrimaryHitList, pfoHitList, sharedHitList));
 
             const int pfoId(pfoToIdMap.at(pfoToSharedHits.first));
-            const int recoNuId(isRecoNeutrinoFinalState ? neutrinoPfoToIdMap.at(LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first)) : -1);
+            const int recoNuId(isRecoNeutrinoFinalState ? static_cast<int>(neutrinoPfoToIdMap.at(LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first))) : -1);
 
             if (0 == matchIndex++)
             {
