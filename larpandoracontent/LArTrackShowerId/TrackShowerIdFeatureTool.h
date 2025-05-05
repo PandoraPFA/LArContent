@@ -18,6 +18,10 @@ namespace lar_content
 typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::Cluster *const> ClusterCharacterisationFeatureTool;
 typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::ParticleFlowObject *const> PfoCharacterisationFeatureTool;
 
+// returns the position of the point with respect to the cathode 
+enum PositionInCryostat {AboveCathode, BelowCathode, WithinCathode};
+PositionInCryostat LocatePointInCryostat( const float point_X ); 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
@@ -215,6 +219,56 @@ public:
      */
     ConeChargeFeatureTool();
 
+    /**
+     *  @brief  VertexComparator class for comparison of two points wrt neutrino vertex position
+     */
+    class VertexComparator
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         */
+        VertexComparator(const pandora::CartesianVector vertexPosition2D);
+
+        /**
+         *  @brief  operator <
+         *
+         *  @param  rhs object for comparison
+         *
+         *  @return boolean
+         */
+        bool operator()(const pandora::CaloHit *const left, const pandora::CaloHit *const right) const;
+
+        pandora::CartesianVector m_neutrinoVertex; //The neutrino vertex used to sort
+    };
+
+    /**                                                                                                                                                                                                    
+     *  @brief  DistanceToVertexComparator class for comparison of two points with different hit type (left and right) wrt neutrino vertex position                                                        
+     */
+    class DistanceToVertexComparator
+    {
+    public:
+      /**                                                                                                                                                                                                  
+       * @brief Constructor                                                                                                                                                                                
+       */
+      DistanceToVertexComparator(const pandora::CartesianVector vertexPosition2D_A, const pandora::CartesianVector vertexPosition2D_B, 
+        const pandora::HitType hitType_A, const pandora::HitType hitType_B);
+
+      /**                                                                                                                                                                                                  
+         @brief operator <                                                                                                                                                                                 
+         *                                                                                                                                                                                                 
+         * @param  rhs object for comparison                                                                                                                                                               
+         *                                                                                                                                                                                                 
+         * @return boolean                                                                                                                                                                                 
+         */
+      bool operator()(const pandora::CaloHit *const left, const pandora::CaloHit *const right) const;
+
+      pandora::CartesianVector m_neutrinoVertex_A; // The neutrino vertex used to sort for hit type A, i.e. position is projected onto the correct view based on the hit type                              
+      pandora::CartesianVector m_neutrinoVertex_B; // same for hit type B                                                                                                                                  
+      pandora::HitType m_hitType_A;
+      pandora::HitType m_hitType_B;
+    };
+    
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
     void Run(LArMvaHelper::MvaFeatureMap &featureMap, pandora::StringVector &featureOrder, const std::string &featureToolName,
         const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
@@ -236,6 +290,12 @@ private:
     float m_conFracRange;
     float m_MoliereRadius;
     float m_MoliereRadiusFrac;
+
+    void OrderCaloHitsByDistanceToVertex(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, 
+        pandora::CaloHitList &caloHitList);
+
+    void CombineCaloHitListsToHaveCollection(const pandora::Algorithm *const pAlgorithm,
+        const pandora::CaloHitList &orderedCaloHitList1, const pandora::CaloHitList &orderedCaloHitList2, pandora::CaloHitList &mergedCaloHitList);
 
     /**
      *  @brief Calculate charge distribution in relation to the Moeliere radius
@@ -366,6 +426,33 @@ public:
         pandora::CartesianVector m_neutrinoVertex; //The neutrino vertex used to sort
     };
 
+    /**                                                                                                                                                                                                    
+     *  @brief  DistanceToVertexComparator class for comparison of two points with different hit type (left and right) wrt neutrino vertex position                                                        
+     */
+    class DistanceToVertexComparator
+    {
+    public:
+      /**                                                                                                                                                                                                  
+       * @brief Constructor                                                                                                                                                                                
+       */
+      DistanceToVertexComparator(const pandora::CartesianVector vertexPosition2D_A, const pandora::CartesianVector vertexPosition2D_B, 
+        const pandora::HitType hitType_A, const pandora::HitType hitType_B);
+
+      /**                                                                                                                                                                                                  
+         @brief operator <                                                                                                                                                                                 
+         *                                                                                                                                                                                                 
+         * @param  rhs object for comparison                                                                                                                                                               
+         *                                                                                                                                                                                                 
+         * @return boolean                                                                                                                                                                                 
+         */
+      bool operator()(const pandora::CaloHit *const left, const pandora::CaloHit *const right) const;
+
+      pandora::CartesianVector m_neutrinoVertex_A; // The neutrino vertex used to sort for hit type A, i.e. position is projected onto the correct view based on the hit type                              
+      pandora::CartesianVector m_neutrinoVertex_B; // same for hit type B                                                                                                                                  
+      pandora::HitType m_hitType_A;
+      pandora::HitType m_hitType_B;
+    };
+
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
     void Run(LArMvaHelper::MvaFeatureMap &featureMap, pandora::StringVector &featureOrder, const std::string &featureToolName,
         const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
@@ -374,15 +461,13 @@ private:
     /**
      *  @brief  Calculation of the charge variables
      *
-     *  @param  pAlgorithm, the algorithm
-     *  @param  pCluster the cluster we are characterizing
+     *  @param  orderedCaloHitList, that contains the list of collection hits ordered by distance to vertex 
      *  @param  totalCharge, to receive the total charge
      *  @param  chargeSigma, to receive the charge sigma
      *  @param  chargeMean, to receive the charge mean
-     *  @param  startCharge, to receive the charge in the initial 10% hits
      *  @param  endCharge, to receive the charge in the last 10% hits
      */
-    void CalculateChargeVariables(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, float &totalCharge,
+    void CalculateChargeVariables(const pandora::CaloHitList &orderedCaloHitList, float &totalCharge, 
         float &chargeSigma, float &chargeMean, float &endCharge);
 
     /**
@@ -393,9 +478,13 @@ private:
      *  @param  caloHitList to receive the ordered calo hit list
      *
      */
-    void OrderCaloHitsByDistanceToVertex(
-        const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, pandora::CaloHitList &caloHitList);
+    
+    void OrderCaloHitsByDistanceToVertex(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, 
+        pandora::CaloHitList &caloHitList);
 
+    void CombineCaloHitListsToHaveCollection(const pandora::Algorithm *const pAlgorithm,
+        const pandora::CaloHitList &orderedCaloHitList1, const pandora::CaloHitList &orderedCaloHitList2, pandora::CaloHitList &mergedCaloHitList);
+    
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float m_endChargeFraction; ///< Fraction of hits that will be considered to calculate end charge (default 10%)

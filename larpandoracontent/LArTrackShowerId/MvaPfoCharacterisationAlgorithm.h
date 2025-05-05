@@ -33,6 +33,56 @@ public:
      */
     MvaPfoCharacterisationAlgorithm();
 
+    /**
+     *  @brief  VertexComparator class for comparison of two points wrt neutrino vertex position
+     */
+    class VertexComparator
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         */
+        VertexComparator(const pandora::CartesianVector vertexPosition2D);
+
+        /**
+         *  @brief  operator <
+         *
+         *  @param  rhs object for comparison
+         *
+         *  @return boolean
+         */
+        bool operator()(const pandora::CaloHit *const left, const pandora::CaloHit *const right) const;
+
+        pandora::CartesianVector m_neutrinoVertex; //The neutrino vertex used to sort
+    };
+
+    /**                                                                                                                                                                                                    
+     *  @brief  DistanceToVertexComparator class for comparison of two points with different hit type (left and right) wrt neutrino vertex position                                                        
+     */
+    class DistanceToVertexComparator
+    {
+    public:
+      /**                                                                                                                                                                                                  
+       * @brief Constructor                                                                                                                                                                                
+       */
+      DistanceToVertexComparator(const pandora::CartesianVector vertexPosition2D_A, const pandora::CartesianVector vertexPosition2D_B, 
+        const pandora::HitType hitType_A, const pandora::HitType hitType_B);
+
+      /**                                                                                                                                                                                                  
+         @brief operator <                                                                                                                                                                                 
+         *                                                                                                                                                                                                 
+         * @param  rhs object for comparison                                                                                                                                                               
+         *                                                                                                                                                                                                 
+         * @return boolean                                                                                                                                                                                 
+         */
+      bool operator()(const pandora::CaloHit *const left, const pandora::CaloHit *const right) const;
+
+      pandora::CartesianVector m_neutrinoVertex_A; // The neutrino vertex used to sort for hit type A, i.e. position is projected onto the correct view based on the hit type                              
+      pandora::CartesianVector m_neutrinoVertex_B; // same for hit type B                                                                                                                                  
+      pandora::HitType m_hitType_A;
+      pandora::HitType m_hitType_B;
+    };
+    
 protected:
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
@@ -84,6 +134,15 @@ private:
      *  @param  vertex The coordinates of the vertex
      */
     bool PassesFiducialCut(const pandora::CartesianVector &vertex) const;
+
+    // void OrderCaloHitsByDistanceToVertex(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, 
+    //     pandora::CaloHitList &caloHitList);
+
+    void OrderCaloHitsByDistanceToVertex(const pandora::Cluster *const pCluster, pandora::CaloHitList &caloHitList) const;
+
+    void CombineCaloHitListsToHaveCollection(const pandora::CaloHitList &orderedCaloHitList1, const pandora::CaloHitList &orderedCaloHitList2, 
+        pandora::CaloHitList &mergedCaloHitList) const;
+
 };
 
 typedef MvaPfoCharacterisationAlgorithm<AdaBoostDecisionTree> BdtPfoCharacterisationAlgorithm;
