@@ -434,10 +434,12 @@
     d("LArTwoDVertexDistanceFeatureTool",       TwoDVertexDistanceFeatureTool)                                                  \
     d("LArThreeDVertexDistanceFeatureTool",     ThreeDVertexDistanceFeatureTool)                                                \
     d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
+    d("LArThreeDChargeFeatureTool_ICARUS",      ThreeDChargeFeatureTool_ICARUS)                                                 \
     d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
     d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  \
     d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)                                                        \
-    d("LArConeChargeFeatureTool",             	ConeChargeFeatureTool)
+    d("LArConeChargeFeatureTool",             	ConeChargeFeatureTool)                                                          \
+    d("LArConeChargeFeatureTool_ICARUS",        ConeChargeFeatureTool_ICARUS)
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)

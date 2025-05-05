@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -22,6 +24,7 @@ namespace lar_content
 
 template <typename T>
 MvaPfoCharacterisationAlgorithm<T>::MvaPfoCharacterisationAlgorithm() :
+    m_useICARUSCollectionPlane(false),
     m_persistFeatures(false),
     m_trainingSetMode(false),
     m_testBeamMode(false),
@@ -95,12 +98,90 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         return (pPfo->GetParticleId() == MU_MINUS);
     }
 
-    // Charge related features are only calculated using hits in W view
-    ClusterList wClusterList;
-    LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
+    bool isChargeInfoEmpty;
 
-    const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
-    const StringVector chosenFeatureToolOrder(wClusterList.empty() ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
+    if (!m_useICARUSCollectionPlane) 
+    {
+        // Charge related features are only calculated using hits in W view
+        ClusterList wClusterList;
+        LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
+
+        isChargeInfoEmpty = wClusterList.empty();
+    }
+    else 
+    {
+        // W 
+        ClusterList wClusterList;
+        LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
+        float minX(9999.), maxX(9999.);
+        if (!wClusterList.empty())
+            wClusterList.front()->GetClusterSpanX(minX, maxX);
+        isChargeInfoEmpty = wClusterList.empty(); ///< Initialize to fall-back case
+
+        // U 
+        ClusterList uClusterList;
+        LArPfoHelper::GetClusters(pPfo, TPC_VIEW_U, uClusterList);
+        float minX_U(9999.), maxX_U(9999.);
+        if (!uClusterList.empty())
+            uClusterList.front()->GetClusterSpanX(minX_U, maxX_U);
+
+        // V 
+        ClusterList vClusterList;
+        LArPfoHelper::GetClusters(pPfo, TPC_VIEW_V, vClusterList);
+        float minX_V(9999.), maxX_V(9999.);
+        if (!vClusterList.empty())
+            vClusterList.front()->GetClusterSpanX(minX_V, maxX_V);
+
+        // Checks
+        if (wClusterList.empty() && uClusterList.empty() && vClusterList.empty()) 
+        {
+            isChargeInfoEmpty = true;
+        }                                                                  
+        else if (uClusterList.empty() && vClusterList.empty()) 
+        {
+            isChargeInfoEmpty = wClusterList.empty();
+        }
+        else 
+        {
+            // Get drift span from well-defined views
+            if (!uClusterList.empty() && !vClusterList.empty()) 
+            {
+                minX = std::min(minX_U, minX_V); 
+                maxX = std::max(maxX_U, maxX_V);  
+            }
+            else if (!uClusterList.empty() && vClusterList.empty())
+            {
+                minX = minX_U; 
+                maxX = maxX_U; 
+            }
+            else if (uClusterList.empty() && !vClusterList.empty())
+            {
+                minX = minX_V; 
+                maxX = maxX_V; 
+            }
+
+            // Based on whether the PFP crosses the cathode, views are combined to obtain Collection in ICARUS      
+            // PFP crosses the cathode                                                          
+            if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::BelowCathode &&
+                LocatePointInCryostat_ICARUS(maxX) == PositionInCryostat::AboveCathode) 
+            {
+                isChargeInfoEmpty = (uClusterList.empty() || vClusterList.empty()) ? wClusterList.empty() : false; ///< Need both U and V, otherwise fall back to Induction-1
+            }
+            // PFP is contained within TPC 2/3
+            else if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::AboveCathode)
+            {
+                isChargeInfoEmpty = (!vClusterList.empty() ? vClusterList.empty() : uClusterList.empty()); ///< TPC 2/3, otherwise fall back to Induction-2
+            }
+            // PFP is contained within TPC 0/1
+            else if (LocatePointInCryostat_ICARUS(maxX) == PositionInCryostat::BelowCathode)
+            {
+                isChargeInfoEmpty = (!uClusterList.empty() ? uClusterList.empty() : vClusterList.empty()); ///< TPC 0/1, otherwise fall back to Induction-2
+            }
+        }
+    }
+
+    const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(isChargeInfoEmpty ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
+    const StringVector chosenFeatureToolOrder(isChargeInfoEmpty ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
     StringVector featureOrder;
     const LArMvaHelper::MvaFeatureMap featureMap(
         LArMvaHelper::CalculateFeatures(chosenFeatureToolOrder, chosenFeatureToolMap, featureOrder, this, pPfo));
@@ -229,7 +310,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
             if (completeness >= 0.f && purity >= 0.f && !mischaracterisedPfo && (!m_applyFiducialCut || this->PassesFiducialCut(threeDVertexPosition)))
             {
                 std::string outputFile(m_trainingOutputFile);
-                const std::string end = ((wClusterList.empty()) ? "noChargeInfo.txt" : ".txt");
+                const std::string end = (isChargeInfoEmpty ? "noChargeInfo.txt" : ".txt");
                 outputFile.append(end);
                 LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureOrder, featureMap);
             }
@@ -255,7 +336,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         if (isMainMCParticleSet)
         {
             std::string outputFile(m_trainingOutputFile);
-            outputFile.append(wClusterList.empty() ? "noChargeInfo.txt" : ".txt");
+            outputFile.append(isChargeInfoEmpty ? "noChargeInfo.txt" : ".txt");
             LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureOrder, featureMap);
         }
 
@@ -265,11 +346,12 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     // If no failures, proceed with MvaPfoCharacterisationAlgorithm classification
     if (!m_enableProbability)
     {
-        return LArMvaHelper::Classify((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureOrder, featureMap);
+        return LArMvaHelper::Classify((isChargeInfoEmpty ? m_mvaNoChargeInfo : m_mva), featureOrder, featureMap);
     }
     else
     {
-        const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureOrder, featureMap));
+        const double score(LArMvaHelper::CalculateProbability((isChargeInfoEmpty ? m_mvaNoChargeInfo : m_mva), featureOrder, featureMap));
+
         object_creation::ParticleFlowObject::Metadata metadata;
         metadata.m_propertiesToAdd["TrackScore"] = score;
         if (m_persistFeatures)
@@ -280,8 +362,10 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
             }
         }
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+
         return (m_minProbabilityCut <= score);
     }
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -309,6 +393,8 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "FoldToPrimaries", m_primaryParameters.m_foldBackHierarchy));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseICARUSCollectionPlane", m_useICARUSCollectionPlane));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PersistFeatures", m_persistFeatures));
 

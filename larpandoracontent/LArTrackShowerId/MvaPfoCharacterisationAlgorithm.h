@@ -32,7 +32,7 @@ public:
      *  @brief  Default constructor
      */
     MvaPfoCharacterisationAlgorithm();
-
+    
 protected:
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
@@ -41,14 +41,15 @@ protected:
     ClusterCharacterisationFeatureTool::FeatureToolMap m_featureToolMap; ///< The feature tool map
 
     PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapThreeD;       ///< FeatureToolMap as a map for 3D info
-    PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapNoChargeInfo; ///< FeatureToolMap as a map for missing W view
+    PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapNoChargeInfo; ///< FeatureToolMap as a map for missing view
 
     pandora::StringVector m_algorithmToolNames; ///< Vector of strings saving feature tool order for use in feature calculation
     pandora::StringVector m_algorithmToolNamesNoChargeInfo; ///< Vector of strings saving feature tool order for use in feature calculation (missing W view)
 
     T m_mva;             ///< The mva
-    T m_mvaNoChargeInfo; ///< The mva for missing W view
+    T m_mvaNoChargeInfo; ///< The mva for missing view
 
+    bool m_useICARUSCollectionPlane;      ///< Whether to change the view logic in order to match the ICARUS Collection plane
     bool m_persistFeatures;               ///< Whether to write the features to the properties map
     bool m_trainingSetMode;               ///< Whether to train
     bool m_testBeamMode;                  ///< Whether the training set is from a test beam experiment
@@ -84,6 +85,7 @@ private:
      *  @param  vertex The coordinates of the vertex
      */
     bool PassesFiducialCut(const pandora::CartesianVector &vertex) const;
+
 };
 
 typedef MvaPfoCharacterisationAlgorithm<AdaBoostDecisionTree> BdtPfoCharacterisationAlgorithm;
