@@ -451,6 +451,7 @@ StatusCode PfoHierarchyFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ConeChargeFeatureTool::ConeChargeFeatureTool() :
+    m_useICARUSCollectionPlane(false),
     m_conMinHits(3),
     m_minCharge(0.1f),
     m_conFracRange(0.2f),
@@ -1055,6 +1056,7 @@ float ConeChargeFeatureTool::CalculateConicalness(
 
 StatusCode ConeChargeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseICARUSCollectionPlane", m_useICARUSCollectionPlane));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConMinHits", m_conMinHits));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCharge", m_minCharge));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConFracRange", m_conFracRange));
@@ -1583,7 +1585,7 @@ StatusCode ThreeDPCAFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() : m_endChargeFraction(0.1f)
+ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() : m_useICARUSCollectionPlane(false), m_endChargeFraction(0.1f)
 {
 }
 
@@ -1598,17 +1600,7 @@ void ThreeDChargeFeatureTool::Run(
     float totalCharge(-1.f), chargeSigma(-1.f), chargeMean(-1.f), endCharge(-1.f);
     LArMvaHelper::MvaFeature charge1, charge2;
 
-    // debugging
     bool debug = false;
-    if(debug)
-        std::cout << "=================================================================" << std::endl;
-    if(debug)
-        std::cout << "RUNNING 3D CHARGE TOOL!" << std::endl;
-    if(debug)
-        std::cout << "This is particle " << pInputPfo->GetParticleId()
-                  << " with mass " << pInputPfo->GetMass() << " [GeV] "
-                  << " with " << pInputPfo->GetVertexList().size() << " vertices."
-                  << std::endl;
 
     /*                                                                                                                                                                                                   
      * Check if the particle crosses the cathode                                                                                                                                                        
@@ -2086,6 +2078,8 @@ void ThreeDChargeFeatureTool::CombineCaloHitListsToHaveCollection(const pandora:
 
 StatusCode ThreeDChargeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseICARUSCollectionPlane", m_useICARUSCollectionPlane));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EndChargeFraction", m_endChargeFraction));
 

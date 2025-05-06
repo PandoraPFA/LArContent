@@ -276,6 +276,8 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    bool m_useICARUSCollectionPlane; ///< Whether to change the view logic in order to match the ICARUS Collection plane
+
     /**
      *  @brief Configurable parameters to calculate cone charge variables
      *
@@ -471,23 +473,22 @@ private:
         float &chargeSigma, float &chargeMean, float &endCharge);
 
     /**
-     *  @brief  Function to order the calo hit list by distance to neutrino vertex
+     *  @brief  Functions to order the calo hit list by distance to neutrino vertex
      *
      *  @param  pAlgorithm, the algorithm
      *  @param  pCluster the cluster we are characterizing
      *  @param  caloHitList to receive the ordered calo hit list
      *
      */
-    
     void OrderCaloHitsByDistanceToVertex(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, 
         pandora::CaloHitList &caloHitList);
-
     void CombineCaloHitListsToHaveCollection(const pandora::Algorithm *const pAlgorithm,
         const pandora::CaloHitList &orderedCaloHitList1, const pandora::CaloHitList &orderedCaloHitList2, pandora::CaloHitList &mergedCaloHitList);
     
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float m_endChargeFraction; ///< Fraction of hits that will be considered to calculate end charge (default 10%)
+    bool m_useICARUSCollectionPlane; ///< Whether to change the view logic in order to match the ICARUS Collection plane
+    float m_endChargeFraction;       ///< Fraction of hits that will be considered to calculate end charge (default 10%)
 };
 
 } // namespace lar_content
