@@ -1850,117 +1850,68 @@ void ThreeDChargeFeatureTool::OrderCaloHitsByDistanceToVertex(
 void ThreeDChargeFeatureTool::CombineCaloHitListsToHaveCollection(const pandora::Algorithm *const pAlgorithm, const pandora::CaloHitList &orderedCaloHitList1,
                                                                   const pandora::CaloHitList &orderedCaloHitList2, pandora::CaloHitList &mergedCaloHitList)
  {
-   bool debug = false;
-   // identify the interaction vertex                                                                                                                                                                    
-   const VertexList *pVertexList(nullptr);
-   (void)PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
-   const CartesianVector vertexPosition2DU(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_U));
-   const CartesianVector vertexPosition2DV(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_V));
-   if( debug )
-     std::cout << "This is vertex position on view U " << vertexPosition2DU.GetX() << "\t " << vertexPosition2DU.GetY() << "\t " << vertexPosition2DU.GetZ() << std::endl;
-   if( debug )
-     std::cout << "This is vertex position on view V " << vertexPosition2DV.GetX() << "\t " << vertexPosition2DV.GetY() << "\t " << vertexPosition2DV.GetZ() << std::endl;
-   float distance_hit_vertex = 0.;
-   float min_distance_hit_vertex_included_1 = 0.;
-   float max_distance_hit_vertex_included_1 = 0.;
-   float min_distance_hit_vertex_included_2 = 0.;
-   float max_distance_hit_vertex_included_2 = 0.;
-   bool set_min_1 = false;
-   bool set_min_2 = false;
-   bool reorderingNeeded = false;
-   // loop over first CaloHitList                                                                                                                                                                        
-   /*                                                                                                                                                                                                    
-    * view U: COLL below cathode, IND2 above cathode                                                                                                                                                     
-    * view V: IND2 below cathode, COLL above cathode                                                                                                                                                     
-    */
-   // if this is from view V take hits ABOVE cathode otherwise below 
-   for (CaloHitList::const_iterator hIter = orderedCaloHitList1.begin(); hIter != orderedCaloHitList1.end(); hIter++) {
-     const CaloHit *const pCaloHit = *hIter;
-     const CartesianVector &hit(pCaloHit->GetPositionVector());
-     if( pCaloHit->GetHitType() == TPC_VIEW_U )
-       distance_hit_vertex = pow( vertexPosition2DU.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DU.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DU.GetZ()- hit.GetZ(), 2 );
-     else
-       distance_hit_vertex = pow( vertexPosition2DV.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DV.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DV.GetZ()- hit.GetZ(), 2 );
-     if( debug )
-       std::cout << hit.GetX() << "\t" << hit.GetY() << "\t" << hit.GetZ() << " whose distance^2 from vertex is " << distance_hit_vertex << std::endl;
-     bool selectHitViewU = pCaloHit->GetHitType() == TPC_VIEW_U && LocatePointInCryostat( hit.GetX() ) == PositionInCryostat::BelowCathode;
-     bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && LocatePointInCryostat( hit.GetX() ) == PositionInCryostat::AboveCathode;
-     bool selectHit = selectHitViewU || selectHitViewV;
-     if( selectHit ){
-       if( debug )
-         std::cout << "This hit should be added to hit list to have COLLECTION plane" << std::endl;
-       mergedCaloHitList.push_back( pCaloHit );
-       if( !set_min_1 ) {
-         min_distance_hit_vertex_included_1 = distance_hit_vertex;
-         set_min_1 = true;
-       }
-       if( distance_hit_vertex > max_distance_hit_vertex_included_1 )
-         max_distance_hit_vertex_included_1 = distance_hit_vertex;
-     }
-   }
-   std::cout << "This is (min,max) from the 1st CaloHitList: ( " << min_distance_hit_vertex_included_1 << ", " << max_distance_hit_vertex_included_1 << " )." << std::endl;
+                                                                                                                                                                  
+    const VertexList *pVertexList(nullptr);
+    (void)PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
+    const CartesianVector vertexPosition2DU(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_U));
+    const CartesianVector vertexPosition2DV(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_V));
 
-   // loop over second CaloHitList                                                                                                                                                                       
-   for (CaloHitList::const_iterator hIter = orderedCaloHitList2.begin(); hIter != orderedCaloHitList2.end(); hIter++) {
-     const CaloHit *const pCaloHit = *hIter;
-     const CartesianVector &hit(pCaloHit->GetPositionVector());
-     if( pCaloHit->GetHitType() == TPC_VIEW_U )
-       distance_hit_vertex = pow( vertexPosition2DU.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DU.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DU.GetZ()- hit.GetZ(), 2 );
-     else
-       distance_hit_vertex = pow( vertexPosition2DV.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DV.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DV.GetZ()- hit.GetZ(), 2 );
-     if( debug )
-       std::cout << hit.GetX() << "\t" << hit.GetY() << "\t" << hit.GetZ() << " whose distance^2 from vertex is " << distance_hit_vertex << std::endl;
-     bool selectHitViewU = pCaloHit->GetHitType() == TPC_VIEW_U && LocatePointInCryostat( hit.GetX() ) == PositionInCryostat::BelowCathode;
-     bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && LocatePointInCryostat( hit.GetX() ) == PositionInCryostat::AboveCathode;
-     bool selectHit = selectHitViewU || selectHitViewV;
-     if( selectHit ){
-       if( debug )
-         std::cout << "This hit should be added to hit list to have COLLECTION plane" << std::endl;
-       mergedCaloHitList.push_back( pCaloHit );
-       if( !set_min_2 ) {
-         min_distance_hit_vertex_included_2 = distance_hit_vertex;
-         set_min_2 = true;
-       }
-       if( distance_hit_vertex > max_distance_hit_vertex_included_2 )
-         max_distance_hit_vertex_included_2 = distance_hit_vertex;
-     }
-   }
-   std::cout << "This is (min,max) from the 2nd CaloHitList: ( " << min_distance_hit_vertex_included_2 << ", " << max_distance_hit_vertex_included_2 << " )." << std::endl;
+    float hitVertexDistance = 0., maxHitVertexDistance1 = 0., minHitVertexDistance2 = 9999.;
 
-   // reorder if needed                                                                                                                                                                                  
-   reorderingNeeded = ( min_distance_hit_vertex_included_2 < max_distance_hit_vertex_included_1 ) ? 1 : 0;
-   if( reorderingNeeded ){
-     std::cerr << "[ThreeDChargeFeatureTool::CombineCaloHitListsToHaveCollection()] Reordering necessary, proceeding to do it." << std::endl;
-     mergedCaloHitList.sort(ThreeDChargeFeatureTool::DistanceToVertexComparator( vertexPosition2DU, vertexPosition2DV, TPC_VIEW_U, TPC_VIEW_V ) );
-   }
-   
-   if( debug ){
-     std::cout << " Listing the final content of the mergedCaloHitList " << std::endl;
-     std::string isBeforeCathode = "";
-     std::string belongsToView = "";
-     for(CaloHitList::const_iterator it = mergedCaloHitList.begin() ; it != mergedCaloHitList.end() ; it++){
-       const CaloHit *const pCaloHit = *it;
-       const CartesianVector &hit(pCaloHit->GetPositionVector());
-       if( pCaloHit->GetHitType() == TPC_VIEW_U )
-         distance_hit_vertex = pow( vertexPosition2DU.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DU.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DU.GetZ()- hit.GetZ(), 2 );
-       else
-         distance_hit_vertex = pow( vertexPosition2DV.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DV.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DV.GetZ()- hit.GetZ(), 2 );
-       isBeforeCathode = (LocatePointInCryostat( hit.GetX() ) == PositionInCryostat::BelowCathode )
-         ? ", is before the cathode" : ", is after the cathode";
-       belongsToView = ( pCaloHit->GetHitType() == TPC_VIEW_U ) ? " and belongs to view U " : " and belongs to view V";
-       if( pCaloHit->GetHitType() == TPC_VIEW_U )
-         std::cout << "This hit has distance " << distance_hit_vertex << isBeforeCathode << belongsToView
-              << ". Its position is ( " << hit.GetX() << ", " << hit.GetY() << ", " << hit.GetZ() << " )."
-              << " Vertex is ( " << vertexPosition2DU.GetX() << ", " <<  vertexPosition2DU.GetY() << ", " << vertexPosition2DU.GetZ() << " )"
-              << std::endl;
-       else
-         std::cout << "This hit has distance " << distance_hit_vertex << isBeforeCathode << belongsToView
-              << ". Its position is ( " << hit.GetX() << ", " << hit.GetY() << ", " << hit.GetZ() << " )."
-              << " Vertex is ( " << vertexPosition2DV.GetX() << ", " <<  vertexPosition2DV.GetY() << ", " << vertexPosition2DV.GetZ() << " )"
-              << std::endl;
-     }
-   }
- }
+    // First hit list
+    for (CaloHitList::const_iterator hIter = orderedCaloHitList1.begin(); hIter != orderedCaloHitList1.end(); hIter++) 
+    {
+        const CaloHit *const pCaloHit = *hIter;
+        const CartesianVector &hit(pCaloHit->GetPositionVector());
+
+        const CartesianVector &vertexPosition = (pCaloHit->GetHitType() == TPC_VIEW_U) ? vertexPosition2DU : vertexPosition2DV;
+        hitVertexDistance = 
+            pow(vertexPosition.GetX() - hit.GetX(), 2) +
+            pow(vertexPosition.GetY() - hit.GetY(), 2) +
+            pow(vertexPosition.GetZ() - hit.GetZ(), 2);
+
+        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) && 
+            (LocatePointInCryostat(hit.GetX()) == PositionInCryostat::BelowCathode); ///< U is Collection "below cathode"
+        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && 
+            (LocatePointInCryostat(hit.GetX()) == PositionInCryostat::AboveCathode); ///< V is Collection "below cathode"
+
+        if (selectHitViewU || selectHitViewV)
+        {
+            mergedCaloHitList.push_back(pCaloHit);
+            maxHitVertexDistance1 = std::max(maxHitVertexDistance1, hitVertexDistance);
+        }
+    }
+
+    // Second hit list                                                                                                                                                                 
+    for (CaloHitList::const_iterator hIter = orderedCaloHitList2.begin(); hIter != orderedCaloHitList2.end(); hIter++) 
+    {
+        const CaloHit *const pCaloHit = *hIter;
+        const CartesianVector &hit(pCaloHit->GetPositionVector());
+
+        const CartesianVector &vertexPosition = (pCaloHit->GetHitType() == TPC_VIEW_U) ? vertexPosition2DU : vertexPosition2DV;
+        hitVertexDistance = 
+            pow(vertexPosition.GetX() - hit.GetX(), 2) +
+            pow(vertexPosition.GetY() - hit.GetY(), 2) +
+            pow(vertexPosition.GetZ() - hit.GetZ(), 2);
+
+        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) && 
+            (LocatePointInCryostat(hit.GetX()) == PositionInCryostat::BelowCathode); ///< U is Collection "below cathode"
+        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && 
+            (LocatePointInCryostat(hit.GetX()) == PositionInCryostat::AboveCathode); ///< V is Collection "below cathode"
+
+        if (selectHitViewU || selectHitViewV)
+        {
+            mergedCaloHitList.push_back(pCaloHit);
+            minHitVertexDistance2 = std::min(minHitVertexDistance2, hitVertexDistance);
+        }
+    }
+
+    // Reorder if needed                                                                                                                   
+    if (minHitVertexDistance2 < maxHitVertexDistance1)
+    {
+        mergedCaloHitList.sort(ThreeDChargeFeatureTool::DistanceToVertexComparator(vertexPosition2DU, vertexPosition2DV, TPC_VIEW_U, TPC_VIEW_V));
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1974,7 +1925,6 @@ StatusCode ThreeDChargeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ThreeDChargeFeatureTool::VertexComparator::VertexComparator(const CartesianVector vertexPosition2D) : m_neutrinoVertex(vertexPosition2D)
@@ -1996,25 +1946,33 @@ ThreeDChargeFeatureTool::DistanceToVertexComparator::DistanceToVertexComparator(
                                                                                 const HitType hitType_A, const HitType hitType_B) :
   m_neutrinoVertex_A(vertexPosition2D_A), m_neutrinoVertex_B(vertexPosition2D_B), m_hitType_A(hitType_A), m_hitType_B(hitType_B)
 {
-    // FIX ME: Throw error if the hit types passed coincide?                                                                                                                                              
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool ThreeDChargeFeatureTool::DistanceToVertexComparator::operator()(const CaloHit *const left, const CaloHit *const right) const
 {
-  // FIX ME: Throw an error here if the hit type is different from any of the two possibilities?                                                                                                         
-  float distanceL;
-  float distanceR;
-  if( left->GetHitType() == m_hitType_A )
-    distanceL = ( left->GetPositionVector() - m_neutrinoVertex_A ).GetMagnitudeSquared();
-  else
-    distanceL = ( left->GetPositionVector() - m_neutrinoVertex_B ).GetMagnitudeSquared();
-  if( right->GetHitType() == m_hitType_A )
-    distanceR = ( right->GetPositionVector() - m_neutrinoVertex_A ).GetMagnitudeSquared();
-  else
-    distanceR = ( right->GetPositionVector() - m_neutrinoVertex_B ).GetMagnitudeSquared();
-  return distanceL < distanceR;
+    float distanceL, distanceR;
+
+    if(left->GetHitType() == m_hitType_A)
+    {
+        distanceL = (left->GetPositionVector() - m_neutrinoVertex_A).GetMagnitudeSquared();
+    }
+    else 
+    {
+        distanceL = (left->GetPositionVector() - m_neutrinoVertex_B).GetMagnitudeSquared();
+    }
+
+    if(right->GetHitType() == m_hitType_A)
+    {
+        distanceR = (right->GetPositionVector() - m_neutrinoVertex_A).GetMagnitudeSquared();
+    }
+    else 
+    {
+        distanceR = (right->GetPositionVector() - m_neutrinoVertex_B).GetMagnitudeSquared();
+    }
+
+    return distanceL < distanceR;
 }
 
 } // namespace lar_content
