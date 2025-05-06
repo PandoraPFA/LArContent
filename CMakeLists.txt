@@ -42,7 +42,6 @@ if (cetmodules_FOUND)
     WERROR
     NO_UNDEFINED
     EXTRA_FLAGS -pedantic
-              $<$<CXX_COMPILER_ID:Clang>:-Wno-unused-private-field>
   )
 
   cet_report_compiler_flags(REPORT_THRESHOLD VERBOSE)
