@@ -32,56 +32,6 @@ public:
      *  @brief  Default constructor
      */
     MvaPfoCharacterisationAlgorithm();
-
-    /**
-     *  @brief  VertexComparator class for comparison of two points wrt neutrino vertex position
-     */
-    class VertexComparator
-    {
-    public:
-        /**
-         *  @brief  Constructor
-         */
-        VertexComparator(const pandora::CartesianVector vertexPosition2D);
-
-        /**
-         *  @brief  operator <
-         *
-         *  @param  rhs object for comparison
-         *
-         *  @return boolean
-         */
-        bool operator()(const pandora::CaloHit *const left, const pandora::CaloHit *const right) const;
-
-        pandora::CartesianVector m_neutrinoVertex; //The neutrino vertex used to sort
-    };
-
-    /**                                                                                                                                                                                                    
-     *  @brief  DistanceToVertexComparator class for comparison of two points with different hit type (left and right) wrt neutrino vertex position                                                        
-     */
-    class DistanceToVertexComparator
-    {
-    public:
-      /**                                                                                                                                                                                                  
-       * @brief Constructor                                                                                                                                                                                
-       */
-      DistanceToVertexComparator(const pandora::CartesianVector vertexPosition2D_A, const pandora::CartesianVector vertexPosition2D_B, 
-        const pandora::HitType hitType_A, const pandora::HitType hitType_B);
-
-      /**                                                                                                                                                                                                  
-         @brief operator <                                                                                                                                                                                 
-         *                                                                                                                                                                                                 
-         * @param  rhs object for comparison                                                                                                                                                               
-         *                                                                                                                                                                                                 
-         * @return boolean                                                                                                                                                                                 
-         */
-      bool operator()(const pandora::CaloHit *const left, const pandora::CaloHit *const right) const;
-
-      pandora::CartesianVector m_neutrinoVertex_A; // The neutrino vertex used to sort for hit type A, i.e. position is projected onto the correct view based on the hit type                              
-      pandora::CartesianVector m_neutrinoVertex_B; // same for hit type B                                                                                                                                  
-      pandora::HitType m_hitType_A;
-      pandora::HitType m_hitType_B;
-    };
     
 protected:
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
@@ -91,14 +41,15 @@ protected:
     ClusterCharacterisationFeatureTool::FeatureToolMap m_featureToolMap; ///< The feature tool map
 
     PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapThreeD;       ///< FeatureToolMap as a map for 3D info
-    PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapNoChargeInfo; ///< FeatureToolMap as a map for missing W view
+    PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapNoChargeInfo; ///< FeatureToolMap as a map for missing view
 
     pandora::StringVector m_algorithmToolNames; ///< Vector of strings saving feature tool order for use in feature calculation
     pandora::StringVector m_algorithmToolNamesNoChargeInfo; ///< Vector of strings saving feature tool order for use in feature calculation (missing W view)
 
     T m_mva;             ///< The mva
-    T m_mvaNoChargeInfo; ///< The mva for missing W view
+    T m_mvaNoChargeInfo; ///< The mva for missing view
 
+    bool m_useICARUSCollectionPlane;      ///< Whether to change the view logic in order to match the ICARUS Collection plane
     bool m_persistFeatures;               ///< Whether to write the features to the properties map
     bool m_trainingSetMode;               ///< Whether to train
     bool m_testBeamMode;                  ///< Whether the training set is from a test beam experiment
@@ -134,14 +85,6 @@ private:
      *  @param  vertex The coordinates of the vertex
      */
     bool PassesFiducialCut(const pandora::CartesianVector &vertex) const;
-
-    // void OrderCaloHitsByDistanceToVertex(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, 
-    //     pandora::CaloHitList &caloHitList);
-
-    void OrderCaloHitsByDistanceToVertex(const pandora::Cluster *const pCluster, pandora::CaloHitList &caloHitList) const;
-
-    void CombineCaloHitListsToHaveCollection(const pandora::CaloHitList &orderedCaloHitList1, const pandora::CaloHitList &orderedCaloHitList2, 
-        pandora::CaloHitList &mergedCaloHitList) const;
 
 };
 
