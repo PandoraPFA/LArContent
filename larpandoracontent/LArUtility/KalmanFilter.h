@@ -20,6 +20,7 @@ template <int DIM>
 class KalmanFilter
 {
     static_assert(DIM > 0, "KalmanFilter dimensionality must be positive");
+
 public:
     using StateVector = Eigen::Matrix<double, 2 * DIM, 1>;
     using MeasurementVector = Eigen::Matrix<double, DIM, 1>;
@@ -35,7 +36,7 @@ public:
      *  @param  measurementVariance Measurement variance
      *  @param  x Initial position
      */
-    KalmanFilter(double dt, double processVariance, double measurementVariance, const PositionVector &x, const double initialCovariance=1.0);
+    KalmanFilter(double dt, double processVariance, double measurementVariance, const PositionVector &x, const double initialCovariance = 1.0);
 
     ~KalmanFilter() = default;
 
@@ -85,18 +86,18 @@ public:
     const StateVector &GetTemporaryState() const;
 
 private:
-    double m_dt;             ///< Time step
-    int m_stateSize;         ///< Size of the state vector
-    int m_measurementSize;   ///  Size of the measurement vector
-    StateVector m_x;         ///< State vector (tracks position and 'velocity')
-    StateMatrix m_P;         ///< Covariance matrix
-    StateMatrix m_F;         ///< State transition matrix
-    MeasurementMatrix m_H;   ///< Measurement matrix
-    CovarianceMatrix m_R;    ///< Measurement covariance matrix
-    StateMatrix m_Q;         ///< Process covariance matrix
-    StateMatrix m_identity;  ///< Identity matrix
-    StateVector m_xTemp;     ///< Temporary state vector
-    StateMatrix m_PTemp;     ///< Temporary covariance matrix
+    double m_dt;            ///< Time step
+    int m_stateSize;        ///< Size of the state vector
+    int m_measurementSize;  ///  Size of the measurement vector
+    StateVector m_x;        ///< State vector (tracks position and 'velocity')
+    StateMatrix m_P;        ///< Covariance matrix
+    StateMatrix m_F;        ///< State transition matrix
+    MeasurementMatrix m_H;  ///< Measurement matrix
+    CovarianceMatrix m_R;   ///< Measurement covariance matrix
+    StateMatrix m_Q;        ///< Process covariance matrix
+    StateMatrix m_identity; ///< Identity matrix
+    StateVector m_xTemp;    ///< Temporary state vector
+    StateMatrix m_PTemp;    ///< Temporary covariance matrix
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -115,7 +116,7 @@ KalmanFilter<DIM>::KalmanFilter(double dt, double processVariance, double measur
     m_F = StateMatrix::Identity();
     m_F.topRightCorner(DIM, DIM) = Eigen::Matrix<double, DIM, DIM>::Identity() * m_dt;
     m_H = MeasurementMatrix::Zero();
-    m_H.leftCols(DIM) = Eigen::Matrix<double, DIM,DIM>::Identity();
+    m_H.leftCols(DIM) = Eigen::Matrix<double, DIM, DIM>::Identity();
     Eigen::Matrix<double, 2 * DIM, DIM> G = Eigen::Matrix<double, 2 * DIM, DIM>::Zero();
     G.topRows(DIM) = Eigen::Matrix<double, DIM, DIM>::Identity() * (0.5 * m_dt * m_dt);
     G.bottomRows(DIM) = Eigen::Matrix<double, DIM, DIM>::Identity() * m_dt;
