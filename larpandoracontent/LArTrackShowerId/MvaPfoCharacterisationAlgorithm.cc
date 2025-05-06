@@ -132,7 +132,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         if (!vClusterList.empty())
             vClusterList.front()->GetClusterSpanX(minX_V, maxX_V);
 
-        // Further checks
+        // Checks
         if (wClusterList.empty() && uClusterList.empty() && vClusterList.empty()) 
         {
             isChargeInfoEmpty = true;
