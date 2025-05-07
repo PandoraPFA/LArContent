@@ -470,261 +470,173 @@ void ConeChargeFeatureTool::Run(
 
     LArMvaHelper::MvaFeature haloTotalRatio, concentration, conicalness;
 
-    bool debug = false;
-    if(debug)
-        std::cout << "=================================================================" << std::endl;
-    if(debug)
-        std::cout << "RUNNING 3D CONE-CHARGE TOOL!" << std::endl;
-    if(debug)
-        std::cout << "This is particle " << pInputPfo->GetParticleId()
-                  << " with mass " << pInputPfo->GetMass() << " [GeV] "
-                  << " with " << pInputPfo->GetVertexList().size() << " vertices."
-                  << std::endl;
-    /*                                                                                                                                                                                                   
-     * Check if the particle crosses the cathode                                                                                                                                                        
-     * Current version: based on ClusterSpanX on TPC_VIEW_W by default, if both TPC_VIEW_U and TPC_VIEW_V are well defined it sets minX and maxX based on them                                         
-     * If only one of them it is well defined it replaces values from TPC_VIEW_W (= IND1) with the one available
-     * --> FIX ME Could switch to min and max X from all the views U,V,W provided their ClusterLists are not empty ( see MvaPfoCharacterisationAlgorithm )                                               
-     */
-    
-    // W (Ind-1)
-    // bool selectViewW = true;
-    ClusterList clusterListW;
-    LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, clusterListW);
-    float minX(9999.), maxX(9999.);
-    // if(clusterListW.empty())
-    // {
-    //     std::cerr << "WARNING: The cluster list on view W has no elements. You cannot use this view to find minX, maxX." << std::endl;
-    //     std::cerr << "Decide what to do in this case." << std::endl;
-    //     selectViewW = false;
-    // }
-    //else 
-    if(!clusterListW.empty())
-    {
-        clusterListW.front()->GetClusterSpanX(minX, maxX);
-        if(debug)
-            std::cout << "view W: minX = " << minX << ", maxX = " << maxX << std::endl;
-    }         
-
-    // U (Ind-2 or Coll, based on TPC)
-    bool selectViewU = true;
-    float minX_U(9999.);
-    float maxX_U(9999.);
-    ClusterList clusterListU;
-
-    LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_U, clusterListU);
-    if(clusterListU.empty())
-    {
-        std::cerr << "WARNING: The cluster list on view U has no elements. You cannot use this view to find minX, maxX." << std::endl;
-        std::cerr << "Decide what to do in this case." << std::endl;
-        selectViewU = false;
-    }
-    else 
-    {
-        clusterListU.front()->GetClusterSpanX(minX_U, maxX_U);
-        if(debug)
-            std::cout << "view U: minX = " << minX_U << ", maxX = " << maxX_U << std::endl;
-    }
-
-    // V (Ind-2 or Coll, based on TPC)
-    bool selectViewV = true;
-    float minX_V(9999.);
-    float maxX_V(9999.);
-    ClusterList clusterListV;
-
-    LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_V, clusterListV);
-    if(clusterListV.empty())
-    {
-        std::cerr<< "WARNING: The cluster list on view V has no elements. You cannot use this view to find minX, maxX." << std::endl;
-        std::cerr<< "Decide what to do in this case." << std::endl;
-        selectViewV = false;
-    }
-    else 
-    {
-        clusterListV.front()->GetClusterSpanX( minX_V, maxX_V );
-        if(debug)
-            std::cout << "view V: minX = " << minX_V << ", maxX = " << maxX_V << std::endl;
-    }
-    
-    // use the available U and V views for the drift span
-    if(selectViewU && selectViewV)
-    {
-        minX = std::min(minX_U, minX_V);
-        maxX = std::max(maxX_U, maxX_V);
-    }
-    else if(selectViewU && !selectViewV)
-    {
-        minX = minX_U;
-        maxX = maxX_U;
-    }
-    else if(!selectViewU && selectViewV)
-    {
-        minX = minX_V;
-        maxX = maxX_V;
-    }
-
-    // debug
-    if(debug)
-    {
-        std::cout << "==============================================" << std::endl;
-        std::cout << "This is the min X " << minX << std::endl;
-        std::cout << "This is the max X " << maxX << std::endl;
-        std::cout << "==============================================" << std::endl;
-    }
-    if(debug)
-    {
-        // Identify the cryostat                                                                                                                                                                           
-        int pFoCryo = -1;
-        if( maxX < 0. )
-            pFoCryo = 0;
-        if( minX > 0. )
-            pFoCryo = 1;
-        std::cout << "==============================================" << std::endl;
-        std::cout << "This particle belongs to cryo " << pFoCryo << std::endl;
-        std::cout << "==============================================" << std::endl;
-    }
-
-    bool particleCrossingCathode = false;
-    if(LocatePointInCryostat(minX) == PositionInCryostat::BelowCathode &&
-       LocatePointInCryostat(maxX) == PositionInCryostat::AboveCathode)
-        particleCrossingCathode = true;
-
-    // debug
-    if(particleCrossingCathode && debug)
-        std::cout << "Pay attention since this particle is crossing the cathode in its trajectory. " << std::endl;
-    else if(!particleCrossingCathode && debug)
-        std::cout << "This particle's trajectory remains on the same side wrt the cathode. " << std::endl;
-
-    // CaloHitList that should contain the COLLECTION hits ordered by distance to the interaction vertex (if any)                                                                                        
     CaloHitList orderedCaloHitList;
-   
-    // Idea is using U/V if defined: if not, just fall back to W (standard case)                                                                                    
-    if(!selectViewU && !selectViewV){
-        std::cerr << "Both views are ill defined, decide how to handle this case. Right now defaulting to view W." << std::endl;
-        this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListW.front(), orderedCaloHitList);
-    }       
 
-    /*
-     *  What is Collection?
-     *  For a given cryostat,
-     *  "above the cathode": TPC 2/3 -> V
-     *  "below the cathode": TPC 0/1 -> U
-     */
-
-    // Particles that don't cross the cathode
-    if(!particleCrossingCathode)
+    if (!m_useICARUSCollectionPlane)
     {
-        // TPC 2/3 -> V
-        if(LocatePointInCryostat(minX) == PositionInCryostat::AboveCathode && selectViewV)
-        {                                                            
-            if(debug)
-                std::cout << "This particle lies either in tpc 2 or 3 and the corresponding view (V) is properly loaded, it will be the one considered." << std::endl;
+        ClusterList clusterListW;
+        LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, clusterListW);
 
-            this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListV.front(), orderedCaloHitList);
-        }
+        if (!clusterListW.empty()) 
+        {
+            clusterListW.front()->GetOrderedCaloHitList().FillCaloHitList(orderedCaloHitList);
 
-        // TPC 0/1 -> U
-        else if(LocatePointInCryostat(maxX) == PositionInCryostat::BelowCathode && selectViewU)
-        {                                          
-            if(debug)
-                std::cout << "This particle lies either in tpc 0 or 1 and the corresponding view (U) is properly loaded, it will be the one considered." << std::endl;
+            const CartesianVector &pfoStart(orderedCaloHitList.front()->GetPositionVector());
+            CartesianVector centroid(0.f, 0.f, 0.f);
+            LArPcaHelper::EigenVectors eigenVecs;
+            LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+            LArPcaHelper::RunPca(orderedCaloHitList, centroid, eigenValues, eigenVecs);
 
-            this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListU.front(), orderedCaloHitList);
-        }
-
-        // TPC 2/3, but V ill-defined
-        else if( LocatePointInCryostat( minX ) == PositionInCryostat::AboveCathode && !selectViewV ){
-            std::cerr << "This particle lies either in tpc 2 or 3, but view V is not available --> considering view U instead (IND2)? Decide how to handle this case." << std::endl;
-            this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListU.front(),orderedCaloHitList);
-        }
-
-        // TPC 0/1, but U ill-defined
-        else if( LocatePointInCryostat( maxX ) == PositionInCryostat::BelowCathode && !selectViewU ) {
-            std::cerr << "This particle lies either in tpc 0 or 1, but view U is not available --> considering view V instead (IND2)? Decide how to handle this case." << std::endl;
-            this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListV.front(), orderedCaloHitList);
+            float chargeCore(0.f), chargeHalo(0.f), chargeCon(0.f);
+            this->CalculateChargeDistribution(orderedCaloHitList, pfoStart, eigenVecs[0], chargeCore, chargeHalo, chargeCon);
+            haloTotalRatio = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeHalo / (chargeCore + chargeHalo) : -1.f;
+            concentration = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeCon / (chargeCore + chargeHalo) : -1.f;
+            const float pfoLength(std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo)));
+            conicalness = (pfoLength > std::numeric_limits<float>::epsilon())
+                            ? this->CalculateConicalness(orderedCaloHitList, pfoStart, eigenVecs[0], pfoLength)
+                            : 1.f;
         }
     }
+    else
+    {
+        // W 
+        ClusterList clusterListW;
+        LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, clusterListW);
+        float minX(9999.), maxX(9999.);
+        if (!clusterListW.empty())
+            clusterListW.front()->GetClusterSpanX(minX, maxX);
 
-    // Particles that cross the cathode (need both U and V)
-    else                                                                                           
-      {
+        // U 
+        ClusterList clusterListU;
+        LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_U, clusterListU);
+        float minX_U(9999.), maxX_U(9999.);
+        if (!clusterListU.empty())
+            clusterListU.front()->GetClusterSpanX(minX_U, maxX_U);
 
-        // Idea is using U/V if defined: if not, just fall back to W (standard case)  
-        if(!selectViewU || !selectViewV){
-            std::cerr << "Any of the required views is ill defined, we don't have full information for collection plane. Defaulting to view W." << std::endl; // we cannot use IND2
+        // V 
+        ClusterList clusterListV;
+        LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_V, clusterListV);
+        float minX_V(9999.), maxX_V(9999.);
+        if (!clusterListV.empty())
+            clusterListV.front()->GetClusterSpanX(minX_V, maxX_V);
+
+        // Checks                                                             
+        if (clusterListU.empty() && clusterListV.empty()) 
+        {
             this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListW.front(), orderedCaloHitList);
         }
-        else 
-        {                                                                                                                     
-            // U                                                                                                                                                                                      
-            CaloHitList orderedCaloHitListU;
-            this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListU.front(), orderedCaloHitListU);
+        else
+        {
+            // Get drift span from well-defined views
+            if (!clusterListU.empty() && !clusterListV.empty()) 
+            {
+                minX = std::min(minX_U, minX_V); 
+                maxX = std::max(maxX_U, maxX_V);  
+            }
+            else if (!clusterListU.empty() && clusterListV.empty())
+            {
+                minX = minX_U; 
+                maxX = maxX_U; 
+            }
+            else if (clusterListU.empty() && !clusterListV.empty())
+            {
+                minX = minX_V; 
+                maxX = maxX_V; 
+            }
 
-            // V                                                                                                                                                                                     
-            CaloHitList orderedCaloHitListV;
-            this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListV.front(), orderedCaloHitListV);
-
-            // if lists are filled, unique vertex exists
-            if(!orderedCaloHitListU.empty() && !orderedCaloHitListV.empty())
-            {                                                   
-                // get vertex
-                const VertexList *pVertexList(nullptr);
-                (void)PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
-                const float pVertexX = pVertexList->front()->GetPosition().GetX();
-                
-
-                // TPC 2/3 -> V, then U
-                if(LocatePointInCryostat(pVertexX) == PositionInCryostat::AboveCathode) 
-                    this->CombineCaloHitListsToHaveCollection(pAlgorithm, orderedCaloHitListV, orderedCaloHitListU, orderedCaloHitList);
-
-                // TPC 0/1 -> U, then V
-                else if(LocatePointInCryostat(pVertexX) == PositionInCryostat::BelowCathode)
-                    this->CombineCaloHitListsToHaveCollection(pAlgorithm, orderedCaloHitListU, orderedCaloHitListV, orderedCaloHitList);
-
-                // vertex within cathode, cannot enstablish the ordering
-                else {
-                    std::cerr << "The vertex is within the cathode: the ordering of the view U and V CaloHitLists cannot be established a priori: randomly decided and then re-ordering will compensate." << std::endl;
-                    this->CombineCaloHitListsToHaveCollection(pAlgorithm, orderedCaloHitListU, orderedCaloHitListV, orderedCaloHitList);
+            // Based on whether the PFP crosses the cathode, views are combined to obtain Collection in ICARUS      
+            // PFP crosses the cathode                                                          
+            if (LocatePointInCryostat(minX) == PositionInCryostat::BelowCathode &&
+                LocatePointInCryostat(maxX) == PositionInCryostat::AboveCathode) 
+            {
+                if (clusterListU.empty() || clusterListV.empty()) 
+                {
+                    this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListW.front(), orderedCaloHitList);
                 }
-            } 
+                else 
+                {                                                                                                                                                                                                                                                                                                         
+                    CaloHitList orderedCaloHitListU;
+                    this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListU.front(), orderedCaloHitListU);
+                                                                                                                                                     
+                    CaloHitList orderedCaloHitListV;
+                    this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListV.front(), orderedCaloHitListV);
 
-            // this means no vertex exists and either list is fine (similarly to what happens for W)                                                                                                                                                               
-            else                                                    
-                orderedCaloHitList = orderedCaloHitListU;
+                    if (!orderedCaloHitListU.empty() && !orderedCaloHitListV.empty())
+                    {                                                   
+                        const VertexList *pVertexList(nullptr);
+                        (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
+                        const float pVertexX = pVertexList->front()->GetPosition().GetX();
+                        
+                        if (LocatePointInCryostat(pVertexX) == PositionInCryostat::AboveCathode) 
+                        {
+                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, 
+                                orderedCaloHitListV, orderedCaloHitListU, orderedCaloHitList); ///< V, then U (TPC 2/3)
+                        }
+                        else if (LocatePointInCryostat(pVertexX) == PositionInCryostat::BelowCathode)
+                        {
+                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, 
+                                orderedCaloHitListU, orderedCaloHitListV, orderedCaloHitList); ///< U, then V (TPC 0/1)
+                        }
+                        else 
+                        {
+                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, 
+                                orderedCaloHitListU, orderedCaloHitListV, orderedCaloHitList); ///< Ordering cannot be established a priori (vertex within cathode)
+                        }
+                    }                                                                                                                                                            
+                    else     
+                    {                                               
+                        orderedCaloHitList = orderedCaloHitListU; ///< No vertex exists, either U or V are fine
+                    }
+                }                                
+            }
+            // PFP is contained within TPC 2/3
+            else if (LocatePointInCryostat(minX) == PositionInCryostat::AboveCathode)
+            {
+                if (!clusterListV.empty())
+                {
+                    this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListV.front(), orderedCaloHitList);
+                }
+                else
+                {
+                    this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListU.front(), orderedCaloHitList); ///< Fall back to Induction-2
+                }
+            }
+            // PFP is contained within TPC 0/1
+            else if (LocatePointInCryostat(maxX) == PositionInCryostat::BelowCathode)
+            {
+                if (!clusterListU.empty())
+                {
+                    this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListU.front(), orderedCaloHitList);
+                }
+                else
+                {
+                    this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListV.front(), orderedCaloHitList); ///< Fall back to Induction-2
+                }
+            }
         }
-      }
-    
-    if (debug)
-        std::cout << "The ordered list of CaloHits contains " << orderedCaloHitList.size() << " hits. Going to compute charge variables." << std::endl;
 
+        if (!orderedCaloHitList.empty()) 
+        {
+            const CartesianVector &pfoStart(orderedCaloHitList.front()->GetPositionVector());
+            CartesianVector centroid(0.f, 0.f, 0.f);
+            LArPcaHelper::EigenVectors eigenVecs;
+            LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+            LArPcaHelper::RunPca(orderedCaloHitList, centroid, eigenValues, eigenVecs);
 
-    // compute charge variables
-    if (!orderedCaloHitList.empty()) {
-        const CartesianVector &pfoStart(orderedCaloHitList.front()->GetPositionVector());
-        CartesianVector centroid(0.f, 0.f, 0.f);
-        LArPcaHelper::EigenVectors eigenVecs;
-        LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-        LArPcaHelper::RunPca(orderedCaloHitList, centroid, eigenValues, eigenVecs);
-
-        float chargeCore(0.f), chargeHalo(0.f), chargeCon(0.f);
-        this->CalculateChargeDistribution(orderedCaloHitList, pfoStart, eigenVecs[0], chargeCore, chargeHalo, chargeCon);
-        haloTotalRatio = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeHalo / (chargeCore + chargeHalo) : -1.f;
-        concentration = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeCon / (chargeCore + chargeHalo) : -1.f;
-        const float pfoLength(std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo)));
-        conicalness = (pfoLength > std::numeric_limits<float>::epsilon())
-                          ? this->CalculateConicalness(orderedCaloHitList, pfoStart, eigenVecs[0], pfoLength)
-                          : 1.f;
+            float chargeCore(0.f), chargeHalo(0.f), chargeCon(0.f);
+            this->CalculateChargeDistribution(orderedCaloHitList, pfoStart, eigenVecs[0], chargeCore, chargeHalo, chargeCon);
+            haloTotalRatio = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeHalo / (chargeCore + chargeHalo) : -1.f;
+            concentration = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeCon / (chargeCore + chargeHalo) : -1.f;
+            const float pfoLength(std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo)));
+            conicalness = (pfoLength > std::numeric_limits<float>::epsilon())
+                            ? this->CalculateConicalness(orderedCaloHitList, pfoStart, eigenVecs[0], pfoLength)
+                            : 1.f;
+        }
     }
     
     featureVector.push_back(haloTotalRatio);
     featureVector.push_back(concentration);
     featureVector.push_back(conicalness);
-
-    if(debug)
-    {
-        std::cout << "This is the end of the function. Bye" << std::endl;
-        std::cout << "==============================================" << std::endl;
-    }
     
 }
 
@@ -750,21 +662,12 @@ void ConeChargeFeatureTool::OrderCaloHitsByDistanceToVertex(
             pInteractionVertex = pVertex;
         }
     }
-    bool debug = false;
     
     if (pInteractionVertex && (1 == nInteractionVertices))
     {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
         const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pInteractionVertex->GetPosition(), hitType));
-        if (debug)
-        {
-            if( hitType == TPC_VIEW_U )
-                std::cout << "[OrderCaloHitsByDistanceToVertex] This is interaction vertex (view U)" << vertexPosition2D.GetX() << "\t" << vertexPosition2D.GetY() << "\t" << vertexPosition2D.GetZ() << std::endl;
-            else if( hitType == TPC_VIEW_V )
-                std::cout << "[OrderCaloHitsByDistanceToVertex] This is interaction vertex (view V)" << vertexPosition2D.GetX() << "\t" << vertexPosition2D.GetY() << "\t" << vertexPosition2D.GetZ() << std::endl;
-            else
-                std::cout << "[OrderCaloHitsByDistanceToVertex] This is interaction vertex (view W)" << vertexPosition2D.GetX() << "\t" << vertexPosition2D.GetY() << "\t" << vertexPosition2D.GetZ() << std::endl;
-        }
+
         CaloHitList clusterCaloHitList;
         pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHitList);
 
@@ -778,118 +681,69 @@ void ConeChargeFeatureTool::OrderCaloHitsByDistanceToVertex(
 
 void ConeChargeFeatureTool::CombineCaloHitListsToHaveCollection(const pandora::Algorithm *const pAlgorithm, const pandora::CaloHitList &orderedCaloHitList1,
                                                                   const pandora::CaloHitList &orderedCaloHitList2, pandora::CaloHitList &mergedCaloHitList)
- {
-   bool debug = false;
-   // identify the interaction vertex                                                                                                                                                                    
-   const VertexList *pVertexList(nullptr);
-   (void)PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
-   const CartesianVector vertexPosition2DU(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_U));
-   const CartesianVector vertexPosition2DV(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_V));
-   if( debug )
-     std::cout << "This is vertex position on view U " << vertexPosition2DU.GetX() << "\t " << vertexPosition2DU.GetY() << "\t " << vertexPosition2DU.GetZ() << std::endl;
-   if( debug )
-     std::cout << "This is vertex position on view V " << vertexPosition2DV.GetX() << "\t " << vertexPosition2DV.GetY() << "\t " << vertexPosition2DV.GetZ() << std::endl;
-   float distance_hit_vertex = 0.;
-   float min_distance_hit_vertex_included_1 = 0.;
-   float max_distance_hit_vertex_included_1 = 0.;
-   float min_distance_hit_vertex_included_2 = 0.;
-   float max_distance_hit_vertex_included_2 = 0.;
-   bool set_min_1 = false;
-   bool set_min_2 = false;
-   bool reorderingNeeded = false;
-   // loop over first CaloHitList                                                                                                                                                                        
-   /*                                                                                                                                                                                                    
-    * view U: COLL below cathode, IND2 above cathode                                                                                                                                                     
-    * view V: IND2 below cathode, COLL above cathode                                                                                                                                                     
-    */
-   // if this is from view V take hits ABOVE cathode otherwise below 
-   for (CaloHitList::const_iterator hIter = orderedCaloHitList1.begin(); hIter != orderedCaloHitList1.end(); hIter++) {
-     const CaloHit *const pCaloHit = *hIter;
-     const CartesianVector &hit(pCaloHit->GetPositionVector());
-     if( pCaloHit->GetHitType() == TPC_VIEW_U )
-       distance_hit_vertex = pow( vertexPosition2DU.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DU.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DU.GetZ()- hit.GetZ(), 2 );
-     else
-       distance_hit_vertex = pow( vertexPosition2DV.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DV.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DV.GetZ()- hit.GetZ(), 2 );
-     if( debug )
-       std::cout << hit.GetX() << "\t" << hit.GetY() << "\t" << hit.GetZ() << " whose distance^2 from vertex is " << distance_hit_vertex << std::endl;
-     bool selectHitViewU = pCaloHit->GetHitType() == TPC_VIEW_U && LocatePointInCryostat( hit.GetX() ) == PositionInCryostat::BelowCathode;
-     bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && LocatePointInCryostat( hit.GetX() ) == PositionInCryostat::AboveCathode;
-     bool selectHit = selectHitViewU || selectHitViewV;
-     if( selectHit ){
-       if( debug )
-         std::cout << "This hit should be added to hit list to have COLLECTION plane" << std::endl;
-       mergedCaloHitList.push_back( pCaloHit );
-       if( !set_min_1 ) {
-         min_distance_hit_vertex_included_1 = distance_hit_vertex;
-         set_min_1 = true;
-       }
-       if( distance_hit_vertex > max_distance_hit_vertex_included_1 )
-         max_distance_hit_vertex_included_1 = distance_hit_vertex;
-     }
-   }
-   std::cout << "This is (min,max) from the 1st CaloHitList: ( " << min_distance_hit_vertex_included_1 << ", " << max_distance_hit_vertex_included_1 << " )." << std::endl;
+{
 
-   // loop over second CaloHitList                                                                                                                                                                       
-   for (CaloHitList::const_iterator hIter = orderedCaloHitList2.begin(); hIter != orderedCaloHitList2.end(); hIter++) {
-     const CaloHit *const pCaloHit = *hIter;
-     const CartesianVector &hit(pCaloHit->GetPositionVector());
-     if( pCaloHit->GetHitType() == TPC_VIEW_U )
-       distance_hit_vertex = pow( vertexPosition2DU.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DU.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DU.GetZ()- hit.GetZ(), 2 );
-     else
-       distance_hit_vertex = pow( vertexPosition2DV.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DV.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DV.GetZ()- hit.GetZ(), 2 );
-     if( debug )
-       std::cout << hit.GetX() << "\t" << hit.GetY() << "\t" << hit.GetZ() << " whose distance^2 from vertex is " << distance_hit_vertex << std::endl;
-     bool selectHitViewU = pCaloHit->GetHitType() == TPC_VIEW_U && LocatePointInCryostat( hit.GetX() ) == PositionInCryostat::BelowCathode;
-     bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && LocatePointInCryostat( hit.GetX() ) == PositionInCryostat::AboveCathode;
-     bool selectHit = selectHitViewU || selectHitViewV;
-     if( selectHit ){
-       if( debug )
-         std::cout << "This hit should be added to hit list to have COLLECTION plane" << std::endl;
-       mergedCaloHitList.push_back( pCaloHit );
-       if( !set_min_2 ) {
-         min_distance_hit_vertex_included_2 = distance_hit_vertex;
-         set_min_2 = true;
-       }
-       if( distance_hit_vertex > max_distance_hit_vertex_included_2 )
-         max_distance_hit_vertex_included_2 = distance_hit_vertex;
-     }
-   }
-   std::cout << "This is (min,max) from the 2nd CaloHitList: ( " << min_distance_hit_vertex_included_2 << ", " << max_distance_hit_vertex_included_2 << " )." << std::endl;
+    const VertexList *pVertexList(nullptr);
+    (void)PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
+    const CartesianVector vertexPosition2DU(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_U));
+    const CartesianVector vertexPosition2DV(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_V));
 
-   // reorder if needed                                                                                                                                                                                  
-   reorderingNeeded = ( min_distance_hit_vertex_included_2 < max_distance_hit_vertex_included_1 ) ? 1 : 0;
-   if( reorderingNeeded ){
-     std::cerr << "[ThreeDChargeFeatureTool::CombineCaloHitListsToHaveCollection()] Reordering necessary, proceeding to do it." << std::endl;
-     mergedCaloHitList.sort(ConeChargeFeatureTool::DistanceToVertexComparator( vertexPosition2DU, vertexPosition2DV, TPC_VIEW_U, TPC_VIEW_V ) );
-   }
-   
-   if( debug ){
-     std::cout << " Listing the final content of the mergedCaloHitList " << std::endl;
-     std::string isBeforeCathode = "";
-     std::string belongsToView = "";
-     for(CaloHitList::const_iterator it = mergedCaloHitList.begin() ; it != mergedCaloHitList.end() ; it++){
-       const CaloHit *const pCaloHit = *it;
-       const CartesianVector &hit(pCaloHit->GetPositionVector());
-       if( pCaloHit->GetHitType() == TPC_VIEW_U )
-         distance_hit_vertex = pow( vertexPosition2DU.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DU.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DU.GetZ()- hit.GetZ(), 2 );
-       else
-         distance_hit_vertex = pow( vertexPosition2DV.GetX() - hit.GetX(), 2 ) + pow( vertexPosition2DV.GetY()- hit.GetY(), 2 ) + pow( vertexPosition2DV.GetZ()- hit.GetZ(), 2 );
-       isBeforeCathode = (LocatePointInCryostat( hit.GetX() ) == PositionInCryostat::BelowCathode )
-         ? ", is before the cathode" : ", is after the cathode";
-       belongsToView = ( pCaloHit->GetHitType() == TPC_VIEW_U ) ? " and belongs to view U " : " and belongs to view V";
-       if( pCaloHit->GetHitType() == TPC_VIEW_U )
-         std::cout << "This hit has distance " << distance_hit_vertex << isBeforeCathode << belongsToView
-              << ". Its position is ( " << hit.GetX() << ", " << hit.GetY() << ", " << hit.GetZ() << " )."
-              << " Vertex is ( " << vertexPosition2DU.GetX() << ", " <<  vertexPosition2DU.GetY() << ", " << vertexPosition2DU.GetZ() << " )"
-              << std::endl;
-       else
-         std::cout << "This hit has distance " << distance_hit_vertex << isBeforeCathode << belongsToView
-              << ". Its position is ( " << hit.GetX() << ", " << hit.GetY() << ", " << hit.GetZ() << " )."
-              << " Vertex is ( " << vertexPosition2DV.GetX() << ", " <<  vertexPosition2DV.GetY() << ", " << vertexPosition2DV.GetZ() << " )"
-              << std::endl;
-     }
-   }
- }
+    float hitVertexDistance = 0., maxHitVertexDistance1 = 0., minHitVertexDistance2 = 9999.;
+
+    // First hit list
+    for (CaloHitList::const_iterator hIter = orderedCaloHitList1.begin(); hIter != orderedCaloHitList1.end(); hIter++) 
+    {
+        const CaloHit *const pCaloHit = *hIter;
+        const CartesianVector &hit(pCaloHit->GetPositionVector());
+
+        const CartesianVector &vertexPosition = (pCaloHit->GetHitType() == TPC_VIEW_U) ? vertexPosition2DU : vertexPosition2DV;
+        hitVertexDistance = 
+            pow(vertexPosition.GetX() - hit.GetX(), 2) +
+            pow(vertexPosition.GetY() - hit.GetY(), 2) +
+            pow(vertexPosition.GetZ() - hit.GetZ(), 2);
+
+        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) && 
+            (LocatePointInCryostat(hit.GetX()) == PositionInCryostat::BelowCathode); ///< U is Collection "below cathode"
+        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && 
+            (LocatePointInCryostat(hit.GetX()) == PositionInCryostat::AboveCathode); ///< V is Collection "below cathode"
+
+        if (selectHitViewU || selectHitViewV)
+        {
+            mergedCaloHitList.push_back(pCaloHit);
+            maxHitVertexDistance1 = std::max(maxHitVertexDistance1, hitVertexDistance);
+        }
+    }
+
+    // Second hit list                                                                                                                                                                 
+    for (CaloHitList::const_iterator hIter = orderedCaloHitList2.begin(); hIter != orderedCaloHitList2.end(); hIter++) 
+    {
+        const CaloHit *const pCaloHit = *hIter;
+        const CartesianVector &hit(pCaloHit->GetPositionVector());
+
+        const CartesianVector &vertexPosition = (pCaloHit->GetHitType() == TPC_VIEW_U) ? vertexPosition2DU : vertexPosition2DV;
+        hitVertexDistance = 
+            pow(vertexPosition.GetX() - hit.GetX(), 2) +
+            pow(vertexPosition.GetY() - hit.GetY(), 2) +
+            pow(vertexPosition.GetZ() - hit.GetZ(), 2);
+
+        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) && 
+            (LocatePointInCryostat(hit.GetX()) == PositionInCryostat::BelowCathode); ///< U is Collection "below cathode"
+        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && 
+            (LocatePointInCryostat(hit.GetX()) == PositionInCryostat::AboveCathode); ///< V is Collection "below cathode"
+
+        if (selectHitViewU || selectHitViewV)
+        {
+            mergedCaloHitList.push_back(pCaloHit);
+            minHitVertexDistance2 = std::min(minHitVertexDistance2, hitVertexDistance);
+        }
+    }
+
+    // Reorder if needed                                                                                                                   
+    if (minHitVertexDistance2 < maxHitVertexDistance1)
+    {
+        mergedCaloHitList.sort(ConeChargeFeatureTool::DistanceToVertexComparator(vertexPosition2DU, vertexPosition2DV, TPC_VIEW_U, TPC_VIEW_V));
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -912,65 +766,35 @@ bool ConeChargeFeatureTool::VertexComparator::operator()(const CaloHit *const le
 ConeChargeFeatureTool::DistanceToVertexComparator::DistanceToVertexComparator(const CartesianVector vertexPosition2D_A, const CartesianVector vertexPosition2D_B,
                                                                                 const HitType hitType_A, const HitType hitType_B) :
   m_neutrinoVertex_A(vertexPosition2D_A), m_neutrinoVertex_B(vertexPosition2D_B), m_hitType_A(hitType_A), m_hitType_B(hitType_B)
-{
-  // FIX ME: Throw error if the hit types passed coincide?                                                                                                                                              
+{                                                                                                                                            
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool ConeChargeFeatureTool::DistanceToVertexComparator::operator()(const CaloHit *const left, const CaloHit *const right) const
 {
-  // FIX ME: Throw an error here if the hit type is different from any of the two possibilities?                                                                                                         
-  float distanceL;
-  float distanceR;
-  if( left->GetHitType() == m_hitType_A )
-    distanceL = ( left->GetPositionVector() - m_neutrinoVertex_A ).GetMagnitudeSquared();
-  else
-    distanceL = ( left->GetPositionVector() - m_neutrinoVertex_B ).GetMagnitudeSquared();
-  if( right->GetHitType() == m_hitType_A )
-    distanceR = ( right->GetPositionVector() - m_neutrinoVertex_A ).GetMagnitudeSquared();
-  else
-    distanceR = ( right->GetPositionVector() - m_neutrinoVertex_B ).GetMagnitudeSquared();
-  return distanceL < distanceR;
+    float distanceL, distanceR;
+
+    if (left->GetHitType() == m_hitType_A)
+    {
+        distanceL = (left->GetPositionVector() - m_neutrinoVertex_A).GetMagnitudeSquared();
+    }
+    else 
+    {
+        distanceL = (left->GetPositionVector() - m_neutrinoVertex_B).GetMagnitudeSquared();
+    }
+
+    if (right->GetHitType() == m_hitType_A)
+    {
+        distanceR = (right->GetPositionVector() - m_neutrinoVertex_A).GetMagnitudeSquared();
+    }
+    else 
+    {
+        distanceR = (right->GetPositionVector() - m_neutrinoVertex_B).GetMagnitudeSquared();
+    }
+
+    return distanceL < distanceR;
 }
-
-// void ConeChargeFeatureTool::Run(
-//     LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
-// {
-//     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-//         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-
-//     // W
-//     ClusterList clusterListW;
-//     LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, clusterListW);
-
-//     LArMvaHelper::MvaFeature haloTotalRatio, concentration, conicalness;
-
-//     if (!clusterListW.empty())
-//     {
-//         CaloHitList clusterCaloHitList;
-//         clusterListW.front()->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHitList);
-
-//         const CartesianVector &pfoStart(clusterCaloHitList.front()->GetPositionVector());
-//         CartesianVector centroid(0.f, 0.f, 0.f);
-//         LArPcaHelper::EigenVectors eigenVecs;
-//         LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-//         LArPcaHelper::RunPca(clusterCaloHitList, centroid, eigenValues, eigenVecs);
-
-//         float chargeCore(0.f), chargeHalo(0.f), chargeCon(0.f);
-//         this->CalculateChargeDistribution(clusterCaloHitList, pfoStart, eigenVecs[0], chargeCore, chargeHalo, chargeCon);
-//         haloTotalRatio = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeHalo / (chargeCore + chargeHalo) : -1.f;
-//         concentration = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeCon / (chargeCore + chargeHalo) : -1.f;
-//         const float pfoLength(std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo)));
-//         conicalness = (pfoLength > std::numeric_limits<float>::epsilon())
-//                           ? this->CalculateConicalness(clusterCaloHitList, pfoStart, eigenVecs[0], pfoLength)
-//                           : 1.f;
-//     }
-
-//     featureVector.push_back(haloTotalRatio);
-//     featureVector.push_back(concentration);
-//     featureVector.push_back(conicalness);
-// }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1954,7 +1778,7 @@ bool ThreeDChargeFeatureTool::DistanceToVertexComparator::operator()(const CaloH
 {
     float distanceL, distanceR;
 
-    if(left->GetHitType() == m_hitType_A)
+    if (left->GetHitType() == m_hitType_A)
     {
         distanceL = (left->GetPositionVector() - m_neutrinoVertex_A).GetMagnitudeSquared();
     }
@@ -1963,7 +1787,7 @@ bool ThreeDChargeFeatureTool::DistanceToVertexComparator::operator()(const CaloH
         distanceL = (left->GetPositionVector() - m_neutrinoVertex_B).GetMagnitudeSquared();
     }
 
-    if(right->GetHitType() == m_hitType_A)
+    if (right->GetHitType() == m_hitType_A)
     {
         distanceR = (right->GetPositionVector() - m_neutrinoVertex_A).GetMagnitudeSquared();
     }
