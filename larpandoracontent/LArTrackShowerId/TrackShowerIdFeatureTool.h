@@ -20,7 +20,7 @@ typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::ParticleF
 
 // Helper function to get the position of a point with respect to the cathode in ICARUS
 enum PositionInCryostat {AboveCathode, BelowCathode, WithinCathode};
-PositionInCryostat LocatePointInCryostat( const float point_X ); 
+PositionInCryostat LocatePointInCryostat(const float point_X); 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

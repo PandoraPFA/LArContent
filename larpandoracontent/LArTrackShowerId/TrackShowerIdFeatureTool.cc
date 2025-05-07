@@ -26,56 +26,36 @@ namespace lar_content
 
 PositionInCryostat LocatePointInCryostat(const float point_X)
 {       
-
-    PositionInCryostat point_position;
-
-    // nominal cathode position for cryo 1
-    // to be extracted from geometry possibly
-    const float CathodeMinX = 210.14;
+    PositionInCryostat position;
+    const float CathodeMinX = 210.14; ///< Cathode position for ICARUS cryostat #1
     const float CathodeMaxX = 210.29;
 
-    // get cathode position for both cryostats
-    float RealCathodeMinX = 0.;
-    float RealCathodeMaxX = 0.;
-    if(point_X < 0.) // cryo 0 
+    float RealCathodeMinX = 0., RealCathodeMaxX = 0.;
+    if (point_X < 0.) ///< ICARUS cryostat #0 
     {                                                                                                                                                                         
         RealCathodeMinX = CathodeMaxX*(-1.);
         RealCathodeMaxX = CathodeMinX*(-1.);
     }
-    else // cryo 1 
+    else ///< ICARUS cryostat #0 
     {                                                                                                                                                                                       
         RealCathodeMinX = CathodeMinX;
         RealCathodeMaxX = CathodeMaxX;
     }
 
-    // determine hit position with respect to cathode
-    if(point_X < RealCathodeMinX)
-        point_position = PositionInCryostat::BelowCathode;
-
-    else if(point_X > RealCathodeMaxX)
-        point_position = PositionInCryostat::AboveCathode;
-
-    else
-        point_position = PositionInCryostat::WithinCathode;
-
-    // debugging
-    bool debug = false;
-    if(debug)
+    if (point_X < RealCathodeMinX)
     {
-        switch(point_position)
-        {
-            case PositionInCryostat::AboveCathode:
-                std::cout << "This point: X = " << point_X << " is above the cathode." << std::endl;
-                break;
-            case PositionInCryostat::BelowCathode:
-                std::cout << "This point: X = " << point_X << " is below the cathode." << std::endl;
-                break;
-            case PositionInCryostat::WithinCathode:
-                std::cout << "This point: X = " << point_X << " is inside the cathode." << std::endl;
-                break;
-        }
+        position = PositionInCryostat::BelowCathode;
     }
-    return point_position;
+    else if (point_X > RealCathodeMaxX)
+    {
+        position = PositionInCryostat::AboveCathode;
+    }
+    else
+    {
+        position = PositionInCryostat::WithinCathode;
+    }
+
+    return position;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
