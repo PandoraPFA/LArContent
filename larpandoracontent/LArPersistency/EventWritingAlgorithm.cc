@@ -81,11 +81,11 @@ StatusCode EventWritingAlgorithm::Initialize()
 
         if (BINARY == m_geometryFileType)
         {
-            m_pGeometryFileWriter = new BinaryFileWriter(this->GetPandora(), m_geometryFileName, fileMode);
+            m_pGeometryFileWriter = new BinaryFileWriter(this->GetPandora(), m_geometryFileName, fileMode, 2);
         }
         else if (XML == m_geometryFileType)
         {
-            m_pGeometryFileWriter = new XmlFileWriter(this->GetPandora(), m_geometryFileName, fileMode);
+            m_pGeometryFileWriter = new XmlFileWriter(this->GetPandora(), m_geometryFileName, fileMode, 2);
         }
         else
         {
@@ -99,11 +99,11 @@ StatusCode EventWritingAlgorithm::Initialize()
 
         if (BINARY == m_eventFileType)
         {
-            m_pEventFileWriter = new BinaryFileWriter(this->GetPandora(), m_eventFileName, fileMode);
+            m_pEventFileWriter = new BinaryFileWriter(this->GetPandora(), m_eventFileName, fileMode, 2);
         }
         else if (XML == m_eventFileType)
         {
-            m_pEventFileWriter = new XmlFileWriter(this->GetPandora(), m_eventFileName, fileMode);
+            m_pEventFileWriter = new XmlFileWriter(this->GetPandora(), m_eventFileName, fileMode, 2);
         }
         else
         {
