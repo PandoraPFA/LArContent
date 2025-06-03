@@ -25,6 +25,8 @@ namespace lar_content
 {
 
 EventWritingAlgorithm::EventWritingAlgorithm() :
+    m_fileMajorVersion(0),
+    m_fileMinorVersion(0),
     m_geometryFileType(UNKNOWN_FILE_TYPE),
     m_eventFileType(UNKNOWN_FILE_TYPE),
     m_pEventFileWriter(nullptr),
@@ -32,6 +34,7 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
     m_shouldWriteGeometry(false),
     m_writtenGeometry(false),
     m_shouldWriteEvents(true),
+    m_writtenEventGlobalHeader(false),
     m_shouldWriteMCRelationships(true),
     m_shouldWriteTrackRelationships(true),
     m_shouldOverwriteEventFile(false),
@@ -81,11 +84,11 @@ StatusCode EventWritingAlgorithm::Initialize()
 
         if (BINARY == m_geometryFileType)
         {
-            m_pGeometryFileWriter = new BinaryFileWriter(this->GetPandora(), m_geometryFileName, fileMode, 2);
+            m_pGeometryFileWriter = new BinaryFileWriter(this->GetPandora(), m_geometryFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
         }
         else if (XML == m_geometryFileType)
         {
-            m_pGeometryFileWriter = new XmlFileWriter(this->GetPandora(), m_geometryFileName, fileMode, 2);
+            m_pGeometryFileWriter = new XmlFileWriter(this->GetPandora(), m_geometryFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
         }
         else
         {
@@ -99,11 +102,11 @@ StatusCode EventWritingAlgorithm::Initialize()
 
         if (BINARY == m_eventFileType)
         {
-            m_pEventFileWriter = new BinaryFileWriter(this->GetPandora(), m_eventFileName, fileMode, 2);
+            m_pEventFileWriter = new BinaryFileWriter(this->GetPandora(), m_eventFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
         }
         else if (XML == m_eventFileType)
         {
-            m_pEventFileWriter = new XmlFileWriter(this->GetPandora(), m_eventFileName, fileMode, 2);
+            m_pEventFileWriter = new XmlFileWriter(this->GetPandora(), m_eventFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
         }
         else
         {
@@ -127,6 +130,9 @@ StatusCode EventWritingAlgorithm::Run()
     // ATTN Should complete geometry creation in LArSoft begin job, but some channel status service functionality unavailable at that point
     if (!m_writtenGeometry && m_pGeometryFileWriter && m_shouldWriteGeometry)
     {
+        std::cout << "AAAAAAAA" << std::endl;
+        std::cout << "BBBBB" << std::endl;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pGeometryFileWriter->WriteGlobalHeader());
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pGeometryFileWriter->WriteGeometry());
         m_writtenGeometry = true;
     }
@@ -145,6 +151,12 @@ StatusCode EventWritingAlgorithm::Run()
 
         const MCParticleList *pMCParticleList = nullptr;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
+
+        if (!m_writtenEventGlobalHeader)
+        {
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileWriter->WriteGlobalHeader());
+            m_writtenEventGlobalHeader = true;
+        }
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
             m_pEventFileWriter->WriteEvent(*pCaloHitList, *pTrackList, *pMCParticleList, m_shouldWriteMCRelationships, m_shouldWriteTrackRelationships));
@@ -263,6 +275,12 @@ bool EventWritingAlgorithm::PassNeutrinoVertexFilter() const
 
 StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "FileMajorVersion", m_fileMajorVersion));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "FileMinorVersion", m_fileMinorVersion));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShouldWriteGeometry", m_shouldWriteGeometry));
 
