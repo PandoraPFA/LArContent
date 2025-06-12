@@ -21,7 +21,8 @@ namespace lar_content
 {
 
 ProvisionalClusteringAlgorithm::ProvisionalClusteringAlgorithm() :
-    m_maxGapSquared(0.5f)
+    m_maxGap(0.25f),
+    m_maxGap2dSquared(2 * m_maxGap * m_maxGap)
 {
 }
 
@@ -29,6 +30,10 @@ ProvisionalClusteringAlgorithm::ProvisionalClusteringAlgorithm() :
 
 StatusCode ProvisionalClusteringAlgorithm::Run()
 {
+    m_apaHitMap.clear();
+
+    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1, 1, 1));
+
     const CaloHitList *pCaloHitList{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
@@ -42,8 +47,6 @@ StatusCode ProvisionalClusteringAlgorithm::Run()
 
 void ProvisionalClusteringAlgorithm::PartitionHits(const CaloHitList &caloHitList)
 {
-    m_apaHitMap.clear();
-
     for (const CaloHit *const pCaloHit : caloHitList)
     {
         const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit *>(pCaloHit));
@@ -58,30 +61,365 @@ void ProvisionalClusteringAlgorithm::PartitionHits(const CaloHitList &caloHitLis
 
 void ProvisionalClusteringAlgorithm::ProcessPartition()
 {
-    typedef KDTreeNodeInfoT<const pandora::CaloHit *, 2> KDNode;
-    typedef std::vector<KDNode> KDNodeVector;
-    typedef KDTreeLinkerAlgo<const pandora::CaloHit *, 2> KDTree;
-
     for (const auto &[apaId, caloHits] : m_apaHitMap)
     {
         if (caloHits.empty())
             continue;
 
+        //PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHits, std::to_string(apaId), AUTOITER));
+        //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+
+        KDTree kdTree;
+        this->FillKDTree(caloHits, kdTree);
+
+        std::cout << caloHits.size() << " hits in APA " << apaId << std::endl;
         OrderedCaloHitList orderedCaloHits;
         orderedCaloHits.Add(caloHits);
 
-        KDTree kdTree;
-        KDNodeVector kdNodes;
-        KDTreeBox kdRegion(fill_and_bound_2d_kd_tree(caloHits, kdNodes));
-        kdTree.build(kdNodes, kdRegion);
+        CaloHitSet ambiguousHits;
+        this->TagAmbiguousHits(orderedCaloHits, ambiguousHits);
+
+        CaloHitList unambiguousHitList, ambiguousHitList;
+        for (OrderedCaloHitList::const_iterator iter = orderedCaloHits.begin(); iter != orderedCaloHits.end(); ++iter)
+        {
+            CaloHitVector currentLayerHits(iter->second->begin(), iter->second->end());
+            for (const CaloHit *const pCaloHit : currentLayerHits)
+            {
+                if (ambiguousHits.count(pCaloHit) > 0)
+                {
+                    ambiguousHitList.push_back(pCaloHit);
+                }
+                else
+                {
+                    unambiguousHitList.push_back(pCaloHit);
+                }
+            }
+        }
+        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &unambiguousHitList, std::to_string(apaId) + "_unambiguous", BLACK));
+        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &ambiguousHitList, std::to_string(apaId) + "_ambiguous", RED));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+
+        for (OrderedCaloHitList::const_iterator iter = orderedCaloHits.begin(); iter != orderedCaloHits.end(); ++iter)
+        {
+            CaloHitVector caloHitVector(iter->second->begin(), iter->second->end());
+            std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPositionInX);
+            if (caloHitVector.empty())
+                continue;
+
+            if (caloHitVector.size() == 1)
+            {
+                // No possible ambiguity within layer
+                const CaloHit *const pCaloHit{caloHitVector.front()};
+                (void)pCaloHit;
+            }
+            else
+            {
+                // Potential ambiguity within layer, check intra-layer proximity
+                //std::unordered_set<const CaloHit *> unambiguousHits, ambiguousHits;
+                //this->CheckForIntraLayerAmbiguities(caloHitVector, unambiguousHits, ambiguousHits);
+
+                // Process unambiguous hits
+
+                // Put ambiguous hits aside
+            }
+        }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ProvisionalClusteringAlgorithm::FillKDTree(const CaloHitList &caloHitList, KDTree &kdTree)
+{
+    typedef KDTreeNodeInfoT<const pandora::CaloHit *, 2> KDNode;
+    typedef std::vector<KDNode> KDNodeVector;
+    KDNodeVector kdNodes;
+    KDTreeBox kdRegion(fill_and_bound_2d_kd_tree(caloHitList, kdNodes));
+    kdTree.build(kdNodes, kdRegion);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &orderedCaloHits, CaloHitSet &ambiguousHits)
+{
+    for (OrderedCaloHitList::const_iterator iter = orderedCaloHits.begin(); iter != orderedCaloHits.end(); ++iter)
+    {
+        CaloHitVector currentLayerHits(iter->second->begin(), iter->second->end()), prevLayerHits, nextLayerHits;
+        if (currentLayerHits.empty())
+            continue;
+
+        CaloHitList *pPrevLayerHits{nullptr}, *pNextLayerHits{nullptr};
+        orderedCaloHits.GetCaloHitsInPseudoLayer(iter->first - 1, pPrevLayerHits);
+        orderedCaloHits.GetCaloHitsInPseudoLayer(iter->first + 1, pNextLayerHits);
+        if (pPrevLayerHits)
+            prevLayerHits.insert(prevLayerHits.end(), pPrevLayerHits->begin(), pPrevLayerHits->end());
+        if (pNextLayerHits)
+            nextLayerHits.insert(nextLayerHits.end(), pNextLayerHits->begin(), pNextLayerHits->end());  
+        std::sort(currentLayerHits.begin(), currentLayerHits.end(), LArClusterHelper::SortHitsByPositionInX);
+        std::sort(prevLayerHits.begin(), prevLayerHits.end(), LArClusterHelper::SortHitsByPositionInX);
+        std::sort(nextLayerHits.begin(), nextLayerHits.end(), LArClusterHelper::SortHitsByPositionInX);
+
+        for (const CaloHit *const pCurrentHit : currentLayerHits)
+        {
+            int neighbourhood[3][3]{
+                {0, 0, 0},
+                {0, 1, 0},
+                {0, 0, 0}
+            };
+            // Consider current layer
+            for (const CaloHit *const pOtherInLayerHit : currentLayerHits)
+            {
+                if (pCurrentHit == pOtherInLayerHit)
+                    continue;
+
+                if (pCurrentHit->GetPositionVector().GetX() >= pOtherInLayerHit->GetPositionVector().GetX())
+                {
+                    // Other hit is to the left
+                    const float hit1Left{pCurrentHit->GetPositionVector().GetX() - 0.5f * pCurrentHit->GetCellSize1()};
+                    const float hit2Right{pOtherInLayerHit->GetPositionVector().GetX() + 0.5f * pOtherInLayerHit->GetCellSize1()};
+                    if (hit1Left - hit2Right < m_maxGap)
+                    {
+                        // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
+                        if (!this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherInLayerHit))
+                            ++neighbourhood[1][0];
+                    }
+                }
+                else
+                {
+                    // Other hit is to the right
+                    const float hit1Right{pCurrentHit->GetPositionVector().GetX() + 0.5f * pCurrentHit->GetCellSize1()};
+                    const float hit2Left{pOtherInLayerHit->GetPositionVector().GetX() - 0.5f * pOtherInLayerHit->GetCellSize1()};
+                    if (hit2Left - hit1Right < m_maxGap)
+                    {
+                        // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
+                        if (!this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherInLayerHit))
+                            ++neighbourhood[1][2];
+                    }
+                }
+            }
+            for (const CaloHit *const pOtherHit : prevLayerHits)
+            {
+                if (pCurrentHit == pOtherHit)
+                    continue;
+
+                if (pCurrentHit->GetPositionVector().GetX() >= pOtherHit->GetPositionVector().GetX())
+                {
+                    // Other hit is to the left
+                    const float hit1Left{pCurrentHit->GetPositionVector().GetX() - 0.5f * pCurrentHit->GetCellSize1()};
+                    const float hit2Right{pOtherHit->GetPositionVector().GetX() + 0.5f * pOtherHit->GetCellSize1()};
+                    if (hit1Left - hit2Right < m_maxGap)
+                    {
+                        // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
+                        if (!(this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
+                              this->HasBlockedPath(prevLayerHits, pCurrentHit, pOtherHit)))
+                        {
+                            const float overlap{hit2Right - hit1Left};
+                            const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
+
+                            if (fractionOverlap > 0.5f)
+                            {
+                                // Hit is below
+                                ++neighbourhood[2][1];
+                            }
+                            else
+                            {
+                                // Hit is below and left
+                                ++neighbourhood[2][0];
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Other hit is to the right
+                    const float hit1Right{pCurrentHit->GetPositionVector().GetX() + 0.5f * pCurrentHit->GetCellSize1()};
+                    const float hit2Left{pOtherHit->GetPositionVector().GetX() - 0.5f * pOtherHit->GetCellSize1()};
+                    if (hit2Left - hit1Right < m_maxGap)
+                    {
+                        // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
+                        if (!(this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
+                              this->HasBlockedPath(prevLayerHits, pCurrentHit, pOtherHit)))
+                        {
+                            const float overlap{hit1Right - hit2Left};
+                            const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
+
+                            if (fractionOverlap > 0.5f)
+                            {
+                                // Hit is below
+                                ++neighbourhood[2][1];
+                            }
+                            else
+                            {
+                                // Hit is below and right
+                                ++neighbourhood[2][2];
+                            }
+                        }
+                    }
+                }
+            }
+            // Consider next layer
+            for (const CaloHit *const pOtherHit : nextLayerHits)
+            {
+                if (pCurrentHit == pOtherHit)
+                    continue;
+
+                if (pCurrentHit->GetPositionVector().GetX() >= pOtherHit->GetPositionVector().GetX())
+                {
+                    // Other hit is to the left
+                    const float hit1Left{pCurrentHit->GetPositionVector().GetX() - 0.5f * pCurrentHit->GetCellSize1()};
+                    const float hit2Right{pOtherHit->GetPositionVector().GetX() + 0.5f * pOtherHit->GetCellSize1()};
+                    if (hit1Left - hit2Right < m_maxGap)
+                    {
+                        // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
+                        if (!(this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
+                              this->HasBlockedPath(nextLayerHits, pCurrentHit, pOtherHit)))
+                        {
+                            const float overlap{hit2Right - hit1Left};
+                            const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
+
+                            if (fractionOverlap > 0.5f)
+                            {
+                                // Hit is above
+                                ++neighbourhood[0][1];
+                            }
+                            else
+                            {
+                                // Hit is above and left
+                                ++neighbourhood[0][0];
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Other hit is to the right
+                    const float hit1Right{pCurrentHit->GetPositionVector().GetX() + 0.5f * pCurrentHit->GetCellSize1()};
+                    const float hit2Left{pOtherHit->GetPositionVector().GetX() - 0.5f * pOtherHit->GetCellSize1()};
+                    if (hit2Left - hit1Right < m_maxGap)
+                    {
+                        // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
+                        if (!(this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
+                              this->HasBlockedPath(nextLayerHits, pCurrentHit, pOtherHit)))
+                        {
+                            const float overlap{hit1Right - hit2Left};
+                            const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
+
+                            if (fractionOverlap > 0.5f)
+                            {
+                                // Hit is above
+                                ++neighbourhood[0][1];
+                            }
+                            else
+                            {
+                                // Hit is above and right
+                                ++neighbourhood[0][2];
+                            }
+                        }
+                    }
+                }
+            }
+
+            std::cout << "Neighbourhood" << std::endl;
+            float sum{0.f};
+            FloatVector rowSums(3, 0.f), colSums(3, 0.f);
+            for (int i = 0; i < 3; ++i)
+            {
+                for (int j = 0; j <3; ++j)
+                {
+                    sum += neighbourhood[i][j];
+                    rowSums[i] += neighbourhood[i][j];
+                    colSums[j] += neighbourhood[i][j];
+                    std::cout << neighbourhood[i][j] << " ";
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+            std::cout << "Total: " << sum << std::endl;
+            std::cout << "Row sums: ";
+            for (const float rowSum : rowSums)
+            {
+                std::cout << rowSum << " ";
+            }
+            std::cout << std::endl;
+            std::cout << "Column sums: ";
+            for (const float colSum : colSums)
+            {
+                std::cout << colSum << " ";
+            }
+            std::cout << std::endl;
+
+            bool isAmbiguous{false};
+            if (sum > 3)
+            {
+                isAmbiguous = true;
+            }
+            else if (sum == 3)
+            {
+                if (rowSums[1] == 1 && colSums[1] == 1)
+                {
+                    if (rowSums[0] == 0 || rowSums[2] == 0 || colSums[0] == 0 || colSums[2] == 0)
+                    {
+                        // Vertex-like, ambiguous
+                        isAmbiguous = true;
+                    }
+                }
+            }
+            if (isAmbiguous)
+            {
+                std::cout << "Ambiguous" << std::endl;
+                ambiguousHits.insert(pCurrentHit);
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ProvisionalClusteringAlgorithm::HasBlockedPath(const CaloHitVector &caloHits, const CaloHit *const pCaloHit1, const CaloHit *const pCaloHit2) const
+{
+    // For each hit in the calo hit list, check if the line between the two hits passes through the hit
+    const CartesianVector &pos1{pCaloHit1->GetPositionVector()};
+    const CartesianVector &pos2{pCaloHit2->GetPositionVector()};
+    for (const CaloHit *const pCaloHit : caloHits)
+    {
+        if (pCaloHit == pCaloHit1 || pCaloHit == pCaloHit2)
+            continue;
+
+        const CartesianVector &hitPosition{pCaloHit->GetPositionVector()};
+        const double xmin{hitPosition.GetX() - 0.5 * pCaloHit->GetCellSize1()}, xmax{hitPosition.GetX() + 0.5 * pCaloHit->GetCellSize1()};
+        const double zmin{hitPosition.GetZ() - 0.5 * pCaloHit->GetCellSize0()}, zmax{hitPosition.GetZ() + 0.5 * pCaloHit->GetCellSize0()};
+
+        double entry{0.}, exit{1.};
+
+        auto check_axis = [&](double p1, double p2, double minB, double maxB)
+        {
+            double t1{(minB - p1) / (p2 - p1)};
+            double t2{(maxB - p1) / (p2 - p1)};
+
+            if (t1 > t2)
+                std::swap(t1, t2);
+
+            entry = std::max(entry, t1);
+            exit = std::min(exit, t2);
+
+            return entry <= exit;
+        };
+
+        if (check_axis(pos1.GetX(), pos2.GetX(), xmin, xmax) && check_axis(pos1.GetZ(), pos2.GetZ(), zmin, zmax))
+        {
+            // We have an intervening hit
+            return true;
+        }
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ProvisionalClusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxGapSquared", m_maxGapSquared));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxGap", m_maxGap));
+    m_maxGap2dSquared = 2 * m_maxGap * m_maxGap;
 
     return STATUS_CODE_SUCCESS;
 }
