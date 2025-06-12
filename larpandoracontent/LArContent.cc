@@ -316,6 +316,7 @@
     d("LArSimpleClusterMerging",                SimpleClusterMergingAlgorithm)                                                  \
     d("LArTransverseAssociation",               TransverseAssociationAlgorithm)                                                 \
     d("LArTransverseExtension",                 TransverseExtensionAlgorithm)                                                   \
+    d("LArProvisionalClustering",               ProvisionalClusteringAlgorithm)                                                 \
     d("LArSimpleClusterCreation",               SimpleClusterCreationAlgorithm)                                                 \
     d("LArTrackClusterCreation",                TrackClusterCreationAlgorithm)                                                  \
     d("LArClusteringParent",                    ClusteringParentAlgorithm)                                                      \
