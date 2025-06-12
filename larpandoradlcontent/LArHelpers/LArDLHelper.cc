@@ -43,4 +43,11 @@ void LArDLHelper::Forward(TorchModel &model, const TorchInputVector &input, Torc
     output = model.forward(input).toTensor();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArDLHelper::Forward(TorchModel &model, const TorchInputVector &input, TorchMultiOutput &output)
+{
+    output = model.forward(input);
+}
+
 } // namespace lar_dl_content

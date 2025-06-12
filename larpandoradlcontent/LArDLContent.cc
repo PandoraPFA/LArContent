@@ -13,6 +13,7 @@
 #include "Pandora/Pandora.h"
 
 #include "larpandoradlcontent/LArControlFlow/DLMasterAlgorithm.h"
+#include "larpandoradlcontent/LArEventClassification/CNNTrackShowerCountingAlgorithm.h"
 #include "larpandoradlcontent/LArMonitoring/DlHitValidationAlgorithm.h"
 #include "larpandoradlcontent/LArSignalId/DlSNSignalAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlClusterCharacterisationAlgorithm.h"
@@ -32,7 +33,8 @@
     d("LArDLHitValidation", DlHitValidationAlgorithm)                                                                                      \
     d("LArDLTrackShowerStreamSelection", DlTrackShowerStreamSelectionAlgorithm)                                                            \
     d("LArDLVertexing",                         DlVertexingAlgorithm)                                                                      \
-    d("LArDLSNSignal",                               DlSNSignalAlgorithm)
+    d("LArDLSNSignal",                               DlSNSignalAlgorithm)                                                                  \
+    d("LArCNNTrackShowerCounting", CNNTrackShowerCountingAlgorithm)                                                                        \
 
 #define LAR_DL_ALGORITHM_TOOL_LIST(d)
 
