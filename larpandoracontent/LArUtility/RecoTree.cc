@@ -82,8 +82,7 @@ void RecoTree::Node::Populate()
 
     const CaloHit *pBestHit{nullptr};
     // This can either be proximity or Mahalanobis distance based, depending on the size of the cluster
-    const float bestMetric{std::numeric_limits<float>::max()};
-    (void)bestMetric;
+    float bestMetric{std::numeric_limits<float>::max()};
     for (const CaloHit *const pCurrentHit : currentLayerHits)
     {
         if (pCurrentHit == m_pSeedHit)
@@ -98,15 +97,29 @@ void RecoTree::Node::Populate()
         // Otherwise, check proximity/consistency and see if we should add this hit to the candidate cluster
         if (m_candidateCluster.size() < 2)
         {
-            // Check proximity
-            // ...
-            // If proximity checks pass, check to see if this is the best match yet
+            const float proximity{this->GetProximity(pCurrentHit)};
+            if (proximity < 0.5f && proximity < bestMetric)
+            {
+                pBestHit = pCurrentHit;
+                bestMetric = proximity;
+            }
         }
         else
         {
-            // Use the Kalman filter to check consistency
-            // ...
-            // If consistency checks pass, check to see if this is the best match yet
+            const float proximity{this->GetProximity(pCurrentHit)};
+            if (proximity < 0.5f)
+            {
+                const float mahalanobisDistance{this->GetMahalanobisDistance(pCurrentHit)};
+                if (mahalanobisDistance < bestMetric)
+                {
+                    // If we have a candidate hit, check if this one is better
+                    if (!pBestHit || mahalanobisDistance < bestMetric)
+                    {
+                        pBestHit = pCurrentHit;
+                        bestMetric = mahalanobisDistance;
+                    }
+                }
+            }
         }
     }
 
@@ -130,16 +143,47 @@ void RecoTree::Node::Populate()
 
 float RecoTree::Node::GetProximity(const pandora::CaloHit *const pCaloHit) const
 {
-    (void)pCaloHit;
-    return 0.0f;
+    const CartesianVector &position1{pCaloHit->GetPositionVector()};
+    const CartesianVector &position2{m_candidateCluster.back()->GetPositionVector()};
+
+    const float width1{0.5f * pCaloHit->GetCellSize1()};
+    const float width2{0.5f * m_candidateCluster.back()->GetCellSize1()};
+    if (pCaloHit->GetPseudoLayer() > m_candidateCluster.back()->GetPseudoLayer())
+    {
+        // Different pseudo layers, so the hits could have any ordering in x
+        const float xlo1{position1.GetX() - width1}, xhi1{position1.GetX() + width1};
+        const float xlo2{position2.GetX() - width2}, xhi2{position2.GetX() + width2};
+        // If the hits have no overlap, check the distance between the closests edges, otherwise, use the centres
+        if (xhi1 <= xlo2)
+            return std::fabs(xhi1 - xlo2);
+        else if (xhi2 <= xlo1)
+            return std::fabs(xhi2 - xlo1);
+        else
+            return std::fabs(position1.GetZ() - position2.GetZ());
+    }
+    else
+    {
+        // Same pseudo layer, the centre of pCaloHit must be to the right of the previously added candidate hit
+        const float xlo1{position1.GetX() - width1};
+        const float xhi2{position2.GetX() + width2};
+        // Note, it is possible to have hits on adjacent channels appear in the same pseudo layer, so we should also check for hit centre
+        // proximity
+        if (position1.GetZ() > position2.GetZ())
+            return std::fabs(position1.GetZ() - position2.GetZ());
+        else
+            return std::fabs(xlo1 - xhi2);
+    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-float RecoTree::Node::GetMahalanobisDistance(const pandora::CaloHit *const pCaloHit) const
+float RecoTree::Node::GetMahalanobisDistance(const pandora::CaloHit *const pCaloHit)
 {
-    (void)pCaloHit;
-    return 0.0f;
+    m_kalmanFilter.Predict();
+    const CartesianVector &pos{pCaloHit->GetPositionVector()};
+    Eigen::VectorXd x(2);
+    x << pos.GetX(), pos.GetZ();
+    return m_kalmanFilter.GetMahalanobisDistance(x);
 }
 
 } // namespace lar_content

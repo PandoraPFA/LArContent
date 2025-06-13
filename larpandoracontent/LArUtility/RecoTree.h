@@ -69,7 +69,7 @@ private:
          *  @param  pCaloHit the calo hit to check
          *  @return the Mahalanobis distance value
          */
-        float GetMahalanobisDistance(const pandora::CaloHit *const pCaloHit) const;
+        float GetMahalanobisDistance(const pandora::CaloHit *const pCaloHit);
 
         const pandora::CaloHit *const m_pSeedHit; ///< The seed calo hit associated with this node
         RecoTree &m_tree; ///< The reco tree to which this node belongs
