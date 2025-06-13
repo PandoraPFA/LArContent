@@ -12,6 +12,7 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
+#include "larpandoracontent/LArUtility/RecoTree.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/ProvisionalClusteringAlgorithm.h"
 
@@ -73,8 +74,19 @@ void ProvisionalClusteringAlgorithm::ProcessPartition()
         this->FillKDTree(caloHits, kdTree);
 
         std::cout << caloHits.size() << " hits in APA " << apaId << std::endl;
-        OrderedCaloHitList orderedCaloHits;
-        orderedCaloHits.Add(caloHits);
+        OrderedCaloHitList provisionalOrderedCaloHits, orderedCaloHits;
+        provisionalOrderedCaloHits.Add(caloHits);
+
+        // Further sort each pseudo layer by position in x - avoids repeated sorts when bulding the reco tree
+        for (OrderedCaloHitList::const_iterator iter = provisionalOrderedCaloHits.begin(); iter != provisionalOrderedCaloHits.end(); ++iter)
+        {
+            CaloHitVector caloHitVector(iter->second->begin(), iter->second->end());
+            std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPositionInX);
+            if (caloHitVector.empty())
+                continue;
+            const CaloHitList sortedCaloHitList(caloHitVector.begin(), caloHitVector.end());
+            orderedCaloHits.Add(sortedCaloHitList);
+        }
 
         CaloHitSet ambiguousHits;
         this->TagAmbiguousHits(orderedCaloHits, ambiguousHits);
@@ -95,34 +107,18 @@ void ProvisionalClusteringAlgorithm::ProcessPartition()
                 }
             }
         }
-        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &unambiguousHitList, std::to_string(apaId) + "_unambiguous", BLACK));
-        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &ambiguousHitList, std::to_string(apaId) + "_ambiguous", RED));
+        if (!unambiguousHitList.empty())
+        {
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &unambiguousHitList, std::to_string(apaId) + "_unambiguous", BLACK));
+        }
+        if (!ambiguousHitList.empty())
+        {
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &ambiguousHitList, std::to_string(apaId) + "_ambiguous", RED));
+        }
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
-        for (OrderedCaloHitList::const_iterator iter = orderedCaloHits.begin(); iter != orderedCaloHits.end(); ++iter)
-        {
-            CaloHitVector caloHitVector(iter->second->begin(), iter->second->end());
-            std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPositionInX);
-            if (caloHitVector.empty())
-                continue;
-
-            if (caloHitVector.size() == 1)
-            {
-                // No possible ambiguity within layer
-                const CaloHit *const pCaloHit{caloHitVector.front()};
-                (void)pCaloHit;
-            }
-            else
-            {
-                // Potential ambiguity within layer, check intra-layer proximity
-                //std::unordered_set<const CaloHit *> unambiguousHits, ambiguousHits;
-                //this->CheckForIntraLayerAmbiguities(caloHitVector, unambiguousHits, ambiguousHits);
-
-                // Process unambiguous hits
-
-                // Put ambiguous hits aside
-            }
-        }
+        RecoTree recoTree(orderedCaloHits, ambiguousHits);
+        recoTree.Populate();
     }
 }
 
@@ -154,9 +150,6 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
             prevLayerHits.insert(prevLayerHits.end(), pPrevLayerHits->begin(), pPrevLayerHits->end());
         if (pNextLayerHits)
             nextLayerHits.insert(nextLayerHits.end(), pNextLayerHits->begin(), pNextLayerHits->end());  
-        std::sort(currentLayerHits.begin(), currentLayerHits.end(), LArClusterHelper::SortHitsByPositionInX);
-        std::sort(prevLayerHits.begin(), prevLayerHits.end(), LArClusterHelper::SortHitsByPositionInX);
-        std::sort(nextLayerHits.begin(), nextLayerHits.end(), LArClusterHelper::SortHitsByPositionInX);
 
         for (const CaloHit *const pCurrentHit : currentLayerHits)
         {
