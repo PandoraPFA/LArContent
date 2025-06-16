@@ -26,7 +26,6 @@ namespace lar_dl_content
 
 CNNTrackShowerCountingAlgorithm::CNNTrackShowerCountingAlgorithm() :
     m_trainingMode{false},
-    m_validationMode{false},
     m_trainingTreeName{""},
     m_trainingFileName{""},
     m_height{512},
@@ -61,18 +60,10 @@ StatusCode CNNTrackShowerCountingAlgorithm::Run()
 {
     StatusCode result{STATUS_CODE_FAILURE};
 
-    // Slightly more complex that naively expected due to validation requiring both truth and predictions
-    if (m_trainingMode || m_validationMode)
-    {
-        result = this->PrepareTrainingSample();
-        if (STATUS_CODE_FAILURE == result)
-            return result;
-    }
-
-    if (!m_trainingMode)
-        result = this->Infer();
-
-    return result;
+    if (m_trainingMode)
+        return this->PrepareTrainingSample();
+    else
+        return this->Infer();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -140,15 +131,6 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
 //        std::cout << " - Got " << nTracks << " tracks and " << nShowers << " showers in view " << static_cast<int>(hitType) << std::endl;
         nTracksPerView[hitType] = nTracks;
         nShowersPerView[hitType] = nShowers;
-    }
-
-    if (m_validationMode)
-    {
-        // Print the true values and stop
-        std::cout << "View: " << TPC_VIEW_U << ", true number of tracks =  " << nTracksPerView.at(TPC_VIEW_U) << " and true number of showers = " << nShowersPerView.at(TPC_VIEW_U) << std::endl;
-        std::cout << "View: " << TPC_VIEW_V << ", true number of tracks =  " << nTracksPerView.at(TPC_VIEW_V) << " and true number of showers = " << nShowersPerView.at(TPC_VIEW_V) << std::endl;
-        std::cout << "View: " << TPC_VIEW_W << ", true number of tracks =  " << nTracksPerView.at(TPC_VIEW_W) << " and true number of showers = " << nShowersPerView.at(TPC_VIEW_W) << std::endl;
-        return STATUS_CODE_SUCCESS;
     }
 
     if (emptyViews)
@@ -525,7 +507,6 @@ void CNNTrackShowerCountingAlgorithm::GetHitRegion(const CaloHitList *const pCal
 StatusCode CNNTrackShowerCountingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ValidationMode", m_validationMode));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageHeight", m_height));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageWidth", m_width));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WiresPerPixel", m_wiresPerPixel));

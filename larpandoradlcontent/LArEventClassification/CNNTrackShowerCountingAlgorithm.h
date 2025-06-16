@@ -158,7 +158,6 @@ private:
     void GetVertexPositions(ViewToVertexPositionMap &vertices) const;
 
     bool m_trainingMode;                        ///< Training mode
-    bool m_validationMode;                      ///< Gets the truth information to compare to the predictions
     std::string m_trainingTreeName;             ///< Tree name for training examples
     std::string m_trainingFileName;             ///< Output file name for training examples
     pandora::StringVector m_caloHitListNames;   ///< Names of input calo hit lists
