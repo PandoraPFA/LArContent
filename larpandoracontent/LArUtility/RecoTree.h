@@ -24,6 +24,9 @@ namespace lar_content
 class RecoTree
 {
 public:
+    class Node;
+    typedef std::vector<std::unique_ptr<Node>> NodeVector;
+
     /**
      *  @brief  Default constructor
      *
@@ -37,7 +40,13 @@ public:
      */
     void Populate();
 
-private:
+    /**
+     *  @brief  Get the root nodes of the reco tree
+     *
+     *  @return the vector of root nodes
+     */
+    const NodeVector &GetRootNodes() const;
+
     class Node
     {
     public:
@@ -53,6 +62,13 @@ private:
          *  @brief  Populate the node based on the seed hit and collection of ordered calo hits
          */
         void Populate();
+
+        /**
+         *  @brief  Get the hits associated with this node
+         *
+         *  @return the hits associated with this node
+         */
+        const pandora::CaloHitVector &GetHits() const;
 
     private:
         /**
@@ -78,8 +94,7 @@ private:
     };
     friend class Node;
 
-    typedef std::vector<std::unique_ptr<Node>> NodeVector;
-
+private:
     const pandora::OrderedCaloHitList &m_orderedCaloHits; ///< The ordered calo hit list
     const pandora::CaloHitSet &m_ambiguousHits; ///< The set of ambiguous hits
     pandora::CaloHitSet m_usedHits; ///< The set of used hits in the reco tree

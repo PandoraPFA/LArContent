@@ -119,6 +119,18 @@ void ProvisionalClusteringAlgorithm::ProcessPartition()
 
         RecoTree recoTree(orderedCaloHits, ambiguousHits);
         recoTree.Populate();
+
+        for (const auto &pNode : recoTree.GetRootNodes())
+        {
+            const CaloHitVector &nodeHits(pNode->GetHits());
+            const CaloHitList hits(nodeHits.begin(), nodeHits.end());
+            if (hits.empty())
+                continue;
+
+            // Visualize the hits in the reco tree
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hits, std::to_string(apaId) + "_reco_tree", AUTOITER));
+        }
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 }
 
@@ -311,7 +323,6 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                 }
             }
 
-            std::cout << "Neighbourhood" << std::endl;
             float sum{0.f};
             FloatVector rowSums(3, 0.f), colSums(3, 0.f);
             for (int i = 0; i < 3; ++i)
@@ -321,24 +332,8 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                     sum += neighbourhood[i][j];
                     rowSums[i] += neighbourhood[i][j];
                     colSums[j] += neighbourhood[i][j];
-                    std::cout << neighbourhood[i][j] << " ";
                 }
-                std::cout << std::endl;
             }
-            std::cout << std::endl;
-            std::cout << "Total: " << sum << std::endl;
-            std::cout << "Row sums: ";
-            for (const float rowSum : rowSums)
-            {
-                std::cout << rowSum << " ";
-            }
-            std::cout << std::endl;
-            std::cout << "Column sums: ";
-            for (const float colSum : colSums)
-            {
-                std::cout << colSum << " ";
-            }
-            std::cout << std::endl;
 
             bool isAmbiguous{false};
             if (sum > 3)
@@ -358,7 +353,6 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
             }
             if (isAmbiguous)
             {
-                std::cout << "Ambiguous" << std::endl;
                 ambiguousHits.insert(pCurrentHit);
             }
         }
