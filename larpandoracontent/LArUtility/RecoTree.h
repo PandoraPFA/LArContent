@@ -32,8 +32,9 @@ public:
      *
      *  @param  orderedCaloHits the ordered calo hit list
      *  @param  ambiguousHits the set of ambiguous hits
+     *  @param  pitch the pitch of the relevant channel (used for proximity checks)
      */
-    RecoTree(const pandora::OrderedCaloHitList &orderedCaloHits, const pandora::CaloHitSet &ambiguousHits);
+    RecoTree(const pandora::OrderedCaloHitList &orderedCaloHits, const pandora::CaloHitSet &ambiguousHits, const float pitch);
 
     /**
      *  @brief  Populate the RecoTree from the collection of ordered calo hits
@@ -75,9 +76,13 @@ public:
          *  @brief  Get the proximity of a calo hit to the candidate cluster
          *
          *  @param  pCaloHit the calo hit to check
-         *  @return the proximity value
+         *  @param  centralProximity the proximity when considering hit centres
+         *  @param  boundaryProximity the proximity when considering hit boundaries
+         *
+         *  @return the proximity value (the function attempts to pick the "most appropriate" of central or boundary depending
+         *          on the configuration of the hits)
          */
-        float GetProximity(const pandora::CaloHit *const pCaloHit) const;
+        float GetProximity(const pandora::CaloHit *const pCaloHit, float &centralProximity, float &boundaryProximity) const;
 
         /**
          *  @brief  Get the Mahalanobis distance of a calo hit to the candidate cluster
@@ -97,6 +102,7 @@ public:
 private:
     const pandora::OrderedCaloHitList &m_orderedCaloHits; ///< The ordered calo hit list
     const pandora::CaloHitSet &m_ambiguousHits; ///< The set of ambiguous hits
+    const float m_pitch; ///< The pitch of the relevant channel (used for proximity checks)
     pandora::CaloHitSet m_usedHits; ///< The set of used hits in the reco tree
     NodeVector m_rootNodes; ///< The vector of root nodes in the reco tree
 };

@@ -13,9 +13,10 @@ using namespace pandora;
 namespace lar_content
 {
 
-RecoTree::RecoTree(const pandora::OrderedCaloHitList &orderedCaloHits, const CaloHitSet &ambiguousHits) :
+RecoTree::RecoTree(const OrderedCaloHitList &orderedCaloHits, const CaloHitSet &ambiguousHits, const float pitch) :
     m_orderedCaloHits(orderedCaloHits),
     m_ambiguousHits(ambiguousHits),
+    m_pitch(pitch),
     m_usedHits(),
     m_rootNodes()
 {
@@ -59,11 +60,11 @@ const RecoTree::NodeVector &RecoTree::GetRootNodes() const
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-RecoTree::Node::Node(const pandora::CaloHit *const pSeedHit, RecoTree &tree) :
+RecoTree::Node::Node(const CaloHit *const pSeedHit, RecoTree &tree) :
     m_pSeedHit(pSeedHit),
     m_tree(tree),
     m_candidateCluster({pSeedHit}),
-    m_kalmanFilter{KalmanFilter2D(1, 0.125 * 0.125, 0.25 * 0.25,  Eigen::VectorXd(2), 1000.f)}
+    m_kalmanFilter{KalmanFilter2D(1, 0.0625f * m_tree.m_pitch * m_tree.m_pitch, 0.25f * m_tree.m_pitch * m_tree.m_pitch,  Eigen::VectorXd(2), 10000.f)}
 {
     const CartesianVector &pos{pSeedHit->GetPositionVector()};
     Eigen::VectorXd seed(2);
@@ -101,20 +102,32 @@ void RecoTree::Node::Populate()
                 // Otherwise, check proximity/consistency and see if we should add this hit to the candidate cluster
                 if (m_candidateCluster.size() < 2)
                 {
-                    const float proximity{this->GetProximity(pCurrentHit)};
-                    if (proximity < 0.5f && proximity < bestMetric)
+                    float centralProximity{0.f}, boundaryProximity{0.f};
+                    const float proximity{this->GetProximity(pCurrentHit, centralProximity, boundaryProximity)};
+                    if (proximity < (1.07f * m_tree.m_pitch) && proximity < bestMetric)
                     {
-                        pBestHit = pCurrentHit;
-                        bestMetric = proximity;
+                        if (proximity < boundaryProximity)
+                        {
+                            pBestHit = pCurrentHit;
+                            bestMetric = proximity;
+                        }
+                        else if (boundaryProximity < 0.1f)
+                        {
+                            // If the returned proximity is the boundary proximity, we should be more strict to avoid
+                            // gaps between hits being used to seed the cluster
+                            pBestHit = pCurrentHit;
+                            bestMetric = boundaryProximity;
+                        }
                     }
                 }
                 else
                 {
-                    const float proximity{this->GetProximity(pCurrentHit)};
-                    if (proximity < 0.5f)
+                    float centralProximity{0.f}, boundaryProximity{0.f};
+                    const float proximity{this->GetProximity(pCurrentHit, centralProximity, boundaryProximity)};
+                    if (proximity < (1.07f * m_tree.m_pitch))
                     {
                         const float mahalanobisDistance{this->GetMahalanobisDistance(pCurrentHit)};
-                        if (mahalanobisDistance < 0.5f && mahalanobisDistance < bestMetric)
+                        if (mahalanobisDistance < (1.1f * m_tree.m_pitch) && mahalanobisDistance < bestMetric)
                         {
                             // If we have a candidate hit, check if this one is better
                             if (!pBestHit || mahalanobisDistance < bestMetric)
@@ -158,7 +171,7 @@ const CaloHitVector &RecoTree::Node::GetHits() const
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-float RecoTree::Node::GetProximity(const pandora::CaloHit *const pCaloHit) const
+float RecoTree::Node::GetProximity(const CaloHit *const pCaloHit, float &centralProximity, float &boundaryProximity) const
 {
     const CartesianVector &position1{pCaloHit->GetPositionVector()};
     const CartesianVector &position2{m_candidateCluster.back()->GetPositionVector()};
@@ -172,11 +185,23 @@ float RecoTree::Node::GetProximity(const pandora::CaloHit *const pCaloHit) const
         const float xlo2{position2.GetX() - width2}, xhi2{position2.GetX() + width2};
         // If the hits have no overlap, check the distance between the closests edges, otherwise, use the centres
         if (xhi1 <= xlo2)
-            return std::fabs(xhi1 - xlo2);
+        {
+            centralProximity = std::fabs(position1.GetZ() - position2.GetZ());
+            boundaryProximity = std::fabs(xhi1 - xlo2);
+            return boundaryProximity;
+        }
         else if (xhi2 <= xlo1)
-            return std::fabs(xhi2 - xlo1);
+        {
+            centralProximity = std::fabs(position1.GetZ() - position2.GetZ());
+            boundaryProximity = std::fabs(xhi2 - xlo1);
+            return boundaryProximity;
+        }
         else
-            return std::fabs(position1.GetZ() - position2.GetZ());
+        {
+            centralProximity = std::fabs(position1.GetZ() - position2.GetZ());
+            boundaryProximity = std::numeric_limits<float>::max();
+            return centralProximity;
+        }
     }
     else
     {
@@ -186,15 +211,23 @@ float RecoTree::Node::GetProximity(const pandora::CaloHit *const pCaloHit) const
         // Note, it is possible to have hits on adjacent channels appear in the same pseudo layer, so we should also check for hit centre
         // proximity
         if (position1.GetZ() > position2.GetZ())
-            return std::fabs(position1.GetZ() - position2.GetZ());
+        {
+            centralProximity = std::fabs(position1.GetZ() - position2.GetZ());
+            boundaryProximity = std::numeric_limits<float>::max();
+            return centralProximity;
+        }
         else
-            return std::fabs(xlo1 - xhi2);
+        {
+            centralProximity = std::fabs(position1.GetZ() - position2.GetZ());
+            boundaryProximity = std::fabs(xlo1 - xhi2);
+            return boundaryProximity;
+        }
     }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-float RecoTree::Node::GetMahalanobisDistance(const pandora::CaloHit *const pCaloHit)
+float RecoTree::Node::GetMahalanobisDistance(const CaloHit *const pCaloHit)
 {
     m_kalmanFilter.Predict();
     const CartesianVector &pos{pCaloHit->GetPositionVector()};
