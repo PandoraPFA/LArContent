@@ -162,18 +162,18 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 
             // Based on whether the PFP crosses the cathode, views are combined to obtain Collection in ICARUS      
             // PFP crosses the cathode                                                          
-            if (LocatePointInCryostat(minX) == PositionInCryostat::BelowCathode &&
-                LocatePointInCryostat(maxX) == PositionInCryostat::AboveCathode) 
+            if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::BelowCathode &&
+                LocatePointInCryostat_ICARUS(maxX) == PositionInCryostat::AboveCathode) 
             {
                 isChargeInfoEmpty = (uClusterList.empty() || vClusterList.empty()) ? wClusterList.empty() : false; ///< Need both U and V, otherwise fall back to Induction-1
             }
             // PFP is contained within TPC 2/3
-            else if (LocatePointInCryostat(minX) == PositionInCryostat::AboveCathode)
+            else if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::AboveCathode)
             {
                 isChargeInfoEmpty = (!vClusterList.empty() ? vClusterList.empty() : uClusterList.empty()); ///< TPC 2/3, otherwise fall back to Induction-2
             }
             // PFP is contained within TPC 0/1
-            else if (LocatePointInCryostat(maxX) == PositionInCryostat::BelowCathode)
+            else if (LocatePointInCryostat_ICARUS(maxX) == PositionInCryostat::BelowCathode)
             {
                 isChargeInfoEmpty = (!uClusterList.empty() ? uClusterList.empty() : vClusterList.empty()); ///< TPC 0/1, otherwise fall back to Induction-2
             }
