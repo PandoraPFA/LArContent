@@ -118,7 +118,7 @@ void ProvisionalClusteringAlgorithm::ProcessPartition()
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
         const float pitch{LArGeometryHelper::GetWirePitch(this->GetPandora(), caloHits.front()->GetHitType())};
-        RecoTree recoTree(orderedCaloHits, ambiguousHits, pitch);
+        RecoTree recoTree(orderedCaloHits, ambiguousHits, pitch, this->GetPandora());
         recoTree.Populate();
 
         for (const auto &pNode : recoTree.GetRootNodes())
