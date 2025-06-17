@@ -9,6 +9,7 @@
 #define LAR_RECO_TREE_H 1
 
 #include "Objects/OrderedCaloHitList.h"
+#include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArUtility/KalmanFilter.h"
 
@@ -34,12 +35,17 @@ public:
      *  @param  ambiguousHits the set of ambiguous hits
      *  @param  pitch the pitch of the relevant channel (used for proximity checks)
      */
-    RecoTree(const pandora::OrderedCaloHitList &orderedCaloHits, const pandora::CaloHitSet &ambiguousHits, const float pitch);
+    RecoTree(const pandora::OrderedCaloHitList &orderedCaloHits, const pandora::CaloHitSet &ambiguousHits, const float pitch, const pandora::Pandora &pandora);
 
     /**
      *  @brief  Populate the RecoTree from the collection of ordered calo hits
      */
     void Populate();
+
+    /**
+     *  @brief  Add the ambiguous hits to the appropriate node
+     */
+    void ClusterAmbiguousHits();
 
     /**
      *  @brief  Get the root nodes of the reco tree
@@ -71,6 +77,8 @@ public:
          */
         const pandora::CaloHitVector &GetHits() const;
 
+        void AddHit(const pandora::CaloHit *const pCaloHit, const bool addAtEnd);
+
     private:
         /**
          *  @brief  Get the proximity of a calo hit to the candidate cluster
@@ -100,11 +108,15 @@ public:
     friend class Node;
 
 private:
+    template <class T>
+    double WalkThroughCluster(T iter, const T endIter, const Eigen::VectorXd &t, KalmanFilter2D &kalmanFilter);
+
     const pandora::OrderedCaloHitList &m_orderedCaloHits; ///< The ordered calo hit list
     const pandora::CaloHitSet &m_ambiguousHits; ///< The set of ambiguous hits
     const float m_pitch; ///< The pitch of the relevant channel (used for proximity checks)
     pandora::CaloHitSet m_usedHits; ///< The set of used hits in the reco tree
     NodeVector m_rootNodes; ///< The vector of root nodes in the reco tree
+    const pandora::Pandora &m_pandora; ///< The Pandora instance associated with this reco tree 
 };
 
 } // namespace lar_content

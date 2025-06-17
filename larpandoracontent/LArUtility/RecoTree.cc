@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "larpandoracontent/LArHelpers/LArEigenHelper.h"
+
 #include "larpandoracontent/LArUtility/RecoTree.h"
 
 using namespace pandora;
@@ -13,12 +15,13 @@ using namespace pandora;
 namespace lar_content
 {
 
-RecoTree::RecoTree(const OrderedCaloHitList &orderedCaloHits, const CaloHitSet &ambiguousHits, const float pitch) :
+RecoTree::RecoTree(const OrderedCaloHitList &orderedCaloHits, const CaloHitSet &ambiguousHits, const float pitch, const Pandora &pandora) :
     m_orderedCaloHits(orderedCaloHits),
     m_ambiguousHits(ambiguousHits),
     m_pitch(pitch),
     m_usedHits(),
-    m_rootNodes()
+    m_rootNodes(),
+    m_pandora(pandora)
 {
 }
 
@@ -48,6 +51,188 @@ void RecoTree::Populate()
             }
         }
     }
+
+    // Visualisation
+    int i{0};
+    std::cout << "Unambiguous" << std::endl;
+    for (const auto &pNode : m_rootNodes)
+    {
+        const CaloHitVector &nodeHits(pNode->GetHits());
+        if (nodeHits.empty())
+            continue;
+
+        // Visualize the hits in the reco tree
+        CaloHitList hits(nodeHits.begin(), nodeHits.end());
+        PandoraMonitoringApi::VisualizeCaloHits(m_pandora, &hits, std::to_string(i) + " unambiguous", AUTOITER);
+        std::cout << i << ": " << hits.size() << " hits" << std::endl;
+        ++i;
+    }
+    std::cout << "Used: " << m_usedHits.size() << " hits" << std::endl;
+    PandoraMonitoringApi::ViewEvent(m_pandora);
+    // End visualization
+
+    this->ClusterAmbiguousHits();
+
+    // Visualisation
+    i = 0;
+    std::cout << "Ambiguous" << std::endl;
+    for (const auto &pNode : m_rootNodes)
+    {
+        const CaloHitVector &nodeHits(pNode->GetHits());
+        if (nodeHits.empty())
+            continue;
+
+        // Visualize the hits in the reco tree
+        CaloHitList hits(nodeHits.begin(), nodeHits.end());
+        PandoraMonitoringApi::VisualizeCaloHits(m_pandora, &hits, std::to_string(i) + " ambiguous", AUTOITER);
+        std::cout << i << ": " << hits.size() << " hits" << std::endl;
+        ++i;
+    }
+    std::cout << "Used: " << m_usedHits.size() << " hits" << std::endl;
+    PandoraMonitoringApi::ViewEvent(m_pandora);
+    // End visualization
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void RecoTree::ClusterAmbiguousHits()
+{
+    // Iterate through the ambiguous hits and determine best matching node
+    // First, identify the closest approach of each ambiguous hit to each root node
+    std::vector<std::vector<float>> closestApproach(m_ambiguousHits.size(), std::vector<float>(m_rootNodes.size(), std::numeric_limits<float>::max()));
+    size_t n{0};
+    for (const auto &pNode : m_rootNodes)
+    {
+        const CaloHitVector &nodeHits{pNode->GetHits()};
+        Eigen::MatrixXf hitMatrix(nodeHits.size(), 2);
+        LArEigenHelper::Vectorize(nodeHits, hitMatrix);
+        size_t h{0};
+        for (const CaloHit *const pCaloHit : m_ambiguousHits)
+        {
+            const CartesianVector &pos{pCaloHit->GetPositionVector()};
+            if (m_usedHits.count(pCaloHit) == 0)
+            {
+                Eigen::RowVectorXf row(2);
+                row << pos.GetX(), pos.GetZ();
+                Eigen::MatrixXf norms((hitMatrix.rowwise() - row).array().pow(2).rowwise().sum());
+                Eigen::Index index;
+                norms.col(0).minCoeff(&index);
+                closestApproach[h][n] = norms(index, 0);
+            }
+            ++h;
+        }
+        ++n;
+    }
+
+    // For each ambiguous hit, collect all of the nodes within a given distance for more detailed consideration
+    bool madeAllocation{true};
+    while (madeAllocation)
+    {
+        madeAllocation = false;
+        size_t h{0};
+        for (const CaloHit *const pTargetHit : m_ambiguousHits)
+        {
+            if (m_usedHits.count(pTargetHit) > 0)
+            {
+                ++h;
+                continue;
+            }
+            const CartesianVector &targetPos{pTargetHit->GetPositionVector()};
+            Eigen::VectorXd t(2);
+            t << targetPos.GetX(), targetPos.GetZ();
+            double bestMahalanobisDistance{std::numeric_limits<double>::max()};
+            float bestProximity{std::numeric_limits<float>::max()};
+            Node *pBestNodeMahalanobis{nullptr}, *pBestNodeProximity{nullptr};
+            (void)bestProximity; // ToDo: Use this in the future for proximity based clustering
+            (void)pBestNodeProximity; // ToDo: Use this in the future for proximity based clustering
+            bool addAtEndMahalanobis{false}, addAtEndProximity{false};
+            (void)addAtEndProximity; // ToDo: Use this in the future for proximity based clustering
+
+            size_t c{0};
+            for (const auto &pNode : m_rootNodes)
+            {
+                if (closestApproach[h][c] < 3.f)
+                {
+                    const CaloHitVector &nodeHits{m_rootNodes[c]->GetHits()};
+                    const float dFront{std::abs((pTargetHit->GetPositionVector() - nodeHits.front()->GetPositionVector()).GetMagnitudeSquared())};
+                    const float dBack{std::abs((pTargetHit->GetPositionVector() - nodeHits.back()->GetPositionVector()).GetMagnitudeSquared())};
+                    if (dFront > dBack)
+                    {
+                        // Walk from the front to the back of the cluster and see where the hit would best fit
+                        KalmanFilter2D kalmanFilter(1, 0.0625f * m_pitch * m_pitch, 0.25f * m_pitch * m_pitch,  Eigen::VectorXd(2), 10000.f);
+                        if (nodeHits.size() > 1)
+                        {
+                            kalmanFilter.Predict();
+                            auto iter{nodeHits.begin()};
+                            const CartesianVector &pos{(*iter)->GetPositionVector()};
+                            Eigen::VectorXd x(2);
+                            x << pos.GetX(), pos.GetZ();
+                            kalmanFilter.Update(x);
+                            kalmanFilter.Predict();
+                            ++iter;
+
+                            const double mahalanobisDistance{this->WalkThroughCluster(iter, nodeHits.end(), t, kalmanFilter)};
+                            if (mahalanobisDistance < bestMahalanobisDistance)
+                            {
+                                bestMahalanobisDistance = mahalanobisDistance;
+                                pBestNodeMahalanobis = pNode.get();
+                                addAtEndMahalanobis = true;
+                            }
+                        }
+                        else
+                        {
+                            // ToDo
+                            // Need to consider comparisons to isolated hits - retain the best iso cluster match and then see
+                            // if it makes more sense than the best Mahalanobis distance match
+                            (void)pBestNodeProximity; // ToDo: Use this in the future for proximity based clustering
+                        }
+                    }
+                    else
+                    {
+                        // Walk from the back to the front of the cluster and see where the hit would best fit
+                        KalmanFilter2D kalmanFilter(1, 0.0625f * m_pitch * m_pitch, 0.25f * m_pitch * m_pitch,  Eigen::VectorXd(2), 10000.f);
+                        if (nodeHits.size() > 1)
+                        {
+                            kalmanFilter.Predict();
+                            auto iter{nodeHits.rbegin()};
+                            const CartesianVector &pos{(*iter)->GetPositionVector()};
+                            Eigen::VectorXd x(2);
+                            x << pos.GetX(), pos.GetZ();
+                            kalmanFilter.Update(x);
+                            kalmanFilter.Predict();
+                            ++iter;
+
+                            const double mahalanobisDistance{this->WalkThroughCluster(iter, nodeHits.rend(), t, kalmanFilter)};
+                            if (mahalanobisDistance < bestMahalanobisDistance)
+                            {
+                                bestMahalanobisDistance = mahalanobisDistance;
+                                pBestNodeMahalanobis = pNode.get();
+                                addAtEndMahalanobis = false;
+                            }
+                        }
+                        else
+                        {
+                            // ToDo
+                            // Need to consider comparisons to isolated hits - retain the best iso cluster match and then see
+                            // if it makes more sense than the best Mahalanobis distance match
+                            (void)pBestNodeProximity; // ToDo: Use this in the future for proximity based clustering
+                        }
+                    }
+                }
+                ++c;
+            }
+            ++h;
+
+            // Might want to relax the distance and also potentially check for prediction inside hit for wide hits
+            if (pBestNodeMahalanobis && bestMahalanobisDistance < (1.1f * m_pitch))
+            {
+                pBestNodeMahalanobis->AddHit(pTargetHit, addAtEndMahalanobis);
+                m_usedHits.insert(pTargetHit);
+                madeAllocation = true;
+            }
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -55,6 +240,28 @@ void RecoTree::Populate()
 const RecoTree::NodeVector &RecoTree::GetRootNodes() const
 {
     return m_rootNodes;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+template <class T>
+double RecoTree::WalkThroughCluster(T iter, const T endIter, const Eigen::VectorXd &t, KalmanFilter2D &kalmanFilter)
+{
+    double bestMahalanobisDistance{std::numeric_limits<float>::max()};
+    for ( ; iter != endIter; ++iter)
+    {
+        const CaloHit *const pCaloHit{*iter};
+        const CartesianVector &pos{pCaloHit->GetPositionVector()};
+        Eigen::VectorXd x(2);
+        x << pos.GetX(), pos.GetZ();
+        kalmanFilter.Update(x);
+        kalmanFilter.Predict();
+        const double mahalanobisDistance{kalmanFilter.GetMahalanobisDistance(t)};
+        if (mahalanobisDistance < bestMahalanobisDistance)
+            bestMahalanobisDistance = mahalanobisDistance;
+    }
+
+    return bestMahalanobisDistance;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -167,6 +374,23 @@ void RecoTree::Node::Populate()
 const CaloHitVector &RecoTree::Node::GetHits() const
 {
     return m_candidateCluster;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void RecoTree::Node::AddHit(const CaloHit *const pCaloHit, const bool addAtEnd)
+{
+    // Add the hit to the candidate cluster, either at the end or at the front
+    if (addAtEnd)
+    {
+        m_candidateCluster.emplace_back(pCaloHit);
+    }
+    else
+    {
+        m_candidateCluster.insert(m_candidateCluster.begin(), pCaloHit);
+    }
+    // ATTN: We're choosing not to update the Kalman filter here under the assumption that this is run for ambiguous hit additions
+    // and that therefore the internal Kalman state is less relevant
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
