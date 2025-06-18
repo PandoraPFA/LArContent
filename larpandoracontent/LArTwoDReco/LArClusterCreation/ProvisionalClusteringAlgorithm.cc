@@ -33,8 +33,6 @@ StatusCode ProvisionalClusteringAlgorithm::Run()
 {
     m_apaHitMap.clear();
 
-    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1, 1, 1));
-
     const CaloHitList *pCaloHitList{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
@@ -67,13 +65,9 @@ void ProvisionalClusteringAlgorithm::ProcessPartition()
         if (caloHits.empty())
             continue;
 
-        //PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHits, std::to_string(apaId), AUTOITER));
-        //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-
         KDTree kdTree;
         this->FillKDTree(caloHits, kdTree);
 
-        std::cout << caloHits.size() << " hits in APA " << apaId << std::endl;
         OrderedCaloHitList provisionalOrderedCaloHits, orderedCaloHits;
         provisionalOrderedCaloHits.Add(caloHits);
 
@@ -107,31 +101,23 @@ void ProvisionalClusteringAlgorithm::ProcessPartition()
                 }
             }
         }
-        if (!unambiguousHitList.empty())
-        {
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &unambiguousHitList, std::to_string(apaId) + "_unambiguous", BLACK));
-        }
-        if (!ambiguousHitList.empty())
-        {
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &ambiguousHitList, std::to_string(apaId) + "_ambiguous", RED));
-        }
-        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
         const float pitch{LArGeometryHelper::GetWirePitch(this->GetPandora(), caloHits.front()->GetHitType())};
-        RecoTree recoTree(orderedCaloHits, ambiguousHits, pitch, this->GetPandora());
+        RecoTree recoTree(orderedCaloHits, ambiguousHits, pitch);
         recoTree.Populate();
 
-        for (const auto &pNode : recoTree.GetRootNodes())
+        const RecoTree::NodeVector &rootNodes{recoTree.GetRootNodes()};
+        for (const auto &pNode : rootNodes)
         {
-            const CaloHitVector &nodeHits(pNode->GetHits());
-            const CaloHitList hits(nodeHits.begin(), nodeHits.end());
-            if (hits.empty())
+            const CaloHitVector &nodeHits{pNode->GetHits()};
+            if (nodeHits.empty())
                 continue;
 
-            // Visualize the hits in the reco tree
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hits, std::to_string(apaId) + "_reco_tree", AUTOITER));
+            const Cluster *pCluster{nullptr};
+            PandoraContentApi::Cluster::Parameters parameters;
+            parameters.m_caloHitList.insert(parameters.m_caloHitList.end(), nodeHits.begin(), nodeHits.end());
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
         }
-        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 }
 
