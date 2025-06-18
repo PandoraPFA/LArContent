@@ -283,6 +283,13 @@ void RecoTree::ClusterAmbiguousHits()
                 m_usedHits.insert(pTargetHit);
                 madeAllocation = true;
             }
+            else
+            {
+                // If we have no suitable node, we should create a new one
+                m_rootNodes.emplace_back(std::make_unique<Node>(pTargetHit, *this));
+                m_usedHits.insert(pTargetHit);
+                madeAllocation = true;
+            }
         }
     }
 }
