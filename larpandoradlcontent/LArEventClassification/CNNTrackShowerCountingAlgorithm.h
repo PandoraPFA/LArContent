@@ -39,6 +39,10 @@ public:
         public:
 
         void AddScoresFromView(const pandora::HitType &view, const torch::Tensor &trackScores, const torch::Tensor &showerScores);
+        std::vector<float> GetTrackScoresFromView(const pandora::HitType &view) const;
+        unsigned int GetTrackClassPredictionFromView(const pandora::HitType &view) const;
+        std::vector<float> GetShowerScoresFromView(const pandora::HitType &view) const;
+        unsigned int GetShowerClassPredictionFromView(const pandora::HitType &view) const;
 
         private:
 
@@ -70,6 +74,13 @@ private:
      *  @brief Perform inference to get the event classification
      */ 
     pandora::StatusCode Infer();
+
+    /**
+     *  @brief Persist the results
+     *
+     *  @param result the result of the CNN inference
+     */ 
+    pandora::StatusCode StorePredictions(const TrackShowerCountingResults &result);
 
     /**
      *  @brief Create a pixel map from a CaloHitList object
@@ -170,6 +181,7 @@ private:
     std::string m_vertexListName;               ///< The vertex list name
     unsigned int m_goodMCPrimaryHits;           ///< The number of hits an MC primary needs to be considered reconstructable per view
     unsigned int m_minHits;                     ///< Minimum number of hits to create a training example
+    std::string m_outputPfoListName;            ///< Name of the output PfoList containing the dummy event pfo
 };
 
 } // namespace lar_dl_content

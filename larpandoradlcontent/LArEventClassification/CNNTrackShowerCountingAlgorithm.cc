@@ -34,7 +34,8 @@ CNNTrackShowerCountingAlgorithm::CNNTrackShowerCountingAlgorithm() :
     m_driftStep{0.5f},
     m_useVertexForCrops{true},
     m_goodMCPrimaryHits{5},
-    m_minHits{10}
+    m_minHits{10},
+    m_outputPfoListName{""}
 {}
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -58,8 +59,6 @@ CNNTrackShowerCountingAlgorithm::~CNNTrackShowerCountingAlgorithm()
 
 StatusCode CNNTrackShowerCountingAlgorithm::Run()
 {
-    StatusCode result{STATUS_CODE_FAILURE};
-
     if (m_trainingMode)
         return this->PrepareTrainingSample();
     else
@@ -107,7 +106,6 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
 
         MCParticleList hierarchy;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CompleteMCHierarchy(mcToHitsMap, hierarchy));
-        MCParticleList primaries;
 
         // Only fill the event level information once
         if (nuPDG == 0)
@@ -240,6 +238,45 @@ StatusCode CNNTrackShowerCountingAlgorithm::Infer()
         
         result.AddScoresFromView(pCaloHitList->front()->GetHitType(), trkOutput, shwOutput);
     }
+
+    return this->StorePredictions(result);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode CNNTrackShowerCountingAlgorithm::StorePredictions(const TrackShowerCountingResults &result)
+{
+    // For now we will create a fake PFParticle and store results as metadata. 
+    // TODO: update this after changes to the SDK will allow us to store event-level information
+    const PfoList *pDummyEventPfoList{nullptr};
+    std::string dummyName;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pDummyEventPfoList, dummyName));
+
+    PandoraContentApi::ParticleFlowObject::Parameters dummyEventPfoParameters;
+    dummyEventPfoParameters.m_particleId = NU_MU;
+    dummyEventPfoParameters.m_charge = PdgTable::GetParticleCharge(dummyEventPfoParameters.m_particleId.Get());
+    dummyEventPfoParameters.m_mass = PdgTable::GetParticleMass(dummyEventPfoParameters.m_particleId.Get());
+    dummyEventPfoParameters.m_energy = 0.f;
+    dummyEventPfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
+    dummyEventPfoParameters.m_propertiesToAdd["IsNeutrino"] = 1.f;
+    const ParticleFlowObject *pDummyEventPfo{nullptr};
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, dummyEventPfoParameters, pDummyEventPfo));
+
+    // Now we add some metadata to the Pfo
+    object_creation::ParticleFlowObject::Metadata dummyEventPfoMetadata;
+
+    dummyEventPfoMetadata.m_propertiesToAdd["nTracksU"] = result.GetTrackClassPredictionFromView(TPC_VIEW_U);
+    dummyEventPfoMetadata.m_propertiesToAdd["nTracksV"] = result.GetTrackClassPredictionFromView(TPC_VIEW_V);
+    dummyEventPfoMetadata.m_propertiesToAdd["nTracksW"] = result.GetTrackClassPredictionFromView(TPC_VIEW_W);
+
+    dummyEventPfoMetadata.m_propertiesToAdd["nShowersU"] = result.GetShowerClassPredictionFromView(TPC_VIEW_U);
+    dummyEventPfoMetadata.m_propertiesToAdd["nShowersV"] = result.GetShowerClassPredictionFromView(TPC_VIEW_V);
+    dummyEventPfoMetadata.m_propertiesToAdd["nShowersW"] = result.GetShowerClassPredictionFromView(TPC_VIEW_W);
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pDummyEventPfo, dummyEventPfoMetadata));
+
+    if (!pDummyEventPfoList->empty())
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, dummyName, m_outputPfoListName));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -537,6 +574,7 @@ StatusCode CNNTrackShowerCountingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GoodMCPrimaryHits", m_goodMCPrimaryHits));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinHits", m_minHits));
 
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
     return STATUS_CODE_SUCCESS;
 }
 
@@ -563,11 +601,36 @@ void CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::AddScoresFromV
     for (unsigned int element = 0; element < showerScores.size(1); ++element)
         shwScoreVector.emplace_back(showerAccessor[0][element]);
     m_showerScores[view] = shwScoreVector;
+}
 
-    const size_t nTrkPred(std::distance(trkScoreVector.begin(), std::max_element(trkScoreVector.begin(), trkScoreVector.end())));
-    const size_t nShwPred(std::distance(shwScoreVector.begin(), std::max_element(shwScoreVector.begin(), shwScoreVector.end())));
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
-    std::cout << "View: " << view << ", predicted number of tracks =  " << nTrkPred << " and prediced number of showers = " << nShwPred << std::endl;
+std::vector<float> CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetTrackScoresFromView(const pandora::HitType &view) const
+{
+    return m_trackScores.at(view);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetTrackClassPredictionFromView(const pandora::HitType &view) const
+{
+    const std::vector<float> &trkScores{m_trackScores.at(view)};
+    return std::distance(trkScores.begin(), std::max_element(trkScores.begin(), trkScores.end()));
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+std::vector<float> CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetShowerScoresFromView(const pandora::HitType &view) const
+{
+    return m_showerScores.at(view);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetShowerClassPredictionFromView(const pandora::HitType &view) const
+{
+    const std::vector<float> &shwScores{m_showerScores.at(view)};
+    return std::distance(shwScores.begin(), std::max_element(shwScores.begin(), shwScores.end()));
 }
 
 }
