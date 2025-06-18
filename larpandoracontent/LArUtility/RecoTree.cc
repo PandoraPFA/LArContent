@@ -6,6 +6,7 @@
  *  $Log: $
  */
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArEigenHelper.h"
 
 #include "larpandoracontent/LArUtility/RecoTree.h"
@@ -88,7 +89,9 @@ void RecoTree::Populate()
         std::cout << i << ": " << hits.size() << " hits" << std::endl;
         ++i;
     }
-    std::cout << "Used: " << m_usedHits.size() << " hits" << std::endl;
+    CaloHitList allHits;
+    m_orderedCaloHits.FillCaloHitList(allHits);
+    std::cout << "Used: " << m_usedHits.size() << " hits out of " << allHits.size() << std::endl;
     PandoraMonitoringApi::ViewEvent(m_pandora);
     // End visualization
 
@@ -182,10 +185,27 @@ void RecoTree::ClusterAmbiguousHits()
                         }
                         else
                         {
-                            // ToDo
-                            // Need to consider comparisons to isolated hits - retain the best iso cluster match and then see
-                            // if it makes more sense than the best Mahalanobis distance match
-                            (void)pBestNodeProximity; // ToDo: Use this in the future for proximity based clustering
+                            const CaloHit *pClosestHit{nullptr};
+                            const float proximity{pNode->GetClosestApproach(pTargetHit, pClosestHit)};
+                            if (proximity < bestProximity)
+                            {
+                                size_t minLayer{std::min(pClosestHit->GetPseudoLayer(), pTargetHit->GetPseudoLayer())};
+                                size_t maxLayer{std::max(pClosestHit->GetPseudoLayer(), pTargetHit->GetPseudoLayer())};
+                                CaloHitVector regionHits;
+                                for (size_t i = minLayer; i <= maxLayer; ++i)
+                                {
+                                    CaloHitList *pHits{nullptr};
+                                    m_orderedCaloHits.GetCaloHitsInPseudoLayer(i, pHits);
+                                    if (pHits)
+                                        regionHits.insert(regionHits.end(), pHits->begin(), pHits->end());
+                                }
+                                if (!LArClusterHelper::HasBlockedPath(regionHits, pClosestHit, pTargetHit))
+                                {
+                                    bestProximity = proximity;
+                                    pBestNodeProximity = pNode.get();
+                                    addAtEndProximity = true;
+                                }
+                            }
                         }
                     }
                     else
@@ -213,10 +233,27 @@ void RecoTree::ClusterAmbiguousHits()
                         }
                         else
                         {
-                            // ToDo
-                            // Need to consider comparisons to isolated hits - retain the best iso cluster match and then see
-                            // if it makes more sense than the best Mahalanobis distance match
-                            (void)pBestNodeProximity; // ToDo: Use this in the future for proximity based clustering
+                            const CaloHit *pClosestHit{nullptr};
+                            const float proximity{pNode->GetClosestApproach(pTargetHit, pClosestHit)};
+                            if (proximity < bestProximity)
+                            {
+                                size_t minLayer{std::min(pClosestHit->GetPseudoLayer(), pTargetHit->GetPseudoLayer())};
+                                size_t maxLayer{std::max(pClosestHit->GetPseudoLayer(), pTargetHit->GetPseudoLayer())};
+                                CaloHitVector regionHits;
+                                for (size_t i = minLayer; i <= maxLayer; ++i)
+                                {
+                                    CaloHitList *pHits{nullptr};
+                                    m_orderedCaloHits.GetCaloHitsInPseudoLayer(i, pHits);
+                                    if (pHits)
+                                        regionHits.insert(regionHits.end(), pHits->begin(), pHits->end());
+                                }
+                                if (!LArClusterHelper::HasBlockedPath(regionHits, pClosestHit, pTargetHit))
+                                {
+                                    bestProximity = proximity;
+                                    pBestNodeProximity = pNode.get();
+                                    addAtEndProximity = false;
+                                }
+                            }
                         }
                     }
                 }
@@ -224,10 +261,25 @@ void RecoTree::ClusterAmbiguousHits()
             }
             ++h;
 
+            // If we have both a proximity and a Mahalanobis distance based node, we should check which one is more appropriate
+            // We should require the proximity based distance to be much better to favour it
+            if (pBestNodeProximity && pBestNodeMahalanobis)
+            {
+                if (bestProximity < (1.07f * m_pitch) && bestProximity < (0.5f * bestMahalanobisDistance))
+                    pBestNodeMahalanobis = nullptr;
+                else
+                    pBestNodeProximity = nullptr;
+            }
             // Might want to relax the distance and also potentially check for prediction inside hit for wide hits
             if (pBestNodeMahalanobis && bestMahalanobisDistance < (1.1f * m_pitch))
             {
                 pBestNodeMahalanobis->AddHit(pTargetHit, addAtEndMahalanobis);
+                m_usedHits.insert(pTargetHit);
+                madeAllocation = true;
+            }
+            else if (pBestNodeProximity && bestProximity < (1.07f * m_pitch))
+            {
+                pBestNodeProximity->AddHit(pTargetHit, addAtEndProximity);
                 m_usedHits.insert(pTargetHit);
                 madeAllocation = true;
             }
@@ -391,6 +443,23 @@ void RecoTree::Node::AddHit(const CaloHit *const pCaloHit, const bool addAtEnd)
     }
     // ATTN: We're choosing not to update the Kalman filter here under the assumption that this is run for ambiguous hit additions
     // and that therefore the internal Kalman state is less relevant
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+float RecoTree::Node::GetClosestApproach(const CaloHit *const pCaloHit, const CaloHit *&pClosestHit) const
+{
+    Eigen::MatrixXf hitMatrix(m_candidateCluster.size(), 2);
+    LArEigenHelper::Vectorize(m_candidateCluster, hitMatrix);
+    const CartesianVector &pos{pCaloHit->GetPositionVector()};
+    Eigen::RowVectorXf row(2);
+    row << pos.GetX(), pos.GetZ();
+    Eigen::MatrixXf norms((hitMatrix.rowwise() - row).array().pow(2).rowwise().sum());
+    Eigen::Index index;
+    norms.col(0).minCoeff(&index);
+    pClosestHit = m_candidateCluster.at(index);
+
+    return norms(index, 0);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------

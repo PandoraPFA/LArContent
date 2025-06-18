@@ -37,18 +37,6 @@ private:
     void FillKDTree(const pandora::CaloHitList &caloHitList, KDTree &kdTree);
     void TagAmbiguousHits(const pandora::OrderedCaloHitList &caloHitVector, pandora::CaloHitSet &ambiguousHits);
 
-    /**
-     *  @brief  Determines if there is a hit between two hits.
-     *
-     *  @param  caloHits the collection of hits under consideration
-     *  @param  pCaloHit1 the first calo hit
-     *  @param  pCaloHit2 the second calo hit
-     *
-     *  @return true if there is a hit between the two hits, false otherwise
-     */
-    bool HasBlockedPath(const pandora::CaloHitVector &caloHits, const pandora::CaloHit *const pCaloHit1, const pandora::CaloHit *const pCaloHit2) const;
-
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float m_maxGap; ///< Maximum calo hit separation (factors in width or height)

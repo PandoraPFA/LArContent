@@ -77,11 +77,27 @@ public:
          */
         const pandora::CaloHitVector &GetHits() const;
 
+        /**
+         *  @brief  Add a single (ambiguous) hit to the candidate cluster associated with this node
+         *
+         *  @param  pCaloHit the calo hit to add
+         *  @param  addAtEnd whether to add the hit at the end of the candidate cluster (true) or at the front (false)
+         */
         void AddHit(const pandora::CaloHit *const pCaloHit, const bool addAtEnd);
 
-    private:
         /**
-         *  @brief  Get the proximity of a calo hit to the candidate cluster
+         *  @brief  Get the closest approach of a calo hit to the candidate cluster
+         *
+         *  @param  pCaloHit the calo hit to check
+         *  @param  pClosestHit the closest hit in the candidate cluster (output parameter)
+         *
+         *  @return the closest approach value
+         */
+        float GetClosestApproach(const pandora::CaloHit *const pCaloHit, const pandora::CaloHit *&pClosestHit) const;
+
+        /**
+         *  @brief  Get the proximity of a calo hit to the candidate cluster. This is an ordered check, so it's the proximity
+         *          to the back of the cluster.
          *
          *  @param  pCaloHit the calo hit to check
          *  @param  centralProximity the proximity when considering hit centres
@@ -100,6 +116,7 @@ public:
          */
         float GetMahalanobisDistance(const pandora::CaloHit *const pCaloHit);
 
+    private:
         const pandora::CaloHit *const m_pSeedHit; ///< The seed calo hit associated with this node
         RecoTree &m_tree; ///< The reco tree to which this node belongs
         pandora::CaloHitVector m_candidateCluster; ///< The candidate cluster associated with this node
