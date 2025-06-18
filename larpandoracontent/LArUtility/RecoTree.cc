@@ -16,13 +16,12 @@ using namespace pandora;
 namespace lar_content
 {
 
-RecoTree::RecoTree(const OrderedCaloHitList &orderedCaloHits, const CaloHitSet &ambiguousHits, const float pitch, const Pandora &pandora) :
+RecoTree::RecoTree(const OrderedCaloHitList &orderedCaloHits, const CaloHitSet &ambiguousHits, const float pitch) :
     m_orderedCaloHits(orderedCaloHits),
     m_ambiguousHits(ambiguousHits),
     m_pitch(pitch),
     m_usedHits(),
-    m_rootNodes(),
-    m_pandora(pandora)
+    m_rootNodes()
 {
 }
 
@@ -53,48 +52,7 @@ void RecoTree::Populate()
         }
     }
 
-    // Visualisation
-    int i{0};
-    std::cout << "Unambiguous" << std::endl;
-    for (const auto &pNode : m_rootNodes)
-    {
-        const CaloHitVector &nodeHits(pNode->GetHits());
-        if (nodeHits.empty())
-            continue;
-
-        // Visualize the hits in the reco tree
-        CaloHitList hits(nodeHits.begin(), nodeHits.end());
-        PandoraMonitoringApi::VisualizeCaloHits(m_pandora, &hits, std::to_string(i) + " unambiguous", AUTOITER);
-        std::cout << i << ": " << hits.size() << " hits" << std::endl;
-        ++i;
-    }
-    std::cout << "Used: " << m_usedHits.size() << " hits" << std::endl;
-    PandoraMonitoringApi::ViewEvent(m_pandora);
-    // End visualization
-
     this->ClusterAmbiguousHits();
-
-    // Visualisation
-    i = 0;
-    std::cout << "Ambiguous" << std::endl;
-    for (const auto &pNode : m_rootNodes)
-    {
-        const CaloHitVector &nodeHits(pNode->GetHits());
-        if (nodeHits.empty())
-            continue;
-
-        // Visualize the hits in the reco tree
-        CaloHitList hits(nodeHits.begin(), nodeHits.end());
-        PandoraMonitoringApi::VisualizeCaloHits(m_pandora, &hits, std::to_string(i) + " ambiguous", AUTOITER);
-        std::cout << i << ": " << hits.size() << " hits" << std::endl;
-        ++i;
-    }
-    CaloHitList allHits;
-    m_orderedCaloHits.FillCaloHitList(allHits);
-    std::cout << "Used: " << m_usedHits.size() << " hits out of " << allHits.size() << std::endl;
-    PandoraMonitoringApi::ViewEvent(m_pandora);
-    // End visualization
-
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------

@@ -9,7 +9,6 @@
 #define LAR_RECO_TREE_H 1
 
 #include "Objects/OrderedCaloHitList.h"
-#include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArUtility/KalmanFilter.h"
 
@@ -35,7 +34,7 @@ public:
      *  @param  ambiguousHits the set of ambiguous hits
      *  @param  pitch the pitch of the relevant channel (used for proximity checks)
      */
-    RecoTree(const pandora::OrderedCaloHitList &orderedCaloHits, const pandora::CaloHitSet &ambiguousHits, const float pitch, const pandora::Pandora &pandora);
+    RecoTree(const pandora::OrderedCaloHitList &orderedCaloHits, const pandora::CaloHitSet &ambiguousHits, const float pitch);
 
     /**
      *  @brief  Populate the RecoTree from the collection of ordered calo hits
@@ -133,7 +132,6 @@ private:
     const float m_pitch; ///< The pitch of the relevant channel (used for proximity checks)
     pandora::CaloHitSet m_usedHits; ///< The set of used hits in the reco tree
     NodeVector m_rootNodes; ///< The vector of root nodes in the reco tree
-    const pandora::Pandora &m_pandora; ///< The Pandora instance associated with this reco tree 
 };
 
 } // namespace lar_content
