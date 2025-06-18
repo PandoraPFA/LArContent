@@ -113,7 +113,7 @@ void RecoTree::ClusterAmbiguousHits()
             size_t c{0};
             for (const auto &pNode : m_rootNodes)
             {
-                if (closestApproach[h][c] < 3.f)
+                if (closestApproach[h][c] < m_closeApproachThreshold)
                 {
                     const CaloHitVector &nodeHits{m_rootNodes[c]->GetHits()};
                     const float dFront{std::abs((pTargetHit->GetPositionVector() - nodeHits.front()->GetPositionVector()).GetMagnitudeSquared())};
@@ -121,7 +121,7 @@ void RecoTree::ClusterAmbiguousHits()
                     if (dFront > dBack)
                     {
                         // Walk from the front to the back of the cluster and see where the hit would best fit
-                        KalmanFilter2D kalmanFilter(1, 0.0625f * m_pitch * m_pitch, 0.25f * m_pitch * m_pitch,  Eigen::VectorXd(2), 10000.f);
+                        KalmanFilter2D kalmanFilter(1, m_processVarianceCoeff * m_pitch * m_pitch, m_measurementVarianceCoeff * m_pitch * m_pitch,  Eigen::VectorXd(2), 10000.f);
                         if (nodeHits.size() > 1)
                         {
                             kalmanFilter.Predict();
@@ -169,7 +169,7 @@ void RecoTree::ClusterAmbiguousHits()
                     else
                     {
                         // Walk from the back to the front of the cluster and see where the hit would best fit
-                        KalmanFilter2D kalmanFilter(1, 0.0625f * m_pitch * m_pitch, 0.25f * m_pitch * m_pitch,  Eigen::VectorXd(2), 10000.f);
+                        KalmanFilter2D kalmanFilter(1, m_processVarianceCoeff * m_pitch * m_pitch, m_measurementVarianceCoeff * m_pitch * m_pitch,  Eigen::VectorXd(2), 10000.f);
                         if (nodeHits.size() > 1)
                         {
                             kalmanFilter.Predict();
@@ -223,19 +223,19 @@ void RecoTree::ClusterAmbiguousHits()
             // We should require the proximity based distance to be much better to favour it
             if (pBestNodeProximity && pBestNodeMahalanobis)
             {
-                if (bestProximity < (1.07f * m_pitch) && bestProximity < (0.5f * bestMahalanobisDistance))
+                if (bestProximity < (m_proximityCoeff * m_pitch) && bestProximity < (m_mahalanobisRescaling * bestMahalanobisDistance))
                     pBestNodeMahalanobis = nullptr;
                 else
                     pBestNodeProximity = nullptr;
             }
             // Might want to relax the distance and also potentially check for prediction inside hit for wide hits
-            if (pBestNodeMahalanobis && bestMahalanobisDistance < (1.1f * m_pitch))
+            if (pBestNodeMahalanobis && bestMahalanobisDistance < (m_mahalanobisCoeff * m_pitch))
             {
                 pBestNodeMahalanobis->AddHit(pTargetHit, addAtEndMahalanobis);
                 m_usedHits.insert(pTargetHit);
                 madeAllocation = true;
             }
-            else if (pBestNodeProximity && bestProximity < (1.07f * m_pitch))
+            else if (pBestNodeProximity && bestProximity < (m_proximityCoeff * m_pitch))
             {
                 pBestNodeProximity->AddHit(pTargetHit, addAtEndProximity);
                 m_usedHits.insert(pTargetHit);
@@ -282,13 +282,28 @@ double RecoTree::WalkThroughCluster(T iter, const T endIter, const Eigen::Vector
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
+
+void RecoTree::Configure(const float closeApproachThreshold, const float processVarianceCoeff,
+    const float measurementVarianceCoeff, const float proximityCoeff, const float mahalanobisCoeff,
+    const float mahalanobisRescaling, const float boundaryProximity)
+{
+    m_closeApproachThreshold = closeApproachThreshold;
+    m_processVarianceCoeff = processVarianceCoeff;
+    m_measurementVarianceCoeff = measurementVarianceCoeff;
+    m_proximityCoeff = proximityCoeff;
+    m_mahalanobisCoeff = mahalanobisCoeff;
+    m_mahalanobisRescaling = mahalanobisRescaling;
+    m_boundaryProximity = boundaryProximity;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
 RecoTree::Node::Node(const CaloHit *const pSeedHit, RecoTree &tree) :
     m_pSeedHit(pSeedHit),
     m_tree(tree),
     m_candidateCluster({pSeedHit}),
-    m_kalmanFilter{KalmanFilter2D(1, 0.0625f * m_tree.m_pitch * m_tree.m_pitch, 0.25f * m_tree.m_pitch * m_tree.m_pitch,  Eigen::VectorXd(2), 10000.f)}
+    m_kalmanFilter{KalmanFilter2D(1, m_tree.m_processVarianceCoeff * m_tree.m_pitch * m_tree.m_pitch, m_tree.m_measurementVarianceCoeff * m_tree.m_pitch * m_tree.m_pitch,  Eigen::VectorXd(2), 10000.f)}
 {
     const CartesianVector &pos{pSeedHit->GetPositionVector()};
     Eigen::VectorXd seed(2);
@@ -328,14 +343,14 @@ void RecoTree::Node::Populate()
                 {
                     float centralProximity{0.f}, boundaryProximity{0.f};
                     const float proximity{this->GetProximity(pCurrentHit, centralProximity, boundaryProximity)};
-                    if (proximity < (1.07f * m_tree.m_pitch) && proximity < bestMetric)
+                    if (proximity < (m_tree.m_proximityCoeff * m_tree.m_pitch) && proximity < bestMetric)
                     {
                         if (proximity < boundaryProximity)
                         {
                             pBestHit = pCurrentHit;
                             bestMetric = proximity;
                         }
-                        else if (boundaryProximity < 0.1f)
+                        else if (boundaryProximity < m_tree.m_boundaryProximity)
                         {
                             // If the returned proximity is the boundary proximity, we should be more strict to avoid
                             // gaps between hits being used to seed the cluster
@@ -348,10 +363,10 @@ void RecoTree::Node::Populate()
                 {
                     float centralProximity{0.f}, boundaryProximity{0.f};
                     const float proximity{this->GetProximity(pCurrentHit, centralProximity, boundaryProximity)};
-                    if (proximity < (1.07f * m_tree.m_pitch))
+                    if (proximity < (m_tree.m_proximityCoeff * m_tree.m_pitch))
                     {
                         const float mahalanobisDistance{this->GetMahalanobisDistance(pCurrentHit)};
-                        if (mahalanobisDistance < (1.1f * m_tree.m_pitch) && mahalanobisDistance < bestMetric)
+                        if (mahalanobisDistance < (m_tree.m_mahalanobisCoeff * m_tree.m_pitch) && mahalanobisDistance < bestMetric)
                         {
                             // If we have a candidate hit, check if this one is better
                             if (!pBestHit || mahalanobisDistance < bestMetric)

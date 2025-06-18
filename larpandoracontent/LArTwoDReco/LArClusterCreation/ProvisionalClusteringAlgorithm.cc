@@ -23,7 +23,14 @@ namespace lar_content
 
 ProvisionalClusteringAlgorithm::ProvisionalClusteringAlgorithm() :
     m_maxGap(0.25f),
-    m_maxGap2dSquared(2 * m_maxGap * m_maxGap)
+    m_maxGap2dSquared(2 * m_maxGap * m_maxGap),
+    m_closeApproachThreshold{3.f},
+    m_processVarianceCoeff{0.0625f},
+    m_measurementVarianceCoeff{0.25f},
+    m_proximityCoeff{1.07f},
+    m_mahalanobisCoeff{1.1f},
+    m_mahalanobisRescaling{0.5f},
+    m_boundaryProximityCoeff{0.1f}
 {
 }
 
@@ -104,6 +111,8 @@ void ProvisionalClusteringAlgorithm::ProcessPartition()
 
         const float pitch{LArGeometryHelper::GetWirePitch(this->GetPandora(), caloHits.front()->GetHitType())};
         RecoTree recoTree(orderedCaloHits, ambiguousHits, pitch);
+        recoTree.Configure(m_closeApproachThreshold, m_processVarianceCoeff, m_measurementVarianceCoeff,
+            m_proximityCoeff, m_mahalanobisCoeff, m_mahalanobisRescaling, m_boundaryProximityCoeff);
         recoTree.Populate();
 
         const RecoTree::NodeVector &rootNodes{recoTree.GetRootNodes()};
@@ -352,6 +361,14 @@ StatusCode ProvisionalClusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxGap", m_maxGap));
     m_maxGap2dSquared = 2 * m_maxGap * m_maxGap;
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CloseApproachThreshold", m_closeApproachThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ProcessVarianceCoeff", m_processVarianceCoeff));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MeasurementVarianceCoeff", m_measurementVarianceCoeff));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ProximityCoeff", m_proximityCoeff));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MahalanobisCoeff", m_mahalanobisCoeff));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MahalanobisRescaling", m_mahalanobisRescaling));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BoundaryProximityCoeff", m_boundaryProximityCoeff));
 
     return STATUS_CODE_SUCCESS;
 }
