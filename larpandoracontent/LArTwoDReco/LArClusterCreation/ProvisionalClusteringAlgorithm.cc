@@ -185,7 +185,7 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                     if (hit1Left - hit2Right < m_maxGap)
                     {
                         // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
-                        if (!this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherInLayerHit))
+                        if (!LArClusterHelper::HasBlockedPath(currentLayerHits, pCurrentHit, pOtherInLayerHit))
                             ++neighbourhood[1][0];
                     }
                 }
@@ -197,7 +197,7 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                     if (hit2Left - hit1Right < m_maxGap)
                     {
                         // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
-                        if (!this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherInLayerHit))
+                        if (!LArClusterHelper::HasBlockedPath(currentLayerHits, pCurrentHit, pOtherInLayerHit))
                             ++neighbourhood[1][2];
                     }
                 }
@@ -215,8 +215,8 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                     if (hit1Left - hit2Right < m_maxGap)
                     {
                         // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
-                        if (!(this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
-                              this->HasBlockedPath(prevLayerHits, pCurrentHit, pOtherHit)))
+                        if (!(LArClusterHelper::HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
+                              LArClusterHelper::HasBlockedPath(prevLayerHits, pCurrentHit, pOtherHit)))
                         {
                             const float overlap{hit2Right - hit1Left};
                             const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
@@ -242,8 +242,8 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                     if (hit2Left - hit1Right < m_maxGap)
                     {
                         // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
-                        if (!(this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
-                              this->HasBlockedPath(prevLayerHits, pCurrentHit, pOtherHit)))
+                        if (!(LArClusterHelper::HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
+                              LArClusterHelper::HasBlockedPath(prevLayerHits, pCurrentHit, pOtherHit)))
                         {
                             const float overlap{hit1Right - hit2Left};
                             const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
@@ -276,8 +276,8 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                     if (hit1Left - hit2Right < m_maxGap)
                     {
                         // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
-                        if (!(this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
-                              this->HasBlockedPath(nextLayerHits, pCurrentHit, pOtherHit)))
+                        if (!(LArClusterHelper::HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
+                              LArClusterHelper::HasBlockedPath(nextLayerHits, pCurrentHit, pOtherHit)))
                         {
                             const float overlap{hit2Right - hit1Left};
                             const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
@@ -303,8 +303,8 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                     if (hit2Left - hit1Right < m_maxGap)
                     {
                         // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
-                        if (!(this->HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
-                              this->HasBlockedPath(nextLayerHits, pCurrentHit, pOtherHit)))
+                        if (!(LArClusterHelper::HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
+                              LArClusterHelper::HasBlockedPath(nextLayerHits, pCurrentHit, pOtherHit)))
                         {
                             const float overlap{hit1Right - hit2Left};
                             const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
@@ -358,48 +358,6 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
             }
         }
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ProvisionalClusteringAlgorithm::HasBlockedPath(const CaloHitVector &caloHits, const CaloHit *const pCaloHit1, const CaloHit *const pCaloHit2) const
-{
-    // For each hit in the calo hit list, check if the line between the two hits passes through the hit
-    const CartesianVector &pos1{pCaloHit1->GetPositionVector()};
-    const CartesianVector &pos2{pCaloHit2->GetPositionVector()};
-    for (const CaloHit *const pCaloHit : caloHits)
-    {
-        if (pCaloHit == pCaloHit1 || pCaloHit == pCaloHit2)
-            continue;
-
-        const CartesianVector &hitPosition{pCaloHit->GetPositionVector()};
-        const double xmin{hitPosition.GetX() - 0.5 * pCaloHit->GetCellSize1()}, xmax{hitPosition.GetX() + 0.5 * pCaloHit->GetCellSize1()};
-        const double zmin{hitPosition.GetZ() - 0.5 * pCaloHit->GetCellSize0()}, zmax{hitPosition.GetZ() + 0.5 * pCaloHit->GetCellSize0()};
-
-        double entry{0.}, exit{1.};
-
-        auto check_axis = [&](double p1, double p2, double minB, double maxB)
-        {
-            double t1{(minB - p1) / (p2 - p1)};
-            double t2{(maxB - p1) / (p2 - p1)};
-
-            if (t1 > t2)
-                std::swap(t1, t2);
-
-            entry = std::max(entry, t1);
-            exit = std::min(exit, t2);
-
-            return entry <= exit;
-        };
-
-        if (check_axis(pos1.GetX(), pos2.GetX(), xmin, xmax) && check_axis(pos1.GetZ(), pos2.GetZ(), zmin, zmax))
-        {
-            // We have an intervening hit
-            return true;
-        }
-    }
-
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
