@@ -32,7 +32,7 @@ public:
      *  @brief  Default constructor
      */
     MvaPfoCharacterisationAlgorithm();
-    
+
 protected:
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
@@ -85,7 +85,6 @@ private:
      *  @param  vertex The coordinates of the vertex
      */
     bool PassesFiducialCut(const pandora::CartesianVector &vertex) const;
-
 };
 
 typedef MvaPfoCharacterisationAlgorithm<AdaBoostDecisionTree> BdtPfoCharacterisationAlgorithm;
