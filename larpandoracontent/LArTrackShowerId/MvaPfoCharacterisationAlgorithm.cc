@@ -9,8 +9,8 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
@@ -98,9 +98,9 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         return (pPfo->GetParticleId() == MU_MINUS);
     }
 
-    bool isChargeInfoEmpty;
+    bool isChargeInfoEmpty{false};
 
-    if (!m_useICARUSCollectionPlane) 
+    if (!m_useICARUSCollectionPlane)
     {
         // Charge related features are only calculated using hits in W view
         ClusterList wClusterList;
@@ -108,9 +108,9 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 
         isChargeInfoEmpty = wClusterList.empty();
     }
-    else 
+    else
     {
-        // W 
+        // W
         ClusterList wClusterList;
         LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
         float minX(9999.), maxX(9999.);
@@ -118,14 +118,14 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
             wClusterList.front()->GetClusterSpanX(minX, maxX);
         isChargeInfoEmpty = wClusterList.empty(); ///< Initialize to fall-back case
 
-        // U 
+        // U
         ClusterList uClusterList;
         LArPfoHelper::GetClusters(pPfo, TPC_VIEW_U, uClusterList);
         float minX_U(9999.), maxX_U(9999.);
         if (!uClusterList.empty())
             uClusterList.front()->GetClusterSpanX(minX_U, maxX_U);
 
-        // V 
+        // V
         ClusterList vClusterList;
         LArPfoHelper::GetClusters(pPfo, TPC_VIEW_V, vClusterList);
         float minX_V(9999.), maxX_V(9999.);
@@ -133,37 +133,36 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
             vClusterList.front()->GetClusterSpanX(minX_V, maxX_V);
 
         // Checks
-        if (wClusterList.empty() && uClusterList.empty() && vClusterList.empty()) 
+        if (wClusterList.empty() && uClusterList.empty() && vClusterList.empty())
         {
             isChargeInfoEmpty = true;
-        }                                                                  
-        else if (uClusterList.empty() && vClusterList.empty()) 
+        }
+        else if (uClusterList.empty() && vClusterList.empty())
         {
             isChargeInfoEmpty = wClusterList.empty();
         }
-        else 
+        else
         {
             // Get drift span from well-defined views
-            if (!uClusterList.empty() && !vClusterList.empty()) 
+            if (!uClusterList.empty() && !vClusterList.empty())
             {
-                minX = std::min(minX_U, minX_V); 
-                maxX = std::max(maxX_U, maxX_V);  
+                minX = std::min(minX_U, minX_V);
+                maxX = std::max(maxX_U, maxX_V);
             }
             else if (!uClusterList.empty() && vClusterList.empty())
             {
-                minX = minX_U; 
-                maxX = maxX_U; 
+                minX = minX_U;
+                maxX = maxX_U;
             }
             else if (uClusterList.empty() && !vClusterList.empty())
             {
-                minX = minX_V; 
-                maxX = maxX_V; 
+                minX = minX_V;
+                maxX = maxX_V;
             }
 
-            // Based on whether the PFP crosses the cathode, views are combined to obtain Collection in ICARUS      
-            // PFP crosses the cathode                                                          
-            if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::BelowCathode &&
-                LocatePointInCryostat_ICARUS(maxX) == PositionInCryostat::AboveCathode) 
+            // Based on whether the PFP crosses the cathode, views are combined to obtain Collection in ICARUS
+            // PFP crosses the cathode
+            if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::BelowCathode && LocatePointInCryostat_ICARUS(maxX) == PositionInCryostat::AboveCathode)
             {
                 isChargeInfoEmpty = (uClusterList.empty() || vClusterList.empty()) ? wClusterList.empty() : false; ///< Need both U and V, otherwise fall back to Induction-1
             }
@@ -365,7 +364,6 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 
         return (m_minProbabilityCut <= score);
     }
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -394,7 +392,8 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "FoldToPrimaries", m_primaryParameters.m_foldBackHierarchy));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseICARUSCollectionPlane", m_useICARUSCollectionPlane));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "UseICARUSCollectionPlane", m_useICARUSCollectionPlane));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PersistFeatures", m_persistFeatures));
 

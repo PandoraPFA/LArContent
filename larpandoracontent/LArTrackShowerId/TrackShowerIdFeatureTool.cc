@@ -25,19 +25,19 @@ namespace lar_content
 {
 
 PositionInCryostat LocatePointInCryostat_ICARUS(const float point_X)
-{       
+{
     PositionInCryostat position;
     const float CathodeMinX = 210.14; ///< Cathode position for ICARUS cryostat #1
     const float CathodeMaxX = 210.29;
 
     float RealCathodeMinX = 0., RealCathodeMaxX = 0.;
-    if (point_X < 0.) ///< ICARUS cryostat #0 
-    {                                                                                                                                                                         
-        RealCathodeMinX = CathodeMaxX*(-1.);
-        RealCathodeMaxX = CathodeMinX*(-1.);
+    if (point_X < 0.) ///< ICARUS cryostat #0
+    {
+        RealCathodeMinX = CathodeMaxX * (-1.);
+        RealCathodeMaxX = CathodeMinX * (-1.);
     }
     else ///< ICARUS cryostat #1
-    {                                                                                                                                                                                       
+    {
         RealCathodeMinX = CathodeMinX;
         RealCathodeMaxX = CathodeMaxX;
     }
@@ -60,7 +60,9 @@ PositionInCryostat LocatePointInCryostat_ICARUS(const float point_X)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() : m_slidingShowerFitWindow(3), m_slidingLinearFitWindow(10000)
+TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() :
+    m_slidingShowerFitWindow(3),
+    m_slidingLinearFitWindow(10000)
 {
 }
 
@@ -446,7 +448,7 @@ ConeChargeFeatureTool::ConeChargeFeatureTool() :
 
 void ConeChargeFeatureTool::Run(
     LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
-{   
+{
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
@@ -605,7 +607,7 @@ void ConeChargeFeatureTool_ICARUS::Run(
         ClusterList clusterListW;
         LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, clusterListW);
 
-        if (!clusterListW.empty()) 
+        if (!clusterListW.empty())
         {
             clusterListW.front()->GetOrderedCaloHitList().FillCaloHitList(orderedCaloHitList);
 
@@ -621,101 +623,98 @@ void ConeChargeFeatureTool_ICARUS::Run(
             concentration = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeCon / (chargeCore + chargeHalo) : -1.f;
             const float pfoLength(std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo)));
             conicalness = (pfoLength > std::numeric_limits<float>::epsilon())
-                            ? this->CalculateConicalness(orderedCaloHitList, pfoStart, eigenVecs[0], pfoLength)
-                            : 1.f;
+                ? this->CalculateConicalness(orderedCaloHitList, pfoStart, eigenVecs[0], pfoLength)
+                : 1.f;
         }
     }
     else
     {
-        // W 
+        // W
         ClusterList clusterListW;
         LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, clusterListW);
         float minX(9999.), maxX(9999.);
         if (!clusterListW.empty())
             clusterListW.front()->GetClusterSpanX(minX, maxX);
 
-        // U 
+        // U
         ClusterList clusterListU;
         LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_U, clusterListU);
         float minX_U(9999.), maxX_U(9999.);
         if (!clusterListU.empty())
             clusterListU.front()->GetClusterSpanX(minX_U, maxX_U);
 
-        // V 
+        // V
         ClusterList clusterListV;
         LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_V, clusterListV);
         float minX_V(9999.), maxX_V(9999.);
         if (!clusterListV.empty())
             clusterListV.front()->GetClusterSpanX(minX_V, maxX_V);
 
-        // Checks                                                             
-        if (clusterListU.empty() && clusterListV.empty()) 
+        // Checks
+        if (clusterListU.empty() && clusterListV.empty())
         {
             this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListW.front(), orderedCaloHitList);
         }
         else
         {
             // Get drift span from well-defined views
-            if (!clusterListU.empty() && !clusterListV.empty()) 
+            if (!clusterListU.empty() && !clusterListV.empty())
             {
-                minX = std::min(minX_U, minX_V); 
-                maxX = std::max(maxX_U, maxX_V);  
+                minX = std::min(minX_U, minX_V);
+                maxX = std::max(maxX_U, maxX_V);
             }
             else if (!clusterListU.empty() && clusterListV.empty())
             {
-                minX = minX_U; 
-                maxX = maxX_U; 
+                minX = minX_U;
+                maxX = maxX_U;
             }
             else if (clusterListU.empty() && !clusterListV.empty())
             {
-                minX = minX_V; 
-                maxX = maxX_V; 
+                minX = minX_V;
+                maxX = maxX_V;
             }
 
-            // Based on whether the PFP crosses the cathode, views are combined to obtain Collection in ICARUS      
-            // PFP crosses the cathode                                                          
-            if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::BelowCathode &&
-                LocatePointInCryostat_ICARUS(maxX) == PositionInCryostat::AboveCathode) 
+            // Based on whether the PFP crosses the cathode, views are combined to obtain Collection in ICARUS
+            // PFP crosses the cathode
+            if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::BelowCathode && LocatePointInCryostat_ICARUS(maxX) == PositionInCryostat::AboveCathode)
             {
-                if (clusterListU.empty() || clusterListV.empty()) 
+                if (clusterListU.empty() || clusterListV.empty())
                 {
                     this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListW.front(), orderedCaloHitList);
                 }
-                else 
-                {                                                                                                                                                                                                                                                                                                         
+                else
+                {
                     CaloHitList orderedCaloHitListU;
                     this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListU.front(), orderedCaloHitListU);
-                                                                                                                                                     
+
                     CaloHitList orderedCaloHitListV;
                     this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListV.front(), orderedCaloHitListV);
 
                     if (!orderedCaloHitListU.empty() && !orderedCaloHitListV.empty())
-                    {                                                   
+                    {
                         const VertexList *pVertexList(nullptr);
-                        (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
+                        (void)PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
                         const float pVertexX = pVertexList->front()->GetPosition().GetX();
-                        
-                        if (LocatePointInCryostat_ICARUS(pVertexX) == PositionInCryostat::AboveCathode) 
+
+                        if (LocatePointInCryostat_ICARUS(pVertexX) == PositionInCryostat::AboveCathode)
                         {
-                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, 
-                                orderedCaloHitListV, orderedCaloHitListU, orderedCaloHitList); ///< V, then U (TPC 2/3)
+                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, orderedCaloHitListV, orderedCaloHitListU, orderedCaloHitList); ///< V, then U (TPC 2/3)
                         }
                         else if (LocatePointInCryostat_ICARUS(pVertexX) == PositionInCryostat::BelowCathode)
                         {
-                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, 
-                                orderedCaloHitListU, orderedCaloHitListV, orderedCaloHitList); ///< U, then V (TPC 0/1)
+                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, orderedCaloHitListU, orderedCaloHitListV, orderedCaloHitList); ///< U, then V (TPC 0/1)
                         }
-                        else 
+                        else
                         {
-                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, 
-                                orderedCaloHitListU, orderedCaloHitListV, orderedCaloHitList); ///< Ordering cannot be established a priori (vertex within cathode)
+                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, orderedCaloHitListU, orderedCaloHitListV,
+                                orderedCaloHitList); ///< Ordering cannot be established a priori (vertex within cathode)
                         }
-                    }                                                                                                                                                            
-                    else     
-                    {                                               
+                    }
+                    else
+                    {
                         orderedCaloHitList = orderedCaloHitListU; ///< No vertex exists, either U or V are fine
                     }
-                }                                
+                }
             }
             // PFP is contained within TPC 2/3
             else if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::AboveCathode)
@@ -743,7 +742,7 @@ void ConeChargeFeatureTool_ICARUS::Run(
             }
         }
 
-        if (!orderedCaloHitList.empty()) 
+        if (!orderedCaloHitList.empty())
         {
             const CartesianVector &pfoStart(orderedCaloHitList.front()->GetPositionVector());
             CartesianVector centroid(0.f, 0.f, 0.f);
@@ -757,15 +756,14 @@ void ConeChargeFeatureTool_ICARUS::Run(
             concentration = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeCon / (chargeCore + chargeHalo) : -1.f;
             const float pfoLength(std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo)));
             conicalness = (pfoLength > std::numeric_limits<float>::epsilon())
-                            ? this->CalculateConicalness(orderedCaloHitList, pfoStart, eigenVecs[0], pfoLength)
-                            : 1.f;
+                ? this->CalculateConicalness(orderedCaloHitList, pfoStart, eigenVecs[0], pfoLength)
+                : 1.f;
         }
     }
-    
+
     featureVector.push_back(haloTotalRatio);
     featureVector.push_back(concentration);
     featureVector.push_back(conicalness);
-    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -790,7 +788,7 @@ void ConeChargeFeatureTool_ICARUS::OrderCaloHitsByDistanceToVertex(
             pInteractionVertex = pVertex;
         }
     }
-    
+
     if (pInteractionVertex && (1 == nInteractionVertices))
     {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
@@ -804,11 +802,10 @@ void ConeChargeFeatureTool_ICARUS::OrderCaloHitsByDistanceToVertex(
     }
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ConeChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const pandora::Algorithm *const pAlgorithm, const pandora::CaloHitList &orderedCaloHitList1,
-                                                                  const pandora::CaloHitList &orderedCaloHitList2, pandora::CaloHitList &mergedCaloHitList)
+void ConeChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const pandora::Algorithm *const pAlgorithm,
+    const pandora::CaloHitList &orderedCaloHitList1, const pandora::CaloHitList &orderedCaloHitList2, pandora::CaloHitList &mergedCaloHitList)
 {
 
     const VertexList *pVertexList(nullptr);
@@ -819,20 +816,18 @@ void ConeChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const pan
     float hitVertexDistance = 0., maxHitVertexDistance1 = 0., minHitVertexDistance2 = 9999.;
 
     // First hit list
-    for (CaloHitList::const_iterator hIter = orderedCaloHitList1.begin(); hIter != orderedCaloHitList1.end(); hIter++) 
+    for (CaloHitList::const_iterator hIter = orderedCaloHitList1.begin(); hIter != orderedCaloHitList1.end(); hIter++)
     {
         const CaloHit *const pCaloHit = *hIter;
         const CartesianVector &hit(pCaloHit->GetPositionVector());
 
         const CartesianVector &vertexPosition = (pCaloHit->GetHitType() == TPC_VIEW_U) ? vertexPosition2DU : vertexPosition2DV;
-        hitVertexDistance = 
-            pow(vertexPosition.GetX() - hit.GetX(), 2) +
-            pow(vertexPosition.GetY() - hit.GetY(), 2) +
-            pow(vertexPosition.GetZ() - hit.GetZ(), 2);
+        hitVertexDistance =
+            pow(vertexPosition.GetX() - hit.GetX(), 2) + pow(vertexPosition.GetY() - hit.GetY(), 2) + pow(vertexPosition.GetZ() - hit.GetZ(), 2);
 
-        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) && 
+        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) &&
             (LocatePointInCryostat_ICARUS(hit.GetX()) == PositionInCryostat::BelowCathode); ///< U is Collection "below cathode"
-        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && 
+        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V &&
             (LocatePointInCryostat_ICARUS(hit.GetX()) == PositionInCryostat::AboveCathode); ///< V is Collection "below cathode"
 
         if (selectHitViewU || selectHitViewV)
@@ -842,21 +837,19 @@ void ConeChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const pan
         }
     }
 
-    // Second hit list                                                                                                                                                                 
-    for (CaloHitList::const_iterator hIter = orderedCaloHitList2.begin(); hIter != orderedCaloHitList2.end(); hIter++) 
+    // Second hit list
+    for (CaloHitList::const_iterator hIter = orderedCaloHitList2.begin(); hIter != orderedCaloHitList2.end(); hIter++)
     {
         const CaloHit *const pCaloHit = *hIter;
         const CartesianVector &hit(pCaloHit->GetPositionVector());
 
         const CartesianVector &vertexPosition = (pCaloHit->GetHitType() == TPC_VIEW_U) ? vertexPosition2DU : vertexPosition2DV;
-        hitVertexDistance = 
-            pow(vertexPosition.GetX() - hit.GetX(), 2) +
-            pow(vertexPosition.GetY() - hit.GetY(), 2) +
-            pow(vertexPosition.GetZ() - hit.GetZ(), 2);
+        hitVertexDistance =
+            pow(vertexPosition.GetX() - hit.GetX(), 2) + pow(vertexPosition.GetY() - hit.GetY(), 2) + pow(vertexPosition.GetZ() - hit.GetZ(), 2);
 
-        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) && 
+        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) &&
             (LocatePointInCryostat_ICARUS(hit.GetX()) == PositionInCryostat::BelowCathode); ///< U is Collection "below cathode"
-        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && 
+        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V &&
             (LocatePointInCryostat_ICARUS(hit.GetX()) == PositionInCryostat::AboveCathode); ///< V is Collection "below cathode"
 
         if (selectHitViewU || selectHitViewV)
@@ -866,7 +859,7 @@ void ConeChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const pan
         }
     }
 
-    // Reorder if needed                                                                                                                   
+    // Reorder if needed
     if (minHitVertexDistance2 < maxHitVertexDistance1)
     {
         mergedCaloHitList.sort(ConeChargeFeatureTool_ICARUS::DistanceToVertexComparator(vertexPosition2DU, vertexPosition2DV, TPC_VIEW_U, TPC_VIEW_V));
@@ -876,7 +869,8 @@ void ConeChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const pan
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ConeChargeFeatureTool_ICARUS::VertexComparator::VertexComparator(const CartesianVector vertexPosition2D) : m_neutrinoVertex(vertexPosition2D)
+ConeChargeFeatureTool_ICARUS::VertexComparator::VertexComparator(const CartesianVector vertexPosition2D) :
+    m_neutrinoVertex(vertexPosition2D)
 {
 }
 
@@ -891,10 +885,13 @@ bool ConeChargeFeatureTool_ICARUS::VertexComparator::operator()(const CaloHit *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ConeChargeFeatureTool_ICARUS::DistanceToVertexComparator::DistanceToVertexComparator(const CartesianVector vertexPosition2D_A, const CartesianVector vertexPosition2D_B,
-                                                                                const HitType hitType_A, const HitType hitType_B) :
-  m_neutrinoVertex_A(vertexPosition2D_A), m_neutrinoVertex_B(vertexPosition2D_B), m_hitType_A(hitType_A), m_hitType_B(hitType_B)
-{                                                                                                                                            
+ConeChargeFeatureTool_ICARUS::DistanceToVertexComparator::DistanceToVertexComparator(
+    const CartesianVector vertexPosition2D_A, const CartesianVector vertexPosition2D_B, const HitType hitType_A, const HitType hitType_B) :
+    m_neutrinoVertex_A(vertexPosition2D_A),
+    m_neutrinoVertex_B(vertexPosition2D_B),
+    m_hitType_A(hitType_A),
+    m_hitType_B(hitType_B)
+{
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -907,7 +904,7 @@ bool ConeChargeFeatureTool_ICARUS::DistanceToVertexComparator::operator()(const 
     {
         distanceL = (left->GetPositionVector() - m_neutrinoVertex_A).GetMagnitudeSquared();
     }
-    else 
+    else
     {
         distanceL = (left->GetPositionVector() - m_neutrinoVertex_B).GetMagnitudeSquared();
     }
@@ -916,7 +913,7 @@ bool ConeChargeFeatureTool_ICARUS::DistanceToVertexComparator::operator()(const 
     {
         distanceR = (right->GetPositionVector() - m_neutrinoVertex_A).GetMagnitudeSquared();
     }
-    else 
+    else
     {
         distanceR = (right->GetPositionVector() - m_neutrinoVertex_B).GetMagnitudeSquared();
     }
@@ -926,8 +923,8 @@ bool ConeChargeFeatureTool_ICARUS::DistanceToVertexComparator::operator()(const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ConeChargeFeatureTool_ICARUS::Run(LArMvaHelper::MvaFeatureMap &featureMap, StringVector &featureOrder, const std::string &featureToolName,
-    const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+void ConeChargeFeatureTool_ICARUS::Run(LArMvaHelper::MvaFeatureMap &featureMap, StringVector &featureOrder,
+    const std::string &featureToolName, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     LArMvaHelper::MvaFeatureVector toolFeatureVec;
     this->Run(toolFeatureVec, pAlgorithm, pInputPfo);
@@ -1008,7 +1005,8 @@ float ConeChargeFeatureTool_ICARUS::CalculateConicalness(
 
 StatusCode ConeChargeFeatureTool_ICARUS::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseICARUSCollectionPlane", m_useICARUSCollectionPlane));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "UseICARUSCollectionPlane", m_useICARUSCollectionPlane));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConMinHits", m_conMinHits));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCharge", m_minCharge));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConFracRange", m_conFracRange));
@@ -1022,7 +1020,9 @@ StatusCode ConeChargeFeatureTool_ICARUS::ReadSettings(const TiXmlHandle xmlHandl
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() : m_slidingLinearFitWindow(3), m_slidingLinearFitWindowLarge(10000)
+ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() :
+    m_slidingLinearFitWindow(3),
+    m_slidingLinearFitWindowLarge(10000)
 {
 }
 
@@ -1702,7 +1702,9 @@ bool ThreeDChargeFeatureTool::VertexComparator::operator()(const CaloHit *const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDChargeFeatureTool_ICARUS::ThreeDChargeFeatureTool_ICARUS() : m_useICARUSCollectionPlane(false), m_endChargeFraction(0.1f)
+ThreeDChargeFeatureTool_ICARUS::ThreeDChargeFeatureTool_ICARUS() :
+    m_useICARUSCollectionPlane(false),
+    m_endChargeFraction(0.1f)
 {
 }
 
@@ -1716,7 +1718,7 @@ void ThreeDChargeFeatureTool_ICARUS::Run(
 
     float totalCharge(-1.f), chargeSigma(-1.f), chargeMean(-1.f), endCharge(-1.f);
     LArMvaHelper::MvaFeature charge1, charge2;
-                                                                                       
+
     CaloHitList orderedCaloHitList;
 
     if (!m_useICARUSCollectionPlane)
@@ -1724,7 +1726,7 @@ void ThreeDChargeFeatureTool_ICARUS::Run(
         ClusterList clusterListW;
         LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, clusterListW);
 
-        if (!clusterListW.empty()) 
+        if (!clusterListW.empty())
         {
             this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListW.front(), orderedCaloHitList);
             this->CalculateChargeVariables(orderedCaloHitList, totalCharge, chargeSigma, chargeMean, endCharge);
@@ -1732,95 +1734,92 @@ void ThreeDChargeFeatureTool_ICARUS::Run(
     }
     else
     {
-        // W 
+        // W
         ClusterList clusterListW;
         LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, clusterListW);
         float minX(9999.), maxX(9999.);
         if (!clusterListW.empty())
             clusterListW.front()->GetClusterSpanX(minX, maxX);
 
-        // U 
+        // U
         ClusterList clusterListU;
         LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_U, clusterListU);
         float minX_U(9999.), maxX_U(9999.);
         if (!clusterListU.empty())
             clusterListU.front()->GetClusterSpanX(minX_U, maxX_U);
 
-        // V 
+        // V
         ClusterList clusterListV;
         LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_V, clusterListV);
         float minX_V(9999.), maxX_V(9999.);
         if (!clusterListV.empty())
             clusterListV.front()->GetClusterSpanX(minX_V, maxX_V);
 
-        // Checks                                                             
-        if (clusterListU.empty() && clusterListV.empty()) 
+        // Checks
+        if (clusterListU.empty() && clusterListV.empty())
         {
             this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListW.front(), orderedCaloHitList);
         }
         else
         {
             // Get drift span from well-defined views
-            if (!clusterListU.empty() && !clusterListV.empty()) 
+            if (!clusterListU.empty() && !clusterListV.empty())
             {
-                minX = std::min(minX_U, minX_V); 
-                maxX = std::max(maxX_U, maxX_V);  
+                minX = std::min(minX_U, minX_V);
+                maxX = std::max(maxX_U, maxX_V);
             }
             else if (!clusterListU.empty() && clusterListV.empty())
             {
-                minX = minX_U; 
-                maxX = maxX_U; 
+                minX = minX_U;
+                maxX = maxX_U;
             }
             else if (clusterListU.empty() && !clusterListV.empty())
             {
-                minX = minX_V; 
-                maxX = maxX_V; 
+                minX = minX_V;
+                maxX = maxX_V;
             }
 
-            // Based on whether the PFP crosses the cathode, views are combined to obtain Collection in ICARUS      
-            // PFP crosses the cathode                                                          
-            if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::BelowCathode &&
-                LocatePointInCryostat_ICARUS(maxX) == PositionInCryostat::AboveCathode) 
+            // Based on whether the PFP crosses the cathode, views are combined to obtain Collection in ICARUS
+            // PFP crosses the cathode
+            if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::BelowCathode && LocatePointInCryostat_ICARUS(maxX) == PositionInCryostat::AboveCathode)
             {
-                if (clusterListU.empty() || clusterListV.empty()) 
+                if (clusterListU.empty() || clusterListV.empty())
                 {
                     this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListW.front(), orderedCaloHitList);
                 }
-                else 
-                {                                                                                                                                                                                                                                                                                                         
+                else
+                {
                     CaloHitList orderedCaloHitListU;
                     this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListU.front(), orderedCaloHitListU);
-                                                                                                                                                     
+
                     CaloHitList orderedCaloHitListV;
                     this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListV.front(), orderedCaloHitListV);
 
                     if (!orderedCaloHitListU.empty() && !orderedCaloHitListV.empty())
-                    {                                                   
+                    {
                         const VertexList *pVertexList(nullptr);
-                        (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
+                        (void)PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
                         const float pVertexX = pVertexList->front()->GetPosition().GetX();
-                        
-                        if (LocatePointInCryostat_ICARUS(pVertexX) == PositionInCryostat::AboveCathode) 
+
+                        if (LocatePointInCryostat_ICARUS(pVertexX) == PositionInCryostat::AboveCathode)
                         {
-                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, 
-                                orderedCaloHitListV, orderedCaloHitListU, orderedCaloHitList); ///< V, then U (TPC 2/3)
+                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, orderedCaloHitListV, orderedCaloHitListU, orderedCaloHitList); ///< V, then U (TPC 2/3)
                         }
                         else if (LocatePointInCryostat_ICARUS(pVertexX) == PositionInCryostat::BelowCathode)
                         {
-                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, 
-                                orderedCaloHitListU, orderedCaloHitListV, orderedCaloHitList); ///< U, then V (TPC 0/1)
+                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, orderedCaloHitListU, orderedCaloHitListV, orderedCaloHitList); ///< U, then V (TPC 0/1)
                         }
-                        else 
+                        else
                         {
-                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, 
-                                orderedCaloHitListU, orderedCaloHitListV, orderedCaloHitList); ///< Ordering cannot be established a priori (vertex within cathode)
+                            this->CombineCaloHitListsToHaveCollection(pAlgorithm, orderedCaloHitListU, orderedCaloHitListV,
+                                orderedCaloHitList); ///< Ordering cannot be established a priori (vertex within cathode)
                         }
-                    }                                                                                                                                                            
-                    else     
-                    {                                               
+                    }
+                    else
+                    {
                         orderedCaloHitList = orderedCaloHitListU; ///< No vertex exists, either U or V are fine
                     }
-                }                                
+                }
             }
             // PFP is contained within TPC 2/3
             else if (LocatePointInCryostat_ICARUS(minX) == PositionInCryostat::AboveCathode)
@@ -1865,8 +1864,8 @@ void ThreeDChargeFeatureTool_ICARUS::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDChargeFeatureTool_ICARUS::Run(LArMvaHelper::MvaFeatureMap &featureMap, StringVector &featureOrder, const std::string &featureToolName,
-    const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+void ThreeDChargeFeatureTool_ICARUS::Run(LArMvaHelper::MvaFeatureMap &featureMap, StringVector &featureOrder,
+    const std::string &featureToolName, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     LArMvaHelper::MvaFeatureVector toolFeatureVec;
     this->Run(toolFeatureVec, pAlgorithm, pInputPfo);
@@ -1887,8 +1886,8 @@ void ThreeDChargeFeatureTool_ICARUS::Run(LArMvaHelper::MvaFeatureMap &featureMap
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDChargeFeatureTool_ICARUS::CalculateChargeVariables(const CaloHitList &orderedCaloHitList, float &totalCharge, 
-    float &chargeSigma, float &chargeMean, float &endCharge)
+void ThreeDChargeFeatureTool_ICARUS::CalculateChargeVariables(
+    const CaloHitList &orderedCaloHitList, float &totalCharge, float &chargeSigma, float &chargeMean, float &endCharge)
 {
     totalCharge = 0.f;
     chargeSigma = 0.f;
@@ -1947,7 +1946,7 @@ void ThreeDChargeFeatureTool_ICARUS::OrderCaloHitsByDistanceToVertex(
             pInteractionVertex = pVertex;
         }
     }
-    
+
     if (pInteractionVertex && (1 == nInteractionVertices))
     {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
@@ -1961,13 +1960,12 @@ void ThreeDChargeFeatureTool_ICARUS::OrderCaloHitsByDistanceToVertex(
     }
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const pandora::Algorithm *const pAlgorithm, const pandora::CaloHitList &orderedCaloHitList1,
-                                                                  const pandora::CaloHitList &orderedCaloHitList2, pandora::CaloHitList &mergedCaloHitList)
- {
-                                                                                                                                                                  
+void ThreeDChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const pandora::Algorithm *const pAlgorithm,
+    const pandora::CaloHitList &orderedCaloHitList1, const pandora::CaloHitList &orderedCaloHitList2, pandora::CaloHitList &mergedCaloHitList)
+{
+
     const VertexList *pVertexList(nullptr);
     (void)PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
     const CartesianVector vertexPosition2DU(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_U));
@@ -1976,20 +1974,18 @@ void ThreeDChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const p
     float hitVertexDistance = 0., maxHitVertexDistance1 = 0., minHitVertexDistance2 = 9999.;
 
     // First hit list
-    for (CaloHitList::const_iterator hIter = orderedCaloHitList1.begin(); hIter != orderedCaloHitList1.end(); hIter++) 
+    for (CaloHitList::const_iterator hIter = orderedCaloHitList1.begin(); hIter != orderedCaloHitList1.end(); hIter++)
     {
         const CaloHit *const pCaloHit = *hIter;
         const CartesianVector &hit(pCaloHit->GetPositionVector());
 
         const CartesianVector &vertexPosition = (pCaloHit->GetHitType() == TPC_VIEW_U) ? vertexPosition2DU : vertexPosition2DV;
-        hitVertexDistance = 
-            pow(vertexPosition.GetX() - hit.GetX(), 2) +
-            pow(vertexPosition.GetY() - hit.GetY(), 2) +
-            pow(vertexPosition.GetZ() - hit.GetZ(), 2);
+        hitVertexDistance =
+            pow(vertexPosition.GetX() - hit.GetX(), 2) + pow(vertexPosition.GetY() - hit.GetY(), 2) + pow(vertexPosition.GetZ() - hit.GetZ(), 2);
 
-        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) && 
+        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) &&
             (LocatePointInCryostat_ICARUS(hit.GetX()) == PositionInCryostat::BelowCathode); ///< U is Collection "below cathode"
-        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && 
+        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V &&
             (LocatePointInCryostat_ICARUS(hit.GetX()) == PositionInCryostat::AboveCathode); ///< V is Collection "below cathode"
 
         if (selectHitViewU || selectHitViewV)
@@ -1999,21 +1995,19 @@ void ThreeDChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const p
         }
     }
 
-    // Second hit list                                                                                                                                                                 
-    for (CaloHitList::const_iterator hIter = orderedCaloHitList2.begin(); hIter != orderedCaloHitList2.end(); hIter++) 
+    // Second hit list
+    for (CaloHitList::const_iterator hIter = orderedCaloHitList2.begin(); hIter != orderedCaloHitList2.end(); hIter++)
     {
         const CaloHit *const pCaloHit = *hIter;
         const CartesianVector &hit(pCaloHit->GetPositionVector());
 
         const CartesianVector &vertexPosition = (pCaloHit->GetHitType() == TPC_VIEW_U) ? vertexPosition2DU : vertexPosition2DV;
-        hitVertexDistance = 
-            pow(vertexPosition.GetX() - hit.GetX(), 2) +
-            pow(vertexPosition.GetY() - hit.GetY(), 2) +
-            pow(vertexPosition.GetZ() - hit.GetZ(), 2);
+        hitVertexDistance =
+            pow(vertexPosition.GetX() - hit.GetX(), 2) + pow(vertexPosition.GetY() - hit.GetY(), 2) + pow(vertexPosition.GetZ() - hit.GetZ(), 2);
 
-        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) && 
+        bool selectHitViewU = (pCaloHit->GetHitType() == TPC_VIEW_U) &&
             (LocatePointInCryostat_ICARUS(hit.GetX()) == PositionInCryostat::BelowCathode); ///< U is Collection "below cathode"
-        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V && 
+        bool selectHitViewV = pCaloHit->GetHitType() == TPC_VIEW_V &&
             (LocatePointInCryostat_ICARUS(hit.GetX()) == PositionInCryostat::AboveCathode); ///< V is Collection "below cathode"
 
         if (selectHitViewU || selectHitViewV)
@@ -2023,7 +2017,7 @@ void ThreeDChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const p
         }
     }
 
-    // Reorder if needed                                                                                                                   
+    // Reorder if needed
     if (minHitVertexDistance2 < maxHitVertexDistance1)
     {
         mergedCaloHitList.sort(ThreeDChargeFeatureTool_ICARUS::DistanceToVertexComparator(vertexPosition2DU, vertexPosition2DV, TPC_VIEW_U, TPC_VIEW_V));
@@ -2034,8 +2028,8 @@ void ThreeDChargeFeatureTool_ICARUS::CombineCaloHitListsToHaveCollection(const p
 
 StatusCode ThreeDChargeFeatureTool_ICARUS::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseICARUSCollectionPlane", m_useICARUSCollectionPlane));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "UseICARUSCollectionPlane", m_useICARUSCollectionPlane));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EndChargeFraction", m_endChargeFraction));
 
@@ -2044,7 +2038,8 @@ StatusCode ThreeDChargeFeatureTool_ICARUS::ReadSettings(const TiXmlHandle xmlHan
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDChargeFeatureTool_ICARUS::VertexComparator::VertexComparator(const CartesianVector vertexPosition2D) : m_neutrinoVertex(vertexPosition2D)
+ThreeDChargeFeatureTool_ICARUS::VertexComparator::VertexComparator(const CartesianVector vertexPosition2D) :
+    m_neutrinoVertex(vertexPosition2D)
 {
 }
 
@@ -2059,9 +2054,12 @@ bool ThreeDChargeFeatureTool_ICARUS::VertexComparator::operator()(const CaloHit 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDChargeFeatureTool_ICARUS::DistanceToVertexComparator::DistanceToVertexComparator(const CartesianVector vertexPosition2D_A, const CartesianVector vertexPosition2D_B,
-                                                                                const HitType hitType_A, const HitType hitType_B) :
-  m_neutrinoVertex_A(vertexPosition2D_A), m_neutrinoVertex_B(vertexPosition2D_B), m_hitType_A(hitType_A), m_hitType_B(hitType_B)
+ThreeDChargeFeatureTool_ICARUS::DistanceToVertexComparator::DistanceToVertexComparator(
+    const CartesianVector vertexPosition2D_A, const CartesianVector vertexPosition2D_B, const HitType hitType_A, const HitType hitType_B) :
+    m_neutrinoVertex_A(vertexPosition2D_A),
+    m_neutrinoVertex_B(vertexPosition2D_B),
+    m_hitType_A(hitType_A),
+    m_hitType_B(hitType_B)
 {
 }
 
@@ -2075,7 +2073,7 @@ bool ThreeDChargeFeatureTool_ICARUS::DistanceToVertexComparator::operator()(cons
     {
         distanceL = (left->GetPositionVector() - m_neutrinoVertex_A).GetMagnitudeSquared();
     }
-    else 
+    else
     {
         distanceL = (left->GetPositionVector() - m_neutrinoVertex_B).GetMagnitudeSquared();
     }
@@ -2084,7 +2082,7 @@ bool ThreeDChargeFeatureTool_ICARUS::DistanceToVertexComparator::operator()(cons
     {
         distanceR = (right->GetPositionVector() - m_neutrinoVertex_A).GetMagnitudeSquared();
     }
-    else 
+    else
     {
         distanceR = (right->GetPositionVector() - m_neutrinoVertex_B).GetMagnitudeSquared();
     }
