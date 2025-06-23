@@ -73,7 +73,7 @@ EventClusterValidationAlgorithm::MatchedParticleMetrics::MatchedParticleMetrics(
 
 EventClusterValidationAlgorithm::EventClusterValidationAlgorithm() :
     m_eventNumber{0},
-    m_deltaRayLengthThresholdSquared{pow(4.67f / 2.f, 2.f)}, // ~half a wire pitch
+    m_deltaRayLengthThresholdSquared{static_cast<float>(pow(4.67f / 2.f, 2.f))}, // ~half a wire pitch
     m_deltaRayParentWeightThreshold{0.01f},
     m_caloHitListNames{ { "CaloHitList2D" } },
     m_minMCHitsPerView{0},
