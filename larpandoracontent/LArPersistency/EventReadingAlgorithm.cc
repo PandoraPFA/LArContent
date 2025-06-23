@@ -29,7 +29,7 @@ EventReadingAlgorithm::EventReadingAlgorithm() :
     m_larCaloHitVersion(1),
     m_useLArMCParticles(true),
     m_larMCParticleVersion(2),
-    m_isEnhancedEventFile(false),    
+    m_isEnhancedEventFile(false),
     m_pEventFileReader(nullptr)
 {
 }
@@ -68,10 +68,10 @@ StatusCode EventReadingAlgorithm::Initialize()
     if (!m_eventFileName.empty())
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceEventFileReader(m_eventFileName));
-	
-	if (m_isEnhancedEventFile)
-	  PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadGlobalHeader());
-	
+
+        if (m_isEnhancedEventFile)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadGlobalHeader());
+
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->GoToEvent(m_skipToEvent));
     }
 
@@ -95,7 +95,7 @@ StatusCode EventReadingAlgorithm::Run()
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RepeatEventPreparation(*this));
     }
-    
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -243,7 +243,7 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IsEnhancedEventFile", m_isEnhancedEventFile));
-    
+
     return STATUS_CODE_SUCCESS;
 }
 
