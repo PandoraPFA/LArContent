@@ -785,7 +785,9 @@ void EventClusterValidationAlgorithm::CalcRandIndex(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventClusterValidationAlgorithm::SetBranches(
-    const ClusterMetrics &clusterMetrics, const MatchedParticleMetrics &matchedParticleMetrics, const int view) const
+    [[maybe_unused]] const ClusterMetrics &clusterMetrics,
+    [[maybe_unused]] const MatchedParticleMetrics &matchedParticleMetrics,
+    [[maybe_unused]] const int view) const
 {
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "event", m_eventNumber - 1));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "view", view));
@@ -866,7 +868,7 @@ void EventClusterValidationAlgorithm::VisualizeTargetClusters(std::map<const Cal
     }
 
     int color {1}; // 0 is white
-    for (const auto &[pMC, caloHits] : mcToCaloHits)
+    for ([[maybe_unused]] const auto &[pMC, caloHits] : mcToCaloHits)
     {
         PANDORA_MONITORING_API(
             VisualizeCaloHits(this->GetPandora(),
@@ -909,7 +911,7 @@ void EventClusterValidationAlgorithm::VisualizeRandIndexRecoClusters(
     int color {1}; // 0 is white
     for (const auto &[pCluster, caloHits] : clusterToCaloHits)
     {
-        const MCParticle *const pMC{clusterToMainMC.at(pCluster)};
+        [[maybe_unused]] const MCParticle *const pMC{clusterToMainMC.at(pCluster)};
         PANDORA_MONITORING_API(
             VisualizeCaloHits(
                 this->GetPandora(),
