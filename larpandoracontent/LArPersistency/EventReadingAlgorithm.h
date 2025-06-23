@@ -88,7 +88,7 @@ private:
     bool m_useLArMCParticles;            ///< Whether to read lar mc particles, or standard pandora mc particles
     unsigned int m_larMCParticleVersion; ///< LArMCParticle version for LArMCParticleFactory
     bool m_isEnhancedEventFile;          ///< Whether the event file has a 'file describing' block
-  
+
     pandora::FileReader *m_pEventFileReader; ///< Address of the event file reader
 };
 
