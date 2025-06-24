@@ -107,7 +107,7 @@ private:
         const std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents, MatchedParticleMetrics &metrics) const;
 
     /**
-     *  @brief Calculate Rand Index for the reoc clusters with the true clusters for all/track/shower hits.
+     *  @brief Calculate Rand Index for the reco clusters with the true clusters for all/track/shower hits.
      *         According to m_mergeShowerClustersForRandIndex, the shower clusters may be merged using cheating prior to the calculation.
      *         (Ref. for Adjusted Rand Index: https://link.springer.com/article/10.1007/BF01908075).
      *
@@ -121,7 +121,7 @@ private:
      *
      *  @param[in]  caloHits   List of hits
      *  @param[in]  clusters   List of clusters
-     *  @param[out] hitParents Map of hits to the Ccuster/MC particle they belong to
+     *  @param[out] hitParents Map of hits to the Cluster/MC particle they belong to
      */
     void GetHitParents(const pandora::CaloHitList &caloHits, const pandora::ClusterList &clusters,
         std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents) const;
@@ -182,7 +182,7 @@ private:
 
     /**
      *  @brief Draw the reco clusters used in the Rand Index calculation. These will be different from the clusters inputted to the
-     *         the algorithm if MergeShowerClustersForRandIndex is true.
+     *         algorithm if MergeShowerClustersForRandIndex is true.
      *
      *  @param[in] hitParents Map of hits to the cluster/MC particle they belong to
      *  @param[in] hitParents Map of hits to the cluster they merge with for the Rand Index Calculation.
@@ -210,7 +210,7 @@ private:
      *  @brief Update the branches of the TTree for this entry
      *
      *  @param[in] clusterMetrics         Output metrics for clusters in the view
-     *  @param[in] matchedParticleMetrics Ouptut metrics each particle matched to a cluster in the view
+     *  @param[in] matchedParticleMetrics Output metrics each particle matched to a cluster in the view
      *  @param[in] view                   The view
      */
     void SetBranches(const ClusterMetrics &clusterMetrics, const MatchedParticleMetrics &matchedParticleMetrics, const int view) const;
