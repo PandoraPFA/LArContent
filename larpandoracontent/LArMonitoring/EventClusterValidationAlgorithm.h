@@ -217,7 +217,7 @@ private:
 
     // members
     int m_eventNumber;                      ///< To track the current event number
-    float m_deltaRayLengthThresholdSquared; ///< Threshold for defining small delta rays that will be folded to the parent particle
+    std::map<pandora::HitType, float> m_deltaRayLengthThresholdSquared; ///< Threshold for defining small delta rays that will be folded to the parent particle
     float m_deltaRayParentWeightThreshold;  ///< Threshold for weight contribution of parent particle for it take the delta ray's hit
 
     // members that may be set from xml
