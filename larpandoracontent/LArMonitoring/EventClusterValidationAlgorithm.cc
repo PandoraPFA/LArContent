@@ -11,7 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
-#include "Helpers/MCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include <numeric>
 #include <algorithm>
@@ -73,7 +73,9 @@ EventClusterValidationAlgorithm::MatchedParticleMetrics::MatchedParticleMetrics(
 
 EventClusterValidationAlgorithm::EventClusterValidationAlgorithm() :
     m_eventNumber{0},
-    m_deltaRayLengthThresholdSquared{static_cast<float>(pow(4.67f / 2.f, 2.f))}, // ~half a wire pitch
+    // m_deltaRayLengthThresholdSquared{static_cast<float>(pow(4.67f / 2.f, 2.f))}, // ~half a wire pitch
+    m_deltaRayLengthThresholdSquared{std::map<HitType, float>{}},
+    // m_deltaRayLengthThresholdSquared{ {TPC_VIEW_U, 0.f}, {TPC_VIEW_V, 0.f}, {TPC_VIEW_W, 0.f} },
     m_deltaRayParentWeightThreshold{0.01f},
     m_caloHitListNames{ { "CaloHitList2D" } },
     m_minMCHitsPerView{0},
@@ -371,7 +373,8 @@ const MCParticle* EventClusterValidationAlgorithm::FoldPotentialDeltaRayTo(const
     }
 
     // Delta ray that does not start a shower and is short -> fold into parent particle
-    if (!this->CausesShower(pMC, 0) && (pMC->GetVertex() - pMC->GetEndpoint()).GetMagnitudeSquared() < m_deltaRayLengthThresholdSquared)
+    if (!this->CausesShower(pMC, 0) &&
+        (pMC->GetVertex() - pMC->GetEndpoint()).GetMagnitudeSquared() < m_deltaRayLengthThresholdSquared.at(pCaloHit->GetHitType()))
     {
         return pParentMC;
     }
@@ -950,6 +953,14 @@ StatusCode EventClusterValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FoldShowers", m_foldShowers));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "HandleDeltaRays", m_handleDeltaRays));
+    if (m_handleDeltaRays)
+    {
+        m_deltaRayLengthThresholdSquared = {
+            { TPC_VIEW_U, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U) / 2., 2.)) },
+            { TPC_VIEW_V, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V) / 2., 2.)) },
+            { TPC_VIEW_W, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W) / 2., 2.)) }
+        };
+    }
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MergeShowerClustersForRandIndex", m_mergeShowerClustersForRandIndex));
@@ -964,6 +975,7 @@ StatusCode EventClusterValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
+
 
     return STATUS_CODE_SUCCESS;
 }
