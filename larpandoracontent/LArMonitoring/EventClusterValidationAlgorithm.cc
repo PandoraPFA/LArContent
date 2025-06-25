@@ -76,7 +76,7 @@ EventClusterValidationAlgorithm::EventClusterValidationAlgorithm() :
     // m_deltaRayLengthThresholdSquared{static_cast<float>(pow(4.67f / 2.f, 2.f))}, // ~half a wire pitch
     m_deltaRayLengthThresholdSquared{std::map<HitType, float>{}},
     // m_deltaRayLengthThresholdSquared{ {TPC_VIEW_U, 0.f}, {TPC_VIEW_V, 0.f}, {TPC_VIEW_W, 0.f} },
-    m_deltaRayParentWeightThreshold{0.01f},
+    m_deltaRayParentWeightThreshold{0.f},
     m_caloHitListNames{ { "CaloHitList2D" } },
     m_minMCHitsPerView{0},
     m_onlyRandIndex{false},
@@ -379,7 +379,7 @@ const MCParticle* EventClusterValidationAlgorithm::FoldPotentialDeltaRayTo(const
         return pParentMC;
     }
 
-    // Now have a delta ray that we would like to cluster but only the hits that not overlapping with the parent particle
+    // Now have a delta ray that we would like to cluster but only the hits that are not overlapping with the parent particle
     float parentWeight{std::numeric_limits<float>::lowest()};
     const MCParticleWeightMap &weightMap{pCaloHit->GetMCParticleWeightMap()};
     for (const auto &[pContributingMC, weight] : weightMap)
@@ -956,9 +956,9 @@ StatusCode EventClusterValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     if (m_handleDeltaRays)
     {
         m_deltaRayLengthThresholdSquared = {
-            { TPC_VIEW_U, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U) / 2., 2.)) },
-            { TPC_VIEW_V, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V) / 2., 2.)) },
-            { TPC_VIEW_W, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W) / 2., 2.)) }
+            { TPC_VIEW_U, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U), 2.)) },
+            { TPC_VIEW_V, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V), 2.)) },
+            { TPC_VIEW_W, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W), 2.)) }
         };
     }
     PANDORA_RETURN_RESULT_IF_AND_IF(
