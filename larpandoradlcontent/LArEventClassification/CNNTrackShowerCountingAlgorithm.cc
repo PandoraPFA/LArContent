@@ -75,11 +75,6 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
-    // Get the neutrino information
-    bool isCC{false};
-    int nuPDG{0};
-    float nuEnergy{0.f};
-    CartesianVector nuVertex{0.f, 0.f, 0.f};
     const MCParticle *pMCNeutrino{nullptr};
     for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
@@ -89,17 +84,18 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
     if (pMCNeutrino == nullptr)
         return STATUS_CODE_FAILURE;
 
+    const int nuPDG{pMCNeutrino->GetParticleId()};
+    const float nuEnergy{pMCNeutrino->GetEnergy()};
+    const CartesianVector nuVertex{pMCNeutrino->GetVertex()};
+
     MCParticleList mcPrimaries;
     this->GetMCPrimaries(pMCParticleList, mcPrimaries);
     const InteractionDescriptor &intType{LArInteractionTypeHelper::GetInteractionDescriptor(mcPrimaries)};
-    isCC = intType.IsCC();
-    nuPDG = pMCNeutrino->GetParticleId();
-    nuEnergy = pMCNeutrino->GetEnergy();
-    nuVertex = pMCNeutrino->GetVertex();
+    const bool isCC{intType.IsCC()};
 
     std::map<HitType, unsigned int> nTracksPerView;
     std::map<HitType, unsigned int> nShowersPerView;
-    unsigned int emptyViews{0};
+    bool emptyView{false};
     for (const std::string &name : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
@@ -108,34 +104,13 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
             continue;
 
         LArMCParticleHelper::MCContributionMap mcToHitsMap;
-
         this->GetVisibleParticles(pMCParticleList, pMCNeutrino, pCaloHitList, mcToHitsMap);
 
         if (mcToHitsMap.empty())
         {
-            ++emptyViews;
-            continue;
+            emptyView = true;
+            break;
         }
-
-        MCParticleList hierarchy;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CompleteMCHierarchy(mcToHitsMap, hierarchy));
-
-        // Only fill the event level information once
-//        if (nuPDG == 0)
-//        {
-//            MCParticleList mcPrimaries;
-//            this->GetMCPrimaries(hierarchy, mcPrimaries);
-//            const InteractionDescriptor &intType{LArInteractionTypeHelper::GetInteractionDescriptor(mcPrimaries)};
-//            isCC = intType.IsCC();
-//            const MCParticle *const pMCNeutrino{hierarchy.front()};
-//            if (!LArMCParticleHelper::IsNeutrino(pMCNeutrino))
-//                return STATUS_CODE_FAILURE;
-//            nuPDG = pMCNeutrino->GetParticleId();
-//            nuEnergy = pMCNeutrino->GetEnergy();
-//            nuVertex = pMCNeutrino->GetVertex();
-////            std::cout << " - Got " << (isCC ? "CC " : "NC ") << nuPDG << " event" << std::endl;
-//        }
-
 
         const HitType hitType{pCaloHitList->front()->GetHitType()};
         unsigned int nTracks{0}, nShowers{0};
@@ -145,7 +120,7 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
         nShowersPerView[hitType] = nShowers;
     }
 
-    if (emptyViews)
+    if (emptyView)
     {
         std::cout << "Skipping event as it does not have enough hits or associated primary particles to make a training sample" << std::endl;
         return STATUS_CODE_FAILURE;
@@ -161,6 +136,7 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuVertexX", nuVertexX));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuVertexY", nuVertexY));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuVertexZ", nuVertexZ));
+
     if (nTracksPerView.count(TPC_VIEW_U))
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTracksU", static_cast<int>(nTracksPerView[TPC_VIEW_U])));
     if (nShowersPerView.count(TPC_VIEW_U))
@@ -567,47 +543,6 @@ void CNNTrackShowerCountingAlgorithm::GetCrop1D(const CaloHitList *const pCaloHi
     max = localMax;
 
 //    std::cout << "Best bin " << maxBin << " with charge sum " << startBinToCharge[maxBin] << " gives minimum " << min << " and max " << max << std::endl;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode CNNTrackShowerCountingAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, MCParticleList &mcHierarchy) const
-{
-    try
-    {
-        for (const auto &[mc, hits] : mcToHitsMap)
-        {
-            (void)hits;
-            mcHierarchy.push_back(mc);
-            LArMCParticleHelper::GetAllAncestorMCParticles(mc, mcHierarchy);
-        }
-    }
-    catch (const StatusCodeException &e)
-    {
-        return e.GetStatusCode();
-    }
-
-    // Move the neutrino to the front of the list
-    auto pivot =
-        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); });
-    (void)pivot;
-    if (pivot != mcHierarchy.end())
-        std::rotate(mcHierarchy.begin(), pivot, std::next(pivot));
-    else
-        return STATUS_CODE_NOT_FOUND;
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-void CNNTrackShowerCountingAlgorithm::GetMCPrimaries(const MCParticleList &mcHierarchy, MCParticleList &mcPrimaries) const
-{
-    for (const MCParticle *const particle : mcHierarchy)
-    {
-        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(particle))
-            mcPrimaries.push_back(particle);
-    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
