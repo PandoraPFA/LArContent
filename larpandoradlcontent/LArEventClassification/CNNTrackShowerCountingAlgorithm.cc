@@ -33,7 +33,10 @@ CNNTrackShowerCountingAlgorithm::CNNTrackShowerCountingAlgorithm() :
     m_wiresPerPixel{1},
     m_driftStep{0.5f},
     m_useVertexForCrops{true},
+    m_useSimpleTruthLabels{false},
     m_goodMCPrimaryHits{5},
+    m_mcHitWeightThreshold{0.5f},
+    m_secondaryDistanceThreshold{2.5f},
     m_minHits{10},
     m_outputPfoListName{""}
 {}
@@ -72,19 +75,30 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
-    // We need to define the number of tracks and showers per view, so we need to do this per view
-    LArMCParticleHelper::PrimaryParameters parameters;
-    parameters.m_minPrimaryGoodHits = m_goodMCPrimaryHits;
-    parameters.m_minHitsForGoodView = m_goodMCPrimaryHits;
-    parameters.m_minPrimaryGoodViews = 1;
-    parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
-
+    // Get the neutrino information
     bool isCC{false};
     int nuPDG{0};
-    std::map<HitType, unsigned int> nTracksPerView;
-    std::map<HitType, unsigned int> nShowersPerView;
     float nuEnergy{0.f};
     CartesianVector nuVertex{0.f, 0.f, 0.f};
+    const MCParticle *pMCNeutrino{nullptr};
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
+    {
+        if (LArMCParticleHelper::IsNeutrino(pMCParticle))
+            pMCNeutrino = pMCParticle;
+    }
+    if (pMCNeutrino == nullptr)
+        return STATUS_CODE_FAILURE;
+
+    MCParticleList mcPrimaries;
+    this->GetMCPrimaries(pMCParticleList, mcPrimaries);
+    const InteractionDescriptor &intType{LArInteractionTypeHelper::GetInteractionDescriptor(mcPrimaries)};
+    isCC = intType.IsCC();
+    nuPDG = pMCNeutrino->GetParticleId();
+    nuEnergy = pMCNeutrino->GetEnergy();
+    nuVertex = pMCNeutrino->GetVertex();
+
+    std::map<HitType, unsigned int> nTracksPerView;
+    std::map<HitType, unsigned int> nShowersPerView;
     unsigned int emptyViews{0};
     for (const std::string &name : m_caloHitListNames)
     {
@@ -94,9 +108,8 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
             continue;
 
         LArMCParticleHelper::MCContributionMap mcToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(
-            pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcToHitsMap);
-//        std::cout << " - Got " << mcToHitsMap.size() << " contributing MC particles of " << pMCParticleList->size() << " for hit list " << name << " with " << pCaloHitList->size() << " hits" << std::endl;
+
+        this->GetVisibleParticles(pMCParticleList, pMCNeutrino, pCaloHitList, mcToHitsMap);
 
         if (mcToHitsMap.empty())
         {
@@ -108,25 +121,26 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CompleteMCHierarchy(mcToHitsMap, hierarchy));
 
         // Only fill the event level information once
-        if (nuPDG == 0)
-        {
-            MCParticleList mcPrimaries;
-            this->GetMCPrimaries(hierarchy, mcPrimaries);
-            const InteractionDescriptor &intType{LArInteractionTypeHelper::GetInteractionDescriptor(mcPrimaries)};
-            isCC = intType.IsCC();
-            const MCParticle *const pMCNeutrino{hierarchy.front()};
-            if (!LArMCParticleHelper::IsNeutrino(pMCNeutrino))
-                return STATUS_CODE_FAILURE;
-            nuPDG = pMCNeutrino->GetParticleId();
-            nuEnergy = pMCNeutrino->GetEnergy();
-            nuVertex = pMCNeutrino->GetVertex();
-//            std::cout << " - Got " << (isCC ? "CC " : "NC ") << nuPDG << " event" << std::endl;
-        }
+//        if (nuPDG == 0)
+//        {
+//            MCParticleList mcPrimaries;
+//            this->GetMCPrimaries(hierarchy, mcPrimaries);
+//            const InteractionDescriptor &intType{LArInteractionTypeHelper::GetInteractionDescriptor(mcPrimaries)};
+//            isCC = intType.IsCC();
+//            const MCParticle *const pMCNeutrino{hierarchy.front()};
+//            if (!LArMCParticleHelper::IsNeutrino(pMCNeutrino))
+//                return STATUS_CODE_FAILURE;
+//            nuPDG = pMCNeutrino->GetParticleId();
+//            nuEnergy = pMCNeutrino->GetEnergy();
+//            nuVertex = pMCNeutrino->GetVertex();
+////            std::cout << " - Got " << (isCC ? "CC " : "NC ") << nuPDG << " event" << std::endl;
+//        }
+
 
         const HitType hitType{pCaloHitList->front()->GetHitType()};
         unsigned int nTracks{0}, nShowers{0};
         this->CountMCPrimaries(mcToHitsMap, nTracks, nShowers);
-//        std::cout << " - Got " << nTracks << " tracks and " << nShowers << " showers in view " << static_cast<int>(hitType) << std::endl;
+        std::cout << " - Got " << nTracks << " tracks and " << nShowers << " showers in view " << static_cast<int>(hitType) << std::endl;
         nTracksPerView[hitType] = nTracks;
         nShowersPerView[hitType] = nShowers;
     }
@@ -279,6 +293,107 @@ StatusCode CNNTrackShowerCountingAlgorithm::StorePredictions(const TrackShowerCo
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, dummyName, m_outputPfoListName));
 
     return STATUS_CODE_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *const pMCParticleList, const MCParticle *const pMCNeutrino, const CaloHitList *const pCaloHitList, LArMCParticleHelper::MCContributionMap &mcToHitsMap) const
+{
+    if (m_useSimpleTruthLabels)
+    {
+        LArMCParticleHelper::PrimaryParameters parameters;
+        parameters.m_minPrimaryGoodHits = m_goodMCPrimaryHits - 1;
+        parameters.m_minHitsForGoodView = m_goodMCPrimaryHits - 1;
+        parameters.m_minPrimaryGoodViews = 1;
+        parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
+
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcToHitsMap);
+    }
+    else
+    {
+        // Find all MCParticles contributing > m_mcHitWeightThreshold to at least one CaloHit
+        for (auto const *pCaloHit : *pCaloHitList)
+        {
+            for (auto const &mcHitWeightPair : pCaloHit->GetMCParticleWeightMap())
+            {
+                const MCParticle *pMCParticle{mcHitWeightPair.first};
+
+                if (mcHitWeightPair.second > m_mcHitWeightThreshold)
+                    mcToHitsMap[pMCParticle].emplace_back(pCaloHit);
+            }
+        }
+    
+        // We need to add any MC particles without hits into the map
+        for (const MCParticle *const pMCParticle : *pMCParticleList)
+        {
+            if (!mcToHitsMap.count(pMCParticle))
+                mcToHitsMap[pMCParticle] = CaloHitList();
+        }
+    }
+
+    // Apply the number of hits cut to primaries and set failed primaries to be removed
+    std::vector<const MCParticle*> keysToRemove;
+    for (auto const &mcToHitsPair : mcToHitsMap)
+    {
+        const MCParticle *pMCParticle{mcToHitsPair.first};
+        //const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
+
+        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))
+        {
+              //std::cout << "Particle " << pMCParticle << " of type " << pMCParticle->GetParticleId() << " has " << mcToHitsPair.second.size() << " hits has parent " << pParentParticle << " of type " << pParentParticle->GetParticleId() << std::endl;
+            if (mcToHitsPair.second.size() < m_goodMCPrimaryHits)
+                keysToRemove.emplace_back(pMCParticle);
+        }
+    }
+
+    // Look for secondaries produced close to the vertex when their parent is not visible
+    const HitType hitType{pCaloHitList->front()->GetHitType()};
+    for (auto const &mcToHitsPair : mcToHitsMap)
+    {
+        const MCParticle *pMCParticle{mcToHitsPair.first};
+
+        // Ignore the incoming neutrino
+        if (pMCParticle->GetParentList().empty())
+        {
+            keysToRemove.emplace_back(pMCParticle);
+            continue;
+        }
+
+        // Ignore primary particles this time
+        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))
+            continue;
+
+        const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
+        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pParentParticle) && std::find(keysToRemove.begin(), keysToRemove.end(), pParentParticle) != keysToRemove.end())
+        {
+            if (mcToHitsPair.second.size() < m_goodMCPrimaryHits)
+            {
+                keysToRemove.emplace_back(pMCParticle);
+                continue;
+            }
+
+            const CartesianVector thisVertex(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCParticle->GetVertex(), hitType));
+            const CartesianVector nuVertex(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCNeutrino->GetVertex(), hitType));
+            const float distance{std::sqrt(nuVertex.GetDistanceSquared(thisVertex))};
+
+            if (distance > m_secondaryDistanceThreshold)
+                keysToRemove.emplace_back(pMCParticle);
+//            else
+//                std::cout << "Keeping particle of type " << pMCParticle->GetParticleId() << " with primary parent type " << pParentParticle->GetParticleId() << " that failed the selection criteria starts at a distance of " << distance << " from the neutrino interaction vertex" << std::endl;
+        }
+        else
+            keysToRemove.emplace_back(pMCParticle);
+    }
+
+    for (auto const &key : keysToRemove)
+        mcToHitsMap.erase(key);
+
+//    for (auto const &mcToHitsPair : mcToHitsMap)
+//    {
+//        const MCParticle *pMCParticle{mcToHitsPair.first};
+//        const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
+//        std::cout << "Particle " << pMCParticle << " of type " << pMCParticle->GetParticleId() << " has " << mcToHitsPair.second.size() << " hits has parent " << pParentParticle << " of type " << pParentParticle->GetParticleId() << std::endl;
+//    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -490,7 +605,18 @@ void CNNTrackShowerCountingAlgorithm::GetMCPrimaries(const MCParticleList &mcHie
 {
     for (const MCParticle *const particle : mcHierarchy)
     {
-        if (LArMCParticleHelper::IsPrimary(particle))
+        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(particle))
+            mcPrimaries.push_back(particle);
+    }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void CNNTrackShowerCountingAlgorithm::GetMCPrimaries(const MCParticleList *pMCParticleList, MCParticleList &mcPrimaries) const
+{
+    for (const MCParticle *const particle : *pMCParticleList)
+    {
+        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(particle))
             mcPrimaries.push_back(particle);
     }
 }
@@ -503,9 +629,12 @@ void CNNTrackShowerCountingAlgorithm::CountMCPrimaries(const LArMCParticleHelper
     nShowers = 0;
     for (const auto &[mc, hits] : mcToHitsMap)
     {
+//        if (!LArMCParticleHelper::IsBeamNeutrinoFinalState(mc))
+//            continue;
+
         // Check if it made some hits or not
-        if (hits.size() < m_goodMCPrimaryHits)
-            continue;
+//        if (hits.size() < m_goodMCPrimaryHits)
+//            continue;
 
         const int pdg{mc->GetParticleId()};
         const bool isShw{(std::abs(pdg) != 11 && pdg != 22) ? false : true};
@@ -571,7 +700,11 @@ StatusCode CNNTrackShowerCountingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         LArDLHelper::LoadModel(modelName, m_model);
     }
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseSimpleTruthLabels", m_useSimpleTruthLabels));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GoodMCPrimaryHits", m_goodMCPrimaryHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCHitWeightThreshold", m_mcHitWeightThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SecondaryDistanceThreshold", m_secondaryDistanceThreshold));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinHits", m_minHits));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));

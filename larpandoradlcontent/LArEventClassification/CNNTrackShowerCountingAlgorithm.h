@@ -82,6 +82,16 @@ private:
      */ 
     pandora::StatusCode StorePredictions(const TrackShowerCountingResults &result);
 
+
+    /**
+     *  @brief Find which particles are visible in the final state
+     *
+     *  @param pMCParticleList the pointer to the list of the input MCParticles
+     *  @param pCaloHitList the pointer to the input CaloHitList
+     *  @param mcToHitsMap to show the CaloHits associated to each MCParticle
+     */ 
+    void GetVisibleParticles(const pandora::MCParticleList *const pMCParticleList, const pandora::MCParticle *const pMCNeutrino, const pandora::CaloHitList *const pCaloHitList, LArMCParticleHelper::MCContributionMap &mcToHitsMap) const;
+
     /**
      *  @brief Create a pixel map from a CaloHitList object
      *
@@ -148,9 +158,17 @@ private:
      *  @brief  Get a list of all the primary MC particles
      *
      *  @param  mcHierarchy the hierarchy of MCParticle objects
-     *  @param  mcPrimaries to take the lst of primary MCParticles
+     *  @param  mcPrimaries to take the list of primary MCParticles
      **/
     void GetMCPrimaries(const pandora::MCParticleList &mcHierarchy, pandora::MCParticleList &mcPrimaries) const;
+
+    /*
+     *  @brief  Get a list of all the primary MC particles
+     *
+     *  @param  pMCParticleList the pointer to the MCParticle list
+     *  @param  mcPrimaries to take the list of primary MCParticles
+     **/
+    void GetMCPrimaries(const pandora::MCParticleList *pMCParticleList, pandora::MCParticleList &mcPrimaries) const;
 
     /*
      *  @brief  Count the number of primary tracks and showers
@@ -179,7 +197,10 @@ private:
     float m_driftStep;                          ///< The size of a pixel in the drift direction in cm
     bool m_useVertexForCrops;                   ///< Make use of the reconstructed vertex to perform the cropping
     std::string m_vertexListName;               ///< The vertex list name
+    bool m_useSimpleTruthLabels;                ///< Use simple truth labels based only on a number of hits cut
     unsigned int m_goodMCPrimaryHits;           ///< The number of hits an MC primary needs to be considered reconstructable per view
+    float m_mcHitWeightThreshold;               ///< Fraction above which a given MCParticle is considered to have been responsible for a hit
+    float m_secondaryDistanceThreshold;         ///< Distance from the neutrino vertex below which a secondary is considered primary if the primary is not visible
     unsigned int m_minHits;                     ///< Minimum number of hits to create a training example
     std::string m_outputPfoListName;            ///< Name of the output PfoList containing the dummy event pfo
 };
