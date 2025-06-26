@@ -144,25 +144,6 @@ private:
     pandora::StatusCode GetMCToHitsMap(LArMCParticleHelper::MCContributionMap &mcToHitsMap) const;
 
     /*
-     *  @brief  Construct a list of the MC particles from the MC to calo hits map, completing the interaction hierarchy with the invisible
-     *          upstream particles.
-     *
-     *  @param  mcToHitsMap The map of reconstructible MC particles to calo hits
-     *  @param  mcHierarchy The output list of MC particles representing the interaction
-     *
-     *  @return The StatusCode resulting from the function
-     **/
-    pandora::StatusCode CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, pandora::MCParticleList &mcHierarchy) const;
-
-    /*
-     *  @brief  Get a list of all the primary MC particles
-     *
-     *  @param  mcHierarchy the hierarchy of MCParticle objects
-     *  @param  mcPrimaries to take the list of primary MCParticles
-     **/
-    void GetMCPrimaries(const pandora::MCParticleList &mcHierarchy, pandora::MCParticleList &mcPrimaries) const;
-
-    /*
      *  @brief  Get a list of all the primary MC particles
      *
      *  @param  pMCParticleList the pointer to the MCParticle list
