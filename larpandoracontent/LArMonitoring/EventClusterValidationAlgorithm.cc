@@ -654,6 +654,11 @@ void EventClusterValidationAlgorithm::GetMatchedParticleMetrics(
         const Cluster *const pCluster{parents.m_pCluster};
         const MCParticle *const pMatchedMC{parents.m_pClusterMainMC};
 
+        if (!pCluster)
+        {
+            continue; // Not letting the null cluster be matched
+        }
+
         if (std::find(seenClusters.begin(), seenClusters.end(), pCluster) != seenClusters.end())
         {
             continue;
