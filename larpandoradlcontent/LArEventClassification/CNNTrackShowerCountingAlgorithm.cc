@@ -34,7 +34,8 @@ CNNTrackShowerCountingAlgorithm::CNNTrackShowerCountingAlgorithm() :
     m_driftStep{0.5f},
     m_useVertexForCrops{true},
     m_useSimpleTruthLabels{false},
-    m_goodMCPrimaryHits{5},
+    m_goodMCTrackHits{5},
+    m_goodMCShowerHits{5},
     m_mcHitWeightThreshold{0.5f},
     m_secondaryDistanceThreshold{2.5f},
     m_minHits{10},
@@ -278,8 +279,8 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
     if (m_useSimpleTruthLabels)
     {
         LArMCParticleHelper::PrimaryParameters parameters;
-        parameters.m_minPrimaryGoodHits = m_goodMCPrimaryHits - 1;
-        parameters.m_minHitsForGoodView = m_goodMCPrimaryHits - 1;
+        parameters.m_minPrimaryGoodHits = m_goodMCTrackHits - 1; // No choice but to just use one of these. TODO: remove the simple option...
+        parameters.m_minHitsForGoodView = m_goodMCTrackHits - 1;
         parameters.m_minPrimaryGoodViews = 1;
         parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
 
@@ -312,12 +313,13 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
     for (auto const &mcToHitsPair : mcToHitsMap)
     {
         const MCParticle *pMCParticle{mcToHitsPair.first};
+        const unsigned int nHitsCut{this->IsTracklike(pMCParticle) ? m_goodMCTrackHits : m_goodMCShowerHits};
         //const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
 
         if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))
         {
               //std::cout << "Particle " << pMCParticle << " of type " << pMCParticle->GetParticleId() << " has " << mcToHitsPair.second.size() << " hits has parent " << pParentParticle << " of type " << pParentParticle->GetParticleId() << std::endl;
-            if (mcToHitsPair.second.size() < m_goodMCPrimaryHits)
+            if (mcToHitsPair.second.size() < nHitsCut)
                 keysToRemove.emplace_back(pMCParticle);
         }
     }
@@ -340,9 +342,10 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
             continue;
 
         const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
+        const unsigned int nHitsCut{this->IsTracklike(pMCParticle) ? m_goodMCTrackHits : m_goodMCShowerHits};
         if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pParentParticle) && std::find(keysToRemove.begin(), keysToRemove.end(), pParentParticle) != keysToRemove.end())
         {
-            if (mcToHitsPair.second.size() < m_goodMCPrimaryHits)
+            if (mcToHitsPair.second.size() < nHitsCut)
             {
                 keysToRemove.emplace_back(pMCParticle);
                 continue;
@@ -364,12 +367,16 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
     for (auto const &key : keysToRemove)
         mcToHitsMap.erase(key);
 
-//    for (auto const &mcToHitsPair : mcToHitsMap)
-//    {
-//        const MCParticle *pMCParticle{mcToHitsPair.first};
-//        const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
-//        std::cout << "Particle " << pMCParticle << " of type " << pMCParticle->GetParticleId() << " has " << mcToHitsPair.second.size() << " hits has parent " << pParentParticle << " of type " << pParentParticle->GetParticleId() << std::endl;
-//    }
+    for (auto const &mcToHitsPair : mcToHitsMap)
+    {
+        const MCParticle *pMCParticle{mcToHitsPair.first};
+        const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
+        
+        const CartesianVector thisVtx(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCParticle->GetVertex(), hitType));
+        const CartesianVector thisEnd(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCParticle->GetEndpoint(), hitType));
+        const float particleLength{std::sqrt(thisVtx.GetDistanceSquared(thisEnd))};
+        std::cout << "Particle " << pMCParticle << " of type " << pMCParticle->GetParticleId() << " has " << mcToHitsPair.second.size() << " hits has parent " << pParentParticle << " of type " << pParentParticle->GetParticleId() << " and hits per unit length " << static_cast<float>(mcToHitsPair.second.size()) / particleLength << std::endl;
+    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -558,25 +565,28 @@ void CNNTrackShowerCountingAlgorithm::GetMCPrimaries(const MCParticleList *pMCPa
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
+bool CNNTrackShowerCountingAlgorithm::IsTracklike(const MCParticle *const pMCParticle) const
+{
+    return !(this->IsShowerlike(pMCParticle)); 
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+bool CNNTrackShowerCountingAlgorithm::IsShowerlike(const MCParticle *const pMCParticle) const
+{
+    const int pdg{pMCParticle->GetParticleId()};
+    return (std::abs(pdg) != 11 && pdg != 22) ? false : true;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
 void CNNTrackShowerCountingAlgorithm::CountMCPrimaries(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, unsigned int &nTracks, unsigned int &nShowers) const
 {
     nTracks = 0;
     nShowers = 0;
     for (const auto &[mc, hits] : mcToHitsMap)
     {
-//        if (!LArMCParticleHelper::IsBeamNeutrinoFinalState(mc))
-//            continue;
-
-        // Check if it made some hits or not
-//        if (hits.size() < m_goodMCPrimaryHits)
-//            continue;
-
-        const int pdg{mc->GetParticleId()};
-        const bool isShw{(std::abs(pdg) != 11 && pdg != 22) ? false : true};
-
-//        std::cout << "Found Good MC Particle of type " << pdg << " (" << isShw << ") with " << hits.size() << " hits" << std::endl;
-
-        if (isShw)
+        if (this->IsShowerlike(mc))
             ++nShowers;
         else
             ++nTracks;
@@ -636,7 +646,8 @@ StatusCode CNNTrackShowerCountingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseSimpleTruthLabels", m_useSimpleTruthLabels));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GoodMCPrimaryHits", m_goodMCPrimaryHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GoodMCTrackHits", m_goodMCTrackHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GoodMCShowerHits", m_goodMCShowerHits));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCHitWeightThreshold", m_mcHitWeightThreshold));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SecondaryDistanceThreshold", m_secondaryDistanceThreshold));
 
