@@ -135,21 +135,30 @@ private:
         float &min, float &max, const float &span, const bool &isDrift) const;
 
     /*
-     *  @brief  Retrieve the map from MC to calo hits for reconstructable particles
-     *
-     *  @param  mcToHitsMap The map to populate
-     *
-     *  @return The StatusCode resulting from the function
-     **/
-    pandora::StatusCode GetMCToHitsMap(LArMCParticleHelper::MCContributionMap &mcToHitsMap) const;
-
-    /*
      *  @brief  Get a list of all the primary MC particles
      *
      *  @param  pMCParticleList the pointer to the MCParticle list
      *  @param  mcPrimaries to take the list of primary MCParticles
      **/
     void GetMCPrimaries(const pandora::MCParticleList *pMCParticleList, pandora::MCParticleList &mcPrimaries) const;
+
+    /*
+     *  @brief  Determine if an MCParticle is tracklike
+     *
+     *  @param  pMCParticle the pointer to the MCParticle in question
+     *
+     *  @return if the object is a tracklike particle
+     **/
+    bool IsTracklike(const pandora::MCParticle *const pMCParticle) const;
+
+    /*
+     *  @brief  Determine if an MCParticle is showerlike
+     *
+     *  @param  pMCParticle the pointer to the MCParticle in question
+     *
+     *  @return if the object is a showerlike particle
+     **/
+    bool IsShowerlike(const pandora::MCParticle *const pMCParticle) const;
 
     /*
      *  @brief  Count the number of primary tracks and showers
@@ -179,7 +188,8 @@ private:
     bool m_useVertexForCrops;                   ///< Make use of the reconstructed vertex to perform the cropping
     std::string m_vertexListName;               ///< The vertex list name
     bool m_useSimpleTruthLabels;                ///< Use simple truth labels based only on a number of hits cut
-    unsigned int m_goodMCPrimaryHits;           ///< The number of hits an MC primary needs to be considered reconstructable per view
+    unsigned int m_goodMCTrackHits;             ///< The number of hits an MC primary track needs to be considered reconstructable per view
+    unsigned int m_goodMCShowerHits;            ///< The number of hits an MC primary shower needs to be considered reconstructable per view
     float m_mcHitWeightThreshold;               ///< Fraction above which a given MCParticle is considered to have been responsible for a hit
     float m_secondaryDistanceThreshold;         ///< Distance from the neutrino vertex below which a secondary is considered primary if the primary is not visible
     unsigned int m_minHits;                     ///< Minimum number of hits to create a training example
