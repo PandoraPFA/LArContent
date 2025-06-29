@@ -98,13 +98,13 @@ void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoP
 
             ProtoParticle protoParticle;
             if (includeU)
-                protoParticle.m_clusterList.push_back(eIter->GetClusterU());
+                protoParticle.m_clusterList.emplace_back(eIter->GetClusterU());
             if (includeV)
-                protoParticle.m_clusterList.push_back(eIter->GetClusterV());
+                protoParticle.m_clusterList.emplace_back(eIter->GetClusterV());
             if (includeW)
-                protoParticle.m_clusterList.push_back(eIter->GetClusterW());
+                protoParticle.m_clusterList.emplace_back(eIter->GetClusterW());
 
-            protoParticleVector.push_back(protoParticle);
+            protoParticleVector.emplace_back(protoParticle);
             usedClusters.insert(eIter->GetClusterU());
             usedClusters.insert(eIter->GetClusterV());
             usedClusters.insert(eIter->GetClusterW());

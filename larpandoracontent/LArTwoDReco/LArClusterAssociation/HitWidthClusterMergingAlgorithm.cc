@@ -292,6 +292,11 @@ void HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHitWidthHelpe
         denominator += hitWeight * pow(rL - weightedLMean, 2);
     }
 
+    if (denominator < std::numeric_limits<float>::epsilon())
+    {
+        std::cout << "HitWidthClusterMergingAlgorithm::GetWeightedGradient - denominator is zero" << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+    }
     const float gradient(numerator / denominator);
 
     // change coordinates to z=mx+c fit and normalise
@@ -416,14 +421,18 @@ void HitWidthClusterMergingAlgorithm::RemoveShortcutAssociations(const ClusterVe
 
                 if (secondaryForwardAssociations.find(pConsideredCluster) != secondaryForwardAssociations.end())
                 {
-                    ClusterSet &tempPrimaryForwardAssociations(tempMap.find(pCluster)->second.m_forwardAssociations);
+                    if (tempMap.find(pCluster) == tempMap.end())
+                        continue;
+                    ClusterSet &tempPrimaryForwardAssociations(tempMap.at(pCluster).m_forwardAssociations);
                     const ClusterSet::const_iterator forwardAssociationToRemove(tempPrimaryForwardAssociations.find(pConsideredCluster));
 
                     // if association has already been removed
                     if (forwardAssociationToRemove == tempPrimaryForwardAssociations.end())
                         continue;
 
-                    ClusterSet &tempPrimaryBackwardAssociations(tempMap.find(pConsideredCluster)->second.m_backwardAssociations);
+                    if (tempMap.find(pConsideredCluster) == tempMap.end())
+                        continue;
+                    ClusterSet &tempPrimaryBackwardAssociations(tempMap.at(pConsideredCluster).m_backwardAssociations);
                     const ClusterSet::const_iterator backwardAssociationToRemove(tempPrimaryBackwardAssociations.find(pCluster));
 
                     // if association has already been removed
@@ -437,7 +446,7 @@ void HitWidthClusterMergingAlgorithm::RemoveShortcutAssociations(const ClusterVe
         }
     }
 
-    clusterAssociationMap = tempMap;
+    clusterAssociationMap = std::move(tempMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

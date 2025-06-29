@@ -625,6 +625,8 @@ void StitchingCosmicRayMergingTool::ShiftPfo(const MasterAlgorithm *const pAlgor
 {
     // get stitching vertex for the pfo to be shifted
     const PfoToPointingVertexMatrix::const_iterator pfoToPointingVertexMatrixIter(pfoToPointingVertexMatrix.find(pPfoToShift));
+    if (pfoToPointingVertexMatrixIter == pfoToPointingVertexMatrix.end())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     const LArPointingCluster::Vertex stitchingVertex(pfoToPointingVertexMatrixIter->second.at(pMatchedPfo));
 
     const LArTPC *const pShiftLArTPC(pfoToLArTPCMap.at(pPfoToShift));

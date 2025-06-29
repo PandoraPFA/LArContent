@@ -166,7 +166,7 @@ void ShowerStartFinderTool::GetEnergyDistribution(const CaloHitList &showerSpine
 
     for (const CaloHit *pCaloHit : showerSpineHitList)
     {
-        const float fractionalEnergy(pCaloHit->GetElectromagneticEnergy() / e0);
+        const float fractionalEnergy(e0 > std::numeric_limits<float>::epsilon() ? pCaloHit->GetElectromagneticEnergy() / e0 : 0.f);
         const float projection(longitudinalPositionMap.at(pCaloHit));
         const int longitudinalIndex = std::floor(projection / m_longitudinalCoordinateBinSize);
 
@@ -225,7 +225,7 @@ int ShowerStartFinderTool::FindShowerStartLongitudinalCoordinate(const ParticleF
     for (; iter != endIter; iter++)
     {
         const float longitudinalCoordinate(iter->first * m_longitudinalCoordinateBinSize);
-        const float energyDeviation((iter->second - meanEnergy) / energySigma);
+        const float energyDeviation(energySigma > std::numeric_limits<float>::epsilon() ? (iter->second - meanEnergy) / energySigma : 0.f);
 
         try
         {

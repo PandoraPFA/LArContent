@@ -109,9 +109,9 @@ void TwoViewLongTracksTool::FindLongTracks(const MatrixType &overlapMatrix, Prot
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterList.push_back((*iIter)->GetCluster1());
-            protoParticle.m_clusterList.push_back((*iIter)->GetCluster2());
-            protoParticleVector.push_back(protoParticle);
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetCluster1());
+            protoParticle.m_clusterList.emplace_back((*iIter)->GetCluster2());
+            protoParticleVector.emplace_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetCluster1());
             usedClusters.insert((*iIter)->GetCluster2());
@@ -142,7 +142,7 @@ void TwoViewLongTracksTool::SelectLongElements(
 
         if ((xOverlap.GetXOverlapFraction0() > m_minXOverlapFraction) && (xOverlap.GetXOverlapFraction1() > m_minXOverlapFraction))
         {
-            iteratorList.push_back(eIter);
+            iteratorList.emplace_back(eIter);
         }
     }
 }

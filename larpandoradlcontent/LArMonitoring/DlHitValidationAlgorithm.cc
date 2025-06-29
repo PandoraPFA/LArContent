@@ -32,21 +32,21 @@ DlHitValidationAlgorithm::DlHitValidationAlgorithm() :
 
 DlHitValidationAlgorithm::~DlHitValidationAlgorithm()
 {
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "u_true_shower", m_confusionU[0][0]));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "u_false_shower", m_confusionU[1][0]));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "u_false_track", m_confusionU[0][1]));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "u_true_track", m_confusionU[1][1]));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "v_true_shower", m_confusionV[0][0]));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "v_false_shower", m_confusionV[1][0]));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "v_false_track", m_confusionV[0][1]));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "v_true_track", m_confusionV[1][1]));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "w_true_shower", m_confusionW[0][0]));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "w_false_shower", m_confusionW[1][0]));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "w_false_track", m_confusionW[0][1]));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "w_true_track", m_confusionW[1][1]));
-    PANDORA_MONITORING_API(FillTree(this->GetPandora(), "confusion_tree"));
     try
     {
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "u_true_shower", m_confusionU[0][0]));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "u_false_shower", m_confusionU[1][0]));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "u_false_track", m_confusionU[0][1]));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "u_true_track", m_confusionU[1][1]));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "v_true_shower", m_confusionV[0][0]));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "v_false_shower", m_confusionV[1][0]));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "v_false_track", m_confusionV[0][1]));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "v_true_track", m_confusionV[1][1]));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "w_true_shower", m_confusionW[0][0]));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "w_false_shower", m_confusionW[1][0]));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "w_false_track", m_confusionW[0][1]));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "confusion_tree", "w_true_track", m_confusionW[1][1]));
+        PANDORA_MONITORING_API(FillTree(this->GetPandora(), "confusion_tree"));
         PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "confusion_tree", "confusion.root", "UPDATE"));
     }
     catch (const StatusCodeException &)
@@ -89,6 +89,8 @@ StatusCode DlHitValidationAlgorithm::Run()
                 const int pdg{std::abs(pMCParticle->GetParticleId())};
                 const int truth{(pdg == 11 || pdg == 22) ? SHOWER_IDX : TRACK_IDX};
                 const LArCaloHit *pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
+                if (!pLArCaloHit)
+                    continue;
                 const float pTrack{pLArCaloHit->GetTrackProbability()};
                 const float pShower{pLArCaloHit->GetShowerProbability()};
                 const int cls{(pShower > pTrack) ? SHOWER_IDX : TRACK_IDX};

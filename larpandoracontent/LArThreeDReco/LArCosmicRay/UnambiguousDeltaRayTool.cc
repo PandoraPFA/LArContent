@@ -51,10 +51,10 @@ bool UnambiguousDeltaRayTool::ExamineUnambiguousElements(TensorType::ElementList
             continue;
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterList.push_back(element.GetClusterU());
-        protoParticle.m_clusterList.push_back(element.GetClusterV());
-        protoParticle.m_clusterList.push_back(element.GetClusterW());
-        protoParticleVector.push_back(protoParticle);
+        protoParticle.m_clusterList.emplace_back(element.GetClusterU());
+        protoParticle.m_clusterList.emplace_back(element.GetClusterV());
+        protoParticle.m_clusterList.emplace_back(element.GetClusterW());
+        protoParticleVector.emplace_back(protoParticle);
     }
 
     return m_pParentAlgorithm->CreatePfos(protoParticleVector);

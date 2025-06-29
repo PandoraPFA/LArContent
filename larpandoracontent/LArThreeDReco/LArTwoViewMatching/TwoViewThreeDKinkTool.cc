@@ -185,7 +185,7 @@ bool TwoViewThreeDKinkTool::ApplyChanges(TwoViewTransverseTracksAlgorithm *const
     {
         ClusterList parentClusters;
         for (const auto &mapEntry : modification.m_clusterMergeMap)
-            parentClusters.push_back(mapEntry.first);
+            parentClusters.emplace_back(mapEntry.first);
         parentClusters.sort(LArClusterHelper::SortByNHits);
 
         for (const Cluster *const pParentCluster : parentClusters)
@@ -204,7 +204,7 @@ bool TwoViewThreeDKinkTool::ApplyChanges(TwoViewTransverseTracksAlgorithm *const
 
         ClusterList splitClusters;
         for (const auto &mapEntry : modification.m_splitPositionMap)
-            splitClusters.push_back(mapEntry.first);
+            splitClusters.emplace_back(mapEntry.first);
         splitClusters.sort(LArClusterHelper::SortByNHits);
 
         for (const Cluster *const pSplitCluster : splitClusters)
@@ -228,7 +228,7 @@ bool TwoViewThreeDKinkTool::ApplyChanges(TwoViewTransverseTracksAlgorithm *const
 void TwoViewThreeDKinkTool::SelectMatrixElements(MatrixType::ElementList::const_iterator eIter, const MatrixType::ElementList &elementList,
     const ClusterSet &usedClusters, IteratorList &iteratorList) const
 {
-    iteratorList.push_back(eIter);
+    iteratorList.emplace_back(eIter);
 
     for (MatrixType::ElementList::const_iterator eIter2 = elementList.begin(); eIter2 != elementList.end(); ++eIter2)
     {
@@ -256,7 +256,7 @@ void TwoViewThreeDKinkTool::SelectMatrixElements(MatrixType::ElementList::const_
 
             if (nMatchedClusters)
             {
-                iteratorList.push_back(eIter2);
+                iteratorList.emplace_back(eIter2);
                 return;
             }
         }
@@ -320,21 +320,21 @@ void TwoViewThreeDKinkTool::GetIteratorListModifications(
                         continue;
                     }
 
-                    modification.m_splitPositionMap[particle.m_pCommonCluster].push_back(splitPositionCommon);
+                    modification.m_splitPositionMap[particle.m_pCommonCluster].emplace_back(splitPositionCommon);
                 }
                 else
                 {
                     const bool vertexAIsLowX(vertexA.GetPosition().GetX() < vertexB.GetPosition().GetX());
                     const Cluster *const pLowXCluster(vertexAIsLowX ? particle.m_pClusterA : particle.m_pClusterB);
                     const Cluster *const pHighXCluster(vertexAIsLowX ? particle.m_pClusterB : particle.m_pClusterA);
-                    modification.m_clusterMergeMap[pLowXCluster].push_back(pHighXCluster);
+                    modification.m_clusterMergeMap[pLowXCluster].emplace_back(pHighXCluster);
                 }
 
-                modification.m_affectedClusters.push_back(particle.m_pClusterA);
-                modification.m_affectedClusters.push_back(particle.m_pClusterB);
-                modification.m_affectedClusters.push_back(particle.m_pCommonCluster);
+                modification.m_affectedClusters.emplace_back(particle.m_pClusterA);
+                modification.m_affectedClusters.emplace_back(particle.m_pClusterB);
+                modification.m_affectedClusters.emplace_back(particle.m_pCommonCluster);
 
-                modificationList.push_back(modification);
+                modificationList.emplace_back(modification);
             }
             catch (const StatusCodeException &statusCodeException)
             {

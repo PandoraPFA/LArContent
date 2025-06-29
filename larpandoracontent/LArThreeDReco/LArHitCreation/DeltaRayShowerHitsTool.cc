@@ -90,7 +90,7 @@ void DeltaRayShowerHitsTool::CreateDeltaRayShowerHits3D(
             this->GetBestPosition3D(hitType1, hitType2, position1, position2, protoHit);
 
             if (protoHit.IsPositionSet())
-                protoHitVector.push_back(protoHit);
+                protoHitVector.emplace_back(protoHit);
         }
         catch (StatusCodeException &)
         {

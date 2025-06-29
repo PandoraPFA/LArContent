@@ -69,10 +69,10 @@ void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, Pr
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterList.push_back(iter->GetClusterU());
-            protoParticle.m_clusterList.push_back(iter->GetClusterV());
-            protoParticle.m_clusterList.push_back(iter->GetClusterW());
-            protoParticleVector.push_back(protoParticle);
+            protoParticle.m_clusterList.emplace_back(iter->GetClusterU());
+            protoParticle.m_clusterList.emplace_back(iter->GetClusterV());
+            protoParticle.m_clusterList.emplace_back(iter->GetClusterW());
+            protoParticleVector.emplace_back(protoParticle);
 
             usedClusters.insert(iter->GetClusterU());
             usedClusters.insert(iter->GetClusterV());

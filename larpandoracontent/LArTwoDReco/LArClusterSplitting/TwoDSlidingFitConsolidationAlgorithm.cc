@@ -65,10 +65,10 @@ void TwoDSlidingFitConsolidationAlgorithm::SortInputClusters(
         const float thisLengthSquared(LArClusterHelper::GetLengthSquared(pCluster));
 
         if (thisLengthSquared < m_maxClusterLength * m_maxClusterLength)
-            showerClusters.push_back(pCluster);
+            showerClusters.emplace_back(pCluster);
 
         if (thisLengthSquared > m_minTrackLength * m_minTrackLength)
-            trackClusters.push_back(pCluster);
+            trackClusters.emplace_back(pCluster);
     }
 
     std::sort(trackClusters.begin(), trackClusters.end(), LArClusterHelper::SortByNHits);
@@ -85,7 +85,7 @@ void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterV
         {
             const float slidingFitPitch(LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(*iter)));
             const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers, slidingFitPitch);
-            slidingFitResultList.push_back(slidingFitResult);
+            slidingFitResultList.emplace_back(slidingFitResult);
         }
         catch (StatusCodeException &statusCodeException)
         {
@@ -101,7 +101,7 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
 {
     ClusterList clusterList;
     for (const auto &mapEntry : clustersToContract)
-        clusterList.push_back(mapEntry.first);
+        clusterList.emplace_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : clusterList)
@@ -120,7 +120,7 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
         for (const CaloHit *const pCaloHit : caloHitList)
         {
             if (caloHitListToRemove.end() == std::find(caloHitListToRemove.begin(), caloHitListToRemove.end(), pCaloHit))
-                caloHitListToKeep.push_back(pCaloHit);
+                caloHitListToKeep.emplace_back(pCaloHit);
         }
 
         if (caloHitListToKeep.empty())
@@ -149,7 +149,7 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const Cluster
     for (const auto &mapEntry : clustersToExpand)
     {
         if (!unavailableClusters.count(mapEntry.first))
-            clusterList.push_back(mapEntry.first);
+            clusterList.emplace_back(mapEntry.first);
     }
 
     clusterList.sort(LArClusterHelper::SortByNHits);
@@ -186,7 +186,7 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterTo
     for (const auto &mapEntry : clustersToRebuild)
     {
         if (!unavailableClusters.count(mapEntry.first))
-            sortedClusters.push_back(mapEntry.first);
+            sortedClusters.emplace_back(mapEntry.first);
     }
 
     std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);

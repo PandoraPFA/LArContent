@@ -12,6 +12,7 @@
 #include "larpandoracontent/LArHelpers/LArHierarchyHelper.h"
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 
+#include <iostream>
 #include <numeric>
 
 namespace lar_content
@@ -1523,9 +1524,11 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
 {
     MCParticleList rootMCParticles;
     mcHierarchy.GetRootMCParticles(rootMCParticles);
+    std::ostream os(std::cout.rdbuf());
 
     for (const MCParticle *const pRootMC : rootMCParticles)
     {
+        os << std::fixed << std::setprecision(2);
         const LArHierarchyHelper::MCMatchesVector &matches{this->GetMatches(pRootMC)};
 
         MCParticleList primaries;
@@ -1545,24 +1548,23 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
 
         const LArMCParticle *const pLArRoot{dynamic_cast<const LArMCParticle *const>(pRootMC)};
         if (pLArRoot)
-            std::cout << "=== MC Interaction : PDG " << std::to_string(pLArRoot->GetParticleId())
+            os << "=== MC Interaction : PDG " << std::to_string(pLArRoot->GetParticleId())
                       << " Energy: " << std::to_string(pLArRoot->GetEnergy()) << " Type: " << descriptor.ToString() << std::endl;
         else
-            std::cout << "=== MC Interaction : PDG " << std::to_string(pRootMC->GetParticleId())
+            os << "=== MC Interaction : PDG " << std::to_string(pRootMC->GetParticleId())
                       << " Energy: " << std::to_string(pRootMC->GetEnergy()) << " Type: " << descriptor.ToString() << std::endl;
 
         unsigned int nNeutrinoMCParticles{this->GetNNeutrinoMCNodes(pRootMC)}, nNeutrinoRecoParticles{0};
         unsigned int nCosmicMCParticles{this->GetNCosmicRayMCNodes(pRootMC)}, nCosmicRecoParticles{0};
         unsigned int nTestBeamMCParticles{this->GetNTestBeamMCNodes(pRootMC)}, nTestBeamRecoParticles{0};
-        std::cout << "   === Matches ===" << std::endl;
-        std::cout << std::fixed << std::setprecision(2);
+        os << "   === Matches ===" << std::endl;
         for (const MCMatches &match : m_matches.at(pRootMC))
         {
             const MCHierarchy::Node *pMCNode{match.GetMC()};
             const int pdg{pMCNode->GetParticleId()};
             const size_t mcHits{pMCNode->GetCaloHits().size()};
             const std::string tag{pMCNode->IsTestBeamParticle() ? "(Beam) " : pMCNode->IsCosmicRay() ? "(Cosmic) " : ""};
-            std::cout << "   MC " << tag << pdg << " hits " << mcHits << std::endl;
+            os << "   MC " << tag << pdg << " hits " << mcHits << std::endl;
             const RecoHierarchy::NodeVector &nodeVector{match.GetRecoMatches()};
 
             for (const RecoHierarchy::Node *pRecoNode : nodeVector)
@@ -1573,15 +1575,15 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
                 const float purity{match.GetPurity(pRecoNode)};
                 const float completeness{match.GetCompleteness(pRecoNode)};
                 if (completeness > 0.1f)
-                    std::cout << "   Matched " << sharedHits << " out of " << nRecoHits << " with purity " << purity << " and completeness "
+                    os << "   Matched " << sharedHits << " out of " << nRecoHits << " with purity " << purity << " and completeness "
                               << completeness << std::endl;
                 else
-                    std::cout << "   (Below threshold) " << sharedHits << " out of " << nRecoHits << " with purity " << purity
+                    os << "   (Below threshold) " << sharedHits << " out of " << nRecoHits << " with purity " << purity
                               << " and completeness " << completeness << std::endl;
             }
             if (nodeVector.empty())
             {
-                std::cout << "      Unmatched" << std::endl;
+                os << "      Unmatched" << std::endl;
             }
             else if (match.IsQuality(this->GetQualityCuts()))
             {
@@ -1596,40 +1598,40 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
 
         if (LArMCParticleHelper::IsNeutrino(pRootMC))
         {
-            std::cout << "   Neutrino Interaction Summary:" << std::endl;
+            os << "   Neutrino Interaction Summary:" << std::endl;
             if (nNeutrinoMCParticles)
             {
-                std::cout << "   Good final state particles: " << nNeutrinoRecoParticles << " of " << nNeutrinoMCParticles << " : "
+                os << "   Good final state particles: " << nNeutrinoRecoParticles << " of " << nNeutrinoMCParticles << " : "
                           << (100 * nNeutrinoRecoParticles / static_cast<float>(nNeutrinoMCParticles)) << "%" << std::endl;
             }
         }
         else if (LArMCParticleHelper::IsCosmicRay(pRootMC))
         {
-            std::cout << "   Cosmic Ray Interaction Summary:" << std::endl;
-            std::cout << std::fixed << std::setprecision(1);
+            os << "   Cosmic Ray Interaction Summary:" << std::endl;
+            os << std::fixed << std::setprecision(1);
             if (nCosmicMCParticles)
             {
-                std::cout << "   Good cosmics: " << nCosmicRecoParticles << " of " << nCosmicMCParticles << " : "
+                os << "   Good cosmics: " << nCosmicRecoParticles << " of " << nCosmicMCParticles << " : "
                           << (100 * nCosmicRecoParticles / static_cast<float>(nCosmicMCParticles)) << "%" << std::endl;
             }
         }
         else if (LArMCParticleHelper::IsBeamParticle(pRootMC))
         {
-            std::cout << "   Test Beam Interaction Summary:" << std::endl;
-            std::cout << std::fixed << std::setprecision(1);
+            os << "   Test Beam Interaction Summary:" << std::endl;
+            os << std::fixed << std::setprecision(1);
             if (nTestBeamMCParticles)
             {
-                std::cout << "   Good test beam particles: " << nTestBeamRecoParticles << " of " << nTestBeamMCParticles << " : "
+                os << "   Good test beam particles: " << nTestBeamRecoParticles << " of " << nTestBeamMCParticles << " : "
                           << (100 * nTestBeamRecoParticles / static_cast<float>(nTestBeamMCParticles)) << "%" << std::endl;
             }
             if (nCosmicMCParticles)
             {
-                std::cout << "   Matched cosmics: " << nCosmicRecoParticles << " of " << nCosmicMCParticles << " : "
+                os << "   Matched cosmics: " << nCosmicRecoParticles << " of " << nCosmicMCParticles << " : "
                           << (100 * nCosmicRecoParticles / static_cast<float>(nCosmicMCParticles)) << "%" << std::endl;
             }
         }
         if (!this->GetUnmatchedReco().empty())
-            std::cout << "   Unmatched reco: " << this->GetUnmatchedReco().size() << std::endl;
+            os << "   Unmatched reco: " << this->GetUnmatchedReco().size() << std::endl;
     }
 }
 
