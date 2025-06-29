@@ -65,6 +65,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    unsigned int m_fileMajorVersion; ///< The major version of the file
+    unsigned int m_fileMinorVersion; ///< The minor version of the file
+
     pandora::FileType m_geometryFileType; ///< The geometry file type
     pandora::FileType m_eventFileType;    ///< The event file type
 
@@ -75,8 +78,9 @@ private:
     bool m_writtenGeometry;         ///< Whether geometry has been written
     std::string m_geometryFileName; ///< Name of the output geometry file
 
-    bool m_shouldWriteEvents;    ///< Whether to write events to a specified file
-    std::string m_eventFileName; ///< Name of the output event file
+    bool m_shouldWriteEvents;        ///< Whether to write events to a specified file
+    bool m_writtenEventGlobalHeader; ///< Whether the global header has been written to the output event file
+    std::string m_eventFileName;     ///< Name of the output event file
 
     bool m_shouldWriteMCRelationships;    ///< Whether to write mc relationship information to the events file
     bool m_shouldWriteTrackRelationships; ///< Whether to write track relationship information to the events file
