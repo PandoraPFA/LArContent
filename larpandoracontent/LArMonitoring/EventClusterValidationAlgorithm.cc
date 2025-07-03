@@ -698,8 +698,10 @@ void EventClusterValidationAlgorithm::GetMatchedParticleMetrics(
     else
     {
         std::map<const Cluster *const, MCParticleList> clusterOrderedMCs;
-        for (const auto &[pCluster, mcNHits] : clusterMCNHits)
+        for (auto it = clusterMCNHits.begin(); it != clusterMCNHits.end(); it++)
         {
+            const Cluster *const pCluster = it->first;
+            const std::map<const MCParticle *const, int> &mcNHits = it->second;
             MCParticleList orderedMCs;
             for (const auto &[pMC, nHits] : mcNHits)
             {
