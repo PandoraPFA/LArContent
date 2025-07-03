@@ -84,7 +84,8 @@ EventClusterValidationAlgorithm::EventClusterValidationAlgorithm() :
     m_visualize{false},
     m_matchedParticleMetrics{false},
     m_dropNullClusterHits{false},
-    m_hitWeightedPurityCompleteness{false}
+    m_hitWeightedPurityCompleteness{false},
+    m_maximalMatching{false}
 {
 }
 
@@ -104,6 +105,7 @@ EventClusterValidationAlgorithm::~EventClusterValidationAlgorithm()
     PANDORA_MONITORING_API(
         SetTreeVariable(
             this->GetPandora(), m_treeName + "_meta", "merge_shower_clusters_for_rand_index", m_mergeShowerClustersForRandIndex ? 1 : 0));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_meta", "maximal_matching", m_maximalMatching ? 1 : 0));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName + "_meta"));
     PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName + "_meta", m_fileName, "UPDATE"));
 }
@@ -627,9 +629,7 @@ void EventClusterValidationAlgorithm::GetMatchedParticleMetrics(
     const std::map<const CaloHit *const, CaloHitParents> &hitParents, MatchedParticleMetrics &metrics) const
 {
     std::map<const MCParticle *const, const Cluster *> mcMatchedCluster;
-    std::map<const MCParticle *const, int> mcMatchedClusterCorrectHits;
-    std::map<const MCParticle *const, int> mcMatchedClusterTotalHits;
-    std::map<const MCParticle *const, int> mcNTrueHits;
+    std::map<const MCParticle *const, int> mcMatchedClusterCorrectHits, mcMatchedClusterTotalHits, mcNTrueHits;
     for (const auto &[pCaloHit, parents] : hitParents)
     {
         if (mcMatchedCluster.find(parents.m_pMainMC) == mcMatchedCluster.end())
@@ -642,50 +642,103 @@ void EventClusterValidationAlgorithm::GetMatchedParticleMetrics(
         mcNTrueHits.at(parents.m_pMainMC)++;
     }
 
-    std::map<const Cluster *const, CaloHitList> clusterHits;
+    std::map<const Cluster *const, std::map<const MCParticle *const, int>> clusterMCNHits;
+    std::map<const Cluster *const, int> clusterNHits;
     for (const auto &[pCaloHit, parents] : hitParents)
     {
-        clusterHits[parents.m_pCluster].emplace_back(pCaloHit);
+        if (parents.m_pCluster)
+        {
+            clusterMCNHits[parents.m_pCluster][parents.m_pMainMC]++;
+            clusterNHits[parents.m_pCluster]++;
+        }
     }
 
-    ClusterList seenClusters;
-    for (const auto &[pCaloHit, parents] : hitParents)
+    auto isBetterMatch =
+        [&mcMatchedCluster, &mcMatchedClusterCorrectHits, &mcMatchedClusterTotalHits]
+        (const MCParticle *const pMC, const int nCorrectHits, const int nTotalHits, const Cluster *const pCluster)
     {
-        const Cluster *const pCluster{parents.m_pCluster};
-        const MCParticle *const pMatchedMC{parents.m_pClusterMainMC};
+        return
+            !mcMatchedCluster.at(pMC) ||                                                // No competitor
+            nCorrectHits > mcMatchedClusterCorrectHits.at(pMC) ||                       // More matched hits
+            (nCorrectHits == mcMatchedClusterCorrectHits.at(pMC) &&                     // Need to do a tie-breaker
+                (nTotalHits < mcMatchedClusterTotalHits.at(pMC) ||                      // Purity tie-breaker
+                LArClusterHelper::SortByPosition(pCluster, mcMatchedCluster.at(pMC)))); // Arbitrary tie-breaker
+    };
 
-        if (!pCluster)
+    if (!m_maximalMatching)
+    {
+        ClusterList seenClusters;
+        for (const auto &[pCaloHit, parents] : hitParents)
         {
-            continue; // Not letting the null cluster be matched
-        }
+            const Cluster *const pCluster{parents.m_pCluster};
+            const MCParticle *const pMatchedMC{parents.m_pClusterMainMC};
 
-        if (std::find(seenClusters.begin(), seenClusters.end(), pCluster) != seenClusters.end())
-        {
-            continue;
-        }
-        seenClusters.emplace_back(pCluster);
-
-        CaloHitList clusterCaloHits{clusterHits.at(pCluster)};
-        int nTotalHits{static_cast<int>(clusterCaloHits.size())}, nCorrectHits{0};
-        for (const CaloHit *const pClusterCaloHit : clusterCaloHits)
-        {
-            if (hitParents.find(pClusterCaloHit) != hitParents.end() && hitParents.at(pClusterCaloHit).m_pMainMC == pMatchedMC)
+            if (!pCluster)
             {
-                nCorrectHits++;
+                continue; // Not letting the null cluster be matched
+            }
+
+            if (std::find(seenClusters.begin(), seenClusters.end(), pCluster) != seenClusters.end())
+            {
+                continue;
+            }
+            seenClusters.emplace_back(pCluster);
+
+            int nTotalHits{clusterNHits.at(pCluster)};
+            int nCorrectHits{clusterMCNHits.at(pCluster).at(pMatchedMC)};
+
+            if (isBetterMatch(pMatchedMC, nCorrectHits, nTotalHits, pCluster))
+            {
+                mcMatchedCluster.at(pMatchedMC) = pCluster;
+                mcMatchedClusterCorrectHits.at(pMatchedMC) = nCorrectHits;
+                mcMatchedClusterTotalHits.at(pMatchedMC) = nTotalHits;
             }
         }
-
-        if (
-            !mcMatchedCluster.at(pMatchedMC) || // No competitor
-            nCorrectHits > mcMatchedClusterCorrectHits.at(pMatchedMC) || // More matched hits
-            (nCorrectHits == mcMatchedClusterCorrectHits.at(pMatchedMC) && // Need to do a tie-breaker
-                (nTotalHits < mcMatchedClusterTotalHits.at(pMatchedMC) || // Purity tie-breaker
-                 LArClusterHelper::SortByPosition(pCluster, mcMatchedCluster.at(pMatchedMC))) // Arbitrary tie-breaker
-            ))
+    }
+    else
+    {
+        std::map<const Cluster *const, MCParticleList> clusterOrderedMCs;
+        for (const auto &[pCluster, mcNHits] : clusterMCNHits)
         {
-            mcMatchedCluster.at(pMatchedMC) = pCluster;
-            mcMatchedClusterCorrectHits.at(pMatchedMC) = nCorrectHits;
-            mcMatchedClusterTotalHits.at(pMatchedMC) = nTotalHits;
+            MCParticleList orderedMCs;
+            for (const auto &[pMC, nHits] : mcNHits)
+            {
+                orderedMCs.emplace_back(pMC);
+            }
+            orderedMCs.sort([&mcNHits](const MCParticle *const pA, const MCParticle *const pB) { return mcNHits.at(pA) > mcNHits.at(pB); });
+            clusterOrderedMCs.insert({pCluster, orderedMCs});
+        }
+
+        std::set<const Cluster *> matchedClusters;
+        bool newMatch{true};
+        while (newMatch)
+        {
+            newMatch = false;
+            for (auto it = clusterOrderedMCs.begin(); it != clusterOrderedMCs.end(); )
+            {
+                const Cluster *const pCluster{it->first};
+                // Exhausted this cluster's MC contributions, or the cluster was already matched in the previous loop
+                if (it->second.empty() || matchedClusters.find(pCluster) != matchedClusters.end())
+                {
+                    it = clusterOrderedMCs.erase(it);
+                    continue;
+                }
+                const MCParticle *const pMC{it->second.front()}; it->second.pop_front();
+                const int nCorrectHits{clusterMCNHits.at(pCluster).at(pMC)};
+                const int nTotalHits{clusterNHits.at(pCluster)};
+
+                if (isBetterMatch(pMC, nCorrectHits, nTotalHits, pCluster))
+                {
+                    newMatch = true;
+                    matchedClusters.erase(mcMatchedCluster.at(pMC));
+                    matchedClusters.insert(pCluster);
+                    mcMatchedCluster.at(pMC) = pCluster;
+                    mcMatchedClusterCorrectHits.at(pMC) = nCorrectHits;
+                    mcMatchedClusterTotalHits.at(pMC) = nTotalHits;
+                }
+
+                it++;
+            }
         }
     }
 
@@ -975,6 +1028,12 @@ StatusCode EventClusterValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "HitWeightedPurityCompleteness", m_hitWeightedPurityCompleteness));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaximalMatching", m_maximalMatching));
+    if (m_maximalMatching && !m_matchedParticleMetrics)
+    {
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
