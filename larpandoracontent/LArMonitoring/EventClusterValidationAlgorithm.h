@@ -225,15 +225,16 @@ private:
     std::string m_treeName;                      ///< The name of the ROOT tree
     std::vector<std::string> m_caloHitListNames; ///< The names of the hit lists containing all 2D hits
     std::vector<std::string> m_clusterListNames; ///< The names of the lists of 2D clusters to process
-    int m_minMCHitsPerView;                      ///< Threshold on total main MCParticle hits in each view for consideration in metric calculations
+    int m_minMCHitsPerView;                      ///< Threshold on total main MC particle hits in each view for consideration in metric calculations
     bool m_onlyRandIndex;                        ///< Flag to only calculate the adjusted rand index over all particles
-    bool m_foldShowers;                          ///< Flag to fold shower MC particles to their leading shower MCParticle
+    bool m_foldShowers;                          ///< Flag to fold shower MC particles to their leading shower MC particle
     bool m_handleDeltaRays;                      ///< Flag to fold short delta rays + ignore contributions from daughter electrons that overlap with their parent
     bool m_mergeShowerClustersForRandIndex;      ///< Flag to merge shower-matched clusters into leading shower MC particle for rand index calculation, note this is only makes any sense for showers folded in the simulation or with m_foldShowers
     bool m_visualize;                            ///< Flag to display the target clustering derived from MC particles
     bool m_matchedParticleMetrics;               ///< Flag to calculate a set of high level clustering metrics by truth-matching clusters
     bool m_dropNullClusterHits;                  ///< Flag to ignore any hits associated with the null cluster
     bool m_hitWeightedPurityCompleteness;        ///< Flag for cluster purity and completeness to be averaged over hits rather than clusters
+    bool m_maximalMatching;                      ///< Flag for cluster truth-matching to try matching every MC particle to a cluster, rather than requiring clusters to a hit majority from the matched MC particle
 };
 
 
