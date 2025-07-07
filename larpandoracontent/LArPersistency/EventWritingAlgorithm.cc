@@ -25,7 +25,7 @@ namespace lar_content
 {
 
 EventWritingAlgorithm::EventWritingAlgorithm() :
-    m_fileMajorVersion(0),
+    m_fileMajorVersion(1),
     m_fileMinorVersion(0),
     m_geometryFileType(UNKNOWN_FILE_TYPE),
     m_eventFileType(UNKNOWN_FILE_TYPE),
