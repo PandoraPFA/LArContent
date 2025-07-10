@@ -32,7 +32,7 @@ CNNTrackShowerCountingAlgorithm::CNNTrackShowerCountingAlgorithm() :
     m_width{512},
     m_wiresPerPixel{1},
     m_driftStep{0.5f},
-    m_useVertexForCrops{true},
+//    m_useVertexForCrops{true},
     m_useSimpleTruthLabels{false},
     m_goodMCTrackHits{5},
     m_goodMCShowerHits{5},
@@ -87,7 +87,7 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
 
     const int nuPDG{pMCNeutrino->GetParticleId()};
     const float nuEnergy{pMCNeutrino->GetEnergy()};
-    const CartesianVector nuVertex{pMCNeutrino->GetVertex()};
+    const CartesianVector nuTrueVertex{pMCNeutrino->GetVertex()};
 
     MCParticleList mcPrimaries;
     this->GetMCPrimaries(pMCParticleList, mcPrimaries);
@@ -127,16 +127,16 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
         return STATUS_CODE_FAILURE;
     }
 
-    const float nuVertexX{nuVertex.GetX()};
-    const float nuVertexY{nuVertex.GetY()};
-    const float nuVertexZ{nuVertex.GetZ()};
-
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuPDG", nuPDG));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "isCC", static_cast<int>(isCC)));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuEnergy", nuEnergy));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuVertexX", nuVertexX));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuVertexY", nuVertexY));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuVertexZ", nuVertexZ));
+
+    const float nuTrueVertexX{nuTrueVertex.GetX()};
+    const float nuTrueVertexY{nuTrueVertex.GetY()};
+    const float nuTrueVertexZ{nuTrueVertex.GetZ()};
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuTrueVertexX", nuTrueVertexX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuTrueVertexY", nuTrueVertexY));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuTrueVertexZ", nuTrueVertexZ));
 
     if (nTracksPerView.count(TPC_VIEW_U))
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTracksU", static_cast<int>(nTracksPerView[TPC_VIEW_U])));
@@ -151,6 +151,8 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
     if (nShowersPerView.count(TPC_VIEW_W))
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nShowersW", static_cast<int>(nShowersPerView[TPC_VIEW_W])));
 
+    ViewToVertexPositionMap nuRecoVertices;
+    this->GetVertexPositions(nuRecoVertices);
     std::vector<int> pixel_view;
     std::vector<int> pixel_row;
     std::vector<int> pixel_column;
@@ -165,8 +167,9 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
             continue;
 
 //        std::cout << "Creating pixel map for hit collection " << listname << " with nHits = " << pCaloHitList->size() << std::endl;
+        VertexPosition &vertex(nuRecoVertices.at(pCaloHitList->front()->GetHitType()));
         PixelMap pixelMap;
-        this->CreatePixelMap(pCaloHitList, pixelMap);
+        this->CreatePixelMap(pCaloHitList, pixelMap, vertex);
         if (pixelMap.size() < m_minHits)
             continue;
 
@@ -180,6 +183,20 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
             pixel_charge.emplace_back(pixel.second);
         }
     }
+
+    const int nuRecoVertexDriftBinU(nuRecoVertices.at(TPC_VIEW_U).GetDriftBin());
+    const int nuRecoVertexDriftBinV(nuRecoVertices.at(TPC_VIEW_V).GetDriftBin());
+    const int nuRecoVertexDriftBinW(nuRecoVertices.at(TPC_VIEW_W).GetDriftBin());
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuRecoVertexDriftBinU", nuRecoVertexDriftBinU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuRecoVertexDriftBinV", nuRecoVertexDriftBinV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuRecoVertexDriftBinW", nuRecoVertexDriftBinW));
+
+    const int nuRecoVertexWireBinU(nuRecoVertices.at(TPC_VIEW_U).GetWireBin());
+    const int nuRecoVertexWireBinV(nuRecoVertices.at(TPC_VIEW_V).GetWireBin());
+    const int nuRecoVertexWireBinW(nuRecoVertices.at(TPC_VIEW_W).GetWireBin());
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuRecoVertexWireBinU", nuRecoVertexWireBinU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuRecoVertexWireBinV", nuRecoVertexWireBinV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuRecoVertexWireBinW", nuRecoVertexWireBinW));
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "pixelView", &pixel_view));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "pixelRow", &pixel_row));
@@ -195,6 +212,8 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
 StatusCode CNNTrackShowerCountingAlgorithm::Infer()
 {
     TrackShowerCountingResults result;
+    ViewToVertexPositionMap vertices;
+    this->GetVertexPositions(vertices);
 
     for (const std::string &listname : m_caloHitListNames)
     {
@@ -203,15 +222,26 @@ StatusCode CNNTrackShowerCountingAlgorithm::Infer()
         if (pCaloHitList->empty())
             continue;
 
+        VertexPosition &vertex(vertices.at(pCaloHitList->front()->GetHitType()));
         PixelMap pixelMap;
-        this->CreatePixelMap(pCaloHitList, pixelMap);
+        this->CreatePixelMap(pCaloHitList, pixelMap, vertex);
         if (pixelMap.size() < m_minHits)
             continue;
 
-        LArDLHelper::TorchInput input;
-        this->MakeNetworkInputFromPixelMap(pixelMap, input);
+        // Image first
+        LArDLHelper::TorchInput imageInput;
+        this->MakeNetworkInputFromPixelMap(pixelMap, imageInput);
+
+        // Now for the reconstructed vertex
+        LArDLHelper::TorchInput vtxInput;
+        LArDLHelper::InitialiseInput({1, 2}, vtxInput);
+        auto accessor = vtxInput.accessor<float, 2>();
+        accessor[0][0] = vertices[pCaloHitList->front()->GetHitType()].GetDriftBin() / static_cast<float>(m_height);
+        accessor[0][1] = vertices[pCaloHitList->front()->GetHitType()].GetWireBin() / static_cast<float>(m_width);
+
         LArDLHelper::TorchInputVector inputs;
-        inputs.emplace_back(input);
+        inputs.emplace_back(imageInput);
+        inputs.emplace_back(vtxInput);
         LArDLHelper::TorchMultiOutput output;
         LArDLHelper::Forward(m_model, inputs, output);
 
@@ -219,11 +249,8 @@ StatusCode CNNTrackShowerCountingAlgorithm::Infer()
         // two tensors, one for each of the outputs.
         const auto outputList = output.toList();
 
-        // Extract the tensors from the tuple
         // Due to the way PyTorch includes the softmax in the loss function we need to apply it here if we
         // want out scores to sum to one
-//        const auto trkOutput = torch::softmax(outputTuple->elements()[0].toTensor(), 1);
-//        const auto shwOutput = torch::softmax(outputTuple->elements()[1].toTensor(), 1);
         const auto trkOutput = torch::softmax(outputList.get(0).toTensor(), 1);
         const auto shwOutput = torch::softmax(outputList.get(1).toTensor(), 1);
         
@@ -343,6 +370,7 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
 
         const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
         const unsigned int nHitsCut{this->IsTracklike(pMCParticle) ? m_goodMCTrackHits : m_goodMCShowerHits};
+        // Look for secondaries produced by primaries that are considered not visible and see if they start close to the neutrino vertex position
         if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pParentParticle) && std::find(keysToRemove.begin(), keysToRemove.end(), pParentParticle) != keysToRemove.end())
         {
             if (mcToHitsPair.second.size() < nHitsCut)
@@ -367,16 +395,37 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
     for (auto const &key : keysToRemove)
         mcToHitsMap.erase(key);
 
-    for (auto const &mcToHitsPair : mcToHitsMap)
+//    for (auto const &mcToHitsPair : mcToHitsMap)
+//    {
+//        const MCParticle *pMCParticle{mcToHitsPair.first};
+//        const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
+//        
+//        const CartesianVector thisVtx(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCParticle->GetVertex(), hitType));
+//        const CartesianVector thisEnd(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCParticle->GetEndpoint(), hitType));
+//        const float particleLength{std::sqrt(thisVtx.GetDistanceSquared(thisEnd))};
+//        std::cout << "Particle " << pMCParticle << " of type " << pMCParticle->GetParticleId() << " has " << mcToHitsPair.second.size() << " hits has parent " << pParentParticle << " of type " << pParentParticle->GetParticleId() << " and length " << particleLength << std::endl;
+//    }
+
+    // Calculate the angle between all remaining tracks and showers
+    std::map<std::pair<const MCParticle *const, const MCParticle *const>, float> particleAngles;
+    for (auto const &mcToHitsPair1 : mcToHitsMap)
     {
-        const MCParticle *pMCParticle{mcToHitsPair.first};
-        const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
-        
-        const CartesianVector thisVtx(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCParticle->GetVertex(), hitType));
-        const CartesianVector thisEnd(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCParticle->GetEndpoint(), hitType));
-        const float particleLength{std::sqrt(thisVtx.GetDistanceSquared(thisEnd))};
-        std::cout << "Particle " << pMCParticle << " of type " << pMCParticle->GetParticleId() << " has " << mcToHitsPair.second.size() << " hits has parent " << pParentParticle << " of type " << pParentParticle->GetParticleId() << " and hits per unit length " << static_cast<float>(mcToHitsPair.second.size()) / particleLength << std::endl;
+        for (auto const &mcToHitsPair2 : mcToHitsMap)
+        {
+            const MCParticle *const pMCParticle1{mcToHitsPair1.first};
+            const MCParticle *const pMCParticle2{mcToHitsPair2.first};
+            if (pMCParticle1 == pMCParticle2)
+                continue;
+            if (particleAngles.count(std::make_pair(pMCParticle2, pMCParticle1)))
+                continue;
+            const CartesianVector momentum1(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCParticle1->GetMomentum(), hitType)); 
+            const CartesianVector momentum2(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCParticle2->GetMomentum(), hitType));
+            const float openingAngle(momentum1.GetOpeningAngle(momentum2) * 180.f / M_PI);
+            particleAngles[std::make_pair(mcToHitsPair1.first, mcToHitsPair2.first)] = openingAngle;
+//            std::cout << "Angle between " << mcToHitsPair1.first << " and " << mcToHitsPair2.first << " = " << openingAngle << std::endl;
+        }
     }
+
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -403,11 +452,11 @@ StatusCode CNNTrackShowerCountingAlgorithm::MakeNetworkInputFromPixelMap(const P
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pCaloHitList, PixelMap &pixelMap) const
+void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pCaloHitList, PixelMap &pixelMap, VertexPosition &vertex) const
 {
-    ViewToVertexPositionMap vertices;
-    if (m_useVertexForCrops)
-        this->GetVertexPositions(vertices);
+//    ViewToVertexPositionMap vertices;
+//    if (m_useVertexForCrops)
+//    this->GetVertexPositions(vertices);
 
     float xMin{std::numeric_limits<float>::max()}, xMax{-1.f * std::numeric_limits<float>::max()};
     float zMin{std::numeric_limits<float>::max()}, zMax{-1.f * std::numeric_limits<float>::max()};
@@ -417,6 +466,7 @@ void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pC
     const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
     const HitType view{pCaloHitList->front()->GetHitType()};
     const float pitch{view == TPC_VIEW_U ? pTPC->GetWirePitchU() : (view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW())};
+    const float wireStep{pitch * m_wiresPerPixel};
 
     const float zSpan{pitch * m_wiresPerPixel * m_width};
     const float xSpan{m_driftStep * m_height};
@@ -424,13 +474,34 @@ void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pC
     const bool cropZ{(zMax - zMin) > zSpan ? true : false};
     const bool cropX{(xMax - xMin) > xSpan ? true : false};
 //    std::cout << "Pixel Map Creation... do we need to crop? " << cropX << ", " << cropZ << std::endl;
-    CartesianVector vtx{CartesianVector(0.f, 0.f, 0.f)};
-    if (m_useVertexForCrops)
-        vtx = vertices.at(view);
+//    CartesianVector vtx{CartesianVector(0.f, 0.f, 0.f)};
+//    if (m_useVertexForCrops)
+
+    float vtxPosX{vertex.GetPosition().GetX()};
+    float vtxPosZ{vertex.GetPosition().GetZ()};
+
+    // Adjust the min and max depending on reconstructed vertex position for events where
+    // the reconstructed vertex isn't on a CaloHit, e.g. NC pizero events
+    if (vtxPosX < xMin)
+        xMin = vtxPosX;
+    if (vtxPosX > xMax)
+        xMax = vtxPosX;
+    if (vtxPosZ < zMin)
+        zMin = vtxPosZ;
+    if (vtxPosZ > zMax)
+        zMax = vtxPosZ;
+
+    const float eps{0.0001f};
     if (cropX)
-        this->GetCrop1D(pCaloHitList, vtx, xMin, xMax, xSpan, true);
+        this->GetCrop1D(pCaloHitList, vertex, xMin, xMax, xSpan, true);
+    else
+        vertex.AddVertexBin(true, static_cast<unsigned int>(std::floor(eps + (vtxPosX - xMin) / m_driftStep)));
+
     if (cropZ)
-        this->GetCrop1D(pCaloHitList, vtx, zMin, zMax, zSpan, false);
+        this->GetCrop1D(pCaloHitList, vertex, zMin, zMax, zSpan, false);
+    else
+        vertex.AddVertexBin(false, static_cast<unsigned int>(std::floor(eps + (vtxPosZ - zMin) / wireStep)));
+
 
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
@@ -441,9 +512,7 @@ void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pC
         if (wirePos < zMin || wirePos > zMax)
             continue;
 
-        const float eps{0.0001f};
         const unsigned int driftBin{static_cast<unsigned int>(std::floor(eps + (driftPos - xMin) / m_driftStep))};
-        const float wireStep{pitch * m_wiresPerPixel};
         const unsigned int wireBin{static_cast<unsigned int>(std::floor(eps + (wirePos - zMin) / wireStep))};
         Pixel pixel{driftBin, wireBin};
         if (!pixelMap.count(pixel))
@@ -457,35 +526,32 @@ void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pC
 
 void CNNTrackShowerCountingAlgorithm::GetVertexPositions(ViewToVertexPositionMap &vertices) const
 {
-    if (!m_useVertexForCrops)
-        return;
+//    if (!m_useVertexForCrops)
+//        return;
 
     const VertexList *pVertexList{nullptr};
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_vertexListName, pVertexList));
     if (pVertexList->empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     if (pVertexList->front()->GetVertexType() != VERTEX_3D)
-        return;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    vertices.emplace(TPC_VIEW_U, LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_U));
-    vertices.emplace(TPC_VIEW_V, LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_V));
-    vertices.emplace(TPC_VIEW_W, LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_W));
+    vertices.emplace(TPC_VIEW_U, VertexPosition(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_U)));
+    vertices.emplace(TPC_VIEW_V, VertexPosition(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_V)));
+    vertices.emplace(TPC_VIEW_W, VertexPosition(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertexList->front()->GetPosition(), TPC_VIEW_W)));
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void CNNTrackShowerCountingAlgorithm::GetCrop1D(const CaloHitList *const pCaloHitList, const CartesianVector &vertexPosition,
+void CNNTrackShowerCountingAlgorithm::GetCrop1D(const CaloHitList *const pCaloHitList, VertexPosition &vertexPosition,
     float &min, float &max, const float &span, const bool &isDrift) const
 {
     // For some NC events we can expect the vertex to be outside the range from the hits
-    const float vtxPos{m_useVertexForCrops ? (isDrift ? vertexPosition.GetX() : vertexPosition.GetZ()) : min};
-    if (m_useVertexForCrops)
-    {
-        if (vtxPos < min)
-            min = vtxPos;
-        if (vtxPos > max)
-            max = vtxPos;
-    }
+    const float vtxPos{isDrift ? vertexPosition.GetPosition().GetX() : vertexPosition.GetPosition().GetZ()};
+    if (vtxPos < min)
+        min = vtxPos;
+    if (vtxPos > max)
+        max = vtxPos;
 
     const unsigned int imageDimension{isDrift ? m_height : m_width};
     const float step{span / imageDimension};
@@ -500,36 +566,27 @@ void CNNTrackShowerCountingAlgorithm::GetCrop1D(const CaloHitList *const pCaloHi
     {
         const CartesianVector pos{pCaloHit->GetPositionVector()};
         const float dim{(isDrift ? pos.GetX() : pos.GetZ())};
-        const unsigned int bin{static_cast<unsigned int>(std::floor(eps + (dim - min) / step))};
-        if (bin > dimensionBins.size() - 1)
+        unsigned int bin{static_cast<unsigned int>(std::floor(eps + (dim - min) / step))};
+        if (bin == nBins)
+            bin = nBins - 1;
+        if (bin >= nBins)
         {
-            std::cout << " - Error! Bin " << bin << " outside range 0 to " << dimensionBins.size() - 1 << std::endl;
-            std::cout << "  - Underlying values: " << dim << ", " << min << ", " << max << ", " << step << std::endl;
+            std::cout << " - Error! Bin " << bin << " outside range 0 to " << nBins - 1 << std::endl;
+            std::cout << "  - Underlying values: " << dim - max << ", " << dim << ", " << min << ", " << max << ", " << step << std::endl;
             continue;
         }
         dimensionBins[bin] += pCaloHit->GetMipEquivalentEnergy();
     }
 
-    const unsigned int vtxBin{static_cast<unsigned int>(std::floor(eps + (vtxPos - min) / step)) - 1};
-
+    const unsigned int vtxBin{static_cast<unsigned int>(std::floor(eps + (vtxPos - min) / step))};
     // Look for the required number of consecutive bins with the highest integrated charge
     std::map<unsigned int, float> startBinToCharge;
-    const float totalCharge{std::accumulate(dimensionBins.begin(), dimensionBins.end(), 0.f)};
+    //const float totalCharge{std::accumulate(dimensionBins.begin(), dimensionBins.end(), 0.f)};
     //std::cout << "Vertex: " << vtxPos << ", " << vtxBin << " :: " << nBins << std::endl;
     for (unsigned int i = 0; i < (nBins - imageDimension); ++i)
     {
-        startBinToCharge[i] = std::accumulate(dimensionBins.begin() + i, dimensionBins.begin() + i + imageDimension, 0.f);
-        // If we are using the reco vertex then set the sum to zero if it doesn't include the vertex
-        if (m_useVertexForCrops)
-        {
-            if (vtxBin < i || vtxBin > (i + imageDimension - 1))
-                startBinToCharge[i] = 0;
-        }
-        else
-        {
-            // Give some upstream bias
-            startBinToCharge[i] -= (totalCharge / dimensionBins.size()) * i;
-        }
+        const bool vtxInRange{(vtxBin >= i) && (vtxBin < (i + imageDimension))};
+        startBinToCharge[i] = (vtxInRange ? std::accumulate(dimensionBins.begin() + i, dimensionBins.begin() + i + imageDimension, 0.f) : 0.f);
     }
 
     // Get the maximum element from the map
@@ -539,16 +596,16 @@ void CNNTrackShowerCountingAlgorithm::GetCrop1D(const CaloHitList *const pCaloHi
 //    std::cout << maxBin << ", " << maxElementIter->second << " :: " << maxBinLoop << ", " << maxValue << std::endl;
     const float localMin{min + maxBin * step};
     const float localMax{localMin + imageDimension * step};
-    if (m_useVertexForCrops)
-    {
-        const float vtxPos{isDrift ? vertexPosition.GetX() : vertexPosition.GetZ()}; 
-	      if (vtxPos < localMin || vtxPos > localMax)
-	          std::cout << "CNNTrackShowerCountingAlgorithm::GetCrop1D: reconstructed vertex outside cropped region! " << vtxPos << ", " << localMin << ", " << localMax << std::endl;
-    }
+
+    vertexPosition.AddVertexBin(isDrift, vtxBin - maxBin);
+
+//    std::cout << "Crop " << isDrift << ": " << min << ", " << vtxPos << ", " << vtxBin << ", " << maxBin << ", " << max << std::endl;
 
     min = localMin;
     max = localMax;
 
+	  if (vtxPos < localMin || vtxPos > localMax)
+	      std::cout << "CNNTrackShowerCountingAlgorithm::GetCrop1D: reconstructed vertex outside cropped region! " << vtxPos << ", " << localMin << ", " << localMax << std::endl;
 //    std::cout << "Best bin " << maxBin << " with charge sum " << startBinToCharge[maxBin] << " gives minimum " << min << " and max " << max << std::endl;
 }
 
@@ -627,10 +684,10 @@ StatusCode CNNTrackShowerCountingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
 
     
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseVertexForCrops", m_useVertexForCrops));
-    if (m_useVertexForCrops)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
+//    PANDORA_RETURN_RESULT_IF_AND_IF(
+//        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseVertexForCrops", m_useVertexForCrops));
+//    if (m_useVertexForCrops)
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
 
     if (m_trainingMode)
     {
@@ -655,6 +712,56 @@ StatusCode CNNTrackShowerCountingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
     return STATUS_CODE_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+CNNTrackShowerCountingAlgorithm::VertexPosition::VertexPosition() :
+    m_position{0.f, 0.f, 0.f},
+    m_driftBin{0},
+    m_wireBin{0}
+{
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+CNNTrackShowerCountingAlgorithm::VertexPosition::VertexPosition(const CartesianVector &pos) :
+    m_position{pos},
+    m_driftBin{0},
+    m_wireBin{0}
+{
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void CNNTrackShowerCountingAlgorithm::VertexPosition::AddVertexBin(const bool &isDrift, const unsigned int &bin)
+{
+    if (isDrift)
+        m_driftBin = bin;
+    else
+        m_wireBin = bin;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector CNNTrackShowerCountingAlgorithm::VertexPosition::GetPosition() const
+{
+    return m_position;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int CNNTrackShowerCountingAlgorithm::VertexPosition::GetDriftBin() const
+{
+    return m_driftBin;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int CNNTrackShowerCountingAlgorithm::VertexPosition::GetWireBin() const
+{
+    return m_wireBin;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
