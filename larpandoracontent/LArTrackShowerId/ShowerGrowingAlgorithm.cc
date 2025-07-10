@@ -449,7 +449,7 @@ void ShowerGrowingAlgorithm::PreComputeClusterLengths(const ClusterList *const p
         CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
         LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
 
-        m_clusterLengthCache[pCluster] = (outerCoordinate - innerCoordinate).GetMagnitude();
+        m_clusterLengthCache[pCluster] = (outerCoordinate - innerCoordinate).GetMagnitudeSquared();
     }
 }
 
