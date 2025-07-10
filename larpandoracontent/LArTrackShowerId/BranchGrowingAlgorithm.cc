@@ -24,6 +24,7 @@ void BranchGrowingAlgorithm::FindAssociatedClusters(const Cluster *const pPartic
     currentSeedAssociations.push_back(pParticleSeed);
 
     unsigned int associationOrder(1);
+    std::map<std::pair<const Cluster *, const Cluster *>, Association> associationCache;
 
     while (!currentSeedAssociations.empty())
     {
@@ -37,14 +38,24 @@ void BranchGrowingAlgorithm::FindAssociatedClusters(const Cluster *const pPartic
             for (ClusterVector::iterator iterJ = currentSeedAssociations.begin(), iterJEnd = currentSeedAssociations.end(); iterJ != iterJEnd; ++iterJ)
             {
                 const Cluster *const pAssociatedCluster = *iterJ;
+                const auto clusterPair = pAssociatedCluster->GetNCaloHits() > pCandidateCluster->GetNCaloHits()
+                    ? std::make_pair(pCandidateCluster, pAssociatedCluster)
+                    : std::make_pair(pAssociatedCluster, pCandidateCluster);
+                Association association;
 
-                const AssociationType associationType(this->AreClustersAssociated(pAssociatedCluster, pCandidateCluster));
+                if (associationCache.count(clusterPair) > 0)
+                    association = associationCache[clusterPair];
+                else
+                {
+                    const AssociationType associationType(this->AreClustersAssociated(pAssociatedCluster, pCandidateCluster));
+                    association = Association(associationOrder, associationType);
+                    associationCache[clusterPair] = association;
+                }
 
-                if (NONE == associationType)
+                if (association.GetType() == NONE)
                     continue;
 
                 // Check we store best association between this seed and candidate
-                Association association(associationOrder, associationType);
                 const Association &existingAssociation = forwardUsageMap[pParticleSeed][pCandidateCluster];
 
                 if (association.GetType() > existingAssociation.GetType())
