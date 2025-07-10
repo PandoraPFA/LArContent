@@ -6,6 +6,7 @@
  *  $Log: $
  */
 
+#include "Objects/CartesianVector.h"
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -14,6 +15,10 @@
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArTrackShowerId/BranchGrowingAlgorithm.h"
+#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
+#include "larpandoracontent/LArUtility/KDTreeLinkerToolsT.h"
+#include <limits>
 
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 
@@ -31,7 +36,8 @@ ShowerGrowingAlgorithm::ShowerGrowingAlgorithm() :
     m_minVertexLongitudinalDistance(-2.5f),
     m_maxVertexLongitudinalDistance(20.f),
     m_maxVertexTransverseDistance(1.5f),
-    m_vertexAngularAllowance(3.f)
+    m_vertexAngularAllowance(3.f),
+    m_useClusterLengthCache(true)
 {
 }
 
@@ -106,6 +112,9 @@ void ShowerGrowingAlgorithm::SimpleModeShowerGrowing(const ClusterList *const pC
 
     ClusterSet usedClusters;
 
+    if (m_useClusterLengthCache)
+        this->PreComputeClusterLengths(pClusterList);
+
     // Pick up all showers starting at vertex
     if (pVertex)
     {
@@ -136,7 +145,8 @@ bool ShowerGrowingAlgorithm::GetNextSeedCandidate(const ClusterList *const pClus
 
     ClusterVector clusterVector;
     clusterVector.insert(clusterVector.end(), pClusterList->begin(), pClusterList->end());
-    std::sort(clusterVector.begin(), clusterVector.end(), ShowerGrowingAlgorithm::SortClusters);
+    ClusterSeedComparator clusterSeedComparator(m_useClusterLengthCache ? &m_clusterLengthCache : nullptr);
+    std::sort(clusterVector.begin(), clusterVector.end(), clusterSeedComparator);
 
     for (const Cluster *const pCluster : clusterVector)
     {
@@ -193,7 +203,8 @@ void ShowerGrowingAlgorithm::GetAllVertexSeedCandidates(const ClusterList *const
         }
     }
 
-    std::sort(seedClusters.begin(), seedClusters.end(), ShowerGrowingAlgorithm::SortClusters);
+    ClusterSeedComparator clusterSeedComparator(m_useClusterLengthCache ? &m_clusterLengthCache : nullptr);
+    std::sort(seedClusters.begin(), seedClusters.end(), clusterSeedComparator);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -222,7 +233,8 @@ void ShowerGrowingAlgorithm::GetSeedAssociationList(
             candidateClusters.push_back(pCandidateCluster);
     }
 
-    std::sort(candidateClusters.begin(), candidateClusters.end(), ShowerGrowingAlgorithm::SortClusters);
+    ClusterSeedComparator clusterSeedComparator(m_useClusterLengthCache ? &m_clusterLengthCache : nullptr);
+    std::sort(candidateClusters.begin(), candidateClusters.end(), clusterSeedComparator);
     ClusterUsageMap forwardUsageMap, backwardUsageMap;
 
     for (const Cluster *const pSeedCluster : particleSeedVector)
@@ -275,6 +287,11 @@ void ShowerGrowingAlgorithm::ProcessBranchClusters(const Cluster *const pParentC
 
 ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
 {
+    // INFO: Check the minimum distance between the two clusters.
+    //       If the minimum distance is larger than the remote cluster distance, then the clusters are not associated.
+    if (LArClusterHelper::GetClosestDistance(pClusterSeed, pCluster) > m_remoteClusterDistance)
+        return NONE;
+
     const VertexList *pVertexList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
     const Vertex *const pVertex(
@@ -421,6 +438,40 @@ unsigned int ShowerGrowingAlgorithm::GetNVertexConnections(const CartesianVector
     }
 
     return nConnections;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerGrowingAlgorithm::PreComputeClusterLengths(const ClusterList *const pClusterList) const
+{
+    m_clusterLengthCache.clear();
+    m_clusterLengthCache.reserve(pClusterList->size());
+
+    for (const Cluster *const pCluster : *pClusterList)
+    {
+        CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
+        LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
+
+        m_clusterLengthCache[pCluster] = (outerCoordinate - innerCoordinate).GetMagnitude();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ShowerGrowingAlgorithm::ClusterSeedComparator::operator()(const Cluster *pLhs, const Cluster *pRhs) const
+{
+    if (m_pClusterLengthCache != nullptr)
+    {
+        const ClusterLengthMap::const_iterator lhsIter(m_pClusterLengthCache->find(pLhs));
+        const ClusterLengthMap::const_iterator rhsIter(m_pClusterLengthCache->find(pRhs));
+
+        if ((m_pClusterLengthCache->end() != lhsIter) && (m_pClusterLengthCache->end() != rhsIter))
+        {
+            return lhsIter->second > rhsIter->second;
+        }
+    }
+
+    return ShowerGrowingAlgorithm::SortClusters(pLhs, pRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

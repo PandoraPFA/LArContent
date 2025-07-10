@@ -779,15 +779,17 @@ bool LArClusterHelper::SortHitsByPulseHeight(const CaloHit *const pLhs, const Ca
 
 bool LArClusterHelper::SortCoordinatesByPosition(const CartesianVector &lhs, const CartesianVector &rhs)
 {
-    const CartesianVector deltaPosition(rhs - lhs);
+    constexpr float epsilon(std::numeric_limits<float>::epsilon());
 
-    if (std::fabs(deltaPosition.GetZ()) > std::numeric_limits<float>::epsilon())
-        return (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon());
+    float deltaZ(rhs.GetZ() - lhs.GetZ());
+    if (std::fabs(deltaZ) > epsilon)
+        return (deltaZ > epsilon);
 
-    if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
-        return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
+    float deltaX(rhs.GetX() - lhs.GetX());
+    if (std::fabs(deltaX) > epsilon)
+        return (deltaX > epsilon);
 
-    return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
+    return (rhs.GetY() - lhs.GetY() > epsilon);
 }
 
 } // namespace lar_content

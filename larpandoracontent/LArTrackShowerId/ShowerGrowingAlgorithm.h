@@ -9,6 +9,7 @@
 #define LAR_SHOWER_GROWING_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
+#include "Objects/CaloHit.h"
 
 #include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
@@ -32,9 +33,11 @@ public:
      */
     ShowerGrowingAlgorithm();
 
+    typedef std::unordered_map<const pandora::Cluster *, float> ClusterLengthMap;
+
 protected:
     /**
-     *  @brief  Whether a pointing cluster is assciated with a provided 2D vertex projection
+     *  @brief  Whether a pointing cluster is associated with a provided 2D vertex projection
      *
      *  @param  pointingCluster the pointing cluster
      *  @param  vertexPosition2D the projected vertex position
@@ -50,6 +53,20 @@ protected:
      *  @param  pRhs address of second cluster
      */
     static bool SortClusters(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+
+    /**
+     *  @brief  Cluster sort class, with the ability to use a cluster length cache.
+     */
+    class ClusterSeedComparator
+    {
+    public:
+        ClusterSeedComparator(const ClusterLengthMap *const pClusterLengthCache) : m_pClusterLengthCache(pClusterLengthCache) {}
+
+        bool operator()(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs) const;
+
+    private:
+        const ClusterLengthMap* m_pClusterLengthCache; ///< The cluster length cache
+    };
 
     typedef std::unordered_map<const pandora::Cluster *, LArVertexHelper::ClusterDirection> ClusterDirectionMap;
     mutable ClusterDirectionMap m_clusterDirectionMap; ///< The cluster direction map
@@ -140,6 +157,13 @@ private:
      */
     unsigned int GetNVertexConnections(const pandora::CartesianVector &vertexPosition2D, const LArPointingClusterList &pointingClusterList) const;
 
+    /**
+     *  @brief  Pre-compute the lengths of all clusters in the input list, if caching is enabled
+     *
+     *  @param  pClusterList the address of the input cluster list
+     */
+    void PreComputeClusterLengths(const pandora::ClusterList *const pClusterList) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     pandora::StringVector m_inputClusterListNames; ///< The names of the input cluster lists
@@ -155,6 +179,9 @@ private:
     float m_maxVertexLongitudinalDistance; ///< Vertex association check: max longitudinal distance cut
     float m_maxVertexTransverseDistance;   ///< Vertex association check: max transverse distance cut
     float m_vertexAngularAllowance;        ///< Vertex association check: pointing angular allowance in degrees
+
+    mutable ClusterLengthMap m_clusterLengthCache; ///< The cluster length cache
+    bool m_useClusterLengthCache;                  ///< Whether to use the cluster length cache
 };
 
 } // namespace lar_content
