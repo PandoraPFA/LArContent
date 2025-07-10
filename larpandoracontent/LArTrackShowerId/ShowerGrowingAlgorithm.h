@@ -8,8 +8,8 @@
 #ifndef LAR_SHOWER_GROWING_ALGORITHM_H
 #define LAR_SHOWER_GROWING_ALGORITHM_H 1
 
-#include "Pandora/Algorithm.h"
 #include "Objects/CaloHit.h"
+#include "Pandora/Algorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
@@ -60,12 +60,15 @@ protected:
     class ClusterSeedComparator
     {
     public:
-        ClusterSeedComparator(const ClusterLengthMap *const pClusterLengthCache) : m_pClusterLengthCache(pClusterLengthCache) {}
+        ClusterSeedComparator(const ClusterLengthMap *const pClusterLengthCache) :
+            m_pClusterLengthCache(pClusterLengthCache)
+        {
+        }
 
         bool operator()(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs) const;
 
     private:
-        const ClusterLengthMap* m_pClusterLengthCache; ///< The cluster length cache
+        const ClusterLengthMap *m_pClusterLengthCache; ///< The cluster length cache
     };
 
     typedef std::unordered_map<const pandora::Cluster *, LArVertexHelper::ClusterDirection> ClusterDirectionMap;

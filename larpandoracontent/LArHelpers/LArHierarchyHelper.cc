@@ -1333,11 +1333,9 @@ void LArHierarchyHelper::MatchInfo::Match()
             RecoHierarchy::NodeVector recoNodes;
             m_recoHierarchy.GetFlattenedNodes(pRootPfo, recoNodes);
 
-            std::sort(mcNodes.begin(), mcNodes.end(),
-                [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs)
+            std::sort(mcNodes.begin(), mcNodes.end(), [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs)
                 { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
-            std::sort(recoNodes.begin(), recoNodes.end(),
-                [](const RecoHierarchy::Node *lhs, const RecoHierarchy::Node *rhs)
+            std::sort(recoNodes.begin(), recoNodes.end(), [](const RecoHierarchy::Node *lhs, const RecoHierarchy::Node *rhs)
                 { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
 
             for (const RecoHierarchy::Node *pRecoNode : recoNodes)
@@ -1498,7 +1496,7 @@ const CaloHitList LArHierarchyHelper::MatchInfo::GetSelectedRecoHits(const RecoH
 {
     // Select all of the reco node hit Ids that overlap with the allMCHits Ids
     CaloHitList selectedHits;
-    if (! pRecoNode)
+    if (!pRecoNode)
         return selectedHits;
 
     // Build a map of MC hit IDs, for fast lookup
@@ -1513,7 +1511,7 @@ const CaloHitList LArHierarchyHelper::MatchInfo::GetSelectedRecoHits(const RecoH
     {
         const int recoId = reinterpret_cast<intptr_t>(pRecoHit->GetParentAddress());
         if (mcHitIds.find(recoId) != mcHitIds.end())
-                selectedHits.emplace_back(pRecoHit);
+            selectedHits.emplace_back(pRecoHit);
     }
     return selectedHits;
 }

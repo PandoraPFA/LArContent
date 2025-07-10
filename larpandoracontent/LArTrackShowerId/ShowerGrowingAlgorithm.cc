@@ -16,9 +16,6 @@
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArTrackShowerId/BranchGrowingAlgorithm.h"
-#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
-#include "larpandoracontent/LArUtility/KDTreeLinkerToolsT.h"
-#include <limits>
 
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 
