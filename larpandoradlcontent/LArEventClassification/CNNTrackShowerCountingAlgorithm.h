@@ -32,7 +32,24 @@ public:
     typedef std::map<Pixel, float> PixelMap; // Sparse representation of the pixel map
     typedef std::map<Pixel, std::vector<const pandora::CaloHit *>> PixelToCaloHitsMap;
     typedef std::vector<Pixel> PixelVector;
-    typedef std::map<pandora::HitType, pandora::CartesianVector> ViewToVertexPositionMap;
+
+    class VertexPosition
+    {
+        public:
+        VertexPosition();
+        VertexPosition(const pandora::CartesianVector &pos);
+        void AddVertexBin(const bool &isDrift, const unsigned int &bin);
+
+        pandora::CartesianVector GetPosition() const;
+        unsigned int GetDriftBin() const;
+        unsigned int GetWireBin() const;
+
+        private:
+        pandora::CartesianVector m_position;
+        unsigned int m_driftBin;
+        unsigned int m_wireBin;
+    };
+    typedef std::map<pandora::HitType, VertexPosition> ViewToVertexPositionMap;
 
     class TrackShowerCountingResults
     {
@@ -97,8 +114,9 @@ private:
      *
      *  @param  pCaloHitList the pointer to the input CaloHitList
      *  @param  pixelMap the PixelMap to be filled
+     *  @param  vertex the reconstructed vertex position
      */ 
-    void CreatePixelMap(const pandora::CaloHitList *const pCaloHitList, PixelMap &pixelMap) const;
+    void CreatePixelMap(const pandora::CaloHitList *const pCaloHitList, PixelMap &pixelMap, VertexPosition &vertex) const;
 
     /*
      *  @brief  Create input for the network from a calo hit list
@@ -131,7 +149,7 @@ private:
      *  @param span the span in coordinate values required
      *  @param isDrift whether this is the drift coordinate or not
      **/
-    void GetCrop1D(const pandora::CaloHitList *const pCaloHitList, const pandora::CartesianVector &vertexPosition,
+    void GetCrop1D(const pandora::CaloHitList *const pCaloHitList, VertexPosition &vertexPosition,
         float &min, float &max, const float &span, const bool &isDrift) const;
 
     /*
@@ -185,7 +203,7 @@ private:
     unsigned int m_width;                       ///< The width of the images in pixels
     unsigned int m_wiresPerPixel;               ///< The number of wires per pixel
     float m_driftStep;                          ///< The size of a pixel in the drift direction in cm
-    bool m_useVertexForCrops;                   ///< Make use of the reconstructed vertex to perform the cropping
+//    bool m_useVertexForCrops;                   ///< Make use of the reconstructed vertex to perform the cropping
     std::string m_vertexListName;               ///< The vertex list name
     bool m_useSimpleTruthLabels;                ///< Use simple truth labels based only on a number of hits cut
     unsigned int m_goodMCTrackHits;             ///< The number of hits an MC primary track needs to be considered reconstructable per view
