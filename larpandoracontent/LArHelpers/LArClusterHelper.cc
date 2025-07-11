@@ -781,11 +781,11 @@ bool LArClusterHelper::SortCoordinatesByPosition(const CartesianVector &lhs, con
 {
     constexpr float epsilon(std::numeric_limits<float>::epsilon());
 
-    float deltaZ(rhs.GetZ() - lhs.GetZ());
+    const float deltaZ(rhs.GetZ() - lhs.GetZ());
     if (std::fabs(deltaZ) > epsilon)
         return (deltaZ > epsilon);
 
-    float deltaX(rhs.GetX() - lhs.GetX());
+    const float deltaX(rhs.GetX() - lhs.GetX());
     if (std::fabs(deltaX) > epsilon)
         return (deltaX > epsilon);
 
