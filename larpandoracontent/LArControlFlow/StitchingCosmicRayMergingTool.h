@@ -122,6 +122,16 @@ private:
     typedef std::unordered_map<const pandora::ParticleFlowObject *, PfoAssociation> PfoAssociationMap;
     typedef std::unordered_map<const pandora::ParticleFlowObject *, PfoAssociationMap> PfoAssociationMatrix;
 
+    // Gianfranco added functions here
+    void CreatePfoMatchesZ(const LArTPCToPfoMap &larTPCToPfoMap, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const;
+
+    bool DoVerticesMatchZ(const pandora::LArTPC &larTPC1, const pandora::LArTPC &larTPC2, const LArPointingCluster::Vertex &pointingCluster1, const LArPointingCluster::Vertex &pointingCluster2) const;
+    
+    void SelectBestMatchesZ(const PfoAssociationMatrix &pfoAssociationMatrix, PfoAssociationMatrix &bestAssociationMatrix) const;
+
+    bool GetBestMatch(const PfoAssociationMatrix &bestAssociationMatrix, const pandora::ParticleFlowObject* current_pfo, PfoAssociation::VertexType vertexType);
+// Gianfranco
+
     /**
      *  @brief  Create associations between Pfos using 3D pointing clusters
      *
@@ -147,6 +157,8 @@ private:
         PfoAssociationMatrix &pfoAssociationMatrix) const;
 
     typedef std::unordered_map<const pandora::ParticleFlowObject *, pandora::PfoList> PfoMergeMap;
+    
+    void CreateMargeMap(const PfoAssociationMatrix &bestAssociationMatrix, PfoMergeMap &pfoMergeMap);
 
     /**
      *  @brief  Select the best associations between Pfos; create a mapping between associated Pfos, handling any ambiguities

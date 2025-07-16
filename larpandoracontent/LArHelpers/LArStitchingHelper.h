@@ -76,6 +76,16 @@ public:
     static float GetTPCBoundaryCenterX(const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC);
 
     /**
+     *  @brief  Get distance between centers of two TPCs
+     *
+     *  @param  firstTPC the first tpc
+     *  @param  secondTPC the second tpc
+     *
+     *  @return distance
+     */
+
+    static float TPCToTPCDistance(const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC);
+    /**
      *  @brief  Determine width in X at the boundary between a pair of tpcs
      *
      *  @param  firstTPC the first tpc
@@ -83,6 +93,8 @@ public:
      *
      *  @return boundary X width
      */
+
+
     static float GetTPCBoundaryWidthX(const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC);
 
     /**
@@ -94,6 +106,12 @@ public:
      *  @return the distance
      */
     static float GetTPCDisplacement(const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC);
+
+    // Gianfranco added code here
+    static void GetClosestVertices(const LArPointingCluster &pointingCluster1,
+                                   const LArPointingCluster &pointingCluster2,
+                                   LArPointingCluster::Vertex &closestVertex1,
+                                   LArPointingCluster::Vertex &closestVertex2);
 
     /**
      *  @brief  Given a pair of pointing clusters, find the pair of vertices with smallest yz-separation

@@ -454,6 +454,7 @@ void CosmicRayTaggingTool::CheckIfContained(const CRCandidateList &candidates, P
 
 void CosmicRayTaggingTool::CheckIfTopToBottom(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsTopToBottomMap) const
 {
+    std::cout << "Gianfranco comment " << __FILE__ << ", function : " << __func__ << ", line : " << __LINE__ << "\n";
     for (const CRCandidate &candidate : candidates)
     {
         const float upperY(

@@ -12,6 +12,7 @@
 
 #include "larpandoracontent/LArHelpers/LArStitchingHelper.h"
 
+#include <chrono>
 #include <cmath>
 #include <limits>
 
@@ -147,6 +148,16 @@ float LArStitchingHelper::GetTPCBoundaryCenterX(const LArTPC &firstTPC, const LA
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float LArStitchingHelper::TPCToTPCDistance(const LArTPC &firstTPC, const LArTPC &secondTPC)
+{
+  const float dx = (firstTPC.GetCenterX() - secondTPC.GetCenterX());
+  const float dy = (firstTPC.GetCenterY() - secondTPC.GetCenterY());
+  const float dz = (firstTPC.GetCenterZ() - secondTPC.GetCenterZ());
+  return std::sqrt(dx*dx + dy*dy + dz*dz);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float LArStitchingHelper::GetTPCBoundaryWidthX(const LArTPC &firstTPC, const LArTPC &secondTPC)
 {
     if (!LArStitchingHelper::AreTPCsAdjacent(firstTPC, secondTPC))
@@ -171,6 +182,35 @@ float LArStitchingHelper::GetTPCDisplacement(const LArTPC &firstTPC, const LArTP
     const float deltaZ(firstTPC.GetCenterZ() - secondTPC.GetCenterZ());
 
     return std::sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LArStitchingHelper::GetClosestVertices(const LArPointingCluster &pointingCluster1,
+                                            const LArPointingCluster &pointingCluster2,
+                                            LArPointingCluster::Vertex &closestVertex1,
+                                            LArPointingCluster::Vertex &closestVertex2)
+{
+  // segment 1 = (inner1, outer1), segment 2 = (inner2, outer2)
+  const LArPointingCluster::Vertex inner1 = pointingCluster1.GetInnerVertex();
+  const LArPointingCluster::Vertex outer1 = pointingCluster1.GetOuterVertex();
+
+  const LArPointingCluster::Vertex inner2 = pointingCluster2.GetInnerVertex();
+  const LArPointingCluster::Vertex outer2 = pointingCluster2.GetOuterVertex();
+
+  float min_dist = std::numeric_limits<float>::max();
+
+  for(const LArPointingCluster::Vertex& vertex1 : {inner1, outer1}){
+    for(const LArPointingCluster::Vertex& vertex2 : {inner2, outer2}){
+      CartesianVector p1 = vertex1.GetPosition();
+      CartesianVector p2 = vertex2.GetPosition();
+      float dist = p1.GetDistanceSquared(p2);
+        if(dist < min_dist){
+         closestVertex1 = vertex1;
+         closestVertex2 = vertex2;
+         min_dist = dist;
+        }
+    }
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
