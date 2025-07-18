@@ -130,6 +130,7 @@
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/ShowerPfoMopUpAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMopUpAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMopUpAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/ShwMergTestPfoMopUpAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArPfoRecovery/ParticleRecoveryAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoRecovery/VertexBasedPfoRecoveryAlgorithm.h"
@@ -292,6 +293,7 @@
     d("LArSlidingConePfoMopUp",                 SlidingConePfoMopUpAlgorithm)                                                   \
     d("LArShowerHierarchyMopUp",                ShowerHierarchyMopUpAlgorithm)                                                  \
     d("LArShowerPfoMopUp",                      ShowerPfoMopUpAlgorithm)                                                        \
+    d("LArShwMergTestPfoMopUp",                 ShwMergTestPfoMopUpAlgorithm)                                                   \
     d("LArVertexBasedPfoMopUp",                 VertexBasedPfoMopUpAlgorithm)                                                   \
     d("LArParticleRecovery",                    ParticleRecoveryAlgorithm)                                                      \
     d("LArVertexBasedPfoRecovery",              VertexBasedPfoRecoveryAlgorithm)                                                \
@@ -436,12 +438,10 @@
     d("LArTwoDVertexDistanceFeatureTool",       TwoDVertexDistanceFeatureTool)                                                  \
     d("LArThreeDVertexDistanceFeatureTool",     ThreeDVertexDistanceFeatureTool)                                                \
     d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
-    d("LArThreeDChargeFeatureTool_ICARUS",      ThreeDChargeFeatureTool_ICARUS)                                                 \
     d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
     d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  \
     d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)                                                        \
-    d("LArConeChargeFeatureTool",             	ConeChargeFeatureTool)                                                          \
-    d("LArConeChargeFeatureTool_ICARUS",        ConeChargeFeatureTool_ICARUS)
+    d("LArConeChargeFeatureTool",             	ConeChargeFeatureTool)
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)
