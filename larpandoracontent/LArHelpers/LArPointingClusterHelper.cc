@@ -405,5 +405,4 @@ float LArPointingClusterHelper::GetAssociatedEnergy(const LArPointingCluster::Ve
 
     return associatedEnergy;
 }
-
 } // namespace lar_content

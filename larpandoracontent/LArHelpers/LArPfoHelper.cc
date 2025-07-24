@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <future>
 #include <limits>
 
 using namespace pandora;
@@ -216,6 +217,27 @@ void LArPfoHelper::GetAllDownstreamPfos(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArPfoHelper::FindPfoGroup(const ParticleFlowObject* const pPfo, const std::vector<PfoVector>& groups, const PfoVector*& groupPfo)
+{
+
+  if(!pPfo)
+    return false;
+
+  if(groups.empty()) 
+    return false;
+
+  for (const PfoVector& group : groups)
+  {
+    if (std::find(group.begin(), group.end(), pPfo) != group.end())
+    {
+      groupPfo = &group;
+      return true;
+    }
+  }
+  return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 int LArPfoHelper::GetHierarchyTier(const ParticleFlowObject *const pPfo)
 {
     const ParticleFlowObject *pParentPfo = pPfo;

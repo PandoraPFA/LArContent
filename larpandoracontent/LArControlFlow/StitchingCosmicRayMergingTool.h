@@ -130,6 +130,9 @@ private:
     void SelectBestMatchesZ(const PfoAssociationMatrix &pfoAssociationMatrix, PfoAssociationMatrix &bestAssociationMatrix) const;
 
     bool GetBestMatch(const PfoAssociationMatrix &bestAssociationMatrix, const pandora::ParticleFlowObject* current_pfo, PfoAssociation::VertexType vertexType);
+
+    void SortGroupedPfosZ(std::vector<pandora::PfoVector>& pfosGroupedAlongZ, const ThreeDPointingClusterMap &pointingClusterMap);
+
 // Gianfranco
 
     /**
@@ -158,7 +161,7 @@ private:
 
     typedef std::unordered_map<const pandora::ParticleFlowObject *, pandora::PfoList> PfoMergeMap;
     
-    void CreateMargeMap(const PfoAssociationMatrix &bestAssociationMatrix, PfoMergeMap &pfoMergeMap);
+    void GroupPfoAlongZ(const PfoAssociationMatrix &bestAssociationMatrix, std::vector<pandora::PfoVector>& pfosGroupedAlongZ);
 
     /**
      *  @brief  Select the best associations between Pfos; create a mapping between associated Pfos, handling any ambiguities
@@ -209,10 +212,22 @@ private:
      *  @param  stitchedPfosToX0Map a map of cosmic-ray pfos that have been stitched between lar tpcs to the X0 shift
      */
     void StitchPfos(const MasterAlgorithm *const pAlgorithm, const ThreeDPointingClusterMap &pointingClusterMap,
-        const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) const;
+        const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map, const std::vector<pandora::PfoVector>& pfosGroupedAlongZ) const;
 
     typedef std::unordered_map<const pandora::ParticleFlowObject *, LArPointingCluster::Vertex> PfoToPointingVertexMap;
     typedef std::unordered_map<const pandora::ParticleFlowObject *, PfoToPointingVertexMap> PfoToPointingVertexMatrix;
+
+    /**
+     *  @brief  Get x0 with sign to shift a pair of pfos
+     *
+     *  @param  pPfoToShift the pfo of the stitching pair to shift
+     *  @param  pMatchedPfo the pfo of the stitching pair to remain stationary
+     *  @param  x0 the distance by which pPfoToShift is to be shifted (direction of shift is determined in method)
+     *  @param  pfoToLArTPCMap the pfo to lar tpc map
+     *  @param  pfoToPointingVertexMatrix the map [pfo -> map [matched pfo -> pfo stitching vertex]]
+     */
+ 
+float GetSignedX0(const pandora::ParticleFlowObject *const pPfoToShift, const pandora::ParticleFlowObject *const pMatchedPfo, const float x0, const PfoToLArTPCMap &pfoToLArTPCMap, const PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const;
 
     /**
      *  @brief  Shift a pfo given its pfo stitching pair
@@ -223,9 +238,7 @@ private:
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
      *  @param  pfoToPointingVertexMatrix the map [pfo -> map [matched pfo -> pfo stitching vertex]]
      */
-    void ShiftPfo(const MasterAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfoToShift,
-        const pandora::ParticleFlowObject *const pMatchedPfo, const float x0, const PfoToLArTPCMap &pfoToLArTPCMap,
-        const PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const;
+    void ShiftPfo(const MasterAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfoToShift, const float signedX0, const PfoToLArTPCMap &pfoToLArTPCMap) const;
 
     /**
      *  @brief  Calculate x0 shift for a group of associated Pfos
@@ -243,6 +256,7 @@ private:
 
     bool m_useXcoordinate;
     bool m_alwaysApplyT0Calculation;
+    bool m_stitchPfosZMatches;
     int m_halfWindowLayers;
     float m_minLengthSquared;
     float m_minCosRelativeAngle;

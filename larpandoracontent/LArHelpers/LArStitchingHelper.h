@@ -108,10 +108,9 @@ public:
     static float GetTPCDisplacement(const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC);
 
     // Gianfranco added code here
-    static void GetClosestVertices(const LArPointingCluster &pointingCluster1,
-                                   const LArPointingCluster &pointingCluster2,
-                                   LArPointingCluster::Vertex &closestVertex1,
-                                   LArPointingCluster::Vertex &closestVertex2);
+    static void GetClosestVertices(const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2, LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2);
+
+    static void GroupTPCsByX(const pandora::LArTPCMap& larTPCMap, std::map<const float, pandora::LArTPCVector>& groupedTPC);
 
     /**
      *  @brief  Given a pair of pointing clusters, find the pair of vertices with smallest yz-separation

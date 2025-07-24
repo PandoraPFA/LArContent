@@ -6,6 +6,7 @@
  *  $Log: $
  */
 
+#include "LArStitchingHelper.h"
 #include "Managers/GeometryManager.h"
 
 #include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
@@ -98,6 +99,8 @@ bool LArStitchingHelper::AreTPCsAdjacent(const LArTPC &firstTPC, const LArTPC &s
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+
+
 bool LArStitchingHelper::AreTPCsAdjacent(const Pandora &pandora, const LArTPC &firstTPC, const LArTPC &secondTPC)
 {
     // Check if first tpc is just upstream of second tpc
@@ -185,10 +188,7 @@ float LArStitchingHelper::GetTPCDisplacement(const LArTPC &firstTPC, const LArTP
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LArStitchingHelper::GetClosestVertices(const LArPointingCluster &pointingCluster1,
-                                            const LArPointingCluster &pointingCluster2,
-                                            LArPointingCluster::Vertex &closestVertex1,
-                                            LArPointingCluster::Vertex &closestVertex2)
+void LArStitchingHelper::GetClosestVertices(const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2, LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2)
 {
   // segment 1 = (inner1, outer1), segment 2 = (inner2, outer2)
   const LArPointingCluster::Vertex inner1 = pointingCluster1.GetInnerVertex();
@@ -311,7 +311,35 @@ float LArStitchingHelper::CalculateX0(const LArTPC &firstTPC, const LArTPC &seco
         secondDirectionX.GetUnitVector().GetDotProduct(firstVertex.GetPosition() - (secondVertex.GetPosition() - secondVertex.GetDirection() * R2)));
 
     // ATTN: By convention, X0 is half the displacement in x (because both Pfos will be corrected)
+    // ATTN: By convention, X0 is half the displacement in x (because both Pfos will be corrected)
     return (X1 + X2) * 0.25f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArStitchingHelper::GroupTPCsByX(const LArTPCMap& larTPCMap, std::map<const float, LArTPCVector>& groupedTPC)
+{
+  for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+  {
+    const LArTPC *const pLArTPC(mapEntry.second);
+
+    if(!pLArTPC) continue;
+
+    const float TPCx = pLArTPC->GetCenterX();
+    bool grouped = false;
+
+    for (auto& [groupX, tpcVec] : groupedTPC)
+    {
+      if (std::abs(groupX - TPCx) < std::numeric_limits<float>::epsilon())
+      {
+        tpcVec.push_back(pLArTPC);
+        grouped = true;
+        break;
+      }
+    }
+    if (!grouped)
+      groupedTPC[TPCx].push_back(pLArTPC);
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

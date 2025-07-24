@@ -162,6 +162,17 @@ public:
      */
     static void GetAllDownstreamPfos(
         const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputTrackPfoList, pandora::PfoList &outputLeadingShowerPfoList);
+    
+    /**
+     * @brief Searches for the group (PfoVector) that contains a given ParticleFlowObject pointer 
+     *
+     * @param pPfo Pointer to the ParticleFlowObject to search for (must not be null).
+     * @param groups A reference to a vector of PfoVectors, each representing a group of PFOs.
+     * @param groupPfo Output pointer to a PfoVector 
+     *
+     * return true, if pPfo is found in a group. Move pointer groupPfo to the group.
+     * */
+    static bool FindPfoGroup(const pandora::ParticleFlowObject* const pPfo, const std::vector<pandora::PfoVector>& groups, const pandora::PfoVector*& groupPfo);
 
     /**
      *  @brief  Determine the position in the hierarchy for the MCParticle

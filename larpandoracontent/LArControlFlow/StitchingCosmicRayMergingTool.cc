@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "StitchingCosmicRayMergingTool.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
@@ -28,6 +29,7 @@ namespace lar_content
 StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_useXcoordinate(false),
     m_alwaysApplyT0Calculation(true),
+    m_stitchPfosZMatches(false),
     m_halfWindowLayers(30),
     m_minLengthSquared(50.f),
     m_minCosRelativeAngle(0.966),
@@ -70,8 +72,10 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
     PfoAssociationMatrix pfoBestMatchesZ;
     this->SelectBestMatchesZ(pfoAssociationMatrixZ, pfoBestMatchesZ);
 
-    PfoMergeMap pfoMerges;
-    this->CreateMargeMap(pfoBestMatchesZ, pfoMerges);
+    std::vector<PfoVector> pfosGroupedAlongZ;
+    this->GroupPfoAlongZ(pfoAssociationMatrixZ, pfosGroupedAlongZ);
+
+    this->SortGroupedPfosZ(pfosGroupedAlongZ, pointingClusterMap);
     // Gianfranco ---------------
 
     PfoAssociationMatrix pfoAssociationMatrix;
@@ -86,7 +90,7 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
     PfoMergeMap pfoOrderedMerges;
     this->OrderPfoMerges(pfoToLArTPCMap, pointingClusterMap, pfoSelectedMerges, pfoOrderedMerges);
 
-    this->StitchPfos(pAlgorithm, pointingClusterMap, pfoOrderedMerges, pfoToLArTPCMap, stitchedPfosToX0Map);
+    this->StitchPfos(pAlgorithm, pointingClusterMap, pfoOrderedMerges, pfoToLArTPCMap, stitchedPfosToX0Map, pfosGroupedAlongZ);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -154,20 +158,12 @@ void StitchingCosmicRayMergingTool::BuildTPCMaps(const PfoList &inputPfoList, co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 // TODOs Z
-void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const LArTPCToPfoMap &larTPCToPfoMap,
-                                                       const ThreeDPointingClusterMap &pointingClusterMap, 
-                                                       PfoAssociationMatrix &pfoAssociationMatrix) const
+void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const LArTPCToPfoMap &larTPCToPfoMap, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const
 {
    std::cout << "Gianfranco comment, file " << __FILE__ << ", function "<< __func__ << "\n";
 
     LArTPCVector larTPCVector;
-    for (const auto &mapEntry : larTPCToPfoMap)
-        larTPCVector.push_back(mapEntry.first);
-
-    // Order TPCs in ascending order firs on their x coordinates than y and z.
-    std::sort(larTPCVector.begin(), larTPCVector.end(), LArStitchingHelper::SortTPCs);
-
-    // loop over TPCs
+    for (const auto &mapEntry : larTPCToPfoMap) larTPCVector.push_back(mapEntry.first); // Order TPCs in ascending order firs on their x coordinates than y and z. std::sort(larTPCVector.begin(), larTPCVector.end(), LArStitchingHelper::SortTPCs); loop over TPCs
     for (LArTPCVector::const_iterator tpcIter = larTPCVector.begin(), tpcIterEnd = larTPCVector.end(); tpcIter != tpcIterEnd-1; ++tpcIter)
     { 
         // find pfo matches with the next closest TPC along z
@@ -299,8 +295,8 @@ bool StitchingCosmicRayMergingTool::DoVerticesMatchZ(const LArTPC &larTPC1,
     const float TPCs_distance = LArStitchingHelper::TPCToTPCDistance(larTPC1, larTPC2);
     // TODO check /2.
     const float TPCs_z_width = larTPC1.GetWidthZ() + larTPC2.GetWidthZ();
-    const float TPCs_z_gap = TPCs_distance - TPCs_z_width;
-    const float z_plane = larTPC1.GetCenterZ() + larTPC1.GetWidthZ() + TPCs_z_gap/2.;
+    const float TPCs_z_gap = TPCs_distance - 0.5f * TPCs_z_width;
+    const float z_plane = larTPC1.GetCenterZ() + larTPC1.GetWidthZ() + 0.5f * TPCs_z_gap;
  
     const float t1 = (z_plane - vertex1.GetZ())/direction1.GetZ();    
     const float x1 = vertex1.GetX() + t1*direction1.GetX(); 
@@ -471,15 +467,16 @@ bool StitchingCosmicRayMergingTool::GetBestMatch(const PfoAssociationMatrix &bes
   return false;
 }
 
-void StitchingCosmicRayMergingTool::CreateMargeMap(const PfoAssociationMatrix &bestAssociationMatrix, PfoMergeMap &pfoMergeMap){
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void StitchingCosmicRayMergingTool::GroupPfoAlongZ(const PfoAssociationMatrix &bestAssociationMatrix, std::vector<PfoVector>& pfosGroupedAlongZ){
 
     PfoVector alreadyProcessed;
     for (const auto &mapEntry : bestAssociationMatrix)
     {
-
         // this will contain the list of pfo to be merged to pPfo
         // based on the best inner/outer matches
-        PfoList pfosToBeMerged;
+        PfoVector pfosToBeMerged;
 
         const ParticleFlowObject* this_pfo = mapEntry.first;
 
@@ -488,6 +485,7 @@ void StitchingCosmicRayMergingTool::CreateMargeMap(const PfoAssociationMatrix &b
         if(it != alreadyProcessed.end()){
           continue; // skip pfo already processed
         }else{
+          pfosToBeMerged.push_back(this_pfo);
           alreadyProcessed.push_back(this_pfo);
         }
 
@@ -508,11 +506,30 @@ void StitchingCosmicRayMergingTool::CreateMargeMap(const PfoAssociationMatrix &b
           alreadyProcessed.push_back(inner);
         }
 
-        pfoMergeMap[this_pfo] = pfosToBeMerged;
+        pfosGroupedAlongZ.push_back(pfosToBeMerged);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+void StitchingCosmicRayMergingTool::SortGroupedPfosZ(std::vector<PfoVector>& pfosGroupedAlongZ, const ThreeDPointingClusterMap &pointingClusterMap){
+
+    // loop over groups of pfo
+    for (PfoVector& pfoVector: pfosGroupedAlongZ)
+    {
+      std::sort(pfoVector.begin(), pfoVector.end(), 
+          [&pointingClusterMap](const ParticleFlowObject* pfo1, const ParticleFlowObject* pfo2)
+          {
+            const LArPointingCluster& p1 = pointingClusterMap.at(pfo1);
+            const LArPointingCluster& p2 = pointingClusterMap.at(pfo2);
+
+            return (p1.GetInnerVertex().GetPosition().GetZ() < p2.GetInnerVertex().GetPosition().GetZ());
+          });
+     }
+  }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void StitchingCosmicRayMergingTool::SelectBestMatchesZ(const PfoAssociationMatrix &pfoAssociationMatrix, PfoAssociationMatrix &bestAssociationMatrix) const
 {
 
@@ -815,7 +832,7 @@ void StitchingCosmicRayMergingTool::OrderPfoMerges(const PfoToLArTPCMap &pfoToLA
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlgorithm, const ThreeDPointingClusterMap &pointingClusterMap,
-    const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) const
+    const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map, const std::vector<PfoVector>& pfosGroupedAlongZ) const
 {
     PfoVector pfoVectorToEnlarge;
     for (const auto &mapEntry : pfoMerges)
@@ -859,20 +876,58 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
                     continue;
 
                 if (std::find(shiftedPfos.begin(), shiftedPfos.end(), pPfoI) == shiftedPfos.end())
-                {
+                { // shift pPfoI
+                    const float signedX0 = this->GetSignedX0(pPfoI, pPfoJ, x0, pfoToLArTPCMap, pfoToPointingVertexMatrix);
+
                     if (!m_useXcoordinate || m_alwaysApplyT0Calculation)
-                        this->ShiftPfo(pAlgorithm, pPfoI, pPfoJ, x0, pfoToLArTPCMap, pfoToPointingVertexMatrix);
+                        this->ShiftPfo(pAlgorithm, pPfoI, signedX0, pfoToLArTPCMap);
 
                     shiftedPfos.insert(pPfoI);
-                }
+                    
+                    // Gianfranco added z stitching here
+                    if (m_stitchPfosZMatches)
+                    { // z stitching
+                        const PfoVector* zMatches = nullptr;
+
+                        // find pfoI z matches
+                        if (LArPfoHelper::FindPfoGroup(pPfoI, pfosGroupedAlongZ, zMatches))
+                        {
+                          for (const ParticleFlowObject* const zMatch : *zMatches)
+                          { // loop on z matches
+                            if (zMatch == pPfoI) continue; // already shifted
+                            this->ShiftPfo(pAlgorithm, zMatch, signedX0, pfoToLArTPCMap);
+                            shiftedPfos.insert(zMatch);
+                          }
+                        }
+                    } // z stitching 
+                } // shift pPfoI
 
                 if (std::find(shiftedPfos.begin(), shiftedPfos.end(), pPfoJ) == shiftedPfos.end())
-                {
+                { // shift pPfoJ
+                    const float signedX0 = this->GetSignedX0(pPfoJ, pPfoI, x0, pfoToLArTPCMap, pfoToPointingVertexMatrix);
+
                     if (!m_useXcoordinate || m_alwaysApplyT0Calculation)
-                        this->ShiftPfo(pAlgorithm, pPfoJ, pPfoI, x0, pfoToLArTPCMap, pfoToPointingVertexMatrix);
+                        this->ShiftPfo(pAlgorithm, pPfoJ, signedX0, pfoToLArTPCMap);
 
                     shiftedPfos.insert(pPfoJ);
-                }
+                    
+                    // Gianfranco added z stitching here
+                    if (m_stitchPfosZMatches)
+                    { // z stitching
+                        const PfoVector* zMatches = nullptr;
+
+                        // find pfoJ z matches
+                        if (LArPfoHelper::FindPfoGroup(pPfoJ, pfosGroupedAlongZ, zMatches))
+                        {
+                          for (const ParticleFlowObject* const zMatch : *zMatches)
+                          { // loop on z matches
+                            if (zMatch == pPfoJ) continue; // already shifted
+                            this->ShiftPfo(pAlgorithm, zMatch, signedX0, pfoToLArTPCMap);
+                            shiftedPfos.insert(zMatch);
+                          }
+                        }
+                    } // z stitching pPfoJ
+                } // shift pPfoJ
             }
         }
 
@@ -891,11 +946,11 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingCosmicRayMergingTool::ShiftPfo(const MasterAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfoToShift,
+float StitchingCosmicRayMergingTool::GetSignedX0(const ParticleFlowObject *const pPfoToShift,
     const ParticleFlowObject *const pMatchedPfo, const float x0, const PfoToLArTPCMap &pfoToLArTPCMap,
     const PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const
 {
-    // get stitching vertex for the pfo to be shifted
+  // get stitching vertex for the pfo to be shifted
     const PfoToPointingVertexMatrix::const_iterator pfoToPointingVertexMatrixIter(pfoToPointingVertexMatrix.find(pPfoToShift));
     const LArPointingCluster::Vertex stitchingVertex(pfoToPointingVertexMatrixIter->second.at(pMatchedPfo));
 
@@ -915,11 +970,17 @@ void StitchingCosmicRayMergingTool::ShiftPfo(const MasterAlgorithm *const pAlgor
         tpcBoundaryX = pShiftLArTPC->GetCenterX() - (pShiftLArTPC->GetWidthX() / 2.f);
     }
 
-    const float positionShiftSign = stitchingVertex.GetPosition().GetX() < tpcBoundaryX ? 1.f : -1.f;
+    const float signX0 = stitchingVertex.GetPosition().GetX() < tpcBoundaryX ? 1.f : -1.f;
 
+    return std::fabs(x0) * signX0; 
+}
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void StitchingCosmicRayMergingTool::ShiftPfo(const MasterAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfoToShift, const float signedX0, const PfoToLArTPCMap &pfoToLArTPCMap) const
+{
     // ATTN: No CPA/APA sign needed since x0 calculation corresponds to an APA
     object_creation::ParticleFlowObject::Metadata metadata;
-    metadata.m_propertiesToAdd["X0"] = x0;
+    metadata.m_propertiesToAdd["X0"] = std::fabs(signedX0);
 
     // ATTN: Set the X0 shift for all particles in hierarchy
     PfoList downstreamPfoList;
@@ -927,8 +988,6 @@ void StitchingCosmicRayMergingTool::ShiftPfo(const MasterAlgorithm *const pAlgor
 
     for (const ParticleFlowObject *const pHierarchyPfo : downstreamPfoList)
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pHierarchyPfo, metadata));
-
-    const float signedX0(std::fabs(x0) * positionShiftSign);
 
     pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, signedX0);
 }
@@ -1057,7 +1116,6 @@ bool StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTP
     return true;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StitchingCosmicRayMergingTool::PfoAssociation::PfoAssociation(const VertexType parent, const VertexType daughter, const float fom) :
