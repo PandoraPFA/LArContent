@@ -247,6 +247,33 @@ void RecoTree::ClusterAmbiguousHits()
                 m_rootNodes.emplace_back(std::make_unique<Node>(pTargetHit, *this));
                 m_usedHits.insert(pTargetHit);
                 madeAllocation = true;
+
+                // Need to rebuild the closest approach matrix since we have added a new node
+                closestApproach.clear();
+                closestApproach = std::vector<std::vector<float>>(m_ambiguousHits.size(), std::vector<float>(m_rootNodes.size(), std::numeric_limits<float>::max()));
+                size_t h1{0};
+                for (const auto &pNode : m_rootNodes)
+                {
+                    const CaloHitVector &nodeHits{pNode->GetHits()};
+                    Eigen::MatrixXf hitMatrix(nodeHits.size(), 2);
+                    LArEigenHelper::Vectorize(nodeHits, hitMatrix);
+                    size_t c1{0};
+                    for (const CaloHit *const pCaloHit : m_ambiguousHits)
+                    {
+                        const CartesianVector &pos{pCaloHit->GetPositionVector()};
+                        if (m_usedHits.count(pCaloHit) == 0)
+                        {
+                            Eigen::RowVectorXf row(2);
+                            row << pos.GetX(), pos.GetZ();
+                            Eigen::MatrixXf norms((hitMatrix.rowwise() - row).array().pow(2).rowwise().sum());
+                            Eigen::Index index;
+                            norms.col(0).minCoeff(&index);
+                            closestApproach[c1][h1] = norms(index, 0);
+                        }
+                        ++c1;
+                    }
+                    ++h1;
+                }
             }
         }
     }
