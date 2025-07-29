@@ -44,6 +44,17 @@ public:
          */
         template <typename T>
         static const pandora::CaloHit *GetCaloHit(const T &t);
+
+	/**
+	 *  @brief  Get the associated calo hit, or nullptr if none
+	 *
+	 *  @param  t the input object
+	 *  @param  retSelf whether to use input CaloHit as the output
+	 *
+	 *  @return the associated calo hit, or nullptr if none
+	 */
+	template <typename T>
+	static const pandora::CaloHit *GetCaloHit(const T &t, const bool retSelf);
     };
 };
 
