@@ -129,7 +129,7 @@ private:
     
     void SelectBestMatchesZ(const PfoAssociationMatrix &pfoAssociationMatrix, PfoAssociationMatrix &bestAssociationMatrix) const;
 
-    bool GetBestMatch(const PfoAssociationMatrix &bestAssociationMatrix, const pandora::ParticleFlowObject* current_pfo, PfoAssociation::VertexType vertexType);
+    bool GetBestMatch(const PfoAssociationMatrix &bestAssociationMatrix, const pandora::ParticleFlowObject*& current_pfo, PfoAssociation::VertexType vertexType);
 
     void SortGroupedPfosZ(std::vector<pandora::PfoVector>& pfosGroupedAlongZ, const ThreeDPointingClusterMap &pointingClusterMap);
 

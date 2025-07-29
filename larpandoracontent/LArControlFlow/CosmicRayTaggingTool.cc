@@ -466,6 +466,14 @@ void CosmicRayTaggingTool::CheckIfTopToBottom(const CRCandidateList &candidates,
 
         if (!pfoToIsTopToBottomMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isTopToBottom)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+        std::cout << "candidate point 1: X " << candidate.m_endPoint1.GetX() 
+                                   << ", Y " << candidate.m_endPoint1.GetY()  
+                                   << ", Z " << candidate.m_endPoint1.GetZ() << "\n";
+        std::cout << "candidate point 2: X " << candidate.m_endPoint2.GetX() 
+                                   << ", Y " << candidate.m_endPoint2.GetY()  
+                                   << ", Z " << candidate.m_endPoint2.GetZ() << "\n";
+        std::cout << "\n";
     }
 }
 
