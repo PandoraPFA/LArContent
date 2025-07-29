@@ -368,6 +368,21 @@ public:
         const unsigned int slidingFitHalfWindow, const float layerPitch, LArTrackStateVector &trackStateVector);
 
     /**
+     *  @brief  Apply 3D sliding fit to Pfo and return track trajectory
+     *
+     *  @param  pCaloHitList  the input list of calo hits
+     *  @param  vertexPosition  the input vertex position
+     *  @param  slidingFitHalfWindow  size of half window for sliding linear fit
+     *  @param  layerPitch  size of pitch for sliding linear fit
+     *  @param  trackStateVector  the output track trajectory
+     *  @param  pIndexVector  lookup vector of spacepoint indices to store trajectory point sorting
+     *  @param  return3DCaloHit  whether to tell TypeAdaptor to use the ParentAddress or use the 3D hit itself
+     */
+    static void GetSlidingFitTrajectory(const pandora::CaloHitList *const pCaloHitList, const pandora::CartesianVector &vertexPosition,
+        const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector,
+        pandora::IntVector *const pIndexVector = nullptr, const bool return3DCaloHit = false);
+
+    /**
      *  @brief  Perform PCA analysis on a set of 3D points and return results
      *
      *  @param  pointVector the input list of 3D positions
@@ -422,7 +437,7 @@ private:
      */
     template <typename T>
     static void SlidingFitTrajectoryImpl(const T *const pT, const pandora::CartesianVector &vertexPosition, const unsigned int layerWindow,
-        const float layerPitch, LArTrackStateVector &trackStateVector, pandora::IntVector *const pIndexVector = nullptr);
+        const float layerPitch, LArTrackStateVector &trackStateVector, pandora::IntVector *const pIndexVector = nullptr, const bool return3DCaloHit = false);
 };
 
 } // namespace lar_content
