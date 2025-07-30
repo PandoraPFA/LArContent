@@ -82,8 +82,28 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
                 <<" pfos \n";
       for (const auto &pfo_in_TPC : pair.second)
       {
-        std::cout << "..... pfo id : " << pfo_in_TPC 
-                  << "\n"; 
+
+        ThreeDPointingClusterMap::const_iterator iter1 = pointingClusterMap.find(pfo_in_TPC);
+        const LArPointingCluster &pointingCluster(iter1->second);
+        const LArPointingCluster::Vertex inner = pointingCluster.GetInnerVertex();
+        const LArPointingCluster::Vertex outer = pointingCluster.GetOuterVertex();
+        auto pfo_in_TPC_vertex = pfo_in_TPC->GetVertexList().begin();
+        if (pfo_in_TPC_vertex == pfo_in_TPC->GetVertexList().end()) continue;
+        const pandora::Vertex *vertex = *pfo_in_TPC_vertex;
+
+        std::cout << "{ \"pfo_id\": " << pfo_in_TPC
+          << ", \"tpc_id\": " << pair.first->GetLArTPCVolumeId()
+          << ", \"vertex_x\": " << vertex->GetPosition().GetX()
+          << ", \"vertex_y\": " << vertex->GetPosition().GetY()  
+          << ", \"vertex_z\": " << vertex->GetPosition().GetZ()
+          << ", \"inner_x\": " << inner.GetPosition().GetX()
+          << ", \"inner_y\": " << inner.GetPosition().GetY()
+          << ", \"inner_z\": " << inner.GetPosition().GetZ()
+          << ", \"outer_x\": " << outer.GetPosition().GetX()
+          << ", \"outer_y\": " << outer.GetPosition().GetY()
+          << ", \"outer_z\": " << outer.GetPosition().GetZ()
+          << " },\n";
+
       }
     }
 
@@ -153,6 +173,7 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
 
     std::cout << "___________ STITCH PFO ____________\n"; 
     this->StitchPfos(pAlgorithm, pointingClusterMap, pfoOrderedMerges, pfoToLArTPCMap, stitchedPfosToX0Map, pfosGroupedAlongZ);
+    // throw "";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -390,12 +411,12 @@ bool StitchingCosmicRayMergingTool::DoVerticesMatchZ(const LArTPC &larTPC1,
     const float cosRelativeAngle(-direction1.GetDotProduct(direction2));
 
     if (cosRelativeAngle < m_relaxCosRelativeAngle) return false;
+    std::cout << "pass parallel direction\n";
 
     const float TPCs_distance = LArStitchingHelper::TPCToTPCDistance(larTPC1, larTPC2);
-    // TODO check /2.
     const float TPCs_z_width = larTPC1.GetWidthZ() + larTPC2.GetWidthZ();
     const float TPCs_z_gap = TPCs_distance - 0.5f * TPCs_z_width;
-    const float z_plane = larTPC1.GetCenterZ() + larTPC1.GetWidthZ() + 0.5f * TPCs_z_gap;
+    const float z_plane = larTPC1.GetCenterZ() + 0.5f * (larTPC1.GetWidthZ() + TPCs_z_gap);
  
     const float t1 = (z_plane - vertex1.GetZ())/direction1.GetZ();    
     const float x1 = vertex1.GetX() + t1*direction1.GetX(); 
@@ -403,12 +424,14 @@ bool StitchingCosmicRayMergingTool::DoVerticesMatchZ(const LArTPC &larTPC1,
 
     const float t2 = (z_plane - vertex2.GetZ())/direction2.GetZ();    
     const float x2 = vertex2.GetX() + t2*direction2.GetX(); 
-    const float y2 = vertex2.GetZ() + t2*direction2.GetZ(); 
+    const float y2 = vertex2.GetY() + t2*direction2.GetY(); 
     
     const float relative_displacement = std::sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
 
     // TODO: come up with a non-hardcoded number 
+    std::cout << "relative displacement " << relative_displacement << "\n";
     if(relative_displacement > 1) return false;
+    std::cout << "pass relative displacement\n";
 
     return true;
 } 
@@ -1076,11 +1099,14 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
           std::cout << "found a group to stitch \n";
           const ParticleFlowObject* const pPfoToEnlarge = pfosGroupedAlongZ[i][0];
 
+          std::cout << "pfo to enlarge " << pPfoToEnlarge << "\n";
           for (size_t j = 1; j < pfosGroupedAlongZ[i].size(); ++j)
           {
            const ParticleFlowObject* pPfoToDelete = pfosGroupedAlongZ[i][j];
 
            pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, pfoToLArTPCMap);
+
+           std::cout << "pfo " << pPfoToDelete << " deleted\n";
           }
         }
       }
