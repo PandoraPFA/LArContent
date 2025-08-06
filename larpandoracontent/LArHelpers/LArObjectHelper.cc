@@ -28,7 +28,7 @@ CartesianVector LArObjectHelper::TypeAdaptor::GetPosition(const CaloHit *const &
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <>
-const CaloHit *LArObjectHelper::TypeAdaptor::GetCaloHit(const CartesianVector &, const bool = false)
+const CaloHit *LArObjectHelper::TypeAdaptor::GetCaloHit(const CartesianVector &, [[maybe_unused]] const bool retSelf)
 {
     return nullptr;
 }
@@ -36,7 +36,7 @@ const CaloHit *LArObjectHelper::TypeAdaptor::GetCaloHit(const CartesianVector &,
 template <>
 const CaloHit *LArObjectHelper::TypeAdaptor::GetCaloHit(const CaloHit *const &pCaloHit3D, const bool retSelf)
 {
-    if (retself)
+    if (retSelf)
         return static_cast<const CaloHit *>(pCaloHit3D);
     else
         return static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress());
