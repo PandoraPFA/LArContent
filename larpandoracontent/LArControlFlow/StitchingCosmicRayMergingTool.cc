@@ -73,6 +73,13 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
     std::cout << "\n";
     std::cout << "larTPCToPfoMap nof entries : " << larTPCToPfoMap.size() << "\n";
     std::cout << "\n";
+    std::cout << "pointingClusterMap nof entries : " << pointingClusterMap.size() << "\n";
+
+    for (const auto & pair : pointingClusterMap)
+    {
+      std::cout << "pfo : " << pair.first << "\n";
+    }
+
     for (const auto & pair : larTPCToPfoMap)
     {
       std::cout << "TPC " << pair.first->GetLArTPCVolumeId() 
@@ -82,8 +89,10 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
                 <<" pfos \n";
       for (const auto &pfo_in_TPC : pair.second)
       {
+        std::cout << "pfo : " << pfo_in_TPC << "\n";
 
         ThreeDPointingClusterMap::const_iterator iter1 = pointingClusterMap.find(pfo_in_TPC);
+        if (iter1 == pointingClusterMap.end() ) continue;
         const LArPointingCluster &pointingCluster(iter1->second);
         const LArPointingCluster::Vertex inner = pointingCluster.GetInnerVertex();
         const LArPointingCluster::Vertex outer = pointingCluster.GetOuterVertex();
@@ -103,9 +112,11 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
           << ", \"outer_y\": " << outer.GetPosition().GetY()
           << ", \"outer_z\": " << outer.GetPosition().GetZ()
           << " },\n";
-
       }
     }
+
+    // std::cout << "STO INTERROMPENDO INTENZIONALMENTE \n";
+    // throw "";
 
     this->CreatePfoMatchesZ(larTPCToPfoMap, pointingClusterMap, pfoAssociationMatrixZ);
     std::cout << "\n";
@@ -173,7 +184,6 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
 
     std::cout << "___________ STITCH PFO ____________\n"; 
     this->StitchPfos(pAlgorithm, pointingClusterMap, pfoOrderedMerges, pfoToLArTPCMap, stitchedPfosToX0Map, pfosGroupedAlongZ);
-    // throw "";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -182,11 +192,25 @@ void StitchingCosmicRayMergingTool::SelectPrimaryPfos(const PfoList *pInputPfoLi
 {
     for (const ParticleFlowObject *const pPfo : *pInputPfoList)
     {
+        std::cout << "processing pfo " << pPfo << "\n";
+        ClusterList clusterList;
+        LArPfoHelper::GetThreeDClusterList(pPfo, clusterList);
+        if(clusterList.size()==0) continue;
+        CaloHitList caloHitList;
+        clusterList.front()->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+        std::cout << "it has " << caloHitList.size() << "\n";
+
         if (!LArPfoHelper::IsFinalState(pPfo) || !LArPfoHelper::IsTrack(pPfo))
             continue;
 
         if (!pfoToLArTPCMap.count(pPfo))
             continue;
+
+        if (caloHitList.size()<2)
+        {
+          std::cout << "skipping pfo " << pPfo << ", less then 2 hits \n";
+          continue;
+        }
 
         outputPfoList.push_back(pPfo);
     }
@@ -201,6 +225,7 @@ void StitchingCosmicRayMergingTool::BuildPointingClusterMaps(
 {
     for (const ParticleFlowObject *const pPfo : inputPfoList)
     {
+      std::cout << "processing primary pfo " << pPfo << "\n";
         try
         {
             PfoToLArTPCMap::const_iterator tpcIter(pfoToLArTPCMap.find(pPfo));
@@ -215,9 +240,28 @@ void StitchingCosmicRayMergingTool::BuildPointingClusterMaps(
 
             if (1 != clusterList.size())
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+            std::cout << "ClusterList size : " << clusterList.size() << "nof hits cluster " 
+                      <<  clusterList.front() << ", " << clusterList.front()->GetOrderedCaloHitList().size() <<"\n";
 
             const ThreeDSlidingFitResult slidingFitResult(clusterList.front(), m_halfWindowLayers, slidingFitPitch);
             (void)pointingClusterMap.insert(ThreeDPointingClusterMap::value_type(pPfo, LArPointingCluster(slidingFitResult)));
+
+            // std::cout << "Gianfranco comment \n";
+            // auto this_pointing_cluster = LArPointingCluster(slidingFitResult);
+            // std::cout << "{ \"pfo\" : " << pPfo 
+            //           << ", \"inner_vertex_x\" : " << this_pointing_cluster.GetInnerVertex().GetPosition().GetX()
+            //           << ", \"inner_vertex_y\" : " << this_pointing_cluster.GetInnerVertex().GetPosition().GetY()
+            //           << ", \"inner_vertex_z\" : " << this_pointing_cluster.GetInnerVertex().GetPosition().GetZ()
+            //           << ", \"outer_vertex_x\" : " << this_pointing_cluster.GetOuterVertex().GetPosition().GetX()
+            //           << ", \"outer_vertex_y\" : " << this_pointing_cluster.GetOuterVertex().GetPosition().GetY()
+            //           << ", \"outer_vertex_z\" : " << this_pointing_cluster.GetOuterVertex().GetPosition().GetZ()
+            //           << ", \"inner_vertex_dir_x\": " << this_pointing_cluster.GetInnerVertex().GetDirection().GetX()
+            //           << ", \"inner_vertex_dir_y\": " << this_pointing_cluster.GetInnerVertex().GetDirection().GetY()
+            //           << ", \"inner_vertex_dir_z\": " << this_pointing_cluster.GetInnerVertex().GetDirection().GetZ()
+            //           << ", \"outer_vertex_dir_x\": " << this_pointing_cluster.GetOuterVertex().GetDirection().GetX()
+            //           << ", \"outer_vertex_dir_y\": " << this_pointing_cluster.GetOuterVertex().GetDirection().GetY()
+            //           << ", \"outer_vertex_dir_z\": " << this_pointing_cluster.GetOuterVertex().GetDirection().GetZ()
+            //           << "},\n"; 
         }
         catch (const StatusCodeException &)
         {
@@ -272,6 +316,7 @@ void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const LArTPCToPfoMap &larT
         for (const ParticleFlowObject *const pPfo1 : pfoList1){
 
             ThreeDPointingClusterMap::const_iterator iter1 = pointingClusterMap.find(pPfo1);
+            if(iter1 == pointingClusterMap.end()) continue;
             const LArPointingCluster &pointingCluster1(iter1->second);
 
             std::cout << "pfo " << pPfo1 << " being considered\n";
@@ -295,6 +340,7 @@ void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const LArTPCToPfoMap &larT
             {
 
                 ThreeDPointingClusterMap::const_iterator iter2 = pointingClusterMap.find(pPfo2);
+                if(iter2 == pointingClusterMap.end()) continue;
                 const LArPointingCluster &pointingCluster2(iter2->second);
 
                 if(pointingCluster2.GetLengthSquared() < m_minLengthSquared) continue;

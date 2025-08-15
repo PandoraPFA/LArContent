@@ -369,7 +369,7 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 
 StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos) const
 {
-          std::cout << "Gianfranco comment, file " << __FILE__<<", function "<<__func__<<", line " << __LINE__<<"\n";
+    std::cout << "Gianfranco comment, file " << __FILE__<<", function "<<__func__<<", line " << __LINE__<<"\n";
     const PfoList *pRecreatedCRPfos(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
 
@@ -383,6 +383,7 @@ StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosTo
         const float x0Shift((pfoToX0Iter != stitchedPfosToX0Map.end()) ? pfoToX0Iter->second : 0.f);
         PfoList &targetList((std::fabs(x0Shift) > m_inTimeMaxX0) ? clearCosmicRayPfos : nonStitchedParentCosmicRayPfos);
         targetList.push_back(pPfo);
+        std::cout << "pfo " << pPfo << " has been shifted by " << x0Shift << "\n";
     }
 
     for (CosmicRayTaggingBaseTool *const pCosmicRayTaggingTool : m_cosmicRayTaggingToolVector)
