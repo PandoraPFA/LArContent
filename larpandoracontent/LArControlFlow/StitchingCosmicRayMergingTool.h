@@ -125,7 +125,9 @@ private:
     // Gianfranco added functions here
     void CreatePfoMatchesZ(const LArTPCToPfoMap &larTPCToPfoMap, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const;
 
-    bool DoVerticesMatchZ(const pandora::LArTPC &larTPC1, const pandora::LArTPC &larTPC2, const LArPointingCluster::Vertex &pointingCluster1, const LArPointingCluster::Vertex &pointingCluster2) const;
+    void CreatePfoMatchesZ(const pandora::PfoList &pfoList1, const pandora::PfoList &pfoList2, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const;
+
+    bool DoVerticesMatchZ(const LArPointingCluster::Vertex &pointingCluster1, const LArPointingCluster::Vertex &pointingCluster2) const;
     
     void SelectBestMatchesZ(const PfoAssociationMatrix &pfoAssociationMatrix, PfoAssociationMatrix &bestAssociationMatrix) const;
 

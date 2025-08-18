@@ -115,9 +115,6 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
       }
     }
 
-    // std::cout << "STO INTERROMPENDO INTENZIONALMENTE \n";
-    // throw "";
-
     this->CreatePfoMatchesZ(larTPCToPfoMap, pointingClusterMap, pfoAssociationMatrixZ);
     std::cout << "\n";
     std::cout << "PfoAssociationMatrix nof entries : " << pfoAssociationMatrixZ.size() << "\n";
@@ -133,6 +130,7 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
     std::cout << "pfosGroupedAlongZ nof groups : " << pfosGroupedAlongZ.size() << "\n";
     for (const auto & group : pfosGroupedAlongZ)
     {
+      std::cout << "new group\n";
       for (const auto & pfo : group)
       {
         std::cout << ".. pfo " << pfo << "\n";
@@ -140,14 +138,6 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
     }
 
     this->SortGroupedPfosZ(pfosGroupedAlongZ, pointingClusterMap);
-    std::cout << "apply group sorting " << pfosGroupedAlongZ.size() << "\n";
-    for (const auto & group : pfosGroupedAlongZ)
-    {
-      for (const auto & pfo : group)
-      {
-        std::cout << ".. pfo " << pfo << "\n";
-      }
-    }
     // Gianfranco ---------------
 
     PfoAssociationMatrix pfoAssociationMatrix;
@@ -284,24 +274,30 @@ void StitchingCosmicRayMergingTool::BuildTPCMaps(const PfoList &inputPfoList, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-// TODOs Z
 void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const LArTPCToPfoMap &larTPCToPfoMap, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const
 {
-   std::cout << "\n";
-   std::cout << "Gianfranco comment, file " << __FILE__ << ", function "<< __func__ << "\n";
 
     LArTPCVector larTPCVector;
-    for (const auto &mapEntry : larTPCToPfoMap) larTPCVector.push_back(mapEntry.first); 
 
+    for (const auto &mapEntry : larTPCToPfoMap) larTPCVector.push_back(mapEntry.first); 
+    
     // Order TPCs in ascending order firs on their x coordinates than y and z. 
     std::sort(larTPCVector.begin(), larTPCVector.end(), LArStitchingHelper::SortTPCs); 
 
-    // loop over TPCs
     for (LArTPCVector::const_iterator tpcIter = larTPCVector.begin(), tpcIterEnd = larTPCVector.end(); tpcIter != tpcIterEnd-1; ++tpcIter)
-    { 
-        // find pfo matches with the next closest TPC along z
+    {
         const LArTPC *const pLArTPC1(*tpcIter);
         const LArTPC *const pLArTPC2(*(tpcIter+1));
+
+        const PfoList &pfoList1(larTPCToPfoMap.at(pLArTPC1));
+        const PfoList &pfoList2(larTPCToPfoMap.at(pLArTPC2));
+
+        std::cout << "\n";
+        std::cout << "_____________ considered pairs of tpc (" 
+          << pLArTPC1->GetLArTPCVolumeId() << ", " <<pLArTPC1->GetLArTPCVolumeId()<<")____________________ \n";
+
+        // find pfo z matches within the same tpc 
+        this->CreatePfoMatchesZ(pfoList1, pfoList1, pointingClusterMap, pfoAssociationMatrix);
 
         std::cout << "\n";
         std::cout << "_____________ considered pairs of tpc (" 
@@ -310,101 +306,108 @@ void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const LArTPCToPfoMap &larT
         if ( fabs(pLArTPC1->GetCenterY() - pLArTPC2->GetCenterY()) > std::numeric_limits<float>::epsilon() ) continue;
         if ( fabs(pLArTPC1->GetCenterX() - pLArTPC2->GetCenterX()) > std::numeric_limits<float>::epsilon() ) continue;
 
-        const PfoList &pfoList1(larTPCToPfoMap.at(pLArTPC1));
-        const PfoList &pfoList2(larTPCToPfoMap.at(pLArTPC2));
+        // find pfo z matches with the clostes TPC along z
+        this->CreatePfoMatchesZ(pfoList1, pfoList2, pointingClusterMap, pfoAssociationMatrix);
+    }
 
-        for (const ParticleFlowObject *const pPfo1 : pfoList1){
+}
 
-            ThreeDPointingClusterMap::const_iterator iter1 = pointingClusterMap.find(pPfo1);
-            if(iter1 == pointingClusterMap.end()) continue;
-            const LArPointingCluster &pointingCluster1(iter1->second);
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-            std::cout << "pfo " << pPfo1 << " being considered\n";
-            if(pointingCluster1.GetLengthSquared() < m_minLengthSquared) continue;
+void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const PfoList& pfoList1, const PfoList& pfoList2, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const
+{
 
-            CaloHitList caloHitList3D1;
-            LArPfoHelper::GetCaloHits(pPfo1, TPC_3D, caloHitList3D1);
-            
-            if (caloHitList3D1.size() < m_minNCaloHits3D) continue;
+      for (const ParticleFlowObject *const pPfo1 : pfoList1){
 
-            const LArPointingCluster::Vertex outer = pointingCluster1.GetOuterVertex();
-            const LArPointingCluster::Vertex inner1 = pointingCluster1.GetInnerVertex();
+          ThreeDPointingClusterMap::const_iterator iter1 = pointingClusterMap.find(pPfo1);
+          if(iter1 == pointingClusterMap.end()) continue;
+          const LArPointingCluster &pointingCluster1(iter1->second);
 
-            // if pointingCluster outer vertex is far from the tpc z boundary
-            // we don't need to match it
-            //
-            // TODO come up with non-hardcoded cut
-            // if ( fabs(outer.GetPosition().GetZ() - (pLArTPC1->GetCenterZ() + 0.5*pLArTPC1->GetWidthZ())) > 20) continue;
+          std::cout << "pfo " << pPfo1 << " being considered\n";
+          if(pointingCluster1.GetLengthSquared() < m_minLengthSquared) continue;
 
-            for (const ParticleFlowObject *const pPfo2 : pfoList2)
-            {
+          CaloHitList caloHitList3D1;
+          LArPfoHelper::GetCaloHits(pPfo1, TPC_3D, caloHitList3D1);
+          
+          if (caloHitList3D1.size() < m_minNCaloHits3D) continue;
 
-                ThreeDPointingClusterMap::const_iterator iter2 = pointingClusterMap.find(pPfo2);
-                if(iter2 == pointingClusterMap.end()) continue;
-                const LArPointingCluster &pointingCluster2(iter2->second);
+          const LArPointingCluster::Vertex outer = pointingCluster1.GetOuterVertex();
+          const LArPointingCluster::Vertex inner1 = pointingCluster1.GetInnerVertex();
 
-                if(pointingCluster2.GetLengthSquared() < m_minLengthSquared) continue;
+          // if pointingCluster outer vertex is far from the tpc z boundary
+          // we don't need to match it
+          //
+          // TODO come up with non-hardcoded cut
+          // if ( fabs(outer.GetPosition().GetZ() - (pLArTPC1->GetCenterZ() + 0.5*pLArTPC1->GetWidthZ())) > 20) continue;
 
-                CaloHitList caloHitList3D2;
-                LArPfoHelper::GetCaloHits(pPfo1, TPC_3D, caloHitList3D2);
+          for (const ParticleFlowObject *const pPfo2 : pfoList2)
+          {
 
-                const LArPointingCluster::Vertex inner = pointingCluster2.GetInnerVertex();
-                const LArPointingCluster::Vertex outer2 = pointingCluster2.GetOuterVertex();
+              ThreeDPointingClusterMap::const_iterator iter2 = pointingClusterMap.find(pPfo2);
+              if(iter2 == pointingClusterMap.end()) continue;
+              const LArPointingCluster &pointingCluster2(iter2->second);
 
-                std::cout << "\n";
-                std::cout<< "new pair of pfo considered:\n";
-                std::cout << pPfo1
-                          <<", inner vertex (x = " << inner1.GetPosition().GetX() 
-                                        << ", y = " << inner1.GetPosition().GetY()
-                                        << ", z = " << inner1.GetPosition().GetZ() 
-                          <<"), outer vertex (x = " << outer.GetPosition().GetX() 
-                                        << ", y = " << outer.GetPosition().GetY()
-                                        << ", z = " << outer.GetPosition().GetZ() <<")\n";    
-                std::cout << pPfo2
-                          <<", inner vertex (x = " << inner.GetPosition().GetX() 
-                                        << ", y = " << inner.GetPosition().GetY()
-                                        << ", z = " << inner.GetPosition().GetZ() 
-                          <<"), outer vertex (x = " << outer2.GetPosition().GetX() 
-                                        << ", y = " << outer2.GetPosition().GetY()
-                                        << ", z = " << outer2.GetPosition().GetZ() <<")\n";
+              if(pointingCluster2.GetLengthSquared() < m_minLengthSquared) continue;
 
-                // if pointingCluster inner vertex is far from the tpc z boundary
-                // we don't need to match it
-                //
-                // TODO come up with non-hardcoded cut
-                // if ( fabs(inner.GetPosition().GetZ() - (pLArTPC2->GetCenterZ() - 0.5*pLArTPC2->GetWidthZ())) > 20) continue;
-                  
-               LArPointingCluster::Vertex pointingVertex1, pointingVertex2;
+              CaloHitList caloHitList3D2;
+              LArPfoHelper::GetCaloHits(pPfo1, TPC_3D, caloHitList3D2);
 
-               LArStitchingHelper::GetClosestVertices(pointingCluster1, pointingCluster2, pointingVertex1, pointingVertex2);
+              const LArPointingCluster::Vertex inner = pointingCluster2.GetInnerVertex();
+              const LArPointingCluster::Vertex outer2 = pointingCluster2.GetOuterVertex();
 
-               std::cout << "closest vertices : pointingVertex1 " << pointingVertex1.GetPosition().GetX()
-                         << ", " << pointingVertex1.GetPosition().GetY()
-                         << ", " << pointingVertex1.GetPosition().GetZ()
-                         << ", pointingVertex2 " << pointingVertex2.GetPosition().GetX()
-                         << ", " << pointingVertex2.GetPosition().GetY()
-                         << ", " << pointingVertex2.GetPosition().GetZ()
-                         << "\n";
+              std::cout << "\n";
+              std::cout<< "new pair of pfo considered:\n";
+              std::cout << pPfo1
+                        <<", inner vertex (x = " << inner1.GetPosition().GetX() 
+                                      << ", y = " << inner1.GetPosition().GetY()
+                                      << ", z = " << inner1.GetPosition().GetZ() 
+                        <<"), outer vertex (x = " << outer.GetPosition().GetX() 
+                                      << ", y = " << outer.GetPosition().GetY()
+                                      << ", z = " << outer.GetPosition().GetZ() <<")\n";    
+              std::cout << pPfo2
+                        <<", inner vertex (x = " << inner.GetPosition().GetX() 
+                                      << ", y = " << inner.GetPosition().GetY()
+                                      << ", z = " << inner.GetPosition().GetZ() 
+                        <<"), outer vertex (x = " << outer2.GetPosition().GetX() 
+                                      << ", y = " << outer2.GetPosition().GetY()
+                                      << ", z = " << outer2.GetPosition().GetZ() <<")\n";
 
-                if (this->DoVerticesMatchZ(*pLArTPC1, *pLArTPC2, pointingVertex1, pointingVertex2))
-                {
-                  std::cout << "vertices match \n";
-                  // Store this association
-                  const PfoAssociation::VertexType vertexType1(pointingVertex1.IsInnerVertex() ? PfoAssociation::INNER 
-                                                                                               : PfoAssociation::OUTER);
-                  const PfoAssociation::VertexType vertexType2(pointingVertex2.IsInnerVertex() ? PfoAssociation::INNER 
-                                                                                               : PfoAssociation::OUTER);
+              // if pointingCluster inner vertex is far from the tpc z boundary
+              // we don't need to match it
+              //
+              // TODO come up with non-hardcoded cut
+              // if ( fabs(inner.GetPosition().GetZ() - (pLArTPC2->GetCenterZ() - 0.5*pLArTPC2->GetWidthZ())) > 20) continue;
+                
+             LArPointingCluster::Vertex pointingVertex1, pointingVertex2;
 
-                  const float particleLength1(pointingCluster1.GetLengthSquared());
-                  const float particleLength2(pointingCluster2.GetLengthSquared());
+             LArStitchingHelper::GetClosestVertices(pointingCluster1, pointingCluster2, pointingVertex1, pointingVertex2);
 
-                  pfoAssociationMatrix[pPfo1].insert(PfoAssociationMap::value_type(pPfo2, PfoAssociation(vertexType1, vertexType2, particleLength2)));
-                  pfoAssociationMatrix[pPfo2].insert(PfoAssociationMap::value_type(pPfo1, PfoAssociation(vertexType2, vertexType1, particleLength1)));
-                }
-                } // pfo2 loop 
-                std::cout << "\n";
-            } // pfo 1 loop
-    } // tpc loop
+             std::cout << "closest vertices : pointingVertex1 " << pointingVertex1.GetPosition().GetX()
+                       << ", " << pointingVertex1.GetPosition().GetY()
+                       << ", " << pointingVertex1.GetPosition().GetZ()
+                       << ", pointingVertex2 " << pointingVertex2.GetPosition().GetX()
+                       << ", " << pointingVertex2.GetPosition().GetY()
+                       << ", " << pointingVertex2.GetPosition().GetZ()
+                       << "\n";
+
+              if (this->DoVerticesMatchZ(pointingVertex1, pointingVertex2))
+              {
+                std::cout << "vertices match \n";
+                // Store this association
+                const PfoAssociation::VertexType vertexType1(pointingVertex1.IsInnerVertex() ? PfoAssociation::INNER 
+                                                                                             : PfoAssociation::OUTER);
+                const PfoAssociation::VertexType vertexType2(pointingVertex2.IsInnerVertex() ? PfoAssociation::INNER 
+                                                                                             : PfoAssociation::OUTER);
+
+                const float particleLength1(pointingCluster1.GetLengthSquared());
+                const float particleLength2(pointingCluster2.GetLengthSquared());
+
+                pfoAssociationMatrix[pPfo1].insert(PfoAssociationMap::value_type(pPfo2, PfoAssociation(vertexType1, vertexType2, particleLength2)));
+                pfoAssociationMatrix[pPfo2].insert(PfoAssociationMap::value_type(pPfo1, PfoAssociation(vertexType2, vertexType1, particleLength1)));
+              }
+              } // pfo2 loop 
+              std::cout << "\n";
+          } // pfo 1 loop
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -439,8 +442,9 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPCToPfoMap &larTP
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool StitchingCosmicRayMergingTool::DoVerticesMatchZ(const LArTPC &larTPC1, 
-                                                     const LArTPC &larTPC2, 
+bool StitchingCosmicRayMergingTool::DoVerticesMatchZ(
+                                                     // const LArTPC &larTPC1, 
+                                                     // const LArTPC &larTPC2, 
                                                      const LArPointingCluster::Vertex &pointingVertex1,
                                                      const LArPointingCluster::Vertex &pointingVertex2) const
 {
@@ -459,10 +463,14 @@ bool StitchingCosmicRayMergingTool::DoVerticesMatchZ(const LArTPC &larTPC1,
     if (cosRelativeAngle < m_relaxCosRelativeAngle) return false;
     std::cout << "pass parallel direction\n";
 
-    const float TPCs_distance = LArStitchingHelper::TPCToTPCDistance(larTPC1, larTPC2);
-    const float TPCs_z_width = larTPC1.GetWidthZ() + larTPC2.GetWidthZ();
-    const float TPCs_z_gap = TPCs_distance - 0.5f * TPCs_z_width;
-    const float z_plane = larTPC1.GetCenterZ() + 0.5f * (larTPC1.GetWidthZ() + TPCs_z_gap);
+    // const float TPCs_distance = LArStitchingHelper::TPCToTPCDistance(larTPC1, larTPC2);
+    // const float TPCs_z_width = larTPC1.GetWidthZ() + larTPC2.GetWidthZ();
+    // const float TPCs_z_gap = TPCs_distance - 0.5f * TPCs_z_width;
+    // const float z_plane = larTPC1.GetCenterZ() + 0.5f * (larTPC1.GetWidthZ() + TPCs_z_gap);
+
+    const CartesianVector diff = {vertex2.GetX() - vertex2.GetX(), vertex2.GetY() - vertex1.GetY(), vertex2.GetZ() - vertex1.GetZ()};
+    const CartesianVector middle_point = vertex1 + diff.GetUnitVector() * 0.5f * diff.GetMagnitude();
+    const float z_plane = middle_point.GetZ();
  
     const float t1 = (z_plane - vertex1.GetZ())/direction1.GetZ();    
     const float x1 = vertex1.GetX() + t1*direction1.GetX(); 
