@@ -520,6 +520,7 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
                     (pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
                         ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature))))));
 
+        // const bool likelyCRMuon = likelyCRMuon_old || true;
         if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
     }

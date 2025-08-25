@@ -141,11 +141,11 @@ float LArStitchingHelper::GetTPCBoundaryCenterX(const LArTPC &firstTPC, const LA
 
     if (firstTPC.GetCenterX() < secondTPC.GetCenterX())
     {
-        return 0.5 * ((firstTPC.GetCenterX() + 0.5 * firstTPC.GetWidthX()) + (secondTPC.GetCenterX() - 0.5 * secondTPC.GetWidthX()));
+        return 0.5f * ((firstTPC.GetCenterX() + 0.5f * firstTPC.GetWidthX()) + (secondTPC.GetCenterX() - 0.5f * secondTPC.GetWidthX()));
     }
     else
     {
-        return 0.5 * ((firstTPC.GetCenterX() - 0.5 * firstTPC.GetWidthX()) + (secondTPC.GetCenterX() + 0.5 * secondTPC.GetWidthX()));
+        return 0.5f * ((firstTPC.GetCenterX() - 0.5f * firstTPC.GetWidthX()) + (secondTPC.GetCenterX() + 0.5f * secondTPC.GetWidthX()));
     }
 }
 
