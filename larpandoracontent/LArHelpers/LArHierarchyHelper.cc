@@ -1333,9 +1333,11 @@ void LArHierarchyHelper::MatchInfo::Match()
             RecoHierarchy::NodeVector recoNodes;
             m_recoHierarchy.GetFlattenedNodes(pRootPfo, recoNodes);
 
-            std::sort(mcNodes.begin(), mcNodes.end(), [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs)
+            std::sort(mcNodes.begin(), mcNodes.end(),
+                [](const MCHierarchy::Node *lhs, const MCHierarchy::Node *rhs)
                 { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
-            std::sort(recoNodes.begin(), recoNodes.end(), [](const RecoHierarchy::Node *lhs, const RecoHierarchy::Node *rhs)
+            std::sort(recoNodes.begin(), recoNodes.end(),
+                [](const RecoHierarchy::Node *lhs, const RecoHierarchy::Node *rhs)
                 { return lhs->GetCaloHits().size() > rhs->GetCaloHits().size(); });
 
             for (const RecoHierarchy::Node *pRecoNode : recoNodes)

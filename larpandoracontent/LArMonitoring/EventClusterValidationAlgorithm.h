@@ -80,7 +80,7 @@ public:
     ~EventClusterValidationAlgorithm();
 
 private:
-    template<typename Ti, typename Tj>
+    template <typename Ti, typename Tj>
     using ContingencyTable = std::map<Ti, std::map<Tj, int>>;
 
     pandora::StatusCode Run();
@@ -103,8 +103,7 @@ private:
      *  @param[in]  hitParents Map of hits being considered to the cluster/MC particle they belong to
      *  @param[out] metrics    Output metrics for the matched MC particles in this view
      */
-    void GetMatchedParticleMetrics(
-        const std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents, MatchedParticleMetrics &metrics) const;
+    void GetMatchedParticleMetrics(const std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents, MatchedParticleMetrics &metrics) const;
 
     /**
      *  @brief Calculate Rand Index for the reco clusters with the true clusters for all/track/shower hits.
@@ -142,7 +141,7 @@ private:
      *
      *  @return The MC particle the hit should be assigned to, this will either be the inputted MC particle or the parent MC particle
      */
-    const pandora::MCParticle* FoldPotentialDeltaRayTo(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pMC) const;
+    const pandora::MCParticle *FoldPotentialDeltaRayTo(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pMC) const;
 
     /**
      *  @brief Finds the ancestor that a child MC particle should be associated with to roll-up an EM shower
@@ -151,7 +150,7 @@ private:
      *
      *  @return The ancestor MC particle, this will be the inputted MC particle for an MC particle that should not be rolled-up
      */
-    const pandora::MCParticle* FoldMCTo(const pandora::MCParticle *const pMC) const;
+    const pandora::MCParticle *FoldMCTo(const pandora::MCParticle *const pMC) const;
 
     /**
      *  @brief Recursive function to check descendent particles for signature of a shower (e -> gamma -> e).
@@ -187,8 +186,7 @@ private:
      *  @param[in] hitParents Map of hits to the cluster/MC particle they belong to
      *  @param[in] hitParents Map of hits to the cluster they merge with for the Rand Index Calculation.
      */
-    void VisualizeRandIndexRecoClusters(
-        std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents,
+    void VisualizeRandIndexRecoClusters(std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents,
         std::map<const pandora::CaloHit *const, const pandora::Cluster *const> &hitMergeTargets) const;
 
     /**
@@ -216,27 +214,26 @@ private:
     void SetBranches(const ClusterMetrics &clusterMetrics, const MatchedParticleMetrics &matchedParticleMetrics, const int view) const;
 
     // members
-    int m_eventNumber;                      ///< To track the current event number
+    int m_eventNumber;                                                  ///< To track the current event number
     std::map<pandora::HitType, float> m_deltaRayLengthThresholdSquared; ///< Threshold for defining small delta rays that will be folded to the parent particle
-    float m_deltaRayParentWeightThreshold;  ///< Threshold for weight contribution of parent particle for it take the delta ray's hit
+    float m_deltaRayParentWeightThreshold; ///< Threshold for weight contribution of parent particle for it take the delta ray's hit
 
     // members that may be set from xml
     std::string m_fileName;                      ///< The filename of the ROOT output file
     std::string m_treeName;                      ///< The name of the ROOT tree
     std::vector<std::string> m_caloHitListNames; ///< The names of the hit lists containing all 2D hits
     std::vector<std::string> m_clusterListNames; ///< The names of the lists of 2D clusters to process
-    int m_minMCHitsPerView;                      ///< Threshold on total main MC particle hits in each view for consideration in metric calculations
-    bool m_onlyRandIndex;                        ///< Flag to only calculate the adjusted rand index over all particles
-    bool m_foldShowers;                          ///< Flag to fold shower MC particles to their leading shower MC particle
-    bool m_handleDeltaRays;                      ///< Flag to fold short delta rays + ignore contributions from daughter electrons that overlap with their parent
-    bool m_mergeShowerClustersForRandIndex;      ///< Flag to merge shower-matched clusters into leading shower MC particle for rand index calculation, note this is only makes any sense for showers folded in the simulation or with m_foldShowers
-    bool m_visualize;                            ///< Flag to display the target clustering derived from MC particles
-    bool m_matchedParticleMetrics;               ///< Flag to calculate a set of high level clustering metrics by truth-matching clusters
-    bool m_dropNullClusterHits;                  ///< Flag to ignore any hits associated with the null cluster
-    bool m_hitWeightedPurityCompleteness;        ///< Flag for cluster purity and completeness to be averaged over hits rather than clusters
-    bool m_maximalMatching;                      ///< Flag for cluster truth-matching to try matching every MC particle to a cluster, rather than requiring clusters to a hit majority from the matched MC particle
+    int m_minMCHitsPerView; ///< Threshold on total main MC particle hits in each view for consideration in metric calculations
+    bool m_onlyRandIndex;   ///< Flag to only calculate the adjusted rand index over all particles
+    bool m_foldShowers;     ///< Flag to fold shower MC particles to their leading shower MC particle
+    bool m_handleDeltaRays; ///< Flag to fold short delta rays + ignore contributions from daughter electrons that overlap with their parent
+    bool m_mergeShowerClustersForRandIndex; ///< Flag to merge shower-matched clusters into leading shower MC particle for rand index calculation, note this is only makes any sense for showers folded in the simulation or with m_foldShowers
+    bool m_visualize;                       ///< Flag to display the target clustering derived from MC particles
+    bool m_matchedParticleMetrics;          ///< Flag to calculate a set of high level clustering metrics by truth-matching clusters
+    bool m_dropNullClusterHits;             ///< Flag to ignore any hits associated with the null cluster
+    bool m_hitWeightedPurityCompleteness;   ///< Flag for cluster purity and completeness to be averaged over hits rather than clusters
+    bool m_maximalMatching; ///< Flag for cluster truth-matching to try matching every MC particle to a cluster, rather than requiring clusters to a hit majority from the matched MC particle
 };
-
 
 } // namespace lar_content
 
