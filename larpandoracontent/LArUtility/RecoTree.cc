@@ -333,7 +333,7 @@ RecoTree::Node::Node(const CaloHit *const pSeedHit, RecoTree &tree) :
     m_tree(tree),
     m_candidateCluster({pSeedHit}),
     m_kalmanFilter{KalmanFilter2D(1, m_tree.m_processVarianceCoeff * m_tree.m_pitch * m_tree.m_pitch,
-        m_tree.m_measurementVarianceCoeff * m_tree.m_pitch * m_tree.m_pitch, Eigen::VectorXd(2), 10000.f)}
+        m_tree.m_measurementVarianceCoeff * m_tree.m_pitch * m_tree.m_pitch, Eigen::VectorXd::Zero(2), 10000.f)}
 {
     const CartesianVector &pos{pSeedHit->GetPositionVector()};
     Eigen::VectorXd seed(2);
