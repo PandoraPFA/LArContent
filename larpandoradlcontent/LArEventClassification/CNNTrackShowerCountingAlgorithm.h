@@ -33,6 +33,9 @@ public:
     typedef std::map<Pixel, std::vector<const pandora::CaloHit *>> PixelToCaloHitsMap;
     typedef std::vector<Pixel> PixelVector;
 
+    /**
+     *  @brief A simple class for storing vertex position information
+     */    
     class VertexPosition
     {
         public:
@@ -51,18 +54,25 @@ public:
     };
     typedef std::map<pandora::HitType, VertexPosition> ViewToVertexPositionMap;
 
+    /**
+     *  @brief A simple class for storing results from the track and shower counting
+     */    
     class TrackShowerCountingResults
     {
         public:
 
-        void AddScoresFromView(const pandora::HitType &view, const torch::Tensor &trackScores, const torch::Tensor &showerScores);
+        void AddScoresFromView(const pandora::HitType &view, const torch::Tensor &nuScores, const torch::Tensor &trackScores, const torch::Tensor &showerScores);
+        std::vector<float> GetNuScoresFromView(const pandora::HitType &view) const;
+        unsigned int GetNuClassPredictionFromView(const pandora::HitType &view) const;
         std::vector<float> GetTrackScoresFromView(const pandora::HitType &view) const;
         unsigned int GetTrackClassPredictionFromView(const pandora::HitType &view) const;
         std::vector<float> GetShowerScoresFromView(const pandora::HitType &view) const;
         unsigned int GetShowerClassPredictionFromView(const pandora::HitType &view) const;
 
         private:
+        std::vector<float> TensorToVector(const torch::Tensor &scores) const;
 
+        std::map<pandora::HitType, std::vector<float>> m_nuScores;
         std::map<pandora::HitType, std::vector<float>> m_trackScores;
         std::map<pandora::HitType, std::vector<float>> m_showerScores;
     };
@@ -93,12 +103,11 @@ private:
     pandora::StatusCode Infer();
 
     /**
-     *  @brief Persist the results
+     *  @brief Persist the results of the track and shower counting
      *
      *  @param result the result of the CNN inference
      */ 
     pandora::StatusCode StorePredictions(const TrackShowerCountingResults &result);
-
 
     /**
      *  @brief Find which particles are visible in the final state
@@ -143,7 +152,7 @@ private:
      *  @brief Find the min and max values for x or z that to create an image of the requested size
      *
      *  @param pCaloHitList the pointer to the input CaloHitList
-     *  @param vertexPosition the position of the interaction vertex
+     *  @param vertexPosition the position of the reconstructed interaction vertex
      *  @param min to take the minimum coordinate value after cropping
      *  @param max to take the maximum coordinate value after cropping
      *  @param span the span in coordinate values required
@@ -188,7 +197,7 @@ private:
     void CountMCPrimaries(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, unsigned int &nTracks, unsigned int &nShowers) const;
 
     /*
-     *  @brief  Get the reconstructed neutrino vertex (if it exists) for each 2D view
+     *  @brief  Get the reconstructed neutrino vertex for each 2D view
      *
      *  @param  vertices to take the vertex position for each view
      **/
@@ -203,11 +212,9 @@ private:
     unsigned int m_width;                       ///< The width of the images in pixels
     unsigned int m_wiresPerPixel;               ///< The number of wires per pixel
     float m_driftStep;                          ///< The size of a pixel in the drift direction in cm
-//    bool m_useVertexForCrops;                   ///< Make use of the reconstructed vertex to perform the cropping
     std::string m_vertexListName;               ///< The vertex list name
-    bool m_useSimpleTruthLabels;                ///< Use simple truth labels based only on a number of hits cut
-    unsigned int m_goodMCTrackHits;             ///< The number of hits an MC primary track needs to be considered reconstructable per view
-    unsigned int m_goodMCShowerHits;            ///< The number of hits an MC primary shower needs to be considered reconstructable per view
+    unsigned int m_goodMCTrackHits;             ///< The number of hits an MC primary track needs to be considered visible per view
+    unsigned int m_goodMCShowerHits;            ///< The number of hits an MC primary shower needs to be considered visible per view
     float m_mcHitWeightThreshold;               ///< Fraction above which a given MCParticle is considered to have been responsible for a hit
     float m_secondaryDistanceThreshold;         ///< Distance from the neutrino vertex below which a secondary is considered primary if the primary is not visible
     unsigned int m_minHits;                     ///< Minimum number of hits to create a training example
