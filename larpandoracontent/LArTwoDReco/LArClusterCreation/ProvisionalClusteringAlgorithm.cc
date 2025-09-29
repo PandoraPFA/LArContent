@@ -111,8 +111,8 @@ void ProvisionalClusteringAlgorithm::ProcessPartition()
 
         const float pitch{LArGeometryHelper::GetWirePitch(this->GetPandora(), caloHits.front()->GetHitType())};
         RecoTree recoTree(orderedCaloHits, ambiguousHits, pitch);
-        recoTree.Configure(m_closeApproachThreshold, m_processVarianceCoeff, m_measurementVarianceCoeff,
-            m_proximityCoeff, m_mahalanobisCoeff, m_mahalanobisRescaling, m_boundaryProximityCoeff);
+        recoTree.Configure(m_closeApproachThreshold, m_processVarianceCoeff, m_measurementVarianceCoeff, m_proximityCoeff,
+            m_mahalanobisCoeff, m_mahalanobisRescaling, m_boundaryProximityCoeff);
         recoTree.Populate();
 
         const RecoTree::NodeVector &rootNodes{recoTree.GetRootNodes()};
@@ -157,15 +157,11 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
         if (pPrevLayerHits)
             prevLayerHits.insert(prevLayerHits.end(), pPrevLayerHits->begin(), pPrevLayerHits->end());
         if (pNextLayerHits)
-            nextLayerHits.insert(nextLayerHits.end(), pNextLayerHits->begin(), pNextLayerHits->end());  
+            nextLayerHits.insert(nextLayerHits.end(), pNextLayerHits->begin(), pNextLayerHits->end());
 
         for (const CaloHit *const pCurrentHit : currentLayerHits)
         {
-            int neighbourhood[3][3]{
-                {0, 0, 0},
-                {0, 1, 0},
-                {0, 0, 0}
-            };
+            int neighbourhood[3][3]{{0, 0, 0}, {0, 1, 0}, {0, 0, 0}};
             // Consider current layer
             for (const CaloHit *const pOtherInLayerHit : currentLayerHits)
             {
@@ -211,7 +207,7 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                     {
                         // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
                         if (!(LArClusterHelper::HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
-                              LArClusterHelper::HasBlockedPath(prevLayerHits, pCurrentHit, pOtherHit)))
+                                LArClusterHelper::HasBlockedPath(prevLayerHits, pCurrentHit, pOtherHit)))
                         {
                             const float overlap{hit2Right - hit1Left};
                             const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
@@ -238,7 +234,7 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                     {
                         // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
                         if (!(LArClusterHelper::HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
-                              LArClusterHelper::HasBlockedPath(prevLayerHits, pCurrentHit, pOtherHit)))
+                                LArClusterHelper::HasBlockedPath(prevLayerHits, pCurrentHit, pOtherHit)))
                         {
                             const float overlap{hit1Right - hit2Left};
                             const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
@@ -272,7 +268,7 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                     {
                         // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
                         if (!(LArClusterHelper::HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
-                              LArClusterHelper::HasBlockedPath(nextLayerHits, pCurrentHit, pOtherHit)))
+                                LArClusterHelper::HasBlockedPath(nextLayerHits, pCurrentHit, pOtherHit)))
                         {
                             const float overlap{hit2Right - hit1Left};
                             const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
@@ -299,7 +295,7 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
                     {
                         // Close enough to be a neighbour, check for blocked path, and if clear, add as neighbour
                         if (!(LArClusterHelper::HasBlockedPath(currentLayerHits, pCurrentHit, pOtherHit) ||
-                              LArClusterHelper::HasBlockedPath(nextLayerHits, pCurrentHit, pOtherHit)))
+                                LArClusterHelper::HasBlockedPath(nextLayerHits, pCurrentHit, pOtherHit)))
                         {
                             const float overlap{hit1Right - hit2Left};
                             const float fractionOverlap{overlap / pOtherHit->GetCellSize1()};
@@ -323,7 +319,7 @@ void ProvisionalClusteringAlgorithm::TagAmbiguousHits(const OrderedCaloHitList &
             FloatVector rowSums(3, 0.f), colSums(3, 0.f);
             for (int i = 0; i < 3; ++i)
             {
-                for (int j = 0; j <3; ++j)
+                for (int j = 0; j < 3; ++j)
                 {
                     sum += neighbourhood[i][j];
                     rowSums[i] += neighbourhood[i][j];
@@ -362,13 +358,19 @@ StatusCode ProvisionalClusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxGap", m_maxGap));
     m_maxGap2dSquared = 2 * m_maxGap * m_maxGap;
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CloseApproachThreshold", m_closeApproachThreshold));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ProcessVarianceCoeff", m_processVarianceCoeff));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MeasurementVarianceCoeff", m_measurementVarianceCoeff));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CloseApproachThreshold", m_closeApproachThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ProcessVarianceCoeff", m_processVarianceCoeff));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MeasurementVarianceCoeff", m_measurementVarianceCoeff));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ProximityCoeff", m_proximityCoeff));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MahalanobisCoeff", m_mahalanobisCoeff));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MahalanobisRescaling", m_mahalanobisRescaling));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BoundaryProximityCoeff", m_boundaryProximityCoeff));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MahalanobisCoeff", m_mahalanobisCoeff));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MahalanobisRescaling", m_mahalanobisRescaling));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BoundaryProximityCoeff", m_boundaryProximityCoeff));
 
     return STATUS_CODE_SUCCESS;
 }

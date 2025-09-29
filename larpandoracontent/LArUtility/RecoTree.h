@@ -64,9 +64,8 @@ public:
      *  @param  mahalanobisRescaling the rescaling factor for the Mahalanobis distance when comparing to proximity
      *  @param  boundaryProximity the boundary proximity threshold
      */
-    void Configure(const float closeApproachThreshold, const float processVarianceCoeff,
-        const float measurementVarianceCoeff, const float proximityCoeff, const float mahalanobisCoeff,
-        const float mahalanobisRescaling, const float boundaryProximity);
+    void Configure(const float closeApproachThreshold, const float processVarianceCoeff, const float measurementVarianceCoeff,
+        const float proximityCoeff, const float mahalanobisCoeff, const float mahalanobisRescaling, const float boundaryProximity);
 
     class Node
     {
@@ -131,10 +130,10 @@ public:
         float GetMahalanobisDistance(const pandora::CaloHit *const pCaloHit);
 
     private:
-        const pandora::CaloHit *const m_pSeedHit; ///< The seed calo hit associated with this node
-        RecoTree &m_tree; ///< The reco tree to which this node belongs
+        const pandora::CaloHit *const m_pSeedHit;  ///< The seed calo hit associated with this node
+        RecoTree &m_tree;                          ///< The reco tree to which this node belongs
         pandora::CaloHitVector m_candidateCluster; ///< The candidate cluster associated with this node
-        KalmanFilter2D m_kalmanFilter; ///< The Kalman filter used to grow the candidate cluster
+        KalmanFilter2D m_kalmanFilter;             ///< The Kalman filter used to grow the candidate cluster
     };
     friend class Node;
 
@@ -153,18 +152,18 @@ private:
     double WalkThroughCluster(T iter, const T endIter, const Eigen::VectorXd &t, KalmanFilter2D &kalmanFilter);
 
     const pandora::OrderedCaloHitList &m_orderedCaloHits; ///< The ordered calo hit list
-    const pandora::CaloHitSet &m_ambiguousHits; ///< The set of ambiguous hits
-    const float m_pitch; ///< The pitch of the relevant channel (used for proximity checks)
-    pandora::CaloHitSet m_usedHits; ///< The set of used hits in the reco tree
-    NodeVector m_rootNodes; ///< The vector of root nodes in the reco tree
+    const pandora::CaloHitSet &m_ambiguousHits;           ///< The set of ambiguous hits
+    const float m_pitch;                                  ///< The pitch of the relevant channel (used for proximity checks)
+    pandora::CaloHitSet m_usedHits;                       ///< The set of used hits in the reco tree
+    NodeVector m_rootNodes;                               ///< The vector of root nodes in the reco tree
 
-    float m_closeApproachThreshold{3.f}; ///< The threshold for a hit being deemded "close" to a cluster
-    float m_processVarianceCoeff{0.0625f}; ///< The process variance coefficient for the Kalman filter
+    float m_closeApproachThreshold{3.f};     ///< The threshold for a hit being deemded "close" to a cluster
+    float m_processVarianceCoeff{0.0625f};   ///< The process variance coefficient for the Kalman filter
     float m_measurementVarianceCoeff{0.25f}; ///< The measurement variance coefficient for the Kalman filter
-    float m_proximityCoeff{1.07f}; ///< The proximity coefficient for proximity thresholds
-    float m_mahalanobisCoeff{1.1f}; ///< The Mahalanobis distance coefficient for proximity thresholds
-    float m_mahalanobisRescaling{0.5f}; ///< The rescaling factor for the Mahalanobis distance when comparing to proximity
-    float m_boundaryProximity{0.1f}; ///< The boundary proximity threshold
+    float m_proximityCoeff{1.07f};           ///< The proximity coefficient for proximity thresholds
+    float m_mahalanobisCoeff{1.1f};          ///< The Mahalanobis distance coefficient for proximity thresholds
+    float m_mahalanobisRescaling{0.5f};      ///< The rescaling factor for the Mahalanobis distance when comparing to proximity
+    float m_boundaryProximity{0.1f};         ///< The boundary proximity threshold
 };
 
 } // namespace lar_content
