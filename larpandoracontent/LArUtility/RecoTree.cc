@@ -105,7 +105,7 @@ void RecoTree::ClusterAmbiguousHits()
             double bestMahalanobisDistance{std::numeric_limits<double>::max()};
             float bestProximity{std::numeric_limits<float>::max()};
             Node *pBestNodeMahalanobis{nullptr}, *pBestNodeProximity{nullptr};
-            (void)bestProximity; // ToDo: Use this in the future for proximity based clustering
+            (void)bestProximity;      // ToDo: Use this in the future for proximity based clustering
             (void)pBestNodeProximity; // ToDo: Use this in the future for proximity based clustering
             bool addAtEndMahalanobis{false}, addAtEndProximity{false};
             (void)addAtEndProximity; // ToDo: Use this in the future for proximity based clustering
@@ -121,7 +121,8 @@ void RecoTree::ClusterAmbiguousHits()
                     if (dFront > dBack)
                     {
                         // Walk from the front to the back of the cluster and see where the hit would best fit
-                        KalmanFilter2D kalmanFilter(1, m_processVarianceCoeff * m_pitch * m_pitch, m_measurementVarianceCoeff * m_pitch * m_pitch,  Eigen::VectorXd(2), 10000.f);
+                        KalmanFilter2D kalmanFilter(1, m_processVarianceCoeff * m_pitch * m_pitch,
+                            m_measurementVarianceCoeff * m_pitch * m_pitch, Eigen::VectorXd(2), 10000.f);
                         if (nodeHits.size() > 1)
                         {
                             kalmanFilter.Predict();
@@ -169,7 +170,8 @@ void RecoTree::ClusterAmbiguousHits()
                     else
                     {
                         // Walk from the back to the front of the cluster and see where the hit would best fit
-                        KalmanFilter2D kalmanFilter(1, m_processVarianceCoeff * m_pitch * m_pitch, m_measurementVarianceCoeff * m_pitch * m_pitch,  Eigen::VectorXd(2), 10000.f);
+                        KalmanFilter2D kalmanFilter(1, m_processVarianceCoeff * m_pitch * m_pitch,
+                            m_measurementVarianceCoeff * m_pitch * m_pitch, Eigen::VectorXd(2), 10000.f);
                         if (nodeHits.size() > 1)
                         {
                             kalmanFilter.Predict();
@@ -250,7 +252,8 @@ void RecoTree::ClusterAmbiguousHits()
 
                 // Need to rebuild the closest approach matrix since we have added a new node
                 closestApproach.clear();
-                closestApproach = std::vector<std::vector<float>>(m_ambiguousHits.size(), std::vector<float>(m_rootNodes.size(), std::numeric_limits<float>::max()));
+                closestApproach = std::vector<std::vector<float>>(
+                    m_ambiguousHits.size(), std::vector<float>(m_rootNodes.size(), std::numeric_limits<float>::max()));
                 size_t h1{0};
                 for (const auto &pNode : m_rootNodes)
                 {
@@ -292,7 +295,7 @@ template <class T>
 double RecoTree::WalkThroughCluster(T iter, const T endIter, const Eigen::VectorXd &t, KalmanFilter2D &kalmanFilter)
 {
     double bestMahalanobisDistance{std::numeric_limits<float>::max()};
-    for ( ; iter != endIter; ++iter)
+    for (; iter != endIter; ++iter)
     {
         const CaloHit *const pCaloHit{*iter};
         const CartesianVector &pos{pCaloHit->GetPositionVector()};
@@ -310,9 +313,8 @@ double RecoTree::WalkThroughCluster(T iter, const T endIter, const Eigen::Vector
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void RecoTree::Configure(const float closeApproachThreshold, const float processVarianceCoeff,
-    const float measurementVarianceCoeff, const float proximityCoeff, const float mahalanobisCoeff,
-    const float mahalanobisRescaling, const float boundaryProximity)
+void RecoTree::Configure(const float closeApproachThreshold, const float processVarianceCoeff, const float measurementVarianceCoeff,
+    const float proximityCoeff, const float mahalanobisCoeff, const float mahalanobisRescaling, const float boundaryProximity)
 {
     m_closeApproachThreshold = closeApproachThreshold;
     m_processVarianceCoeff = processVarianceCoeff;
@@ -330,7 +332,8 @@ RecoTree::Node::Node(const CaloHit *const pSeedHit, RecoTree &tree) :
     m_pSeedHit(pSeedHit),
     m_tree(tree),
     m_candidateCluster({pSeedHit}),
-    m_kalmanFilter{KalmanFilter2D(1, m_tree.m_processVarianceCoeff * m_tree.m_pitch * m_tree.m_pitch, m_tree.m_measurementVarianceCoeff * m_tree.m_pitch * m_tree.m_pitch,  Eigen::VectorXd(2), 10000.f)}
+    m_kalmanFilter{KalmanFilter2D(1, m_tree.m_processVarianceCoeff * m_tree.m_pitch * m_tree.m_pitch,
+        m_tree.m_measurementVarianceCoeff * m_tree.m_pitch * m_tree.m_pitch, Eigen::VectorXd(2), 10000.f)}
 {
     const CartesianVector &pos{pSeedHit->GetPositionVector()};
     Eigen::VectorXd seed(2);
