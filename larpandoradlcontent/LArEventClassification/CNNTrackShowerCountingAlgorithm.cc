@@ -32,8 +32,6 @@ CNNTrackShowerCountingAlgorithm::CNNTrackShowerCountingAlgorithm() :
     m_width{512},
     m_wiresPerPixel{1},
     m_driftStep{0.5f},
-//    m_useVertexForCrops{true},
-    m_useSimpleTruthLabels{false},
     m_goodMCTrackHits{5},
     m_goodMCShowerHits{5},
     m_mcHitWeightThreshold{0.5f},
@@ -80,7 +78,10 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
     for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
         if (LArMCParticleHelper::IsNeutrino(pMCParticle))
+        {
             pMCNeutrino = pMCParticle;
+            break;
+        }
     }
     if (pMCNeutrino == nullptr)
         return STATUS_CODE_FAILURE;
@@ -94,15 +95,18 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
     const InteractionDescriptor &intType{LArInteractionTypeHelper::GetInteractionDescriptor(mcPrimaries)};
     const bool isCC{intType.IsCC()};
 
-    std::map<HitType, unsigned int> nTracksPerView;
-    std::map<HitType, unsigned int> nShowersPerView;
+    std::unordered_map<HitType, unsigned int> nTracksPerView;
+    std::unordered_map<HitType, unsigned int> nShowersPerView;
     bool emptyView{false};
     for (const std::string &name : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, name, pCaloHitList));
         if (pCaloHitList->empty())
-            continue;
+        {
+            emptyView = true;
+            break;
+        }
 
         LArMCParticleHelper::MCContributionMap mcToHitsMap;
         this->GetVisibleParticles(pMCParticleList, pMCNeutrino, pCaloHitList, mcToHitsMap);
@@ -116,7 +120,6 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
         const HitType hitType{pCaloHitList->front()->GetHitType()};
         unsigned int nTracks{0}, nShowers{0};
         this->CountMCPrimaries(mcToHitsMap, nTracks, nShowers);
-        std::cout << " - Got " << nTracks << " tracks and " << nShowers << " showers in view " << static_cast<int>(hitType) << std::endl;
         nTracksPerView[hitType] = nTracks;
         nShowersPerView[hitType] = nShowers;
     }
@@ -138,18 +141,12 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuTrueVertexY", nuTrueVertexY));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nuTrueVertexZ", nuTrueVertexZ));
 
-    if (nTracksPerView.count(TPC_VIEW_U))
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTracksU", static_cast<int>(nTracksPerView[TPC_VIEW_U])));
-    if (nShowersPerView.count(TPC_VIEW_U))
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nShowersU", static_cast<int>(nShowersPerView[TPC_VIEW_U])));
-    if (nTracksPerView.count(TPC_VIEW_V))
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTracksV", static_cast<int>(nTracksPerView[TPC_VIEW_V])));
-    if (nShowersPerView.count(TPC_VIEW_V))
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nShowersV", static_cast<int>(nShowersPerView[TPC_VIEW_V])));
-    if (nTracksPerView.count(TPC_VIEW_W))
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTracksW", static_cast<int>(nTracksPerView[TPC_VIEW_W])));
-    if (nShowersPerView.count(TPC_VIEW_W))
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nShowersW", static_cast<int>(nShowersPerView[TPC_VIEW_W])));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTracksU", static_cast<int>(nTracksPerView[TPC_VIEW_U])));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nShowersU", static_cast<int>(nShowersPerView[TPC_VIEW_U])));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTracksV", static_cast<int>(nTracksPerView[TPC_VIEW_V])));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nShowersV", static_cast<int>(nShowersPerView[TPC_VIEW_V])));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTracksW", static_cast<int>(nTracksPerView[TPC_VIEW_W])));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nShowersW", static_cast<int>(nShowersPerView[TPC_VIEW_W])));
 
     ViewToVertexPositionMap nuRecoVertices;
     this->GetVertexPositions(nuRecoVertices);
@@ -166,14 +163,12 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
         if (pCaloHitList->empty())
             continue;
 
-//        std::cout << "Creating pixel map for hit collection " << listname << " with nHits = " << pCaloHitList->size() << std::endl;
         VertexPosition &vertex(nuRecoVertices.at(pCaloHitList->front()->GetHitType()));
         PixelMap pixelMap;
         this->CreatePixelMap(pCaloHitList, pixelMap, vertex);
         if (pixelMap.size() < m_minHits)
             continue;
 
-//        std::cout << "Writing pixel map with " << pixelMap.size() << " non-zero entries to the tree" << std::endl;
         const int view{static_cast<int>(pCaloHitList->front()->GetHitType())};
         for (auto const &pixel : pixelMap)
         {
@@ -211,10 +206,10 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
 
 StatusCode CNNTrackShowerCountingAlgorithm::Infer()
 {
-    TrackShowerCountingResults result;
     ViewToVertexPositionMap vertices;
     this->GetVertexPositions(vertices);
 
+    TrackShowerCountingResults result;
     for (const std::string &listname : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
@@ -222,7 +217,9 @@ StatusCode CNNTrackShowerCountingAlgorithm::Infer()
         if (pCaloHitList->empty())
             continue;
 
-        VertexPosition &vertex(vertices.at(pCaloHitList->front()->GetHitType()));
+        const HitType hitType(pCaloHitList->front()->GetHitType());
+
+        VertexPosition &vertex(vertices.at(hitType));
         PixelMap pixelMap;
         this->CreatePixelMap(pCaloHitList, pixelMap, vertex);
         if (pixelMap.size() < m_minHits)
@@ -236,8 +233,8 @@ StatusCode CNNTrackShowerCountingAlgorithm::Infer()
         LArDLHelper::TorchInput vtxInput;
         LArDLHelper::InitialiseInput({1, 2}, vtxInput);
         auto accessor = vtxInput.accessor<float, 2>();
-        accessor[0][0] = vertices[pCaloHitList->front()->GetHitType()].GetDriftBin() / static_cast<float>(m_height);
-        accessor[0][1] = vertices[pCaloHitList->front()->GetHitType()].GetWireBin() / static_cast<float>(m_width);
+        accessor[0][0] = vertices[hitType].GetDriftBin() / static_cast<float>(m_height);
+        accessor[0][1] = vertices[hitType].GetWireBin() / static_cast<float>(m_width);
 
         LArDLHelper::TorchInputVector inputs;
         inputs.emplace_back(imageInput);
@@ -251,12 +248,12 @@ StatusCode CNNTrackShowerCountingAlgorithm::Infer()
 
         // Due to the way PyTorch includes the softmax in the loss function we need to apply it here if we
         // want out scores to sum to one
-        const auto trkOutput = torch::softmax(outputList.get(0).toTensor(), 1);
-        const auto shwOutput = torch::softmax(outputList.get(1).toTensor(), 1);
+        const auto nuOutput = torch::softmax(outputList.get(0).toTensor(), 1);
+        const auto trkOutput = torch::softmax(outputList.get(1).toTensor(), 1);
+        const auto shwOutput = torch::softmax(outputList.get(2).toTensor(), 1);
         
-        result.AddScoresFromView(pCaloHitList->front()->GetHitType(), trkOutput, shwOutput);
+        result.AddScoresFromView(hitType, nuOutput, trkOutput, shwOutput);
     }
-
     return this->StorePredictions(result);
 }
 
@@ -283,6 +280,10 @@ StatusCode CNNTrackShowerCountingAlgorithm::StorePredictions(const TrackShowerCo
     // Now we add some metadata to the Pfo
     object_creation::ParticleFlowObject::Metadata dummyEventPfoMetadata;
 
+    dummyEventPfoMetadata.m_propertiesToAdd["nuClassU"] = result.GetNuClassPredictionFromView(TPC_VIEW_U);
+    dummyEventPfoMetadata.m_propertiesToAdd["nuClassV"] = result.GetNuClassPredictionFromView(TPC_VIEW_V);
+    dummyEventPfoMetadata.m_propertiesToAdd["nuClassW"] = result.GetNuClassPredictionFromView(TPC_VIEW_W);
+
     dummyEventPfoMetadata.m_propertiesToAdd["nTracksU"] = result.GetTrackClassPredictionFromView(TPC_VIEW_U);
     dummyEventPfoMetadata.m_propertiesToAdd["nTracksV"] = result.GetTrackClassPredictionFromView(TPC_VIEW_V);
     dummyEventPfoMetadata.m_propertiesToAdd["nTracksW"] = result.GetTrackClassPredictionFromView(TPC_VIEW_W);
@@ -303,36 +304,21 @@ StatusCode CNNTrackShowerCountingAlgorithm::StorePredictions(const TrackShowerCo
 
 void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *const pMCParticleList, const MCParticle *const pMCNeutrino, const CaloHitList *const pCaloHitList, LArMCParticleHelper::MCContributionMap &mcToHitsMap) const
 {
-    if (m_useSimpleTruthLabels)
+    // Find all MCParticles contributing > m_mcHitWeightThreshold to at least one CaloHit
+    for (auto const *pCaloHit : *pCaloHitList)
     {
-        LArMCParticleHelper::PrimaryParameters parameters;
-        parameters.m_minPrimaryGoodHits = m_goodMCTrackHits - 1; // No choice but to just use one of these. TODO: remove the simple option...
-        parameters.m_minHitsForGoodView = m_goodMCTrackHits - 1;
-        parameters.m_minPrimaryGoodViews = 1;
-        parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
-
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcToHitsMap);
+        for (auto const &mcHitWeightPair : pCaloHit->GetMCParticleWeightMap())
+        {
+            if (mcHitWeightPair.second > m_mcHitWeightThreshold)
+                mcToHitsMap[mcHitWeightPair.first].emplace_back(pCaloHit);
+        }
     }
-    else
-    {
-        // Find all MCParticles contributing > m_mcHitWeightThreshold to at least one CaloHit
-        for (auto const *pCaloHit : *pCaloHitList)
-        {
-            for (auto const &mcHitWeightPair : pCaloHit->GetMCParticleWeightMap())
-            {
-                const MCParticle *pMCParticle{mcHitWeightPair.first};
-
-                if (mcHitWeightPair.second > m_mcHitWeightThreshold)
-                    mcToHitsMap[pMCParticle].emplace_back(pCaloHit);
-            }
-        }
     
-        // We need to add any MC particles without hits into the map
-        for (const MCParticle *const pMCParticle : *pMCParticleList)
-        {
-            if (!mcToHitsMap.count(pMCParticle))
-                mcToHitsMap[pMCParticle] = CaloHitList();
-        }
+    // We need to add any MC particles without hits into the map
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
+    {
+        if (!mcToHitsMap.count(pMCParticle))
+            mcToHitsMap[pMCParticle] = CaloHitList();
     }
 
     // Apply the number of hits cut to primaries and set failed primaries to be removed
@@ -343,12 +329,8 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
         const unsigned int nHitsCut{this->IsTracklike(pMCParticle) ? m_goodMCTrackHits : m_goodMCShowerHits};
         //const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
 
-        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))
-        {
-              //std::cout << "Particle " << pMCParticle << " of type " << pMCParticle->GetParticleId() << " has " << mcToHitsPair.second.size() << " hits has parent " << pParentParticle << " of type " << pParentParticle->GetParticleId() << std::endl;
-            if (mcToHitsPair.second.size() < nHitsCut)
-                keysToRemove.emplace_back(pMCParticle);
-        }
+        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle) && mcToHitsPair.second.size() < nHitsCut)
+            keysToRemove.emplace_back(pMCParticle);
     }
 
     // Look for secondaries produced close to the vertex when their parent is not visible
@@ -357,6 +339,10 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
     {
         const MCParticle *pMCParticle{mcToHitsPair.first};
 
+        // Ignore primary particles this time
+        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))
+            continue;
+
         // Ignore the incoming neutrino
         if (pMCParticle->GetParentList().empty())
         {
@@ -364,13 +350,9 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
             continue;
         }
 
-        // Ignore primary particles this time
-        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))
-            continue;
-
+        // Look for secondaries produced by primaries that are considered not visible and see if they start close to the neutrino vertex position
         const MCParticle *pParentParticle{*(pMCParticle->GetParentList().begin())};
         const unsigned int nHitsCut{this->IsTracklike(pMCParticle) ? m_goodMCTrackHits : m_goodMCShowerHits};
-        // Look for secondaries produced by primaries that are considered not visible and see if they start close to the neutrino vertex position
         if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pParentParticle) && std::find(keysToRemove.begin(), keysToRemove.end(), pParentParticle) != keysToRemove.end())
         {
             if (mcToHitsPair.second.size() < nHitsCut)
@@ -385,13 +367,12 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
 
             if (distance > m_secondaryDistanceThreshold)
                 keysToRemove.emplace_back(pMCParticle);
-//            else
-//                std::cout << "Keeping particle of type " << pMCParticle->GetParticleId() << " with primary parent type " << pParentParticle->GetParticleId() << " that failed the selection criteria starts at a distance of " << distance << " from the neutrino interaction vertex" << std::endl;
         }
         else
             keysToRemove.emplace_back(pMCParticle);
     }
 
+    // We will be left with visible primaries and selected secondaries of invisible primaries
     for (auto const &key : keysToRemove)
         mcToHitsMap.erase(key);
 
@@ -408,12 +389,18 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
 
     // Calculate the angle between all remaining tracks and showers
     std::map<std::pair<const MCParticle *const, const MCParticle *const>, float> particleAngles;
-    for (auto const &mcToHitsPair1 : mcToHitsMap)
+//    for (auto const &mcToHitsPair1 : mcToHitsMap)
+//    {
+//        for (auto const &mcToHitsPair2 : mcToHitsMap)
+//        {
+//            if (mcToHitsPair1 == mcToHitsPair2)
+//                continue;
+//            const MCParticle *const pMCParticle1{mcToHitsPair1.first};
+//            const MCParticle *const pMCParticle2{mcToHitsPair2.first};
+    for (auto const &[pMCParticle1, _] : mcToHitsMap)
     {
-        for (auto const &mcToHitsPair2 : mcToHitsMap)
+        for (auto const &[pMCParticle2, _] : mcToHitsMap)
         {
-            const MCParticle *const pMCParticle1{mcToHitsPair1.first};
-            const MCParticle *const pMCParticle2{mcToHitsPair2.first};
             if (pMCParticle1 == pMCParticle2)
                 continue;
             if (particleAngles.count(std::make_pair(pMCParticle2, pMCParticle1)))
@@ -421,7 +408,7 @@ void CNNTrackShowerCountingAlgorithm::GetVisibleParticles(const MCParticleList *
             const CartesianVector momentum1(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCParticle1->GetMomentum(), hitType)); 
             const CartesianVector momentum2(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCParticle2->GetMomentum(), hitType));
             const float openingAngle(momentum1.GetOpeningAngle(momentum2) * 180.f / M_PI);
-            particleAngles[std::make_pair(mcToHitsPair1.first, mcToHitsPair2.first)] = openingAngle;
+            particleAngles[std::make_pair(pMCParticle1, pMCParticle2)] = openingAngle;
 //            std::cout << "Angle between " << mcToHitsPair1.first << " and " << mcToHitsPair2.first << " = " << openingAngle << std::endl;
         }
     }
@@ -439,11 +426,9 @@ StatusCode CNNTrackShowerCountingAlgorithm::MakeNetworkInputFromPixelMap(const P
     {
         const unsigned int row{pixel.first.first};
         const unsigned int col{pixel.first.second};
-        float q{pixel.second};
+        const float q{pixel.second <= 10.f ? pixel.second : 10.f };
 
-        // Cap the charge at 10 ADC units and then rescale to be between 0 and 1.
-        if (q > 10)
-            q = 10;
+        // Rescale to be between 0 and 1.
         accessor[0][0][row][col] = q / 10.f;
     }
 
@@ -454,10 +439,6 @@ StatusCode CNNTrackShowerCountingAlgorithm::MakeNetworkInputFromPixelMap(const P
 
 void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pCaloHitList, PixelMap &pixelMap, VertexPosition &vertex) const
 {
-//    ViewToVertexPositionMap vertices;
-//    if (m_useVertexForCrops)
-//    this->GetVertexPositions(vertices);
-
     float xMin{std::numeric_limits<float>::max()}, xMax{-1.f * std::numeric_limits<float>::max()};
     float zMin{std::numeric_limits<float>::max()}, zMax{-1.f * std::numeric_limits<float>::max()};
     this->GetHitRegion(pCaloHitList, xMin, xMax, zMin, zMax);
@@ -470,15 +451,12 @@ void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pC
 
     const float zSpan{pitch * m_wiresPerPixel * m_width};
     const float xSpan{m_driftStep * m_height};
+
     // If the min / max values exceed the above spans then we need to crop
     const bool cropZ{(zMax - zMin) > zSpan ? true : false};
     const bool cropX{(xMax - xMin) > xSpan ? true : false};
-//    std::cout << "Pixel Map Creation... do we need to crop? " << cropX << ", " << cropZ << std::endl;
-//    CartesianVector vtx{CartesianVector(0.f, 0.f, 0.f)};
-//    if (m_useVertexForCrops)
-
-    float vtxPosX{vertex.GetPosition().GetX()};
-    float vtxPosZ{vertex.GetPosition().GetZ()};
+    const float vtxPosX{vertex.GetPosition().GetX()};
+    const float vtxPosZ{vertex.GetPosition().GetZ()};
 
     // Adjust the min and max depending on reconstructed vertex position for events where
     // the reconstructed vertex isn't on a CaloHit, e.g. NC pizero events
@@ -491,7 +469,7 @@ void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pC
     if (vtxPosZ > zMax)
         zMax = vtxPosZ;
 
-    const float eps{0.0001f};
+    constexpr float eps{0.0001f};
     if (cropX)
         this->GetCrop1D(pCaloHitList, vertex, xMin, xMax, xSpan, true);
     else
@@ -502,7 +480,7 @@ void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pC
     else
         vertex.AddVertexBin(false, static_cast<unsigned int>(std::floor(eps + (vtxPosZ - zMin) / wireStep)));
 
-
+    // Now we have the cropped region we can make the pixel map
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         const float driftPos{pCaloHit->GetPositionVector().GetX()};
@@ -514,7 +492,7 @@ void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pC
 
         const unsigned int driftBin{static_cast<unsigned int>(std::floor(eps + (driftPos - xMin) / m_driftStep))};
         const unsigned int wireBin{static_cast<unsigned int>(std::floor(eps + (wirePos - zMin) / wireStep))};
-        Pixel pixel{driftBin, wireBin};
+        const Pixel pixel{driftBin, wireBin};
         if (!pixelMap.count(pixel))
             pixelMap[pixel] = pCaloHit->GetMipEquivalentEnergy();
         else
@@ -526,9 +504,6 @@ void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pC
 
 void CNNTrackShowerCountingAlgorithm::GetVertexPositions(ViewToVertexPositionMap &vertices) const
 {
-//    if (!m_useVertexForCrops)
-//        return;
-
     const VertexList *pVertexList{nullptr};
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_vertexListName, pVertexList));
     if (pVertexList->empty())
@@ -560,8 +535,7 @@ void CNNTrackShowerCountingAlgorithm::GetCrop1D(const CaloHitList *const pCaloHi
     if (nBins <= imageDimension)
         return;
     std::vector<float> dimensionBins(nBins, 0.f);
-//    std::cout << "Min " << min << " and Max " << max << " with step " << step << " gives " << dimensionBins.size() << " bins" << std::endl;
-    const float eps{0.0001f};
+    constexpr float eps{0.0001f};
     for (const CaloHit *pCaloHit : *pCaloHitList)
     {
         const CartesianVector pos{pCaloHit->GetPositionVector()};
@@ -580,9 +554,8 @@ void CNNTrackShowerCountingAlgorithm::GetCrop1D(const CaloHitList *const pCaloHi
 
     const unsigned int vtxBin{static_cast<unsigned int>(std::floor(eps + (vtxPos - min) / step))};
     // Look for the required number of consecutive bins with the highest integrated charge
-    std::map<unsigned int, float> startBinToCharge;
+    std::unordered_map<unsigned int, float> startBinToCharge;
     //const float totalCharge{std::accumulate(dimensionBins.begin(), dimensionBins.end(), 0.f)};
-    //std::cout << "Vertex: " << vtxPos << ", " << vtxBin << " :: " << nBins << std::endl;
     for (unsigned int i = 0; i < (nBins - imageDimension); ++i)
     {
         const bool vtxInRange{(vtxBin >= i) && (vtxBin < (i + imageDimension))};
@@ -590,10 +563,9 @@ void CNNTrackShowerCountingAlgorithm::GetCrop1D(const CaloHitList *const pCaloHi
     }
 
     // Get the maximum element from the map
-    std::map<unsigned int, float>::iterator maxElementIter{std::max_element(
+    std::unordered_map<unsigned int, float>::iterator maxElementIter{std::max_element(
         startBinToCharge.begin(), startBinToCharge.end(), [](const auto &a, const auto &b){return a.second < b.second;})};
     const unsigned int maxBin{maxElementIter->first};
-//    std::cout << maxBin << ", " << maxElementIter->second << " :: " << maxBinLoop << ", " << maxValue << std::endl;
     const float localMin{min + maxBin * step};
     const float localMax{localMin + imageDimension * step};
 
@@ -606,7 +578,6 @@ void CNNTrackShowerCountingAlgorithm::GetCrop1D(const CaloHitList *const pCaloHi
 
 	  if (vtxPos < localMin || vtxPos > localMax)
 	      std::cout << "CNNTrackShowerCountingAlgorithm::GetCrop1D: reconstructed vertex outside cropped region! " << vtxPos << ", " << localMin << ", " << localMax << std::endl;
-//    std::cout << "Best bin " << maxBin << " with charge sum " << startBinToCharge[maxBin] << " gives minimum " << min << " and max " << max << std::endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -641,9 +612,9 @@ void CNNTrackShowerCountingAlgorithm::CountMCPrimaries(const LArMCParticleHelper
 {
     nTracks = 0;
     nShowers = 0;
-    for (const auto &[mc, hits] : mcToHitsMap)
+    for (const auto &[pMCParticle, _] : mcToHitsMap)
     {
-        if (this->IsShowerlike(mc))
+        if (this->IsShowerlike(pMCParticle))
             ++nShowers;
         else
             ++nTracks;
@@ -684,9 +655,6 @@ StatusCode CNNTrackShowerCountingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
 
     
-//    PANDORA_RETURN_RESULT_IF_AND_IF(
-//        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseVertexForCrops", m_useVertexForCrops));
-//    if (m_useVertexForCrops)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
 
     if (m_trainingMode)
@@ -702,7 +670,6 @@ StatusCode CNNTrackShowerCountingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         LArDLHelper::LoadModel(modelName, m_model);
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseSimpleTruthLabels", m_useSimpleTruthLabels));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GoodMCTrackHits", m_goodMCTrackHits));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GoodMCShowerHits", m_goodMCShowerHits));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCHitWeightThreshold", m_mcHitWeightThreshold));
@@ -767,26 +734,42 @@ unsigned int CNNTrackShowerCountingAlgorithm::VertexPosition::GetWireBin() const
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::AddScoresFromView(const HitType &view, const torch::Tensor &trackScores, const torch::Tensor &showerScores)
+std::vector<float> CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::TensorToVector(const torch::Tensor &scores) const
 {
-    if (m_trackScores.count(view) || m_showerScores.count(view))
+    // These are technically 2D as they have a batch dimension
+    auto scoreAccessor = scores.accessor<float, 2>();
+    std::vector<float> scoreVector;
+    for (unsigned int element = 0; element < scores.size(1); ++element)
+        scoreVector.emplace_back(scoreAccessor[0][element]);
+
+    return scoreVector;
+}
+
+void CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::AddScoresFromView(const HitType &view, const torch::Tensor &nuScores, const torch::Tensor &trackScores, const torch::Tensor &showerScores)
+{
+    if (m_nuScores.count(view) || m_trackScores.count(view) || m_showerScores.count(view))
     {
         std::cerr << "TrackShowerCountingResults::AddScoresFromView: scores for view " << view << " already exist. Doing nothing." << std::endl;
         return;
     }
+    m_nuScores[view] = this->TensorToVector(nuScores);
+    m_trackScores[view] = this->TensorToVector(trackScores);
+    m_showerScores[view] = this->TensorToVector(showerScores);
+}
 
-    // The tensors have a batch dimension so are technically 2D
-    auto trackAccessor = trackScores.accessor<float, 2>();
-    std::vector<float> trkScoreVector;
-    for (unsigned int element = 0; element < trackScores.size(1); ++element)
-        trkScoreVector.emplace_back(trackAccessor[0][element]);
-    m_trackScores[view] = trkScoreVector;
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
-    auto showerAccessor = showerScores.accessor<float, 2>();
-    std::vector<float> shwScoreVector;
-    for (unsigned int element = 0; element < showerScores.size(1); ++element)
-        shwScoreVector.emplace_back(showerAccessor[0][element]);
-    m_showerScores[view] = shwScoreVector;
+std::vector<float> CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetNuScoresFromView(const pandora::HitType &view) const
+{
+    return m_nuScores.at(view);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetNuClassPredictionFromView(const pandora::HitType &view) const
+{
+    const std::vector<float> &nuScores{m_nuScores.at(view)};
+    return std::distance(nuScores.begin(), std::max_element(nuScores.begin(), nuScores.end()));
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
