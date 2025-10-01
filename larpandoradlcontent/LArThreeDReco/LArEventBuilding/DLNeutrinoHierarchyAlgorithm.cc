@@ -53,7 +53,10 @@ DLNeutrinoHierarchyAlgorithm::DLNeutrinoHierarchyAlgorithm() :
     m_primaryThresholdTrackPass2(0.9f),
     m_primaryThresholdShowerPass2(0.9f),
     m_laterTierThresholdTrackPass2(0.0f),
-    m_laterTierThresholdShowerPass2(0.0f)
+    m_laterTierThresholdShowerPass2(0.0f),
+    m_primaryHierarchyTool(nullptr),
+    m_laterTierHierarchyTool(nullptr),
+    m_cheatHierarchyTool(nullptr)
 {
 }
 

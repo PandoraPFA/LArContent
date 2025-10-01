@@ -21,6 +21,13 @@ namespace lar_content
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+RandomClusteringAlgorithm::RandomClusteringAlgorithm() :
+    m_numNewClusters(0)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode RandomClusteringAlgorithm::Run()
 {
     const CaloHitList *pCaloHits{nullptr};

@@ -23,9 +23,9 @@ class RandomClusteringAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Default constructor
+     *  @brief  Constructor
      */
-    RandomClusteringAlgorithm() = default;
+    RandomClusteringAlgorithm();
 
     /**
     *  @brief  Default destructor
