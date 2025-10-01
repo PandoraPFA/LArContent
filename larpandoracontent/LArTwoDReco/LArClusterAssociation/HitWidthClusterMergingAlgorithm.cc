@@ -292,7 +292,7 @@ void HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHitWidthHelpe
         denominator += hitWeight * pow(rL - weightedLMean, 2);
     }
 
-    const float gradient(numerator / denominator);
+    const float gradient(denominator ? numerator / denominator : 0.f);
 
     // change coordinates to z=mx+c fit and normalise
     this->GetGlobalDirection(axisDirection, gradient, direction);
