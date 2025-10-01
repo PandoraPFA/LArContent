@@ -350,19 +350,19 @@ bool DLNeutrinoHierarchyAlgorithm::GetShowerDirection(const ParticleFlowObject *
         float theta0YZ((mag < std::numeric_limits<float>::epsilon()) ? 0.f
                 : (std::fabs(std::fabs(displacement.GetY() / mag) - 1.f) < std::numeric_limits<float>::epsilon())
                 ? 0.f
-                : std::acos(displacement.GetY() / mag));
+                : std::fabs(std::acos(displacement.GetY() / mag)));
 
         float theta0XZ((magXZ < std::numeric_limits<float>::epsilon()) ? 0.f
                 : (std::fabs(std::fabs(displacement.GetX() / magXZ) - 1.f) < std::numeric_limits<float>::epsilon())
                 ? 0.f
-                : std::acos(displacement.GetX() / magXZ));
+                : std::fabs(std::acos(displacement.GetX() / magXZ)));
 
         // try do signed-ness
         if (displacement.GetZ() < 0.f)
             theta0XZ = (2.0 * M_PI) - theta0XZ;
 
-        const int bin0YZ(std::floor(theta0YZ / binWidth));
-        const int bin0XZ(std::floor(theta0XZ / binWidth));
+        const size_t bin0YZ(std::floor(theta0YZ / binWidth));
+        const size_t bin0XZ(std::floor(theta0XZ / binWidth));
 
         spatialDist[bin0YZ][bin0XZ] += 1;
         tieBreakerDist[bin0YZ][bin0XZ] += (1.f / mag); // tie-breaker
