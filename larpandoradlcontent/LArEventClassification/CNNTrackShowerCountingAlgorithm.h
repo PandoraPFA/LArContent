@@ -29,16 +29,16 @@ class CNNTrackShowerCountingAlgorithm : public pandora::Algorithm
 {
 public:
     typedef std::pair<unsigned int, unsigned int> Pixel; // A Pixel is a row, column pair
-    typedef std::map<Pixel, float> PixelMap; // Sparse representation of the pixel map
+    typedef std::map<Pixel, float> PixelMap;             // Sparse representation of the pixel map
     typedef std::map<Pixel, std::vector<const pandora::CaloHit *>> PixelToCaloHitsMap;
     typedef std::vector<Pixel> PixelVector;
 
     /**
      *  @brief A simple class for storing vertex position information
-     */    
+     */
     class VertexPosition
     {
-        public:
+    public:
         VertexPosition();
         VertexPosition(const pandora::CartesianVector &pos);
         void AddVertexBin(const bool &isDrift, const unsigned int &bin);
@@ -47,7 +47,7 @@ public:
         unsigned int GetDriftBin() const;
         unsigned int GetWireBin() const;
 
-        private:
+    private:
         pandora::CartesianVector m_position;
         unsigned int m_driftBin;
         unsigned int m_wireBin;
@@ -56,12 +56,12 @@ public:
 
     /**
      *  @brief A simple class for storing results from the track and shower counting
-     */    
+     */
     class TrackShowerCountingResults
     {
-        public:
-
-        void AddScoresFromView(const pandora::HitType &view, const torch::Tensor &nuScores, const torch::Tensor &trackScores, const torch::Tensor &showerScores);
+    public:
+        void AddScoresFromView(const pandora::HitType &view, const torch::Tensor &nuScores, const torch::Tensor &trackScores,
+            const torch::Tensor &showerScores);
         std::vector<float> GetNuScoresFromView(const pandora::HitType &view) const;
         unsigned int GetNuClassPredictionFromView(const pandora::HitType &view) const;
         std::vector<float> GetTrackScoresFromView(const pandora::HitType &view) const;
@@ -69,7 +69,7 @@ public:
         std::vector<float> GetShowerScoresFromView(const pandora::HitType &view) const;
         unsigned int GetShowerClassPredictionFromView(const pandora::HitType &view) const;
 
-        private:
+    private:
         std::vector<float> TensorToVector(const torch::Tensor &scores) const;
 
         std::map<pandora::HitType, std::vector<float>> m_nuScores;
@@ -88,25 +88,24 @@ public:
     virtual ~CNNTrackShowerCountingAlgorithm();
 
 private:
-  
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
      *  @brief Create the input files for training the network
-     */ 
+     */
     pandora::StatusCode PrepareTrainingSample();
 
     /**
      *  @brief Perform inference to get the event classification
-     */ 
+     */
     pandora::StatusCode Infer();
 
     /**
      *  @brief Persist the results of the track and shower counting
      *
      *  @param result the result of the CNN inference
-     */ 
+     */
     pandora::StatusCode StorePredictions(const TrackShowerCountingResults &result);
 
     /**
@@ -115,8 +114,9 @@ private:
      *  @param pMCParticleList the pointer to the list of the input MCParticles
      *  @param pCaloHitList the pointer to the input CaloHitList
      *  @param mcToHitsMap to show the CaloHits associated to each MCParticle
-     */ 
-    void GetVisibleParticles(const pandora::MCParticleList *const pMCParticleList, const pandora::MCParticle *const pMCNeutrino, const pandora::CaloHitList *const pCaloHitList, LArMCParticleHelper::MCContributionMap &mcToHitsMap) const;
+     */
+    void GetVisibleParticles(const pandora::MCParticleList *const pMCParticleList, const pandora::MCParticle *const pMCNeutrino,
+        const pandora::CaloHitList *const pCaloHitList, LArMCParticleHelper::MCContributionMap &mcToHitsMap) const;
 
     /**
      *  @brief Create a pixel map from a CaloHitList object
@@ -124,7 +124,7 @@ private:
      *  @param  pCaloHitList the pointer to the input CaloHitList
      *  @param  pixelMap the PixelMap to be filled
      *  @param  vertex the reconstructed vertex position
-     */ 
+     */
     void CreatePixelMap(const pandora::CaloHitList *const pCaloHitList, PixelMap &pixelMap, VertexPosition &vertex) const;
 
     /*
@@ -158,8 +158,8 @@ private:
      *  @param span the span in coordinate values required
      *  @param isDrift whether this is the drift coordinate or not
      **/
-    void GetCrop1D(const pandora::CaloHitList *const pCaloHitList, VertexPosition &vertexPosition,
-        float &min, float &max, const float &span, const bool &isDrift) const;
+    void GetCrop1D(const pandora::CaloHitList *const pCaloHitList, VertexPosition &vertexPosition, float &min, float &max,
+        const float &span, const bool &isDrift) const;
 
     /*
      *  @brief  Get a list of all the primary MC particles
@@ -203,22 +203,23 @@ private:
      **/
     void GetVertexPositions(ViewToVertexPositionMap &vertices) const;
 
-    bool m_trainingMode;                        ///< Training mode
-    std::string m_trainingTreeName;             ///< Tree name for training examples
-    std::string m_trainingFileName;             ///< Output file name for training examples
-    pandora::StringVector m_caloHitListNames;   ///< Names of input calo hit lists
-    LArDLHelper::TorchModel m_model;            ///< The network model
-    unsigned int m_height;                      ///< The height of the images in pixels
-    unsigned int m_width;                       ///< The width of the images in pixels
-    unsigned int m_wiresPerPixel;               ///< The number of wires per pixel
-    float m_driftStep;                          ///< The size of a pixel in the drift direction in cm
-    std::string m_vertexListName;               ///< The vertex list name
-    unsigned int m_goodMCTrackHits;             ///< The number of hits an MC primary track needs to be considered visible per view
-    unsigned int m_goodMCShowerHits;            ///< The number of hits an MC primary shower needs to be considered visible per view
-    float m_mcHitWeightThreshold;               ///< Fraction above which a given MCParticle is considered to have been responsible for a hit
-    float m_secondaryDistanceThreshold;         ///< Distance from the neutrino vertex below which a secondary is considered primary if the primary is not visible
-    unsigned int m_minHits;                     ///< Minimum number of hits to create a training example
-    std::string m_outputPfoListName;            ///< Name of the output PfoList containing the dummy event pfo
+    bool m_trainingMode;                      ///< Training mode
+    std::string m_trainingTreeName;           ///< Tree name for training examples
+    std::string m_trainingFileName;           ///< Output file name for training examples
+    pandora::StringVector m_caloHitListNames; ///< Names of input calo hit lists
+    LArDLHelper::TorchModel m_model;          ///< The network model
+    unsigned int m_height;                    ///< The height of the images in pixels
+    unsigned int m_width;                     ///< The width of the images in pixels
+    unsigned int m_wiresPerPixel;             ///< The number of wires per pixel
+    float m_driftStep;                        ///< The size of a pixel in the drift direction in cm
+    std::string m_vertexListName;             ///< The vertex list name
+    unsigned int m_goodMCTrackHits;           ///< The number of hits an MC primary track needs to be considered visible per view
+    unsigned int m_goodMCShowerHits;          ///< The number of hits an MC primary shower needs to be considered visible per view
+    float m_mcHitWeightThreshold;             ///< Fraction above which a given MCParticle is considered to have been responsible for a hit
+    float m_secondaryDistanceThreshold;       ///< Distance from the neutrino vertex below which a secondary is considered primary if the primary is not visible
+    unsigned int m_minHits;                   ///< Minimum number of hits to create a training example
+    float m_maxChargeThreshold;               ///< Value at which to truncate the charge of each pixel
+    std::string m_outputPfoListName;          ///< Name of the output PfoList containing the dummy event pfo
 };
 
 } // namespace lar_dl_content
