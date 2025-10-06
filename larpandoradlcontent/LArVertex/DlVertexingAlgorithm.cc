@@ -176,8 +176,8 @@ StatusCode DlVertexingAlgorithm::Infer()
     {
         // INFO: Check if there is a zoom in region for the second pass.
         const VertexList *pVertexList(nullptr);
-        PandoraContentApi::GetList(*this, m_inputVertexListName, pVertexList);
-        if (pVertexList == nullptr || pVertexList->empty())
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, m_inputVertexListName, pVertexList) || pVertexList == nullptr ||
+            pVertexList->empty())
         {
             std::cout << "DLVertexing: Input vertex list is empty! Can't perform pass " << m_pass << std::endl;
             return STATUS_CODE_SUCCESS;
