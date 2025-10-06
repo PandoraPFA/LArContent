@@ -242,7 +242,7 @@ void EventClusterValidationAlgorithm::GetHitParents(
                 pMainMC = pMC;
                 maxWeight = weight;
             }
-            if (weight == maxWeight) // tie-breaker (very unlikely)
+            if (weight == maxWeight && pMainMC) // tie-breaker (very unlikely)
             {
                 if (LArMCParticleHelper::SortByMomentum(pMC, pMainMC))
                 {
@@ -455,7 +455,7 @@ void EventClusterValidationAlgorithm::GetClusterMainMC(std::map<const CaloHit *c
                 pClusterMainMC = pMC;
                 maxHits = nHits;
             }
-            else if (nHits == maxHits) // tie-breaker
+            else if (nHits == maxHits && pClusterMainMC) // tie-breaker
             {
                 if (LArMCParticleHelper::SortByMomentum(pMC, pClusterMainMC))
                 {
