@@ -416,14 +416,20 @@ void HitWidthClusterMergingAlgorithm::RemoveShortcutAssociations(const ClusterVe
 
                 if (secondaryForwardAssociations.find(pConsideredCluster) != secondaryForwardAssociations.end())
                 {
-                    ClusterSet &tempPrimaryForwardAssociations(tempMap.find(pCluster)->second.m_forwardAssociations);
+                    const auto tempMapIter{tempMap.find(pCluster)};
+                    if (tempMapIter == tempMap.end())
+                        continue;
+                    ClusterSet &tempPrimaryForwardAssociations(tempMapIter->second.m_forwardAssociations);
                     const ClusterSet::const_iterator forwardAssociationToRemove(tempPrimaryForwardAssociations.find(pConsideredCluster));
 
                     // if association has already been removed
                     if (forwardAssociationToRemove == tempPrimaryForwardAssociations.end())
                         continue;
 
-                    ClusterSet &tempPrimaryBackwardAssociations(tempMap.find(pConsideredCluster)->second.m_backwardAssociations);
+                    const auto tempMapIter2{tempMap.find(pConsideredCluster)};
+                    if (tempMapIter2 == tempMap.end())
+                        continue;
+                    ClusterSet &tempPrimaryBackwardAssociations(tempMapIter2->second.m_backwardAssociations);
                     const ClusterSet::const_iterator backwardAssociationToRemove(tempPrimaryBackwardAssociations.find(pCluster));
 
                     // if association has already been removed
