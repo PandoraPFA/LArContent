@@ -1522,6 +1522,9 @@ const CaloHitList LArHierarchyHelper::MatchInfo::GetSelectedRecoHits(const RecoH
 
 void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
 {
+    const std::streamsize originalPrecision{std::cout.precision()};
+    const std::ios_base::fmtflags originalFormat{std::cout.flags()};
+
     MCParticleList rootMCParticles;
     mcHierarchy.GetRootMCParticles(rootMCParticles);
 
@@ -1632,6 +1635,9 @@ void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
         if (!this->GetUnmatchedReco().empty())
             std::cout << "   Unmatched reco: " << this->GetUnmatchedReco().size() << std::endl;
     }
+
+    std::cout.precision(originalPrecision);
+    std::cout.flags(originalFormat);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
