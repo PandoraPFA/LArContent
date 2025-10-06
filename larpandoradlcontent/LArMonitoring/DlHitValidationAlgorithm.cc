@@ -89,15 +89,18 @@ StatusCode DlHitValidationAlgorithm::Run()
                 const int pdg{std::abs(pMCParticle->GetParticleId())};
                 const int truth{(pdg == 11 || pdg == 22) ? SHOWER_IDX : TRACK_IDX};
                 const LArCaloHit *pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
-                const float pTrack{pLArCaloHit->GetTrackProbability()};
-                const float pShower{pLArCaloHit->GetShowerProbability()};
-                const int cls{(pShower > pTrack) ? SHOWER_IDX : TRACK_IDX};
-                if (view == TPC_VIEW_U)
-                    ++m_confusionU[truth][cls];
-                else if (view == TPC_VIEW_V)
-                    ++m_confusionV[truth][cls];
-                else
-                    ++m_confusionW[truth][cls];
+                if (pLArCaloHit)
+                {
+                    const float pTrack{pLArCaloHit->GetTrackProbability()};
+                    const float pShower{pLArCaloHit->GetShowerProbability()};
+                    const int cls{(pShower > pTrack) ? SHOWER_IDX : TRACK_IDX};
+                    if (view == TPC_VIEW_U)
+                        ++m_confusionU[truth][cls];
+                    else if (view == TPC_VIEW_V)
+                        ++m_confusionV[truth][cls];
+                    else
+                        ++m_confusionW[truth][cls];
+                }
             }
             catch (const StatusCodeException &)
             {
