@@ -93,20 +93,27 @@ EventClusterValidationAlgorithm::EventClusterValidationAlgorithm() :
 
 EventClusterValidationAlgorithm::~EventClusterValidationAlgorithm()
 {
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName, m_fileName, "UPDATE"));
-    if (m_matchedParticleMetrics)
+    try
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName + "_matching", m_fileName, "UPDATE"));
-    }
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName, m_fileName, "UPDATE"));
+        if (m_matchedParticleMetrics)
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName + "_matching", m_fileName, "UPDATE"));
+        }
 
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_meta", "min_mc_hits_per_view", m_minMCHitsPerView));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_meta", "fold_showers", m_foldShowers ? 1 : 0));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_meta", "handle_delta_rays", m_handleDeltaRays ? 1 : 0));
-    PANDORA_MONITORING_API(SetTreeVariable(
-        this->GetPandora(), m_treeName + "_meta", "merge_shower_clusters_for_rand_index", m_mergeShowerClustersForRandIndex ? 1 : 0));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_meta", "maximal_matching", m_maximalMatching ? 1 : 0));
-    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName + "_meta"));
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName + "_meta", m_fileName, "UPDATE"));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_meta", "min_mc_hits_per_view", m_minMCHitsPerView));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_meta", "fold_showers", m_foldShowers ? 1 : 0));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_meta", "handle_delta_rays", m_handleDeltaRays ? 1 : 0));
+        PANDORA_MONITORING_API(SetTreeVariable(
+            this->GetPandora(), m_treeName + "_meta", "merge_shower_clusters_for_rand_index", m_mergeShowerClustersForRandIndex ? 1 : 0));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_meta", "maximal_matching", m_maximalMatching ? 1 : 0));
+        PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName + "_meta"));
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName + "_meta", m_fileName, "UPDATE"));
+    }
+    catch (StatusCodeException e)
+    {
+        std::cout << "EventClusterValidationAlgorithm: Unable to write to ROOT tree" << std::endl;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
