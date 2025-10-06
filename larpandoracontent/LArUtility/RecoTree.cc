@@ -358,7 +358,7 @@ void RecoTree::Node::Populate()
 
         // This can either be proximity or Mahalanobis distance based, depending on the size of the cluster
         float bestMetric{std::numeric_limits<float>::max()};
-        for (const CaloHitList &hitList : {currentLayerHits, nextLayerHits})
+        for (const CaloHitList &hitList : {std::cref(currentLayerHits), std::cref(nextLayerHits)})
         {
             for (const CaloHit *const pCurrentHit : hitList)
             {
