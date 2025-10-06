@@ -40,10 +40,13 @@ bool DlPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster)
         for (const CaloHit *pCaloHit : caloHits)
         {
             const LArCaloHit *pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
-            const float pTrack{pLArCaloHit->GetTrackProbability()};
-            const float pShower{pLArCaloHit->GetShowerProbability()};
-            if ((pTrack + pShower) > std::numeric_limits<float>::epsilon())
-                trackLikelihoods.emplace_back(pTrack / (pTrack + pShower));
+            if (pLArCaloHit)
+            {
+                const float pTrack{pLArCaloHit->GetTrackProbability()};
+                const float pShower{pLArCaloHit->GetShowerProbability()};
+                if ((pTrack + pShower) > std::numeric_limits<float>::epsilon())
+                    trackLikelihoods.emplace_back(pTrack / (pTrack + pShower));
+            }
         }
 
         const unsigned long N{trackLikelihoods.size()};
@@ -82,10 +85,13 @@ bool DlPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowObj
             for (const CaloHit *pCaloHit : caloHits)
             {
                 const LArCaloHit *pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
-                const float pTrack{pLArCaloHit->GetTrackProbability()};
-                const float pShower{pLArCaloHit->GetShowerProbability()};
-                if ((pTrack + pShower) > std::numeric_limits<float>::epsilon())
-                    trackLikelihoods.emplace_back(pTrack / (pTrack + pShower));
+                if (pLArCaloHit)
+                {
+                    const float pTrack{pLArCaloHit->GetTrackProbability()};
+                    const float pShower{pLArCaloHit->GetShowerProbability()};
+                    if ((pTrack + pShower) > std::numeric_limits<float>::epsilon())
+                        trackLikelihoods.emplace_back(pTrack / (pTrack + pShower));
+                }
             }
         }
         catch (const StatusCodeException &)
