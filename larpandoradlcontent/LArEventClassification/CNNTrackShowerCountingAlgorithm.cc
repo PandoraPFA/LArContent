@@ -658,10 +658,10 @@ StatusCode CNNTrackShowerCountingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
 
-
     if (m_height <= 0 || m_width <= 0 || m_wiresPerPixel <= 0.f || m_driftStep <= 0 || m_maxChargeThreshold <= 0.f)
     {
-        std::cerr << "CNNTrackShowerCountingAlgorithm::ReadSettings: ImageHeight, ImageWidth, WiresPerPixel, DriftStep and MaxChargeThreshold must be positive" << std::endl;
+        std::cerr << "CNNTrackShowerCountingAlgorithm::ReadSettings: ImageHeight, ImageWidth, WiresPerPixel, DriftStep and MaxChargeThreshold must be positive"
+                  << std::endl;
         return STATUS_CODE_FAILURE;
     }
     else
@@ -747,7 +747,7 @@ void CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::AddScoresFromV
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-const std::vector<float>& CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetNuScoresFromView(const pandora::HitType &view) const
+const std::vector<float> &CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetNuScoresFromView(const pandora::HitType &view) const
 {
     return m_nuScores.at(view);
 }
@@ -762,7 +762,7 @@ unsigned int CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetNuC
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-const std::vector<float>& CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetTrackScoresFromView(const pandora::HitType &view) const
+const std::vector<float> &CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetTrackScoresFromView(const pandora::HitType &view) const
 {
     return m_trackScores.at(view);
 }
@@ -777,7 +777,7 @@ unsigned int CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetTra
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-const std::vector<float>& CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetShowerScoresFromView(const pandora::HitType &view) const
+const std::vector<float> &CNNTrackShowerCountingAlgorithm::TrackShowerCountingResults::GetShowerScoresFromView(const pandora::HitType &view) const
 {
     return m_showerScores.at(view);
 }
