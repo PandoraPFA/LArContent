@@ -52,7 +52,6 @@ HierarchyValidationAlgorithm::~HierarchyValidationAlgorithm()
         {
             std::cout << "HierarchyValidationAlgorithm: Unable to write to ROOT tree" << std::endl;
         }
-
     }
     if (m_writeMCTree)
     {
