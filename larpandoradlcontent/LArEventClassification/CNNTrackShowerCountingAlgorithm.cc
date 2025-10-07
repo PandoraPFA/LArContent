@@ -460,13 +460,11 @@ void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pC
         this->GetCrop1D(pCaloHitList, vertex, xMin, xMax, xSpan, true);
     else
         vertex.AddVertexBin(true, static_cast<unsigned int>(std::floor((vtxPosX - xMin) / m_driftStep)));
-//        vertex.AddVertexBin(true, static_cast<unsigned int>(std::floor(eps + (vtxPosX - xMin) / m_driftStep)));
 
     if (cropZ)
         this->GetCrop1D(pCaloHitList, vertex, zMin, zMax, zSpan, false);
     else
         vertex.AddVertexBin(false, static_cast<unsigned int>(std::floor((vtxPosZ - zMin) / wireStep)));
-//        vertex.AddVertexBin(false, static_cast<unsigned int>(std::floor(eps + (vtxPosZ - zMin) / wireStep)));
 
     // Now we have the cropped region we can make the pixel map
     for (const CaloHit *const pCaloHit : *pCaloHitList)
@@ -478,8 +476,6 @@ void CNNTrackShowerCountingAlgorithm::CreatePixelMap(const CaloHitList *const pC
         if (wirePos < zMin || wirePos > zMax)
             continue;
 
-//        const unsigned int driftBin{static_cast<unsigned int>(std::floor(eps + (driftPos - xMin) / m_driftStep))};
-//        const unsigned int wireBin{static_cast<unsigned int>(std::floor(eps + (wirePos - zMin) / wireStep))};
         const unsigned int driftBin{static_cast<unsigned int>(std::floor((driftPos - xMin) / m_driftStep))};
         const unsigned int wireBin{static_cast<unsigned int>(std::floor((wirePos - zMin) / wireStep))};
         const Pixel pixel{driftBin, wireBin};
@@ -521,16 +517,11 @@ void CNNTrackShowerCountingAlgorithm::GetCrop1D(const CaloHitList *const pCaloHi
     if (nBins <= imageDimension)
         return;
     std::vector<float> dimensionBins(nBins, 0.f);
-//    constexpr float eps{0.0001f};
     for (const CaloHit *pCaloHit : *pCaloHitList)
     {
         const CartesianVector pos{pCaloHit->GetPositionVector()};
         const float dim{(isDrift ? pos.GetX() : pos.GetZ())};
-//        unsigned int bin{static_cast<unsigned int>(std::floor(eps + (dim - min) / step))};
         const unsigned int bin{static_cast<unsigned int>(std::floor((dim - min) / step))};
-        // Protection for final bin upper edge
-//        if (std::fabs(dim - max) < std::numeric_limits<float>::epsilon())
-//            bin = nBins - 1;
         if (bin >= nBins)
         {
             std::cout << " - Error! Bin " << bin << " outside range 0 to " << nBins - 1 << std::endl;
@@ -541,7 +532,6 @@ void CNNTrackShowerCountingAlgorithm::GetCrop1D(const CaloHitList *const pCaloHi
     }
 
     const float vtxPos{isDrift ? vertexPosition.GetPosition().GetX() : vertexPosition.GetPosition().GetZ()};
-//    const unsigned int vtxBin{static_cast<unsigned int>(std::floor(eps + (vtxPos - min) / step))};
     const unsigned int vtxBin{static_cast<unsigned int>(std::floor((vtxPos - min) / step))};
 
     // Look for the required number of consecutive bins with the highest integrated charge
