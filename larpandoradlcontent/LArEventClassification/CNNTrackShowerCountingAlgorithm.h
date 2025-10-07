@@ -39,18 +39,51 @@ public:
     class VertexPosition
     {
     public:
+        /**
+        *  @brief  Default constructor
+        */
         VertexPosition();
-        VertexPosition(const pandora::CartesianVector &pos);
-        void AddVertexBin(const bool &isDrift, const unsigned int &bin);
 
+        /**
+        *  @brief  Constructor with cartesian vector
+        *
+        *  @param  pos the vertex position
+        */
+        VertexPosition(const pandora::CartesianVector &pos);
+
+        /**
+        *  @brief  Add information about the vertex position in the pixel map
+        *
+        *  @param  isDrift to determine if this is the wire or x coordiate
+        *  @param  bin the image row or column containing the vertex 
+        */
+        void AddVertexBin(const bool isDrift, const unsigned int bin);
+
+        /**
+        *  @brief  Query the vertex position
+        *
+        *  @return the vertex position
+        */
         pandora::CartesianVector GetPosition() const;
+
+        /**
+        *  @brief  Query the vertex position in the drift dimension of the image
+        *
+        *  @return the vertex drift bin
+        */
         unsigned int GetDriftBin() const;
+
+        /**
+        *  @brief  Query the vertex position in the wire dimension of the image
+        *
+        *  @return the vertex wire bin
+        */
         unsigned int GetWireBin() const;
 
     private:
-        pandora::CartesianVector m_position;
-        unsigned int m_driftBin;
-        unsigned int m_wireBin;
+        pandora::CartesianVector m_position;  ///< The vertex position
+        unsigned int m_driftBin;              ///< The vertex position in the drift dimension of the image
+        unsigned int m_wireBin;               ///< The vertex position in the wire dimension of the image
     };
     typedef std::map<pandora::HitType, VertexPosition> ViewToVertexPositionMap;
 
@@ -60,30 +93,74 @@ public:
     class TrackShowerCountingResults
     {
     public:
+        /**
+        *  @brief  Add the predicted scores for each network output
+        *
+        *  @param  view the readout view
+        *  @param  nuScores the scores from the neutrino id output
+        *  @param  trackScores the scores from the track counting output
+        *  @param  showerScores the scores from the shower counting output
+        */
         void AddScoresFromView(const pandora::HitType &view, const torch::Tensor &nuScores, const torch::Tensor &trackScores,
             const torch::Tensor &showerScores);
+
+        /**
+        *  @brief  Get the predicted scores for neutrino id output
+        *
+        *  @return the output scores
+        */
         std::vector<float> GetNuScoresFromView(const pandora::HitType &view) const;
+
+        /**
+        *  @brief  Get the neutrino class with the highest score
+        *
+        *  @return the neutrino class with the highest score
+        */
         unsigned int GetNuClassPredictionFromView(const pandora::HitType &view) const;
+
+        /**
+        *  @brief  Get the predicted scores for track counting output
+        *
+        *  @return the output scores
+        */
         std::vector<float> GetTrackScoresFromView(const pandora::HitType &view) const;
+
+        /**
+        *  @brief  Get the track counting class with the highest score
+        *
+        *  @return the track counting class with the highest score
+        */
         unsigned int GetTrackClassPredictionFromView(const pandora::HitType &view) const;
+
+        /**
+        *  @brief  Get the predicted scores for shower counting output
+        *
+        *  @return the output scores
+        */
         std::vector<float> GetShowerScoresFromView(const pandora::HitType &view) const;
+
+        /**
+        *  @brief  Get the shower counting class with the highest score
+        *
+        *  @return the shower counting class with the highest score
+        */
         unsigned int GetShowerClassPredictionFromView(const pandora::HitType &view) const;
 
     private:
         std::vector<float> TensorToVector(const torch::Tensor &scores) const;
 
-        std::map<pandora::HitType, std::vector<float>> m_nuScores;
-        std::map<pandora::HitType, std::vector<float>> m_trackScores;
-        std::map<pandora::HitType, std::vector<float>> m_showerScores;
+        std::map<pandora::HitType, std::vector<float>> m_nuScores;      ///< Vector of neutrino class scores
+        std::map<pandora::HitType, std::vector<float>> m_trackScores;   ///< Vector of track class scores
+        std::map<pandora::HitType, std::vector<float>> m_showerScores;  ///< Vector of shower class scores
     };
 
     /**
-     *  @brief Default constructor
+     *  @brief  Default constructor
      */
     CNNTrackShowerCountingAlgorithm();
 
     /**
-     *  @brief Default destructor
+     *  @brief  Default destructor
      */
     virtual ~CNNTrackShowerCountingAlgorithm();
 
@@ -92,34 +169,34 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief Create the input files for training the network
+     *  @brief  Create the input files for training the network
      */
     pandora::StatusCode PrepareTrainingSample();
 
     /**
-     *  @brief Perform inference to get the event classification
+     *  @brief  Perform inference to get the event classification
      */
     pandora::StatusCode Infer();
 
     /**
-     *  @brief Persist the results of the track and shower counting
+     *  @brief  Persist the results of the track and shower counting
      *
-     *  @param result the result of the CNN inference
+     *  @param  result the result of the CNN inference
      */
     pandora::StatusCode StorePredictions(const TrackShowerCountingResults &result);
 
     /**
-     *  @brief Find which particles are visible in the final state
+     *  @brief  Find which particles are visible in the final state
      *
-     *  @param pMCParticleList the pointer to the list of the input MCParticles
-     *  @param pCaloHitList the pointer to the input CaloHitList
-     *  @param mcToHitsMap to show the CaloHits associated to each MCParticle
+     *  @param  pMCParticleList the pointer to the list of the input MCParticles
+     *  @param  pCaloHitList the pointer to the input CaloHitList
+     *  @param  mcToHitsMap to show the CaloHits associated to each MCParticle
      */
     void GetVisibleParticles(const pandora::MCParticleList *const pMCParticleList, const pandora::MCParticle *const pMCNeutrino,
         const pandora::CaloHitList *const pCaloHitList, LArMCParticleHelper::MCContributionMap &mcToHitsMap) const;
 
     /**
-     *  @brief Create a pixel map from a CaloHitList object
+     *  @brief  Create a pixel map from a CaloHitList object
      *
      *  @param  pCaloHitList the pointer to the input CaloHitList
      *  @param  pixelMap the PixelMap to be filled
@@ -138,7 +215,7 @@ private:
     pandora::StatusCode MakeNetworkInputFromPixelMap(const PixelMap &pixelMap, LArDLHelper::TorchInput &networkInput) const;
 
     /**
-     *  @brief Calculate the best cropped region around the event
+     *  @brief  Calculate the best cropped region around the event
      *
      *  @param  pCaloHitList the pointer to the input CaloHitList
      *  @param  xMin The minimum x coordinate for the hits
@@ -149,14 +226,14 @@ private:
     void GetHitRegion(const pandora::CaloHitList *const pCaloHitList, float &xMin, float &xMax, float &zMin, float &zMax) const;
 
     /**
-     *  @brief Find the min and max values for x or z that to create an image of the requested size
+     *  @brief  Find the min and max values for x or z that to create an image of the requested size
      *
-     *  @param pCaloHitList the pointer to the input CaloHitList
-     *  @param vertexPosition the position of the reconstructed interaction vertex
-     *  @param min to take the minimum coordinate value after cropping
-     *  @param max to take the maximum coordinate value after cropping
-     *  @param span the span in coordinate values required
-     *  @param isDrift whether this is the drift coordinate or not
+     *  @param  pCaloHitList the pointer to the input CaloHitList
+     *  @param  vertexPosition the position of the reconstructed interaction vertex
+     *  @param  min to take the minimum coordinate value after cropping
+     *  @param  max to take the maximum coordinate value after cropping
+     *  @param  span the span in coordinate values required
+     *  @param  isDrift whether this is the drift coordinate or not
      **/
     void GetCrop1D(const pandora::CaloHitList *const pCaloHitList, VertexPosition &vertexPosition, float &min, float &max,
         const float &span, const bool &isDrift) const;

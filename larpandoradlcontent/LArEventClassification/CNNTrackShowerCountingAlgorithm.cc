@@ -690,7 +690,7 @@ CNNTrackShowerCountingAlgorithm::VertexPosition::VertexPosition(const CartesianV
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void CNNTrackShowerCountingAlgorithm::VertexPosition::AddVertexBin(const bool &isDrift, const unsigned int &bin)
+void CNNTrackShowerCountingAlgorithm::VertexPosition::AddVertexBin(const bool isDrift, const unsigned int bin)
 {
     if (isDrift)
         m_driftBin = bin;
