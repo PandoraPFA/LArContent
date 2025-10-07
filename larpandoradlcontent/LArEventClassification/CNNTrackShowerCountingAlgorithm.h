@@ -81,9 +81,9 @@ public:
         unsigned int GetWireBin() const;
 
     private:
-        pandora::CartesianVector m_position;  ///< The vertex position
-        unsigned int m_driftBin;              ///< The vertex position in the drift dimension of the image
-        unsigned int m_wireBin;               ///< The vertex position in the wire dimension of the image
+        pandora::CartesianVector m_position; ///< The vertex position
+        unsigned int m_driftBin;             ///< The vertex position in the drift dimension of the image
+        unsigned int m_wireBin;              ///< The vertex position in the wire dimension of the image
     };
     typedef std::map<pandora::HitType, VertexPosition> ViewToVertexPositionMap;
 
@@ -109,7 +109,7 @@ public:
         *
         *  @return the output scores
         */
-        const std::vector<float>& GetNuScoresFromView(const pandora::HitType &view) const;
+        const std::vector<float> &GetNuScoresFromView(const pandora::HitType &view) const;
 
         /**
         *  @brief  Get the neutrino class with the highest score
@@ -123,7 +123,7 @@ public:
         *
         *  @return the output scores
         */
-        const std::vector<float>& GetTrackScoresFromView(const pandora::HitType &view) const;
+        const std::vector<float> &GetTrackScoresFromView(const pandora::HitType &view) const;
 
         /**
         *  @brief  Get the track counting class with the highest score
@@ -137,7 +137,7 @@ public:
         *
         *  @return the output scores
         */
-        const std::vector<float>& GetShowerScoresFromView(const pandora::HitType &view) const;
+        const std::vector<float> &GetShowerScoresFromView(const pandora::HitType &view) const;
 
         /**
         *  @brief  Get the shower counting class with the highest score
@@ -149,9 +149,9 @@ public:
     private:
         std::vector<float> TensorToVector(const torch::Tensor &scores) const;
 
-        std::map<pandora::HitType, std::vector<float>> m_nuScores;      ///< Vector of neutrino class scores
-        std::map<pandora::HitType, std::vector<float>> m_trackScores;   ///< Vector of track class scores
-        std::map<pandora::HitType, std::vector<float>> m_showerScores;  ///< Vector of shower class scores
+        std::map<pandora::HitType, std::vector<float>> m_nuScores;     ///< Vector of neutrino class scores
+        std::map<pandora::HitType, std::vector<float>> m_trackScores;  ///< Vector of track class scores
+        std::map<pandora::HitType, std::vector<float>> m_showerScores; ///< Vector of shower class scores
     };
 
     /**
@@ -293,10 +293,10 @@ private:
     unsigned int m_goodMCTrackHits;           ///< The number of hits an MC primary track needs to be considered visible per view
     unsigned int m_goodMCShowerHits;          ///< The number of hits an MC primary shower needs to be considered visible per view
     float m_mcHitWeightThreshold;             ///< Fraction above which a given MCParticle is considered to have been responsible for a hit
-    float m_secondaryDistanceThreshold;       ///< Distance from the neutrino vertex below which a secondary is considered primary if the primary is not visible
-    unsigned int m_minHits;                   ///< Minimum number of hits to create a training example
-    float m_maxChargeThreshold;               ///< Value at which to truncate the charge of each pixel
-    std::string m_outputPfoListName;          ///< Name of the output PfoList containing the dummy event pfo
+    float m_secondaryDistanceThreshold; ///< Distance from the neutrino vertex below which a secondary is considered primary if the primary is not visible
+    unsigned int m_minHits;          ///< Minimum number of hits to create a training example
+    float m_maxChargeThreshold;      ///< Value at which to truncate the charge of each pixel
+    std::string m_outputPfoListName; ///< Name of the output PfoList containing the dummy event pfo
 };
 
 } // namespace lar_dl_content
