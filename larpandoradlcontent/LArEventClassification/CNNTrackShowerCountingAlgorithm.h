@@ -109,7 +109,7 @@ public:
         *
         *  @return the output scores
         */
-        std::vector<float> GetNuScoresFromView(const pandora::HitType &view) const;
+        const std::vector<float>& GetNuScoresFromView(const pandora::HitType &view) const;
 
         /**
         *  @brief  Get the neutrino class with the highest score
@@ -123,7 +123,7 @@ public:
         *
         *  @return the output scores
         */
-        std::vector<float> GetTrackScoresFromView(const pandora::HitType &view) const;
+        const std::vector<float>& GetTrackScoresFromView(const pandora::HitType &view) const;
 
         /**
         *  @brief  Get the track counting class with the highest score
@@ -137,7 +137,7 @@ public:
         *
         *  @return the output scores
         */
-        std::vector<float> GetShowerScoresFromView(const pandora::HitType &view) const;
+        const std::vector<float>& GetShowerScoresFromView(const pandora::HitType &view) const;
 
         /**
         *  @brief  Get the shower counting class with the highest score
