@@ -29,6 +29,9 @@ class LArCaloHitParameters : public object_creation::CaloHit::Parameters
 public:
     pandora::InputUInt m_larTPCVolumeId;   ///< The lar tpc volume id
     pandora::InputUInt m_daughterVolumeId; ///< The daughter volume id
+
+    pandora::InputFloat m_pTrack;          ///< Probability the hit is track-like
+    pandora::InputFloat m_pShower;         ///< Probability the hit is shower-like
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -158,7 +161,9 @@ private:
 inline LArCaloHit::LArCaloHit(const LArCaloHitParameters &parameters) :
     object_creation::CaloHit::Object(parameters),
     m_larTPCVolumeId(parameters.m_larTPCVolumeId.Get()),
-    m_daughterVolumeId(parameters.m_daughterVolumeId.IsInitialized() ? parameters.m_daughterVolumeId.Get() : 0)
+    m_daughterVolumeId(parameters.m_daughterVolumeId.IsInitialized() ? parameters.m_daughterVolumeId.Get() : 0),
+    m_pTrack(parameters.m_pTrack.IsInitialized() ? parameters.m_pTrack.Get() : -1.),
+    m_pShower(parameters.m_pShower.IsInitialized() ? parameters.m_pShower.Get() : -1.)
 {
 }
 
@@ -203,6 +208,8 @@ inline void LArCaloHit::FillParameters(LArCaloHitParameters &parameters) const
     parameters.m_pParentAddress = static_cast<const void *>(this);
     parameters.m_larTPCVolumeId = this->GetLArTPCVolumeId();
     parameters.m_daughterVolumeId = this->GetDaughterVolumeId();
+    parameters.m_pTrack = this->GetTrackProbability();
+    parameters.m_pShower = this->GetShowerProbability();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
