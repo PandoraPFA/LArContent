@@ -259,6 +259,8 @@ float GetSignedX0(const pandora::ParticleFlowObject *const pPfoToShift, const pa
     bool m_useXcoordinate;
     bool m_alwaysApplyT0Calculation;
     bool m_stitchPfosZMatches;
+    float m_maxXYdisplacementPfoZmatching;
+    float m_maxZdistancePfoZmatching;
     int m_halfWindowLayers;
     float m_minLengthSquared;
     float m_minCosRelativeAngle;

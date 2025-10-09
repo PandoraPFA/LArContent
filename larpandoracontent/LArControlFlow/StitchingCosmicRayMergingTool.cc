@@ -31,6 +31,8 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_useXcoordinate(false),
     m_alwaysApplyT0Calculation(true),
     m_stitchPfosZMatches(false),
+    m_maxXYdisplacementPfoZmatching(1.f),
+    m_maxZdistancePfoZmatching(10.f),
     m_halfWindowLayers(30),
     m_minLengthSquared(50.f),
     m_minCosRelativeAngle(0.966),
@@ -71,42 +73,39 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
     PfoAssociationMatrix pfoAssociationMatrixZ;
 
     std::cout << larTPCToPfoMap.size() << "\n";
-    // for (const auto & pair : larTPCToPfoMap)
-    // {
-    //   std::cout << "TPC " << pair.first->GetLArTPCVolumeId() 
-    //             <<" has " <<pair.second.size()
-    //             <<" pfos \n";
-    //   for (const auto &pfo_in_TPC : pair.second)
-    //   {
-    //     std::cout << "pfo : " << pfo_in_TPC << "\n";
-    //
-    //     ThreeDPointingClusterMap::const_iterator iter1 = pointingClusterMap.find(pfo_in_TPC);
-    //     if (iter1 == pointingClusterMap.end() ) continue;
-    //     const LArPointingCluster &pointingCluster(iter1->second);
-    //     const LArPointingCluster::Vertex inner = pointingCluster.GetInnerVertex();
-    //     const LArPointingCluster::Vertex outer = pointingCluster.GetOuterVertex();
-    //     auto pfo_in_TPC_vertex = pfo_in_TPC->GetVertexList().begin();
-    //     if (pfo_in_TPC_vertex == pfo_in_TPC->GetVertexList().end()) continue;
-    //     const pandora::Vertex *vertex = *pfo_in_TPC_vertex;
-    //
-    //     std::cout << "{ \"pfo_id\": " << pfo_in_TPC
-    //       << ", \"tpc_id\": " << pair.first->GetLArTPCVolumeId()
-    //       << ", \"vertex_x\": " << vertex->GetPosition().GetX()
-    //       << ", \"vertex_y\": " << vertex->GetPosition().GetY()  
-    //       << ", \"vertex_z\": " << vertex->GetPosition().GetZ()
-    //       << ", \"inner_x\": " << inner.GetPosition().GetX()
-    //       << ", \"inner_y\": " << inner.GetPosition().GetY()
-    //       << ", \"inner_z\": " << inner.GetPosition().GetZ()
-    //       << ", \"outer_x\": " << outer.GetPosition().GetX()
-    //       << ", \"outer_y\": " << outer.GetPosition().GetY()
-    //       << ", \"outer_z\": " << outer.GetPosition().GetZ()
-    //       << " },\n";
-    //   }
-    // }
+    for (const auto & pair : larTPCToPfoMap)
+    {
+      std::cout << "TPC " << pair.first->GetLArTPCVolumeId() 
+                <<" has " <<pair.second.size()
+                <<" pfos \n";
+      for (const auto &pfo_in_TPC : pair.second)
+      {
+
+        ThreeDPointingClusterMap::const_iterator iter1 = pointingClusterMap.find(pfo_in_TPC);
+        if (iter1 == pointingClusterMap.end() ) continue;
+        const LArPointingCluster &pointingCluster(iter1->second);
+        const LArPointingCluster::Vertex inner = pointingCluster.GetInnerVertex();
+        const LArPointingCluster::Vertex outer = pointingCluster.GetOuterVertex();
+        auto pfo_in_TPC_vertex = pfo_in_TPC->GetVertexList().begin();
+        if (pfo_in_TPC_vertex == pfo_in_TPC->GetVertexList().end()) continue;
+        const pandora::Vertex *vertex = *pfo_in_TPC_vertex;
+
+        std::cout << "{ \"pfo_id\": " << pfo_in_TPC
+          << ", \"tpc_id\": " << pair.first->GetLArTPCVolumeId()
+          << ", \"vertex_x\": " << vertex->GetPosition().GetX()
+          << ", \"vertex_y\": " << vertex->GetPosition().GetY()  
+          << ", \"vertex_z\": " << vertex->GetPosition().GetZ()
+          << ", \"inner_x\": " << inner.GetPosition().GetX()
+          << ", \"inner_y\": " << inner.GetPosition().GetY()
+          << ", \"inner_z\": " << inner.GetPosition().GetZ()
+          << ", \"outer_x\": " << outer.GetPosition().GetX()
+          << ", \"outer_y\": " << outer.GetPosition().GetY()
+          << ", \"outer_z\": " << outer.GetPosition().GetZ()
+          << " },\n";
+      }
+    }
 
     this->CreatePfoMatchesZ(larTPCToPfoMap, pointingClusterMap, pfoAssociationMatrixZ);
-    std::cout << "\n";
-    std::cout << "PfoAssociationMatrix nof entries : " << pfoAssociationMatrixZ.size() << "\n";
    
     PfoAssociationMatrix pfoBestMatchesZ;
     this->SelectBestMatchesZ(pfoAssociationMatrixZ, pfoBestMatchesZ);
@@ -115,6 +114,16 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
     this->GroupPfoAlongZ(pfoAssociationMatrixZ, pfosGroupedAlongZ);
 
     this->SortGroupedPfosZ(pfosGroupedAlongZ, pointingClusterMap);
+    std::cout << "After having selected the Best matches in Z and having them ordered : \n";
+    for (const auto & group: pfosGroupedAlongZ)
+    {
+      std::cout << "\n";
+      std::cout << "new group\n";
+      for (const auto & pfo: group)
+      {
+        std::cout << pfo << "\n";
+      }
+    }
     // Gianfranco ---------------
 
     PfoAssociationMatrix pfoAssociationMatrix;
@@ -309,25 +318,29 @@ void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const PfoList& pfoList1, c
               CaloHitList caloHitList3D2;
               LArPfoHelper::GetCaloHits(pPfo1, TPC_3D, caloHitList3D2);
 
+              if (caloHitList3D2.size() < m_minNCaloHits3D) continue;
+
               const LArPointingCluster::Vertex inner = pointingCluster2.GetInnerVertex();
               const LArPointingCluster::Vertex outer2 = pointingCluster2.GetOuterVertex();
 
               std::cout << "\n";
               std::cout<< "new pair of pfo considered:\n";
               std::cout << pPfo1
-                        <<", inner vertex (x = " << inner1.GetPosition().GetX() 
-                                      << ", y = " << inner1.GetPosition().GetY()
-                                      << ", z = " << inner1.GetPosition().GetZ() 
-                        <<"), outer vertex (x = " << outer.GetPosition().GetX() 
-                                      << ", y = " << outer.GetPosition().GetY()
-                                      << ", z = " << outer.GetPosition().GetZ() <<")\n";    
+                        // <<", inner vertex (x = " << inner1.GetPosition().GetX() 
+                        //               << ", y = " << inner1.GetPosition().GetY()
+                        //               << ", z = " << inner1.GetPosition().GetZ() 
+                        // <<"), outer vertex (x = " << outer.GetPosition().GetX() 
+                        //               << ", y = " << outer.GetPosition().GetY()
+                        //               << ", z = " << outer.GetPosition().GetZ() 
+                                      <<")\n";    
               std::cout << pPfo2
-                        <<", inner vertex (x = " << inner.GetPosition().GetX() 
-                                      << ", y = " << inner.GetPosition().GetY()
-                                      << ", z = " << inner.GetPosition().GetZ() 
-                        <<"), outer vertex (x = " << outer2.GetPosition().GetX() 
-                                      << ", y = " << outer2.GetPosition().GetY()
-                                      << ", z = " << outer2.GetPosition().GetZ() <<")\n";
+                        // <<", inner vertex (x = " << inner.GetPosition().GetX() 
+                        //               << ", y = " << inner.GetPosition().GetY()
+                        //               << ", z = " << inner.GetPosition().GetZ() 
+                        // <<"), outer vertex (x = " << outer2.GetPosition().GetX() 
+                        //               << ", y = " << outer2.GetPosition().GetY()
+                        //               << ", z = " << outer2.GetPosition().GetZ() 
+                                      <<")\n";
 
               // if pointingCluster inner vertex is far from the tpc z boundary
               // we don't need to match it
@@ -339,13 +352,13 @@ void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const PfoList& pfoList1, c
 
              LArStitchingHelper::GetClosestVertices(pointingCluster1, pointingCluster2, pointingVertex1, pointingVertex2);
 
-             std::cout << "closest vertices : pointingVertex1 " << pointingVertex1.GetPosition().GetX()
-                       << ", " << pointingVertex1.GetPosition().GetY()
-                       << ", " << pointingVertex1.GetPosition().GetZ()
-                       << ", pointingVertex2 " << pointingVertex2.GetPosition().GetX()
-                       << ", " << pointingVertex2.GetPosition().GetY()
-                       << ", " << pointingVertex2.GetPosition().GetZ()
-                       << "\n";
+             // std::cout << "closest vertices : pointingVertex1 " << pointingVertex1.GetPosition().GetX()
+             //           << ", " << pointingVertex1.GetPosition().GetY()
+             //           << ", " << pointingVertex1.GetPosition().GetZ()
+             //           << ", pointingVertex2 " << pointingVertex2.GetPosition().GetX()
+             //           << ", " << pointingVertex2.GetPosition().GetY()
+             //           << ", " << pointingVertex2.GetPosition().GetZ()
+             //           << "\n";
 
               if (this->DoVerticesMatchZ(pointingVertex1, pointingVertex2))
               {
@@ -406,6 +419,7 @@ bool StitchingCosmicRayMergingTool::DoVerticesMatchZ(
                                                      const LArPointingCluster::Vertex &pointingVertex2) const
 {
     // Input pointing vertices from adjacent TPCs match across z if:
+    // - they are not more than m_maxZdistancePfoZmatching apart along Z
     // - they are colinear
     // - their projections onto a plane at z (in the middle of the TPC) are consistent
 
@@ -414,16 +428,13 @@ bool StitchingCosmicRayMergingTool::DoVerticesMatchZ(
     const CartesianVector direction1 = pointingVertex1.GetDirection(); 
     const CartesianVector direction2 = pointingVertex2.GetDirection(); 
 
+    // Pointing vertices must not be further than m_maxZdistancePfoZmatching
+    if (fabs(vertex2.GetZ() - vertex1.GetZ()) > m_maxZdistancePfoZmatching) return false;
+
     // Pointing clusters must have a parallel direction
     const float cosRelativeAngle(-direction1.GetDotProduct(direction2));
 
     if (cosRelativeAngle < m_relaxCosRelativeAngle) return false;
-    std::cout << "pass parallel direction\n";
-
-    // const float TPCs_distance = LArStitchingHelper::TPCToTPCDistance(larTPC1, larTPC2);
-    // const float TPCs_z_width = larTPC1.GetWidthZ() + larTPC2.GetWidthZ();
-    // const float TPCs_z_gap = TPCs_distance - 0.5f * TPCs_z_width;
-    // const float z_plane = larTPC1.GetCenterZ() + 0.5f * (larTPC1.GetWidthZ() + TPCs_z_gap);
 
     const CartesianVector diff = {vertex2.GetX() - vertex2.GetX(), vertex2.GetY() - vertex1.GetY(), vertex2.GetZ() - vertex1.GetZ()};
     const CartesianVector middle_point = vertex1 + diff.GetUnitVector() * 0.5f * diff.GetMagnitude();
@@ -437,12 +448,10 @@ bool StitchingCosmicRayMergingTool::DoVerticesMatchZ(
     const float x2 = vertex2.GetX() + t2*direction2.GetX(); 
     const float y2 = vertex2.GetY() + t2*direction2.GetY(); 
     
-    const float relative_displacement = std::sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+    const float relative_XYdisplacement = std::sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
 
-    // TODO: come up with a non-hardcoded number 
-    std::cout << "relative displacement " << relative_displacement << "\n";
-    if(relative_displacement > 1) return false;
-    std::cout << "pass relative displacement\n";
+    // Pointing clusters projected onto XY planes must be not further than m_maxXYdisplacementPfoZmatching 
+    if(relative_XYdisplacement > m_maxXYdisplacementPfoZmatching) return false;
 
     return true;
 } 
@@ -1117,6 +1126,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
            std::cout << "pfo " << pPfoToDelete << " deleted\n";
           }
+          isZgroupStitched[i] = true;
         }
       }
     }
@@ -1147,26 +1157,26 @@ float StitchingCosmicRayMergingTool::GetSignedX0(const ParticleFlowObject *const
     {
         tpcBoundaryX = pShiftLArTPC->GetCenterX() - (0.5f * pShiftLArTPC->GetWidthX());
     }
-    std:: cout << "test\n";
-    std::cout<< LArStitchingHelper::GetTPCBoundaryCenterX(*pShiftLArTPC, *pMatchedLArTPC) << "\n";
-    std::cout<< LArStitchingHelper::GetTPCBoundaryCenterX(*pMatchedLArTPC, *pShiftLArTPC) << "\n";
-    const float test1 = LArStitchingHelper::GetTPCBoundaryCenterX(*pShiftLArTPC, *pMatchedLArTPC); 
-    const float test2 = LArStitchingHelper::GetTPCBoundaryCenterX(*pMatchedLArTPC, *pShiftLArTPC); 
-    std::cout << test1 <<"\n";
-    std::cout << test2 <<"\n";
-    std:: cout << "test\n";
-
+    // std:: cout << "test\n";
+    // std::cout<< LArStitchingHelper::GetTPCBoundaryCenterX(*pShiftLArTPC, *pMatchedLArTPC) << "\n";
+    // std::cout<< LArStitchingHelper::GetTPCBoundaryCenterX(*pMatchedLArTPC, *pShiftLArTPC) << "\n";
+    // const float test1 = LArStitchingHelper::GetTPCBoundaryCenterX(*pShiftLArTPC, *pMatchedLArTPC); 
+    // const float test2 = LArStitchingHelper::GetTPCBoundaryCenterX(*pMatchedLArTPC, *pShiftLArTPC); 
+    // std::cout << test1 <<"\n";
+    // std::cout << test2 <<"\n";
+    // std:: cout << "test\n";
+    //
     const float signX0 = stitchingVertex.GetPosition().GetX() < tpcBoundaryX ? 1.f : -1.f;
-    std::cout << "\n";
-    std::cout << "tpcBoundaryX : " << tpcBoundaryX 
-              << ", TPC with pfo to shift : " << pShiftLArTPC->GetLArTPCVolumeId() << ", with X center : " <<pShiftLArTPC->GetCenterX()
-              << ", other : " << pMatchedLArTPC->GetLArTPCVolumeId() << ", with X center : " <<pMatchedLArTPC->GetCenterX()
-              << ", TPC boundaryX " << tpcBoundaryX
-              << ", tpcBoundaryCenterX " << tpcBoundaryCenterX 
-              << ", vertexX " << stitchingVertex.GetPosition().GetX()
-              << ", signedX0 : "<< signX0
-              <<"\n";
-
+    // std::cout << "\n";
+    // std::cout << "tpcBoundaryX : " << tpcBoundaryX 
+    //           << ", TPC with pfo to shift : " << pShiftLArTPC->GetLArTPCVolumeId() << ", with X center : " <<pShiftLArTPC->GetCenterX()
+    //           << ", other : " << pMatchedLArTPC->GetLArTPCVolumeId() << ", with X center : " <<pMatchedLArTPC->GetCenterX()
+    //           << ", TPC boundaryX " << tpcBoundaryX
+    //           << ", tpcBoundaryCenterX " << tpcBoundaryCenterX 
+    //           << ", vertexX " << stitchingVertex.GetPosition().GetX()
+    //           << ", signedX0 : "<< signX0
+    //           <<"\n";
+    //
     return std::fabs(x0) * signX0; 
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1364,7 +1374,10 @@ PANDORA_RETURN_RESULT_IF_AND_IF(
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosRelativeAngle", m_minCosRelativeAngle));
-
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxXYdisplacementPfoZmatching", m_maxXYdisplacementPfoZmatching));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxZdistancePfoZmatching", m_maxZdistancePfoZmatching));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "RelaxMinLongitudinalDisplacement", m_relaxMinLongitudinalDisplacement));
 
