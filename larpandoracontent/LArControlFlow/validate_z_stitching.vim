@@ -13,13 +13,21 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +496 StitchingCosmicRayMergingTool.cc
+badd +54 StitchingCosmicRayMergingTool.cc
 badd +137 ../LArHelpers/LArStitchingHelper.cc
 badd +263 StitchingCosmicRayMergingTool.h
+badd +577 CosmicRayTaggingTool.cc
 argglobal
 %argdel
 $argadd StitchingCosmicRayMergingTool.cc
-edit StitchingCosmicRayMergingTool.cc
+edit CosmicRayTaggingTool.cc
+wincmd t
+let s:save_winminheight = &winminheight
+let s:save_winminwidth = &winminwidth
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 argglobal
 balt StitchingCosmicRayMergingTool.h
 setlocal foldmethod=manual
@@ -32,12 +40,12 @@ setlocal foldnestmax=20
 setlocal foldenable
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 54 - ((32 * winheight(0) + 17) / 34)
+let s:l = 577 - ((11 * winheight(0) + 14) / 29)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 54
-normal! 046|
+keepjumps 577
+normal! 097|
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
@@ -45,6 +53,8 @@ endif
 unlet! s:wipebuf
 set winheight=1 winwidth=20
 let &shortmess = s:shortmess_save
+let &winminheight = s:save_winminheight
+let &winminwidth = s:save_winminwidth
 let s:sx = expand("<sfile>:p:r")."x.vim"
 if filereadable(s:sx)
   exe "source " . fnameescape(s:sx)

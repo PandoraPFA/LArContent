@@ -263,7 +263,7 @@ void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const LArTPCToPfoMap &larT
           << pLArTPC1->GetLArTPCVolumeId() << ", " <<pLArTPC1->GetLArTPCVolumeId()<<")____________________ \n";
 
         // find pfo z matches within the same tpc 
-        this->CreatePfoMatchesZ(pfoList1, pfoList1, pointingClusterMap, pfoAssociationMatrix);
+        this->CreatePfoMatchesZ(0.f, pfoList1, pfoList1, pointingClusterMap, pfoAssociationMatrix);
 
         std::cout << "\n";
         std::cout << "_____________ considered pairs of tpc (" 
@@ -272,15 +272,16 @@ void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const LArTPCToPfoMap &larT
         if ( fabs(pLArTPC1->GetCenterY() - pLArTPC2->GetCenterY()) > std::numeric_limits<float>::epsilon() ) continue;
         if ( fabs(pLArTPC1->GetCenterX() - pLArTPC2->GetCenterX()) > std::numeric_limits<float>::epsilon() ) continue;
 
-        // find pfo z matches with the clostes TPC along z
-        this->CreatePfoMatchesZ(pfoList1, pfoList2, pointingClusterMap, pfoAssociationMatrix);
+        // find pfo z matches with the clostest TPC along z
+        const float TPCsGap = fabs(pLArTPC1->GetCenterZ() - pLArTPC2->GetCenterZ()) - (0.5f*pLArTPC1->GetWidthZ() + 0.5f*pLArTPC2->GetWidthZ());
+        this->CreatePfoMatchesZ(TPCsGap, pfoList1, pfoList2, pointingClusterMap, pfoAssociationMatrix);
     }
 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const PfoList& pfoList1, const PfoList& pfoList2, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const
+void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const float TPCsGap, const PfoList& pfoList1, const PfoList& pfoList2, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const
 {
 
       for (const ParticleFlowObject *const pPfo1 : pfoList1){
@@ -360,7 +361,7 @@ void StitchingCosmicRayMergingTool::CreatePfoMatchesZ(const PfoList& pfoList1, c
              //           << ", " << pointingVertex2.GetPosition().GetZ()
              //           << "\n";
 
-              if (this->DoVerticesMatchZ(pointingVertex1, pointingVertex2))
+              if (this->DoVerticesMatchZ(TPCsGap, pointingVertex1, pointingVertex2))
               {
                 std::cout << "vertices match \n";
                 // Store this association
@@ -413,8 +414,7 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPCToPfoMap &larTP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool StitchingCosmicRayMergingTool::DoVerticesMatchZ(
-                                                     // const LArTPC &larTPC1, 
-                                                     // const LArTPC &larTPC2, 
+                                                     const float TPCsGap, 
                                                      const LArPointingCluster::Vertex &pointingVertex1,
                                                      const LArPointingCluster::Vertex &pointingVertex2) const
 {
@@ -428,8 +428,9 @@ bool StitchingCosmicRayMergingTool::DoVerticesMatchZ(
     const CartesianVector direction1 = pointingVertex1.GetDirection(); 
     const CartesianVector direction2 = pointingVertex2.GetDirection(); 
 
-    // Pointing vertices must not be further than m_maxZdistancePfoZmatching
-    if (fabs(vertex2.GetZ() - vertex1.GetZ()) > m_maxZdistancePfoZmatching) return false;
+    // Pointing vertices must not be further than m_maxZdistancePfoZmatching (not including the gap between TPCs' boundaries)
+    float maxPfoZdistance = m_maxZdistancePfoZmatching + TPCsGap;
+    if (fabs(vertex2.GetZ() - vertex1.GetZ()) > maxPfoZdistance) return false;
 
     // Pointing clusters must have a parallel direction
     const float cosRelativeAngle(-direction1.GetDotProduct(direction2));

@@ -30,6 +30,7 @@ CosmicRayTaggingTool::CosmicRayTaggingTool() :
     m_inTimeMaxX0(1.f),
     m_marginY(20.f),
     m_marginZ(10.f),
+    m_marginX(20.f),
     m_maxNeutrinoCosTheta(0.2f),
     m_minCosmicCosTheta(0.6f),
     m_maxCosmicCurvature(0.04f),
@@ -105,6 +106,11 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
     m_face_Zu = parentMinZ;
     m_face_Zd = parentMaxZ;
 
+    std::cout << "detector boundaries used to tag comic/rock muons : x [" 
+              << parentMinX <<"," << parentMaxX << "] "
+              << "y [" << parentMinY <<"," << parentMaxY << "] "
+              << "z [" << parentMinZ <<"," << parentMaxZ << "] \n";
+
     PfoToPfoListMap pfoAssociationMap;
     this->GetPfoAssociations(parentCosmicRayPfos, pfoAssociationMap);
 
@@ -123,11 +129,14 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
     PfoToBoolMap pfoToIsTopToBottomMap;
     this->CheckIfTopToBottom(candidates, pfoToIsTopToBottomMap);
 
+    PfoToBoolMap pfoToIsThroughgoingMap;
+    this->CheckIfThroughgoing(candidates, pfoToIsThroughgoingMap);
+
     UIntSet neutrinoSliceSet;
     this->GetNeutrinoSlices(candidates, pfoToInTimeMap, pfoToIsContainedMap, neutrinoSliceSet);
 
     PfoToBoolMap pfoToIsLikelyCRMuonMap;
-    this->TagCRMuons(candidates, pfoToInTimeMap, pfoToIsTopToBottomMap, neutrinoSliceSet, pfoToIsLikelyCRMuonMap);
+    this->TagCRMuons(candidates, pfoToInTimeMap, pfoToIsTopToBottomMap, pfoToIsThroughgoingMap, neutrinoSliceSet, pfoToIsLikelyCRMuonMap);
 
     for (const ParticleFlowObject *const pPfo : parentCosmicRayPfos)
     {
@@ -479,6 +488,46 @@ void CosmicRayTaggingTool::CheckIfTopToBottom(const CRCandidateList &candidates,
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+bool CosmicRayTaggingTool::IsOutsideBox(const float x, const float y, const float z) const 
+{
+  const float BoxXmin = m_face_Xa - m_marginX;
+  const float BoxXmax = m_face_Xc + m_marginX;
+
+  const float BoxYmin = m_face_Yb + m_marginY;
+  const float BoxYmax = m_face_Yt - m_marginY;
+
+  const float BoxZmin = m_face_Zu + m_marginZ;
+  const float BoxZmax = m_face_Zd - m_marginZ;
+
+  bool IsOutRangeX = (x < BoxXmin || x > BoxXmax);
+  bool IsOutRangeY = (y < BoxYmin || y > BoxYmax);
+  bool IsOutRangeZ = (z < BoxZmin || z > BoxZmax);
+
+  return (IsOutRangeZ || IsOutRangeY || IsOutRangeX);
+}
+
+void CosmicRayTaggingTool::CheckIfThroughgoing(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsThroughgoingMap) const
+{
+    for (const CRCandidate &candidate : candidates)
+    {
+      std::cout << "candidate cosmic " << candidate.m_pPfo << "\n";
+      std::cout << "point 1 (" <<  candidate.m_endPoint1.GetX() << "," << candidate.m_endPoint1.GetY() << "," << candidate.m_endPoint1.GetZ() << ")\n";
+      std::cout << "point 2 (" <<  candidate.m_endPoint2.GetX() << "," << candidate.m_endPoint2.GetY() << "," << candidate.m_endPoint2.GetZ() << ")\n";
+      bool isEndPoint1Outside = IsOutsideBox(candidate.m_endPoint1.GetX(), candidate.m_endPoint1.GetY(), candidate.m_endPoint1.GetZ());
+      bool isEndPoint2Outside = IsOutsideBox(candidate.m_endPoint2.GetX(), candidate.m_endPoint2.GetY(), candidate.m_endPoint2.GetZ());
+
+      std::cout << "point 1 is outside ? " <<isEndPoint1Outside << "\n";
+      std::cout << "point 2 is outside ? " <<isEndPoint2Outside << "\n";
+
+      bool isThroughgoing = (isEndPoint1Outside && isEndPoint2Outside);
+      std::cout << "is throughgoing " << isThroughgoing << "\n";
+
+      if (!pfoToIsThroughgoingMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isThroughgoing)).second)
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+    }
+} 
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayTaggingTool::GetNeutrinoSlices(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap,
     const PfoToBoolMap &pfoToIsContainedMap, UIntSet &neutrinoSliceSet) const
@@ -510,17 +559,23 @@ void CosmicRayTaggingTool::GetNeutrinoSlices(const CRCandidateList &candidates, 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap,
-    const PfoToBoolMap &pfoToIsTopToBottomMap, const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap) const
+    const PfoToBoolMap &pfoToIsTopToBottomMap, const PfoToBoolMap &pfoToIsThroughgoingMap,const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap) const
 {
     for (const CRCandidate &candidate : candidates)
     {
-        const bool likelyCRMuon(!neutrinoSliceSet.count(candidate.m_sliceId) &&
+        std::cout << "try tagging candidate " << candidate.m_pPfo << "\n";
+        std::cout << "is top to bottom ? " << pfoToIsTopToBottomMap.at(candidate.m_pPfo) << "\n"; 
+        std::cout << "is throughgoing ? " << pfoToIsThroughgoingMap.at(candidate.m_pPfo) << "\n"; 
+        std::cout << "neutrinoSliceSet.count(candidate.m_sliceId) " << neutrinoSliceSet.count(candidate.m_sliceId)<< "\n"; 
+
+        const bool likelyCRMuon_(!neutrinoSliceSet.count(candidate.m_sliceId) &&
             (!pfoToInTimeMap.at(candidate.m_pPfo) ||
                 (candidate.m_canFit &&
                     (pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
                         ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature))))));
 
-        // const bool likelyCRMuon = likelyCRMuon_old || true;
+        const bool likelyCRMuon = pfoToIsThroughgoingMap.at(candidate.m_pPfo) ? 1 : likelyCRMuon_;
+
         if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
     }
