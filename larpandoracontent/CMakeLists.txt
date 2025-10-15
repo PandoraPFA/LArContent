@@ -8,17 +8,20 @@ cet_make_library(LIBRARY_NAME ${LAR_CONTENT_LIBRARY_NAME}
   SOURCE ${${PROJECT_NAME}_SRCS}
   LIBRARIES
   PUBLIC
-  PandoraPFA::PandoraMonitoring
   PandoraPFA::PandoraSDK
   PRIVATE
   Eigen3::Eigen
 )
 
-# This definition is used in headers, so is propagated downstream with
-# PUBLIC.
-target_compile_definitions(${LAR_CONTENT_LIBRARY_NAME}
-  PUBLIC MONITORING
-)
+if(PANDORA_MONITORING)
+  # Include PandoraMonitoring if required
+  target_link_libraries(${LAR_CONTENT_LIBRARY_NAME} PUBLIC PandoraPFA::PandoraMonitoring)
+  # This definition is used in headers, so is propagated downstream with
+  # PUBLIC.
+  target_compile_definitions(${LAR_CONTENT_LIBRARY_NAME}
+    PUBLIC MONITORING
+  )
+endif()
 
 install_source(SUBDIRS ${subdir_list})
 install_headers(SUBDIRS ${subdir_list})
