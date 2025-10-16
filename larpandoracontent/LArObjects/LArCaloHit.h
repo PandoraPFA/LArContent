@@ -278,6 +278,8 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
     // ATTN: To receive this call-back must have already set file reader mc particle factory to this factory
     unsigned int larTPCVolumeId(std::numeric_limits<unsigned int>::max());
     unsigned int daughterVolumeId(0);
+    float pTrack(-1.);
+    float pShower(-1.);
 
     if (pandora::BINARY == fileReader.GetFileType())
     {
@@ -285,6 +287,11 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(larTPCVolumeId));
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(daughterVolumeId));
+        if (m_version > 2) {
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(pTrack));
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(pShower));  
+        }
+        
     }
     else if (pandora::XML == fileReader.GetFileType())
     {
@@ -292,6 +299,10 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("LArTPCVolumeId", larTPCVolumeId));
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("DaughterVolumeId", daughterVolumeId));
+        if (m_version > 2) {
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("PTrack", pTrack));
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("PShower", pShower));
+        }
     }
     else
     {
@@ -301,6 +312,8 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
     LArCaloHitParameters &larCaloHitParameters(dynamic_cast<LArCaloHitParameters &>(parameters));
     larCaloHitParameters.m_larTPCVolumeId = larTPCVolumeId;
     larCaloHitParameters.m_daughterVolumeId = daughterVolumeId;
+    larCaloHitParameters.m_pTrack = pTrack;
+    larCaloHitParameters.m_pShower = pShower;
 
     return pandora::STATUS_CODE_SUCCESS;
 }
