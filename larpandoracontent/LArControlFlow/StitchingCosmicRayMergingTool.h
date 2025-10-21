@@ -122,7 +122,7 @@ private:
     typedef std::unordered_map<const pandora::ParticleFlowObject *, PfoAssociation> PfoAssociationMap;
     typedef std::unordered_map<const pandora::ParticleFlowObject *, PfoAssociationMap> PfoAssociationMatrix;
 
-    // Gianfranco added functions here
+    // functions to implement pfo Z stitching and rock muon tagging
     void CreatePfoMatchesZ(const LArTPCToPfoMap &larTPCToPfoMap, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const;
 
     void CreatePfoMatchesZ(const float TPCsGap, const pandora::PfoList &pfoList1, const pandora::PfoList &pfoList2, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const;
@@ -131,11 +131,15 @@ private:
     
     void SelectBestMatchesZ(const PfoAssociationMatrix &pfoAssociationMatrix, PfoAssociationMatrix &bestAssociationMatrix) const;
 
+std::pair<const pandora::ParticleFlowObject *, const pandora::ParticleFlowObject *> GetInnerOuterDaughters(const pandora::ParticleFlowObject *pfo, const PfoAssociationMatrix& associationMatrix) const; 
+    
+    void SelectUniqueMatchesZ(const PfoAssociationMatrix &bestAssociationMatrix, PfoAssociationMatrix &uniqueAssociationMatrix) const;
+
     bool GetBestMatch(const PfoAssociationMatrix &bestAssociationMatrix, const pandora::ParticleFlowObject*& current_pfo, PfoAssociation::VertexType vertexType);
 
     void SortGroupedPfosZ(std::vector<pandora::PfoVector>& pfosGroupedAlongZ, const ThreeDPointingClusterMap &pointingClusterMap);
 
-// Gianfranco
+// end function to implement Z stitching and rock muon tagging
 
     /**
      *  @brief  Create associations between Pfos using 3D pointing clusters

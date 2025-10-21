@@ -478,7 +478,9 @@ void CosmicRayTaggingTool::CheckIfTopToBottom(const CRCandidateList &candidates,
 
         if (!pfoToIsTopToBottomMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isTopToBottom)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
-        std::cout << "{\"start_X\" : " << candidate.m_endPoint1.GetX() 
+        std::cout 
+                  << "{\"pfo\" : " << "\"" <<candidate.m_pPfo << "\"" 
+                  << ", \"start_X\" : " << candidate.m_endPoint1.GetX() 
                   << ", \"start_Y\" : " << candidate.m_endPoint1.GetY() 
                   << ", \"start_Z\" : " << candidate.m_endPoint1.GetZ()
                   << ", \"stop_X\"  : " << candidate.m_endPoint2.GetX()
@@ -510,17 +512,18 @@ void CosmicRayTaggingTool::CheckIfThroughgoing(const CRCandidateList &candidates
 {
     for (const CRCandidate &candidate : candidates)
     {
-      std::cout << "candidate cosmic " << candidate.m_pPfo << "\n";
-      std::cout << "point 1 (" <<  candidate.m_endPoint1.GetX() << "," << candidate.m_endPoint1.GetY() << "," << candidate.m_endPoint1.GetZ() << ")\n";
-      std::cout << "point 2 (" <<  candidate.m_endPoint2.GetX() << "," << candidate.m_endPoint2.GetY() << "," << candidate.m_endPoint2.GetZ() << ")\n";
+      // std::cout << "candidate cosmic " << candidate.m_pPfo << "\n";
+      // std::cout << "point 1 (" <<  candidate.m_endPoint1.GetX() << "," << candidate.m_endPoint1.GetY() << "," << candidate.m_endPoint1.GetZ() << ")\n";
+      // std::cout << "point 2 (" <<  candidate.m_endPoint2.GetX() << "," << candidate.m_endPoint2.GetY() << "," << candidate.m_endPoint2.GetZ() << ")\n";
+      //
       bool isEndPoint1Outside = IsOutsideBox(candidate.m_endPoint1.GetX(), candidate.m_endPoint1.GetY(), candidate.m_endPoint1.GetZ());
       bool isEndPoint2Outside = IsOutsideBox(candidate.m_endPoint2.GetX(), candidate.m_endPoint2.GetY(), candidate.m_endPoint2.GetZ());
 
-      std::cout << "point 1 is outside ? " <<isEndPoint1Outside << "\n";
-      std::cout << "point 2 is outside ? " <<isEndPoint2Outside << "\n";
+      // std::cout << "point 1 is outside ? " <<isEndPoint1Outside << "\n";
+      // std::cout << "point 2 is outside ? " <<isEndPoint2Outside << "\n";
 
       bool isThroughgoing = (isEndPoint1Outside && isEndPoint2Outside);
-      std::cout << "is throughgoing " << isThroughgoing << "\n";
+      // std::cout << "is throughgoing " << isThroughgoing << "\n";
 
       if (!pfoToIsThroughgoingMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isThroughgoing)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -563,10 +566,10 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
 {
     for (const CRCandidate &candidate : candidates)
     {
-        std::cout << "try tagging candidate " << candidate.m_pPfo << "\n";
-        std::cout << "is top to bottom ? " << pfoToIsTopToBottomMap.at(candidate.m_pPfo) << "\n"; 
-        std::cout << "is throughgoing ? " << pfoToIsThroughgoingMap.at(candidate.m_pPfo) << "\n"; 
-        std::cout << "neutrinoSliceSet.count(candidate.m_sliceId) " << neutrinoSliceSet.count(candidate.m_sliceId)<< "\n"; 
+        // std::cout << "try tagging candidate " << candidate.m_pPfo << "\n";
+        // std::cout << "is top to bottom ? " << pfoToIsTopToBottomMap.at(candidate.m_pPfo) << "\n"; 
+        // std::cout << "is throughgoing ? " << pfoToIsThroughgoingMap.at(candidate.m_pPfo) << "\n"; 
+        // std::cout << "neutrinoSliceSet.count(candidate.m_sliceId) " << neutrinoSliceSet.count(candidate.m_sliceId)<< "\n"; 
 
         const bool likelyCRMuon_(!neutrinoSliceSet.count(candidate.m_sliceId) &&
             (!pfoToInTimeMap.at(candidate.m_pPfo) ||
@@ -581,7 +584,6 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 CosmicRayTaggingTool::CRCandidate::CRCandidate(const Pandora &pandora, const ParticleFlowObject *const pPfo, const unsigned int sliceId) :
