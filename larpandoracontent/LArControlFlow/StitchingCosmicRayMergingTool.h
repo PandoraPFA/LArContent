@@ -123,20 +123,79 @@ private:
     typedef std::unordered_map<const pandora::ParticleFlowObject *, PfoAssociationMap> PfoAssociationMatrix;
 
     // functions to implement pfo Z stitching and rock muon tagging
+
+    /**
+     *  @brief  Create pfo matches along the Z direction 
+     *
+     *  @param  larTPCToPfoMap the mapping between tpc and Pfos
+     *  @param  pointingClusterMap the mapping between Pfos and their corresponding 3D pointing clusters
+     *  @param  pfoAssociationMatrix the output matrix that contains for each pfo entry the corresponding Z matches
+     */
     void CreatePfoMatchesZ(const LArTPCToPfoMap &larTPCToPfoMap, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const;
 
+    /**
+     *  @brief  Create Z matches between pfos of TPC1 and pfos of TPC2
+     *
+     *  @param  TPCsGap the gap between two TPCs for which the Z matches are being created
+     *  @param  pfoList1 list of pfos in TPC1
+     *  @param  pfoList2 list of pfos in TPC2
+     *  @param  pointingClusterMap the mapping between Pfos and their corresponding 3D pointing clusters
+     *  @param  pfoAssociationMatrix the output matrix that contains for each pfo entry the corresponding Z matches
+     */
     void CreatePfoMatchesZ(const float TPCsGap, const pandora::PfoList &pfoList1, const pandora::PfoList &pfoList2, const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const;
 
+    /**
+     *  @brief  Check if vertices of two pointing clusters in two TPCs match  
+     *
+     *  @param  TPCsGap the gap between two TPCs to be accounted in the vertex matching
+     *  @param  pointingCluster1 the pointing cluster of the first vertex
+     *  @param  pointingCluster2 the pointing cluster of the second vertex
+     */
     bool DoVerticesMatchZ(const float TPCsGap, const LArPointingCluster::Vertex &pointingCluster1, const LArPointingCluster::Vertex &pointingCluster2) const;
     
+    /**
+     *  @brief  Select best inner/outer Z matches for each pfo in pfoAssociationMatrix 
+     *
+     *  @param  pfoAssociationMatrix the input matrix
+     *  @param  bestAssociationMatrix the ouput matrix with selected best Z matches
+     */
     void SelectBestMatchesZ(const PfoAssociationMatrix &pfoAssociationMatrix, PfoAssociationMatrix &bestAssociationMatrix) const;
 
+    /**
+     *  @brief Get the pfo's inner and outer daughter  
+     *
+     *  @param  pfo input pfo
+     *  @param  associationMatrix the input association matrix between pfo and its best inner/outer match
+     *
+     *  @return std::pair<const pfo*, const pfo*> the pair of inner/outer daughter
+     */
 std::pair<const pandora::ParticleFlowObject *, const pandora::ParticleFlowObject *> GetInnerOuterDaughters(const pandora::ParticleFlowObject *pfo, const PfoAssociationMatrix& associationMatrix) const; 
     
+    /**
+     *  @brief  Select only matches that are unique (at most one pfo to at most one pfo) 
+     *
+     *  @param  bestAssociationMatrix input matrix with inner/outer best Z mathes
+     *  @param  uniqueAssociationMatrix output matrix with unique Z matches
+     */
     void SelectUniqueMatchesZ(const PfoAssociationMatrix &bestAssociationMatrix, PfoAssociationMatrix &uniqueAssociationMatrix) const;
 
+    /**
+     *  @brief  Return a pointer to the pfo best INNER/OUTER match 
+     *
+     *  @param  bestAssociationMatrix the input matrix that contains all the INNER and OUTER matches
+     *  @param  current_pfo the reference to a pointer to the best INNER or OUTER vertex
+     *  @param  vertexType INNER or OUTER
+     *
+     *  @return 
+     */
     bool GetBestMatch(const PfoAssociationMatrix &bestAssociationMatrix, const pandora::ParticleFlowObject*& current_pfo, PfoAssociation::VertexType vertexType);
 
+    /**
+     *  @brief  Sort pfos that are matched along Z from the most upstream to the most downstream 
+     *
+     *  @param  pfosGroupedAlongZ  the input vector that contains the pfos grouped by Z matches
+     *  @param  pointingClusterMap the mapping between Pfos and their corresponding 3D pointing clusters
+     */
     void SortGroupedPfosZ(std::vector<pandora::PfoVector>& pfosGroupedAlongZ, const ThreeDPointingClusterMap &pointingClusterMap);
 
 // end function to implement Z stitching and rock muon tagging

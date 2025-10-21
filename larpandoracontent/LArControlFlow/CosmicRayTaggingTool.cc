@@ -22,6 +22,7 @@ namespace lar_content
 
 CosmicRayTaggingTool::CosmicRayTaggingTool() :
     m_cutMode("nominal"),
+    m_tagRockMuons(false),
     m_angularUncertainty(5.f),
     m_positionalUncertainty(3.f),
     m_maxAssociationDist(3.f * 18.f),
@@ -130,7 +131,8 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
     this->CheckIfTopToBottom(candidates, pfoToIsTopToBottomMap);
 
     PfoToBoolMap pfoToIsThroughgoingMap;
-    this->CheckIfThroughgoing(candidates, pfoToIsThroughgoingMap);
+    if(m_tagRockMuons)
+      this->CheckIfThroughgoing(candidates, pfoToIsThroughgoingMap);
 
     UIntSet neutrinoSliceSet;
     this->GetNeutrinoSlices(candidates, pfoToInTimeMap, pfoToIsContainedMap, neutrinoSliceSet);
@@ -141,10 +143,7 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
     for (const ParticleFlowObject *const pPfo : parentCosmicRayPfos)
     {
         if (!pfoToIsLikelyCRMuonMap.at(pPfo))
-        {
             ambiguousPfos.push_back(pPfo);
-            std::cout << "pfo " << pPfo << " is considered ambiguousPfos \n";
-        }
     }
 }
 
@@ -466,7 +465,6 @@ void CosmicRayTaggingTool::CheckIfContained(const CRCandidateList &candidates, P
 
 void CosmicRayTaggingTool::CheckIfTopToBottom(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsTopToBottomMap) const
 {
-    std::cout << "Gianfranco comment " << __FILE__ << ", function : " << __func__ << ", line : " << __LINE__ << "\n";
     for (const CRCandidate &candidate : candidates)
     {
         const float upperY(
@@ -512,18 +510,10 @@ void CosmicRayTaggingTool::CheckIfThroughgoing(const CRCandidateList &candidates
 {
     for (const CRCandidate &candidate : candidates)
     {
-      // std::cout << "candidate cosmic " << candidate.m_pPfo << "\n";
-      // std::cout << "point 1 (" <<  candidate.m_endPoint1.GetX() << "," << candidate.m_endPoint1.GetY() << "," << candidate.m_endPoint1.GetZ() << ")\n";
-      // std::cout << "point 2 (" <<  candidate.m_endPoint2.GetX() << "," << candidate.m_endPoint2.GetY() << "," << candidate.m_endPoint2.GetZ() << ")\n";
-      //
       bool isEndPoint1Outside = IsOutsideBox(candidate.m_endPoint1.GetX(), candidate.m_endPoint1.GetY(), candidate.m_endPoint1.GetZ());
       bool isEndPoint2Outside = IsOutsideBox(candidate.m_endPoint2.GetX(), candidate.m_endPoint2.GetY(), candidate.m_endPoint2.GetZ());
 
-      // std::cout << "point 1 is outside ? " <<isEndPoint1Outside << "\n";
-      // std::cout << "point 2 is outside ? " <<isEndPoint2Outside << "\n";
-
       bool isThroughgoing = (isEndPoint1Outside && isEndPoint2Outside);
-      // std::cout << "is throughgoing " << isThroughgoing << "\n";
 
       if (!pfoToIsThroughgoingMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isThroughgoing)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -566,18 +556,19 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
 {
     for (const CRCandidate &candidate : candidates)
     {
-        // std::cout << "try tagging candidate " << candidate.m_pPfo << "\n";
-        // std::cout << "is top to bottom ? " << pfoToIsTopToBottomMap.at(candidate.m_pPfo) << "\n"; 
-        // std::cout << "is throughgoing ? " << pfoToIsThroughgoingMap.at(candidate.m_pPfo) << "\n"; 
-        // std::cout << "neutrinoSliceSet.count(candidate.m_sliceId) " << neutrinoSliceSet.count(candidate.m_sliceId)<< "\n"; 
-
         const bool likelyCRMuon_(!neutrinoSliceSet.count(candidate.m_sliceId) &&
             (!pfoToInTimeMap.at(candidate.m_pPfo) ||
                 (candidate.m_canFit &&
                     (pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
                         ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature))))));
 
-        const bool likelyCRMuon = pfoToIsThroughgoingMap.at(candidate.m_pPfo) ? 1 : likelyCRMuon_;
+        if(m_tagRockMuons)
+        {
+          const bool likelyCRMuon = pfoToIsThroughgoingMap.at(candidate.m_pPfo) ? 1 : likelyCRMuon_;
+        }else
+        {
+          const bool likelyCRMuon = likelyCRMuon_;
+        }
 
         if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -650,6 +641,8 @@ StatusCode CosmicRayTaggingTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CutMode", m_cutMode));
     std::transform(m_cutMode.begin(), m_cutMode.end(), m_cutMode.begin(), ::tolower);
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TagRockMuons", m_tagRockMuons));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "AngularUncertainty", m_angularUncertainty));

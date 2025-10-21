@@ -369,7 +369,6 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 
 StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos) const
 {
-    std::cout << "Gianfranco comment, file " << __FILE__<<", function "<<__func__<<", line " << __LINE__<<"\n";
     const PfoList *pRecreatedCRPfos(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
 

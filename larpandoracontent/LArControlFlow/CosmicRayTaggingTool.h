@@ -211,6 +211,7 @@ private:
      *          "aggressive" = remove CR muons and allow more neutrinos to be tagged
      */
     std::string m_cutMode;
+    bool m_tagRockMuons; ///< bool to activate tagging of rock muons
 
     float m_angularUncertainty;    ///< The uncertainty in degrees for the angle of a Pfo
     float m_positionalUncertainty; ///< The uncertainty in cm for the position of Pfo endpoint in 3D
