@@ -30,8 +30,8 @@ public:
     pandora::InputUInt m_larTPCVolumeId;   ///< The lar tpc volume id
     pandora::InputUInt m_daughterVolumeId; ///< The daughter volume id
 
-    std::vector<float> m_hitScores;             ///< Hit scores
-    std::vector<std::string> m_hitScoreLabels;  ///< Labels for the hit scores
+    pandora::FloatVector m_hitScores;        ///< Hit scores
+    pandora::StringVector m_hitScoreLabels;  ///< Labels for the hit scores
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -75,14 +75,14 @@ public:
      *
      *  @return a vector of scores for each category
      */
-    std::vector<float> GetHitScores() const;
+    const pandora::FloatVector & GetHitScores() const;
 
     /**
      *  @brief  Get scores for each hit
      *
-     *  @return a vector of scores for each category
+     *  @return a vector of score labels for each category
      */
-    std::vector<std::string> GetHitScoreLabels() const;
+    const pandora::StringVector & GetHitScoreLabels() const;
 
     /**
      *  @brief  Get the probability that the hit is track-like
@@ -115,8 +115,8 @@ public:
 private:
     unsigned int m_larTPCVolumeId;              ///< The lar tpc volume id
     unsigned int m_daughterVolumeId;            ///< The daughter volume id
-    std::vector<float> m_hitScores;             ///< Hit scores
-    std::vector<std::string> m_hitScoreLabels;  ///< Labels for the hit scores    
+    pandora::FloatVector m_hitScores;           ///< Hit scores
+    pandora::StringVector m_hitScoreLabels;     ///< Labels for the hit scores    
     pandora::InputFloat m_pTrack;               ///< The probability that the hit is track-like
     pandora::InputFloat m_pShower;              ///< The probability that the hit is shower-like
 };
@@ -199,14 +199,14 @@ inline unsigned int LArCaloHit::GetDaughterVolumeId() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::vector<float> LArCaloHit::GetHitScores() const
+inline const pandora::FloatVector & LArCaloHit::GetHitScores() const
 {
     return m_hitScores;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::vector<std::string> LArCaloHit::GetHitScoreLabels() const
+inline const pandora::StringVector & LArCaloHit::GetHitScoreLabels() const
 {
     return m_hitScoreLabels;
 }
@@ -309,8 +309,8 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
     unsigned int larTPCVolumeId(std::numeric_limits<unsigned int>::max());
     unsigned int daughterVolumeId(0);
     unsigned int nLabels(0);
-    std::vector<float> hitScores;
-    std::vector<std::string> hitScoreLabels;
+    pandora::FloatVector hitScores;
+    pandora::StringVector hitScoreLabels;
 
     if (pandora::BINARY == fileReader.GetFileType())
     {
@@ -319,11 +319,16 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(daughterVolumeId));
         if (m_version > 2) {
-            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(hitScores));
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nLabels));
-            hitScoreLabels.resize(nLabels);
-            for (unsigned int i = 0; i < nLabels; ++i)
-                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(hitScoreLabels[i]));
+            for (unsigned int i = 0; i < nLabels; ++i) {
+                float score;
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(score));
+                hitScores.emplace_back(std::move(score));
+
+                std::string label;
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(label));
+                hitScoreLabels.emplace_back(std::move(label));
+            }
         }        
     }
     else if (pandora::XML == fileReader.GetFileType())
@@ -333,10 +338,13 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("DaughterVolumeId", daughterVolumeId));
         if (m_version > 2) {
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NHitLabels", nLabels));
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("HitScores", hitScores));
-            hitScoreLabels.resize(nLabels);
-            for (unsigned int i = 0; i < nLabels; ++i)
-                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("HitScoreLabels", hitScoreLabels[i]));
+            for (unsigned int i = 0; i < nLabels; ++i) {
+                std::string label;
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("HitScoreLabels", label));
+                hitScoreLabels.emplace_back(std::move(label));
+            }
         }
     }
     else
@@ -369,6 +377,18 @@ inline pandora::StatusCode LArCaloHitFactory::Write(const Object *const pObject,
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetLArTPCVolumeId()));
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetDaughterVolumeId()));
+        if (m_version > 2)
+        {
+            const pandora::FloatVector &hitScores(pLArCaloHit->GetHitScores());
+            const pandora::StringVector &hitScoreLabels(pLArCaloHit->GetHitScoreLabels());
+            const unsigned int nLabels(hitScores.size());
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(nLabels));
+            for (unsigned int i = 0; i < nLabels; ++i)
+            {
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(hitScores.at(i)));
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(hitScoreLabels.at(i)));
+            }
+        }
     }
     else if (pandora::XML == fileWriter.GetFileType())
     {
@@ -377,6 +397,18 @@ inline pandora::StatusCode LArCaloHitFactory::Write(const Object *const pObject,
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(
                 pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("DaughterVolumeId", pLArCaloHit->GetDaughterVolumeId()));
+        if (m_version > 2)
+        {
+            const pandora::FloatVector &hitScores(pLArCaloHit->GetHitScores());
+            const pandora::StringVector &hitScoreLabels(pLArCaloHit->GetHitScoreLabels());
+            const unsigned int nLabels(hitScores.size());
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("NHitLabels", nLabels));
+            for (unsigned int i = 0; i < nLabels; ++i)
+            {
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("HitScores", hitScores.at(i)));
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("HitScoreLabels", hitScoreLabels.at(i)));
+            }
+        }
     }
     else
     {
