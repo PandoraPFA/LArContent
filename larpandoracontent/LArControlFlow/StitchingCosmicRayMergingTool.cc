@@ -68,54 +68,23 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
     LArTPCToPfoMap larTPCToPfoMap;
     this->BuildTPCMaps(primaryPfos, pfoToLArTPCMap, larTPCToPfoMap);
 
-    // std::cout << larTPCToPfoMap.size() << "\n";
-    // for (const auto & pair : larTPCToPfoMap)
-    // {
-    //   std::cout << "TPC " << pair.first->GetLArTPCVolumeId() 
-    //             <<" has " <<pair.second.size()
-    //             <<" pfos \n";
-    //   for (const auto &pfo_in_TPC : pair.second)
-    //   {
-    //
-    //     ThreeDPointingClusterMap::const_iterator iter1 = pointingClusterMap.find(pfo_in_TPC);
-    //     if (iter1 == pointingClusterMap.end() ) continue;
-    //     const LArPointingCluster &pointingCluster(iter1->second);
-    //     const LArPointingCluster::Vertex inner = pointingCluster.GetInnerVertex();
-    //     const LArPointingCluster::Vertex outer = pointingCluster.GetOuterVertex();
-    //     auto pfo_in_TPC_vertex = pfo_in_TPC->GetVertexList().begin();
-    //     if (pfo_in_TPC_vertex == pfo_in_TPC->GetVertexList().end()) continue;
-    //     const pandora::Vertex *vertex = *pfo_in_TPC_vertex;
-    //
-    //     std::cout << "{ \"pfo_id\": " << pfo_in_TPC
-    //       << ", \"tpc_id\": " << pair.first->GetLArTPCVolumeId()
-    //       << ", \"vertex_x\": " << vertex->GetPosition().GetX()
-    //       << ", \"vertex_y\": " << vertex->GetPosition().GetY()  
-    //       << ", \"vertex_z\": " << vertex->GetPosition().GetZ()
-    //       << ", \"inner_x\": " << inner.GetPosition().GetX()
-    //       << ", \"inner_y\": " << inner.GetPosition().GetY()
-    //       << ", \"inner_z\": " << inner.GetPosition().GetZ()
-    //       << ", \"outer_x\": " << outer.GetPosition().GetX()
-    //       << ", \"outer_y\": " << outer.GetPosition().GetY()
-    //       << ", \"outer_z\": " << outer.GetPosition().GetZ()
-    //       << " },\n";
-    //   }
-    // }
-
-    // Functions to enable Z stitching
-    PfoAssociationMatrix pfoAssociationMatrixZ;
-    this->CreatePfoMatchesZ(larTPCToPfoMap, pointingClusterMap, pfoAssociationMatrixZ);
-   
-    PfoAssociationMatrix pfoBestMatchesZ;
-    this->SelectBestMatchesZ(pfoAssociationMatrixZ, pfoBestMatchesZ);
-
-    PfoAssociationMatrix pfoUniqueMatchesZ;
-    this->SelectUniqueMatchesZ(pfoBestMatchesZ, pfoUniqueMatchesZ);
-
+    // group pfos that match along Z direction across detector boundaries for Z stitching (applied inside StitchPfo)
     std::vector<PfoVector> pfosGroupedAlongZ;
-    this->GroupPfoAlongZ(pfoUniqueMatchesZ, pfosGroupedAlongZ);
+    if(m_stitchPfosZMatches)
+    {
+      PfoAssociationMatrix pfoAssociationMatrixZ;
+      this->CreatePfoMatchesZ(larTPCToPfoMap, pointingClusterMap, pfoAssociationMatrixZ);
 
-    this->SortGroupedPfosZ(pfosGroupedAlongZ, pointingClusterMap);
-    // end functions to enable Z stitching
+      PfoAssociationMatrix pfoBestMatchesZ;
+      this->SelectBestMatchesZ(pfoAssociationMatrixZ, pfoBestMatchesZ);
+
+      PfoAssociationMatrix pfoUniqueMatchesZ;
+      this->SelectUniqueMatchesZ(pfoBestMatchesZ, pfoUniqueMatchesZ);
+
+      this->GroupPfoAlongZ(pfoUniqueMatchesZ, pfosGroupedAlongZ);
+
+      this->SortGroupedPfosZ(pfosGroupedAlongZ, pointingClusterMap);
+    }
 
     PfoAssociationMatrix pfoAssociationMatrix;
     this->CreatePfoMatches(larTPCToPfoMap, pointingClusterMap, pfoAssociationMatrix);
@@ -1141,8 +1110,6 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
     }
 
     // stitch across z remaining pfos
-    std::cout << "\n";
-    std::cout << "stitch remaining groups of pfos along z if any\n";
     if (m_stitchPfosZMatches)
     {
       for (size_t i = 0; i < pfosGroupedAlongZ.size(); ++i )

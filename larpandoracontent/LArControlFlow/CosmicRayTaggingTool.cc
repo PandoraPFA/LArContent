@@ -556,22 +556,23 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
 {
     for (const CRCandidate &candidate : candidates)
     {
-        const bool likelyCRMuon_(!neutrinoSliceSet.count(candidate.m_sliceId) &&
+        const bool likelyCRMuon(!neutrinoSliceSet.count(candidate.m_sliceId) &&
             (!pfoToInTimeMap.at(candidate.m_pPfo) ||
                 (candidate.m_canFit &&
                     (pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
                         ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature))))));
-
-        if(m_tagRockMuons)
+        
+        if(m_tagRockMuons && (pfoToIsThroughgoingMap.at(candidate.m_pPfo)))
         {
-          const bool likelyCRMuon = pfoToIsThroughgoingMap.at(candidate.m_pPfo) ? 1 : likelyCRMuon_;
+          const bool likelyRockMuon = true;
+          if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyRockMuon)).second)
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }else
         {
-          const bool likelyCRMuon = likelyCRMuon_;
+          if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
 
-        if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
-            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
     }
 }
 
