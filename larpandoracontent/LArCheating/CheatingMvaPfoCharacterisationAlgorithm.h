@@ -44,6 +44,7 @@ protected:
 
     bool m_persistFeatures;             ///< Whether to write the features to the properties map
     bool m_useCaloHitsMatching;         ///< Wheter to use calorimetric hits for the truth matching (Andy C. suggestion)  
+    float m_criticalEnergy;
 
     std::string m_caloHitListName;    ///< Name of input calo hit list
     std::string m_mcParticleListName; ///< Name of input MC particle list

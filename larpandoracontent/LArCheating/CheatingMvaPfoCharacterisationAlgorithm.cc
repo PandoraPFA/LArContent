@@ -22,7 +22,8 @@ namespace lar_content
 
 CheatingMvaPfoCharacterisationAlgorithm::CheatingMvaPfoCharacterisationAlgorithm() :
     m_persistFeatures(false),
-    m_useCaloHitsMatching(false)
+    m_useCaloHitsMatching(false),
+    m_criticalEnergy(0.0305) // LAr Critical energy, standard value from https://lar.bnl.gov/properties/ (GeV)
 {
 }
 
@@ -45,7 +46,7 @@ bool CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack(const pandora::Partic
         
         return (pPfo->GetParticleId() == MU_MINUS);
     }
-
+ 
     // Charge related features are only calculated using hits in W view
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
@@ -77,14 +78,18 @@ bool CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack(const pandora::Partic
     {
         // This define the truth trackScore value for the Pfo: 1 tracks, 0 showers
         const MCParticle *const pMCParticle(LArMCParticleHelper::GetMainMCParticle(pPfo));
-        isTrueTrack = ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())));
+        isTrueTrack = (
+            (PHOTON != pMCParticle->GetParticleId()) && (
+                E_MINUS != std::abs(pMCParticle->GetParticleId()) || pMCParticle->GetEnergy() <= m_criticalEnergy
+            )
+        );
         isMainMCParticleSet = (pMCParticle->GetParticleId() != 0);
 
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
             std::cout << "CheatingMvaPfoCharacterisationAlgorithm: "
                       << "The MC particle found is with PID = " << pMCParticle->GetParticleId() 
                       << ", assigned TrackScore == " << static_cast<int>(isTrueTrack) << " ("
-                      << (isTrueTrack ? "track" : "shower") << ")" << std::endl;
+                      << (isTrueTrack ? "track" : "shower") << "), has Energy == " << pMCParticle->GetEnergy() << " GeV " << std::endl;
 
     }
     catch (const StatusCodeException &)
@@ -99,7 +104,10 @@ bool CheatingMvaPfoCharacterisationAlgorithm::IsClearTrack(const pandora::Partic
     
     const MCParticle *const pMCParticleFromHits(MCParticleHelper::GetMainMCParticle(&pHitListAll));
     isTrueTrackFromHits = (
-        (PHOTON != pMCParticleFromHits->GetParticleId()) && (E_MINUS != std::abs(pMCParticleFromHits->GetParticleId())));
+        (PHOTON != pMCParticleFromHits->GetParticleId()) && (
+            E_MINUS != std::abs(pMCParticleFromHits->GetParticleId()) || pMCParticleFromHits->GetEnergy() <= m_criticalEnergy
+        )
+    );
     
     if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         std::cout << "CheatingMvaPfoCharacterisationAlgorithm: using calo hits matching: "
@@ -181,6 +189,8 @@ StatusCode CheatingMvaPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHand
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PersistFeatures", m_persistFeatures));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
         XmlHelper::ReadValue(xmlHandle, "UseCaloHitsMatching", m_useCaloHitsMatching));
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CriticalEnergy", m_criticalEnergy));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
