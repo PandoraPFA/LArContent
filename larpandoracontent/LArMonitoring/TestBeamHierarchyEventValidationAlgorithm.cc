@@ -286,8 +286,9 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(
             // Tier (0) : Primary, (1) : Daughter, (2) : Granddaughter etc...  Note that the tier only increases for visible particle
             const int pfoHierarchyTier(LArPfoHelper::GetHierarchyTier(pfoToSharedHits.first));
             const int pfoId(pfoToIdMap.at(pfoToSharedHits.first));
-            const int recoTBId(
-                isRecoTestBeam || isRecoTestBeamHierarchy ? testBeamPfoToIdMap.at(LArPfoHelper::GetParentPfo(pfoToSharedHits.first)) : -1);
+            const int recoTBId(isRecoTestBeam || isRecoTestBeamHierarchy
+                    ? static_cast<int>(testBeamPfoToIdMap.at(LArPfoHelper::GetParentPfo(pfoToSharedHits.first)))
+                    : -1);
 
             if (0 == matchIndex++)
             {

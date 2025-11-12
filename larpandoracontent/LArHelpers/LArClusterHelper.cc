@@ -647,6 +647,49 @@ void LArClusterHelper::GetDaughterVolumeIDs(const Cluster *const pCluster, UIntS
         }
     }
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArClusterHelper::HasBlockedPath(const CaloHitVector &caloHits, const CaloHit *const pCaloHit1, const CaloHit *const pCaloHit2)
+{
+    // For each hit in the calo hit list, check if the line between the two hits passes through the hit
+    const CartesianVector &pos1{pCaloHit1->GetPositionVector()};
+    const CartesianVector &pos2{pCaloHit2->GetPositionVector()};
+    for (const CaloHit *const pCaloHit : caloHits)
+    {
+        if (pCaloHit == pCaloHit1 || pCaloHit == pCaloHit2)
+            continue;
+
+        const CartesianVector &hitPosition{pCaloHit->GetPositionVector()};
+        const double xmin{hitPosition.GetX() - 0.5 * pCaloHit->GetCellSize1()}, xmax{hitPosition.GetX() + 0.5 * pCaloHit->GetCellSize1()};
+        const double zmin{hitPosition.GetZ() - 0.5 * pCaloHit->GetCellSize0()}, zmax{hitPosition.GetZ() + 0.5 * pCaloHit->GetCellSize0()};
+
+        double entry{0.}, exit{1.};
+
+        auto check_axis = [&](double p1, double p2, double minB, double maxB)
+        {
+            double t1{(minB - p1) / (p2 - p1)};
+            double t2{(maxB - p1) / (p2 - p1)};
+
+            if (t1 > t2)
+                std::swap(t1, t2);
+
+            entry = std::max(entry, t1);
+            exit = std::min(exit, t2);
+
+            return entry <= exit;
+        };
+
+        if (check_axis(pos1.GetX(), pos2.GetX(), xmin, xmax) && check_axis(pos1.GetZ(), pos2.GetZ(), zmin, zmax))
+        {
+            // We have an intervening hit
+            return true;
+        }
+    }
+
+    return false;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArClusterHelper::SortByNOccupiedLayers(const Cluster *const pLhs, const Cluster *const pRhs)
@@ -779,15 +822,17 @@ bool LArClusterHelper::SortHitsByPulseHeight(const CaloHit *const pLhs, const Ca
 
 bool LArClusterHelper::SortCoordinatesByPosition(const CartesianVector &lhs, const CartesianVector &rhs)
 {
-    const CartesianVector deltaPosition(rhs - lhs);
+    constexpr float epsilon(std::numeric_limits<float>::epsilon());
 
-    if (std::fabs(deltaPosition.GetZ()) > std::numeric_limits<float>::epsilon())
-        return (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon());
+    const float deltaZ(rhs.GetZ() - lhs.GetZ());
+    if (std::fabs(deltaZ) > epsilon)
+        return (deltaZ > epsilon);
 
-    if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
-        return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
+    const float deltaX(rhs.GetX() - lhs.GetX());
+    if (std::fabs(deltaX) > epsilon)
+        return (deltaX > epsilon);
 
-    return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
+    return (rhs.GetY() - lhs.GetY() > epsilon);
 }
 
 } // namespace lar_content

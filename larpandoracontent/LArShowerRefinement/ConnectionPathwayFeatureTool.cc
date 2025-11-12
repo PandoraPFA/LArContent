@@ -817,7 +817,7 @@ void ShowerRegionFeatureTool::CalculateViewShowerStartConsistencyVariables(const
         const float hitEnergy(std::fabs(pCaloHit->GetElectromagneticEnergy()));
         showerStartRunningEnergySum += hitEnergy;
 
-        if ((showerStartRunningEnergySum / totalEnergy) > m_moliereFraction)
+        if ((totalEnergy > 0.f) && ((showerStartRunningEnergySum / totalEnergy) > m_moliereFraction))
         {
             const CartesianVector position(pCaloHit->GetPositionVector() - fitShowerStart);
             showerStartMoliereRadius = directionAxis.GetCrossProduct(position).GetMagnitude();

@@ -50,8 +50,8 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         // INFO: See if there is already a vertex, and quit early if there is.
         //       The vertex has likely already been defined by another algorithm.
         const VertexList *pVertexList(nullptr);
-        PandoraContentApi::GetCurrentList(*this, pVertexList);
-        if (pVertexList != nullptr && !pVertexList->empty())
+        const StatusCode status{PandoraContentApi::GetCurrentList(*this, pVertexList)};
+        if (status == STATUS_CODE_SUCCESS && pVertexList != nullptr && !pVertexList->empty())
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "CandidateVertexCreationAlgorithm: Vertex already defined, skipping" << std::endl;
@@ -400,8 +400,7 @@ void CandidateVertexCreationAlgorithm::AddInputVertices() const
     const VertexList *pInputVertexList{nullptr};
     try
     { // ATTN - No guarantee the list has been initialised, but silent failure here is ok
-        PandoraContentApi::GetList(*this, m_inputVertexListName, pInputVertexList);
-        if (!pInputVertexList)
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, m_inputVertexListName, pInputVertexList) || !pInputVertexList)
             return;
 
         for (const Vertex *pInputVertex : *pInputVertexList)

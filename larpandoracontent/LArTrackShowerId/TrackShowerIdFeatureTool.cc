@@ -569,6 +569,11 @@ StatusCode ConeChargeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConMinHits", m_conMinHits));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCharge", m_minCharge));
+    if (m_minCharge <= 0.f)
+    {
+        std::cout << "Error: ConeChargeFeatureTool: Minimum charge not strictly positive" << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConFracRange", m_conFracRange));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MoliereRadius", m_MoliereRadius));
     PANDORA_RETURN_RESULT_IF_AND_IF(
@@ -993,9 +998,9 @@ float ConeChargeFeatureTool_ICARUS::CalculateConicalness(
     }
 
     float conicalness(1.f);
-
+    const bool divByZero{!(chargeConStart > 0 && totalChargeStart > 0)};
     if (nHitsConStart >= m_conMinHits && nHitsConEnd >= m_conMinHits && totalChargeEnd > m_minCharge &&
-        std::sqrt(chargeConStart) > m_minCharge && totalChargeStart > m_minCharge)
+        std::sqrt(chargeConStart) > m_minCharge && totalChargeStart > m_minCharge && !divByZero)
         conicalness = (std::sqrt(chargeConEnd / chargeConStart)) / (totalChargeEnd / totalChargeStart);
 
     return conicalness;
@@ -1009,6 +1014,11 @@ StatusCode ConeChargeFeatureTool_ICARUS::ReadSettings(const TiXmlHandle xmlHandl
         XmlHelper::ReadValue(xmlHandle, "UseICARUSCollectionPlane", m_useICARUSCollectionPlane));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConMinHits", m_conMinHits));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCharge", m_minCharge));
+    if (m_minCharge <= 0.f)
+    {
+        std::cout << "Error: ConeChargeFeatureTool: Minimum charge not strictly positive" << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConFracRange", m_conFracRange));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MoliereRadius", m_MoliereRadius));
     PANDORA_RETURN_RESULT_IF_AND_IF(

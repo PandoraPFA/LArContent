@@ -44,13 +44,15 @@ StatusCode StreamingAlgorithm::Run()
         std::string algStreamName{"Algorithms" + listName};
         const ClusterList *pClusterList{nullptr};
         // Set the input list as current
-        PandoraContentApi::ReplaceCurrentList<Cluster>(*this, listName);
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::ReplaceCurrentList<Cluster>(*this, listName))
+            continue;
         StatusCode code{PandoraContentApi::GetCurrentList(*this, pClusterList)};
         if (code == STATUS_CODE_SUCCESS)
         {
             for (const auto &alg : m_streamAlgorithmMap.at(algStreamName))
             { // ATTN - The algorithms replace the current list as they go
-                PandoraContentApi::GetCurrentList(*this, pClusterList);
+                if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pClusterList))
+                    continue;
                 if (!pClusterList->empty())
                 {
                     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, alg));

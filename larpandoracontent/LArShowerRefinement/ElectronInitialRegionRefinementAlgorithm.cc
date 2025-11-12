@@ -30,6 +30,17 @@ namespace lar_content
 {
 
 ElectronInitialRegionRefinementAlgorithm::ElectronInitialRegionRefinementAlgorithm() :
+    m_pShowerPeakDirectionFinderTool{nullptr},
+    m_pEventPeakDirectionFinderTool{nullptr},
+    m_pShowerSpineFinderTool{nullptr},
+    m_pEventPathwayFinderTool{nullptr},
+    m_pShowerStartFinderTool{nullptr},
+    m_pProtoShowerMatchingTool{nullptr},
+    m_showerPfoListName{""},
+    m_neutrinoVertexListName{""},
+    m_caloHitListNameU{""},
+    m_caloHitListNameV{""},
+    m_caloHitListNameW{""},
     m_minShowerHits3D(50),
     m_showerSlidingFitWindow(1000),
     m_maxCoincidenceTransverseSeparation(5.f),

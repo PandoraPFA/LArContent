@@ -333,7 +333,8 @@ void DLLaterTierHierarchyTool::SetConnectionParams(const HierarchyPfo &parentHie
         trackLength += (secondPosition - firstPosition).GetMagnitude();
     }
 
-    if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) < std::numeric_limits<float>::epsilon())
+    if (std::fabs(laterTierNetworkParams.m_doesChildConnect - 1.f) < std::numeric_limits<float>::epsilon() &&
+        (trackLength > std::numeric_limits<float>::epsilon()))
         laterTierNetworkParams.m_childCPLRatio = lengthAtConnection / trackLength;
 }
 

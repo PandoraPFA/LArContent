@@ -102,14 +102,8 @@ StatusCode DlSNSignalAlgorithm::PrepareTrainingSample()
     for (const std::string &listname : m_inputCaloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
-        try
-        {
-            PandoraContentApi::GetList(*this, listname, pCaloHitList);
-        }
-        catch (const StatusCodeException &e)
-        {
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listname, pCaloHitList))
             continue;
-        }
         if (!pCaloHitList || pCaloHitList->empty())
             continue;
 

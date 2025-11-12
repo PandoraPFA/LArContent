@@ -19,6 +19,11 @@ StatusCode LArDLHelper::LoadModel(const std::string &filename, LArDLHelper::Torc
     {
         model = torch::jit::load(filename);
         std::cout << "Loaded the TorchScript model \'" << filename << "\'" << std::endl;
+
+        // Set the model to evaluation mode.
+        // This should have been done during the model export, but we do it here just in case.
+        // This ensures that layers like dropout and batch normalization behave correctly during inference.
+        model.eval();
     }
     catch (const std::exception &e)
     {
@@ -40,6 +45,11 @@ void LArDLHelper::InitialiseInput(const at::IntArrayRef dimensions, TorchInput &
 
 void LArDLHelper::Forward(TorchModel &model, const TorchInputVector &input, TorchOutput &output)
 {
+    // Set torch to no_grad mode to avoid tracking gradients, which are not
+    // needed during inference.
+    // This uses RAII, so the guard is only active within this scope.
+    torch::NoGradGuard guard;
+
     output = model.forward(input).toTensor();
 }
 

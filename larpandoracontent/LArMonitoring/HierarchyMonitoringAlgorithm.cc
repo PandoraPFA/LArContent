@@ -39,7 +39,14 @@ HierarchyMonitoringAlgorithm::~HierarchyMonitoringAlgorithm()
 {
     if (!m_rootFileName.empty())
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "processes", m_rootFileName, "UPDATE"));
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "processes", m_rootFileName, "UPDATE"));
+        }
+        catch (StatusCodeException e)
+        {
+            std::cout << "HierarchyMonitoringAlgorithm: Unable to write to ROOT tree" << std::endl;
+        }
     }
 }
 
