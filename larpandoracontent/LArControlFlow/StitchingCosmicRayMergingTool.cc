@@ -1132,6 +1132,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
             std::cout << "pfo " << pPfoToDelete << " deleted\n";
           }
           isZgroupStitched[i] = true;
+          stitchedPfosToX0Map.insert(PfoToFloatMap::value_type(pPfoToEnlarge, 0.));
         }
       }
     }
