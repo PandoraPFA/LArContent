@@ -66,7 +66,9 @@ DLThreeDClusterSplittingAlgorithm::DLThreeDClusterSplittingAlgorithm() :
 DLThreeDClusterSplittingAlgorithm::~DLThreeDClusterSplittingAlgorithm()
 {
     if (m_trainingMode)
+    {
         PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
+    }
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
