@@ -265,6 +265,7 @@ void DLThreeDClusterSplittingAlgorithm::ProcessCluster(const Cluster *const pClu
 
     if (m_trainingMode)
     {
+#ifdef MONITORING
         // mainHitListMap - to identify targets, contHitListMap - to use for topology
         MCParticleToHitListMap mainHitListMap, contHitListMap;
         this->FillHitListMaps(pCluster, mainHitListMap, contHitListMap);
@@ -281,6 +282,7 @@ void DLThreeDClusterSplittingAlgorithm::ProcessCluster(const Cluster *const pClu
 
         // Fill tree
         this->FillTree(splitPositions, mainHitListMap, clusterFit, features);
+#endif
     }
     else
     {
@@ -893,6 +895,7 @@ void DLThreeDClusterSplittingAlgorithm::SplitCluster(const Cluster *const pClust
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Training Functions
 //------------------------------------------------------------------------------------------------------------------------------------------
+#ifdef MONITORING
 
 void DLThreeDClusterSplittingAlgorithm::FillHitListMaps(const Cluster *const pCluster, MCParticleToHitListMap &mainHitListMap, 
     MCParticleToHitListMap &contHitListMap) 
@@ -1202,7 +1205,7 @@ void DLThreeDClusterSplittingAlgorithm::FillTree(const CartesianPointVector &spl
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "SecVertex", &secVertex));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 }
-
+#endif
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DLThreeDClusterSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)

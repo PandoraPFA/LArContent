@@ -310,7 +310,7 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Training Functions
 //------------------------------------------------------------------------------------------------------------------------------------------
-
+#ifdef MONITORING
     /**
      *  @brief  Identify the MCParticles that dominate and contribute to the energy of the cluster hits
      *
@@ -362,7 +362,7 @@ private:
      */
     void FillTree(const pandora::CartesianPointVector &splitPositions, const MCParticleToHitListMap &mainHitListMap, 
         const lar_content::TwoDSlidingFitResult &clusterFit, const Features &features);
-
+#endif
     std::string m_caloHitListNameU;   ///< The name of the U view CaloHitList
     std::string m_caloHitListNameV;   ///< The name of the V view CaloHitList
     std::string m_caloHitListNameW;   ///< The name of the W view CaloHitList
