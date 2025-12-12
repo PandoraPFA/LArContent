@@ -7,7 +7,7 @@
 namespace lar_content
 {
 
-class ShwMergTestPfoMopUpAlgorithm : public PfoMopUpBaseAlgorithm
+class ShowerMergingPfoMopUpAlgorithm : public PfoMopUpBaseAlgorithm
 {
 
 private:

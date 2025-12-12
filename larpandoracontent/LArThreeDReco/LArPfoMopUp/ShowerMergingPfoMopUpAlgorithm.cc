@@ -6,7 +6,7 @@
 #include "larpandoracontent/LArObjects/LArPfoObjects.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
-#include "ShwMergTestPfoMopUpAlgorithm.h"
+#include "ShowerMergingPfoMopUpAlgorithm.h"
 
 using namespace pandora;
 
@@ -14,7 +14,7 @@ namespace lar_content
 {
 
 
-StatusCode ShwMergTestPfoMopUpAlgorithm::Run()
+StatusCode ShowerMergingPfoMopUpAlgorithm::Run()
 {
 
     PfoVector sortedPfos;
@@ -88,7 +88,7 @@ StatusCode ShwMergTestPfoMopUpAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------
 
-void ShwMergTestPfoMopUpAlgorithm::GetSortedPfos(PfoVector &sortedPfos) const
+void ShowerMergingPfoMopUpAlgorithm::GetSortedPfos(PfoVector &sortedPfos) const
 {
     
     for (const std::string &listName : m_inputPfoListNames)
@@ -105,7 +105,7 @@ void ShwMergTestPfoMopUpAlgorithm::GetSortedPfos(PfoVector &sortedPfos) const
 //------------------------------------------------------------------------------------------------------------
 
 
-bool ShwMergTestPfoMopUpAlgorithm::AreDirectionsAligned(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2) const
+bool ShowerMergingPfoMopUpAlgorithm::AreDirectionsAligned(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2) const
 {
     if (pPfo1->GetVertexList().empty() || pPfo2->GetVertexList().empty())
         return false;
@@ -130,7 +130,7 @@ bool ShwMergTestPfoMopUpAlgorithm::AreDirectionsAligned(const ParticleFlowObject
 //------------------------------------------------------------------------------------------------------------
 
 
-bool ShwMergTestPfoMopUpAlgorithm::HaveSameVertex(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2, bool&invert) const
+bool ShowerMergingPfoMopUpAlgorithm::HaveSameVertex(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2, bool&invert) const
 {
     if (pPfo1->GetVertexList().empty() || pPfo2->GetVertexList().empty())
              return false;
@@ -208,7 +208,7 @@ bool ShwMergTestPfoMopUpAlgorithm::HaveSameVertex(const ParticleFlowObject *cons
 
 //------------------------------------------------------------------------------------------------------------
 
-StatusCode ShwMergTestPfoMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ShowerMergingPfoMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "AlignmentAngle", m_alignmentAngle));
