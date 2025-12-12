@@ -4,6 +4,7 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArObjects/LArPfoObjects.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 #include "ShwMergTestPfoMopUpAlgorithm.h"
 
@@ -15,7 +16,7 @@ namespace lar_content
 
 StatusCode ShwMergTestPfoMopUpAlgorithm::Run()
 {
-  
+
     PfoVector sortedPfos;
     this->GetSortedPfos(sortedPfos);
    
@@ -46,15 +47,37 @@ StatusCode ShwMergTestPfoMopUpAlgorithm::Run()
                 continue;
 
             const bool isAligned{this->AreDirectionsAligned(pPfo1, pPfo2)};
-            const bool isSameVertex{this->HaveSameVertex(pPfo1, pPfo2)};
-            
-           std::cout <<  "(" << i << "," << j << ") Aligned " << isAligned << " Same Vertex " << isSameVertex << std::endl;
+            bool invert = false;
+            const bool isSameVertex{this->HaveSameVertex(pPfo1, pPfo2, invert)};
+           
 
             if (isAligned && isSameVertex)
             {   
-                this->MergeAndDeletePfos(pPfo1, pPfo2);
-                deletedPfos.insert(pPfo2);
-                std::cout << "Merge" << std::endl;
+                
+
+               if (!invert)
+               {
+                   for ( const Pfo* const daughter : pPfo2->GetDaughterPfoList() )
+                       if (daughter == pPfo1)
+                        invert=true;
+               }
+               
+
+                if (invert)
+                { 
+                    this->MergeAndDeletePfos(pPfo2, pPfo1);
+
+                }
+
+                else 
+                {
+                    this->MergeAndDeletePfos(pPfo1, pPfo2);
+                }
+                    
+                    deletedPfos.insert(pPfo1);
+                    deletedPfos.insert(pPfo2);
+                    break;
+
             }
         }
     }
@@ -68,7 +91,7 @@ StatusCode ShwMergTestPfoMopUpAlgorithm::Run()
 void ShwMergTestPfoMopUpAlgorithm::GetSortedPfos(PfoVector &sortedPfos) const
 {
     
-    for (const std::string &listName : m_daughterListNames)
+    for (const std::string &listName : m_inputPfoListNames)
     {   
         const PfoList *pPfoList(nullptr);
         
@@ -84,6 +107,9 @@ void ShwMergTestPfoMopUpAlgorithm::GetSortedPfos(PfoVector &sortedPfos) const
 
 bool ShwMergTestPfoMopUpAlgorithm::AreDirectionsAligned(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2) const
 {
+    if (pPfo1->GetVertexList().empty() || pPfo2->GetVertexList().empty())
+        return false;
+
     const Vertex *const pVertex1 = LArPfoHelper::GetVertex(pPfo1);
     const Vertex *const pVertex2 = LArPfoHelper::GetVertex(pPfo2);
 
@@ -97,15 +123,18 @@ bool ShwMergTestPfoMopUpAlgorithm::AreDirectionsAligned(const ParticleFlowObject
     const CartesianVector dir2 = pca2.GetPrimaryAxis();
 
     const float cosAngle = dir1.GetUnitVector().GetDotProduct(dir2.GetUnitVector());
-    return (cosAngle > 0.98f);
+    return (cosAngle > m_alignmentAngle);
 
 }
 
 //------------------------------------------------------------------------------------------------------------
 
 
-bool ShwMergTestPfoMopUpAlgorithm::HaveSameVertex(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2) const
+bool ShwMergTestPfoMopUpAlgorithm::HaveSameVertex(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2, bool&invert) const
 {
+    if (pPfo1->GetVertexList().empty() || pPfo2->GetVertexList().empty())
+             return false;
+
     const Pfo *const pNu = LArPfoHelper::GetParentNeutrino(pPfo1);
     const Vertex *const pNuVertex = LArPfoHelper::GetVertex(pNu);
 
@@ -117,26 +146,31 @@ bool ShwMergTestPfoMopUpAlgorithm::HaveSameVertex(const ParticleFlowObject *cons
     const CartesianVector vtx1 = pVertex1->GetPosition();
     const CartesianVector vtx2 = pVertex2->GetPosition();
 
-    const float distance1 = (nuVtx - vtx1).GetMagnitude();
-    const float distance2 = (nuVtx - vtx2).GetMagnitude();
+    const float distNuVtxToVtx1 = (nuVtx - vtx1).GetMagnitude();
+    const float distNuVtxToVtx2 = (nuVtx - vtx2).GetMagnitude();
     
-    if  (distance1 > 3.f && distance2 > 3.f)
+    if  (distNuVtxToVtx1 > 3.f && distNuVtxToVtx2 > 3.f)
       return false;
 
     const Pfo * pStub = nullptr;
     const Pfo * pShw = nullptr;
    
-    const CartesianVector StubVtx = distance1<distance2 ? vtx1:vtx2;
-    const CartesianVector ShwVtx = distance1<distance2 ? vtx2:vtx1;
+    const CartesianVector StubVtx = distNuVtxToVtx1 < distNuVtxToVtx2 ? vtx1:vtx2;
+    const CartesianVector ShwVtx = distNuVtxToVtx1 < distNuVtxToVtx2 ? vtx2:vtx1;
 
-    if ( distance1<distance2) 
+    if ( distNuVtxToVtx1 < distNuVtxToVtx2) 
         { pStub = pPfo1;
           pShw = pPfo2;
+          invert = false;
         }
      else 
         { pStub = pPfo2;
           pShw = pPfo1;
-      }
+          invert = true;
+        }
+
+    if (!LArPfoHelper::IsShower(pShw))
+        return false;
 
     CaloHitList StubHits, ShwHits;
     LArPfoHelper::GetCaloHits(pStub, TPC_3D, StubHits);
@@ -157,11 +191,18 @@ bool ShwMergTestPfoMopUpAlgorithm::HaveSameVertex(const ParticleFlowObject *cons
        
             }
         }
+    
+    const float distNuVtxToStubEnd = ( nuVtx - pStubEndPoint->GetPositionVector()).GetMagnitude();
+    const float distNuVtxToShwStart = ( nuVtx - ShwVtx ).GetMagnitude();
+
+    if ( distNuVtxToShwStart < distNuVtxToStubEnd)
+      return false;
+
 
     const float StubShwSep = ( ShwVtx - pStubEndPoint->GetPositionVector() ).GetMagnitudeSquared(); 
     
 
-    return StubShwSep<50*50;
+    return StubShwSep<m_stubShowerSeperation;
 
 }
 
@@ -169,10 +210,11 @@ bool ShwMergTestPfoMopUpAlgorithm::HaveSameVertex(const ParticleFlowObject *cons
 
 StatusCode ShwMergTestPfoMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
-
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "AlignmentAngle", m_alignmentAngle));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "StubShowerSeperation", m_stubShowerSeperation));   
+    
     return PfoMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 }
-
