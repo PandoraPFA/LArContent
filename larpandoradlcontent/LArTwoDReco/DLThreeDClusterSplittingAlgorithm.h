@@ -25,7 +25,7 @@ class DLThreeDClusterSplittingAlgorithm : public pandora::Algorithm
 /**
  *  @brief  MCContaminant class
  */
-class MCContaminant
+struct MCContaminant
 {
  public:
     /**
@@ -47,7 +47,7 @@ class MCContaminant
 /**
  *  @brief  ClusterHit class
  */
-class ClusterHit
+struct ClusterHit
 {
 public:
     /**
@@ -62,9 +62,9 @@ public:
      */
     bool operator==(const ClusterHit &rhs) const;
 
-    const pandora::CaloHit *m_pHit; ///< The characterised CaloHit
-    float m_l;                      ///< The longitudinal position of the CaloHit from the cluster fit
-    float m_t;                      ///< The transverse position of the CaloHit from the cluster fit
+    const pandora::CaloHit * m_pHit; ///< The characterised CaloHit
+    int m_lBin;                         ///< The longitudinal BIN of the CaloHit from the cluster fit
+    float m_t;                       ///< The transverse position of the CaloHit from the cluster fit
 };
 /**
  *  @brief  ClusterHit class
@@ -76,6 +76,27 @@ public:
      *  @brief  Constructor
      */
     Feature(const float mean, const float std, const pandora::FloatVector &sequence);
+
+    /**
+     *  @brief  Get length of the feature vector
+     */
+    int GetSequenceLength() const;
+
+    /**
+     *  @brief  Add a value to the feature vector
+     *
+     *  @param  The value to add
+     */
+    void AddToSequence(const float value);
+
+    /**
+     *  @brief  Obtain the sequence value at a given index
+     *
+     *  @param  the specified index
+     *
+     *  @return the value at the specified index
+     */
+    float GetSequenceValue(const unsigned int index) const;
 
     /**
      *  @brief  Normalise the feature vector
@@ -92,8 +113,9 @@ public:
      *
      *  @return FloatVector a const reference to the feature vector
      */
-    const pandora::FloatVector* GetSequence() const;
+    const pandora::FloatVector& GetSequence() const;
 
+private:
     float m_mean;                    ///< The feature mean
     float m_std;                     ///< The feature standard deviation
     pandora::FloatVector m_sequence; ///< The feature vector
@@ -130,6 +152,30 @@ private:
     pandora::StatusCode GetLists();
 
     /**
+     *  @brief  Fill an algorithm list
+     *
+     *  @param  pList the algorithm list to fill
+     *  @param  listName the name of the internal pandora list
+     *
+     *  @return StatusCode whether the list has been filled
+     */
+    template <typename T>
+    pandora::StatusCode GetList(const T *&pList, const std::string listName);
+
+    /**
+     *  @brief  Identify the true/predicted cluster split positions within a single 2D view
+     *
+     *  @param  pClusterList a pointer to the cluster list of the view
+     *  @param  kdTree the KDTree of view hits
+     *  @param  splitPos the container to hold the found split positions
+     *  @param  clusterToSplitIndex the map between 2D clusters and their split point indices
+     *  @param  clusterFits the map between 2D clusters and their TwoDSlidingFitResults
+     */
+    void FindSplitPositions(const pandora::ClusterList *const pClusterList, HitKDTree2D &kdTree, 
+        pandora::CartesianPointVector &splitPos, std::map<const pandora::Cluster*, pandora::IntVector> &clusterToSplitIndex, 
+        std::map<const pandora::Cluster*, lar_content::TwoDSlidingFitResult> &clusterFits);
+
+    /**
      *  @brief  Identify true or predicted split positions 
      *
      *  @param  pCluster the input cluster
@@ -137,7 +183,7 @@ private:
      *  @param  kdTree kdTree of view hits
      *  @param  splitPositions to store found split positions
      */
-    void ProcessCluster(const pandora::Cluster *const pCluster, const lar_content::TwoDSlidingFitResult &clusterFit, 
+    void FindClusterSplitPositions(const pandora::Cluster *const pCluster, const lar_content::TwoDSlidingFitResult &clusterFit, 
          HitKDTree2D &kdTree, pandora::CartesianPointVector &splitPositions);
 
     /**
@@ -182,16 +228,6 @@ private:
     void GetFilteredViewSecVertices(const lar_content::TwoDSlidingFitResult &clusterFit, pandora::CartesianPointVector &viewSecVtx) const;
 
     /**
-     *  @brief  Get the separation between CaloHit and the closest secondary vertex
-     *
-     *  @param  pCaloHit the input CaloHit
-     *  @param  viewSecVtx the filtered 2D secondary vertices
-     *
-     *  @return the separation between CaloHit and the closest secondary vertex
-     */
-    float GetDistanceToSecVertex(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &viewSecVtx) const;
-
-    /**
      *  @brief  Get the separation between CaloHit and the closest non-clusterPath hit
      *
      *  @param  kdTree kdTree of view hits
@@ -212,16 +248,6 @@ private:
      *  @return the separation between a ClusterHit and the next in the ClusterPath
      */
     float GetDistanceToClusterHit(const ClusterHit &currentHit, const ClusterHit &nextHit) const;
-
-    /**
-     *  @brief  Determine whether two hits are in the same TPC volume
-     *
-     *  @param  pPrevHit the first CaloHit
-     *  @param  pCurrentHit the second CaloHit
-     *
-     *  @return whether two hits are in the same TPC volume
-     */
-    float IsInSameVolume(const pandora::CaloHit *const pPrevHit, const pandora::CaloHit *const pCurrentHit) const;
 
     /**
      *  @brief  Identify predicted split positions in terms of their sequence position
@@ -260,6 +286,19 @@ private:
      */
     void FilterSplitIndices(const ClusterPath &clusterPath, const pandora::HitType hitType, const Features &features, 
         pandora::IntVector &splitIndices) const;
+
+    /**
+     *  @brief  Match predicted split positions across the 2D views to remove false positives
+     *
+     *  @param  splitPosU split positions in the U view
+     *  @param  splitPosV split positions in the V view
+     *  @param  splitPosW split positions in the W view
+     *  @param  usedU accepted split positions in the U view
+     *  @param  usedV accepted split positions in the V view
+     *  @param  usedW accepted split positions in the W view
+     */
+    void PerformMatching(const pandora::CartesianPointVector &splitPosU, const pandora::CartesianPointVector &splitPosV, 
+        const pandora::CartesianPointVector &splitPosW, pandora::IntVector &usedU, pandora::IntVector &usedV, pandora::IntVector &usedW);
 
     /**
      *  @brief  Consider the split positions of all views, and accept those that form a consistent 3D position
@@ -392,6 +431,15 @@ private:
     float m_kalmanMeasurementVarCoeff;     ///< the measurement variance coefficient for the Kalman filter
     float m_searchRegion1D;                ///< The width/length of the region in which to search for event hits
     unsigned int m_windowLength;           ///< The length of the window considered by the window/split point models
+    pandora::FloatVector m_longitudinalNormVals;  ///< mean/std of the longitudinal variable
+    pandora::FloatVector m_transverseNormVals;    ///< mean/std of the transverse variable
+    pandora::FloatVector m_energyNormVals;        ///< mean/std of the energy variable
+    pandora::FloatVector m_hitWidthNormVals;      ///< mean/std of the hit width variable
+    pandora::FloatVector m_thetaNormVals;         ///< mean/std of the theta variable
+    pandora::FloatVector m_secVertexNormVals;     ///< mean/std of the secVertex variable
+    pandora::FloatVector m_gapSepNormVals;        ///< mean/std of the gapSep variable
+    pandora::FloatVector m_eventHitSepNormVals;   ///< mean/std of the eventHitSep variable
+    pandora::FloatVector m_clusterHitSepNormVals; ///< mean/std of the clusterHitSep variable
     float m_bkgThreshold;                  ///< The maximum background 'probability' of a contaminated window
     float m_isContaminatedThreshold;       ///< The threshold 'probability' of a contaminated window
     float m_isSplitThreshold;              ///< The threshold 'probability' of a predicted split position
@@ -432,9 +480,9 @@ inline DLThreeDClusterSplittingAlgorithm::MCContaminant::MCContaminant(const pan
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline DLThreeDClusterSplittingAlgorithm::ClusterHit::ClusterHit(const pandora::CaloHit *const pCaloHit, const float l, const float t) :
+inline DLThreeDClusterSplittingAlgorithm::ClusterHit::ClusterHit(const pandora::CaloHit *const pCaloHit, const float lBin, const float t) :
     m_pHit(pCaloHit),
-    m_l(l),
+    m_lBin(lBin),
     m_t(t)
 {
 }
@@ -443,7 +491,7 @@ inline DLThreeDClusterSplittingAlgorithm::ClusterHit::ClusterHit(const pandora::
 
 inline bool DLThreeDClusterSplittingAlgorithm::ClusterHit::operator==(const ClusterHit &rhs) const
 {
-    return this->m_l == rhs.m_l;
+    return this->m_lBin == rhs.m_lBin;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -453,6 +501,30 @@ inline DLThreeDClusterSplittingAlgorithm::Feature::Feature(const float mean, con
     m_std(std),
     m_sequence(sequence)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline int DLThreeDClusterSplittingAlgorithm::Feature::GetSequenceLength() const
+{
+    return m_sequence.size();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void DLThreeDClusterSplittingAlgorithm::Feature::AddToSequence(const float value)
+{
+    m_sequence.emplace_back(value);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float DLThreeDClusterSplittingAlgorithm::Feature::GetSequenceValue(const unsigned int index) const
+{
+    if (index >= m_sequence.size())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+
+    return m_sequence.at(index);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -498,9 +570,9 @@ inline void DLThreeDClusterSplittingAlgorithm::Feature::Smooth()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::FloatVector* DLThreeDClusterSplittingAlgorithm::Feature::GetSequence() const
+inline const pandora::FloatVector& DLThreeDClusterSplittingAlgorithm::Feature::GetSequence() const
 {
-    return &m_sequence;
+    return m_sequence;
 }
 
 } // namespace lar_content
