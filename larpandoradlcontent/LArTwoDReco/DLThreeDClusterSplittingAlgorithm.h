@@ -10,9 +10,9 @@
 
 #include "Pandora/PandoraInternal.h"
 
+#include "larpandoracontent/LArHelpers/LArEigenHelper.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 #include "larpandoracontent/LArUtility/KalmanFilter.h"
-#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
 
 namespace lar_dl_content
@@ -56,6 +56,15 @@ public:
     ClusterHit(const pandora::CaloHit *const pCaloHit, const float l, const float t);
 
     /**
+     *  @brief  Get the distance of the ClusterHit to a given ClusterHit
+     *
+     *  @param  clusterHit the given ClusterHit
+     *
+     *  @return the distance of the ClusterHit to a given ClusterHit
+     */
+    float GetDistanceToClusterHit(const ClusterHit &clusterHit) const;
+
+    /**
      *  @brief  ClusterHit == operator
      *
      *  @param  rhs the ClusterHit to compare
@@ -63,7 +72,7 @@ public:
     bool operator==(const ClusterHit &rhs) const;
 
     const pandora::CaloHit * m_pHit; ///< The characterised CaloHit
-    int m_lBin;                         ///< The longitudinal BIN of the CaloHit from the cluster fit
+    int m_lBin;                      ///< The longitudinal BIN of the CaloHit from the cluster fit
     float m_t;                       ///< The transverse position of the CaloHit from the cluster fit
 };
 /**
@@ -136,9 +145,6 @@ public:
 private:
     typedef std::vector<MCContaminant> MCContaminantVector;
     typedef std::vector<ClusterHit> ClusterPath;
-    typedef lar_content::KDTreeLinkerAlgo<const pandora::CaloHit *, 2> HitKDTree2D;
-    typedef lar_content::KDTreeNodeInfoT<const pandora::CaloHit *, 2> HitKDNode2D;
-    typedef std::vector<HitKDNode2D> HitKDNode2DList;
     typedef std::unordered_map<const pandora::MCParticle *, pandora::CaloHitList> MCParticleToHitListMap;
     typedef std::map<std::string, Feature> Features;
 
@@ -166,13 +172,15 @@ private:
      *  @brief  Identify the true/predicted cluster split positions within a single 2D view
      *
      *  @param  pClusterList a pointer to the cluster list of the view
-     *  @param  kdTree the KDTree of view hits
+     *  @param  eventHitMatrix the position matrix of view hits
+     *  @param  orderedHits the ordered vector of event hits 
      *  @param  splitPos the container to hold the found split positions
      *  @param  clusterToSplitIndex the map between 2D clusters and their split point indices
      *  @param  clusterFits the map between 2D clusters and their TwoDSlidingFitResults
      */
-    void FindSplitPositions(const pandora::ClusterList *const pClusterList, HitKDTree2D &kdTree, 
-        pandora::CartesianPointVector &splitPos, std::map<const pandora::Cluster*, pandora::IntVector> &clusterToSplitIndex, 
+    void FindSplitPositions(const pandora::ClusterList *const pClusterList, const Eigen::MatrixXf &eventHitMatrix, 
+        const pandora::CaloHitVector &orderedHits, pandora::CartesianPointVector &splitPos, 
+        std::map<const pandora::Cluster*, pandora::IntVector> &clusterToSplitIndex, 
         std::map<const pandora::Cluster*, lar_content::TwoDSlidingFitResult> &clusterFits);
 
     /**
@@ -180,11 +188,12 @@ private:
      *
      *  @param  pCluster the input cluster
      *  @param  clusterFit the TwoDSlidingFitResult of the cluster 
-     *  @param  kdTree kdTree of view hits
+     *  @param  eventHitMatrix position matrix of view hits
+     *  @param  orderedHits the ordered vector of event hits 
      *  @param  splitPositions to store found split positions
      */
     void FindClusterSplitPositions(const pandora::Cluster *const pCluster, const lar_content::TwoDSlidingFitResult &clusterFit, 
-         HitKDTree2D &kdTree, pandora::CartesianPointVector &splitPositions);
+        const Eigen::MatrixXf &eventHitMatrix, const pandora::CaloHitVector &orderedHits, pandora::CartesianPointVector &splitPositions);
 
     /**
      *  @brief  Identify the 'sequence' hits of the cluster i.e those used to fill the feature vectors
@@ -208,9 +217,11 @@ private:
      *  @param  clusterPath the input hit sequence 
      *  @param  clusterFit the input TwoDSlidingFitResult of the cluster 
      *  @param  features the input feature map
-     *  @param  kdTree kdTree of view hits
+     *  @param  eventHitMatrix position matrix of view hits
+     *  @param  orderedHits the ordered vector of event hits 
      */
-    void FillFeatures(const ClusterPath &clusterPath, const lar_content::TwoDSlidingFitResult &clusterFit, Features &features, HitKDTree2D &kdTree) const;
+    void FillFeatures(const ClusterPath &clusterPath, const lar_content::TwoDSlidingFitResult &clusterFit, Features &features, 
+        const Eigen::MatrixXf &eventHitMatrix, const pandora::CaloHitVector &orderedHits) const;
 
     /**
      *  @brief  Initialise the KalmanFilter2D, and seed its fit
@@ -230,24 +241,13 @@ private:
     /**
      *  @brief  Get the separation between CaloHit and the closest non-clusterPath hit
      *
-     *  @param  kdTree kdTree of view hits
+     *  @param  eventHitMatrix position matrix of view hits
+     *  @param  blacklist the vector of the indices of the unconsidered hits (clusterPath hits)
      *  @param  pCaloHit the input CaloHit
-     *  @param  clusterPathHits the hits of the cluster path
      *
      *  @return the separation between CaloHit and the closest non-clusterPath hit
      */
-    float GetDistanceToEventHit(HitKDTree2D &kdTree, const pandora::CaloHit *const pCaloHit, 
-        const pandora::CaloHitList &clusterPathHits) const;
-
-    /**
-     *  @brief  Get the separation between a ClusterHit and the next in the ClusterPath
-     *
-     *  @param  currentHit the considered ClusterHit
-     *  @param  nextHit the subsequent ClusterHit
-     *
-     *  @return the separation between a ClusterHit and the next in the ClusterPath
-     */
-    float GetDistanceToClusterHit(const ClusterHit &currentHit, const ClusterHit &nextHit) const;
+    float GetDistanceToEventHit(const Eigen::MatrixXf &eventHitMatrix, const pandora::IntVector &blacklist, const pandora::CaloHit *const pCaloHit) const;
 
     /**
      *  @brief  Identify predicted split positions in terms of their sequence position
@@ -282,7 +282,7 @@ private:
      *  @param  clusterPath the hit sequence 
      *  @param  hitType the type of 2D view
      *  @param  features the feature map
-     *  @param  splitIndices the idenitfied split sequence indices
+     *  @param  splitIndices the identified split sequence indices
      */
     void FilterSplitIndices(const ClusterPath &clusterPath, const pandora::HitType hitType, const Features &features, 
         pandora::IntVector &splitIndices) const;
@@ -293,12 +293,14 @@ private:
      *  @param  splitPosU split positions in the U view
      *  @param  splitPosV split positions in the V view
      *  @param  splitPosW split positions in the W view
+     *  @param  viewTreeMap the map of hit type to the event hit position matrix
      *  @param  usedU accepted split positions in the U view
      *  @param  usedV accepted split positions in the V view
      *  @param  usedW accepted split positions in the W view
      */
     void PerformMatching(const pandora::CartesianPointVector &splitPosU, const pandora::CartesianPointVector &splitPosV, 
-        const pandora::CartesianPointVector &splitPosW, pandora::IntVector &usedU, pandora::IntVector &usedV, pandora::IntVector &usedW);
+        const pandora::CartesianPointVector &splitPosW, const std::map<pandora::HitType, Eigen::MatrixXf> &viewTreeMap, 
+        pandora::IntVector &usedU, pandora::IntVector &usedV, pandora::IntVector &usedW) const;
 
     /**
      *  @brief  Consider the split positions of all views, and accept those that form a consistent 3D position
@@ -311,7 +313,7 @@ private:
      *  @param  usedW accepted split positions in the W view
      */
     void ThreeViewMatching(const pandora::CartesianPointVector &splitPosU, const pandora::CartesianPointVector &splitPosV, 
-        const pandora::CartesianPointVector &splitPosW, pandora::IntVector &usedU, pandora::IntVector &usedV, pandora::IntVector &usedW);
+        const pandora::CartesianPointVector &splitPosW, pandora::IntVector &usedU, pandora::IntVector &usedV, pandora::IntVector &usedW) const;
 
     /**
      *  @brief  Consider the split positions of two views, and accept those that map onto a hit in the third view
@@ -320,12 +322,13 @@ private:
      *  @param  splitPos2 split positions in view 2
      *  @param  hitType1 the view type of view 1
      *  @param  hitType2 the view type of view 2
-     *  @param  kdTree kdTree of the hits in view 3
+     *  @param  eventHitMatrix position matrix of the hits in view 3
      *  @param  used1 accepted split positions in view 1
      *  @param  used2 accepted split positions in view 2
      */
     void TwoViewMatching(const pandora::CartesianPointVector &splitPos1, const pandora::CartesianPointVector &splitPos2, 
-        const pandora::HitType hitType1, const pandora::HitType hitType2, HitKDTree2D &kdTree, pandora::IntVector &used1, pandora::IntVector &used2);
+        const pandora::HitType hitType1, const pandora::HitType hitType2, const Eigen::MatrixXf &eventHitMatrix, 
+        pandora::IntVector &used1, pandora::IntVector &used2) const;
 
     /**
      *  @brief  Split the hits of the cluster into groups determined by the found split indices 
@@ -357,7 +360,7 @@ private:
      *  @param  mainHitListMap the map to fill with dominant contributions
      *  @param  contHitListMap the map to fill with all 'significant' contributions
      */
-    void FillHitListMaps(const pandora::Cluster *const pCluster, MCParticleToHitListMap &mainHitListMap, MCParticleToHitListMap &contHitListMap);
+    void FillHitListMaps(const pandora::Cluster *const pCluster, MCParticleToHitListMap &mainHitListMap, MCParticleToHitListMap &contHitListMap) const;
 
     /**
      *  @brief  Find the MCContaminants of the considered cluster
@@ -367,7 +370,7 @@ private:
      *  @param  mcContaminants the container to store found MCContaminants
      */
     void FindContaminants(const MCParticleToHitListMap &mainHitListMap, const MCParticleToHitListMap &contHitListMap,
-        MCContaminantVector &mcContaminants);
+        MCContaminantVector &mcContaminants) const;
 
     /**
      *  @brief  Create from an input contaminant MCParticle a MCContaminant, 
@@ -379,7 +382,7 @@ private:
      *  @param  mcContaminants the container to store MCContaminants
      */
     void BuildMCContaminant(const pandora::MCParticle *const pMCContaminant, const pandora::CaloHitList &mainHitList, 
-        const pandora::CaloHitList &contHitList, MCContaminantVector &mcContaminants);
+        const pandora::CaloHitList &contHitList, MCContaminantVector &mcContaminants) const;
 
     /**
      *  @brief  Identify true split positions within the considered cluster
@@ -389,7 +392,7 @@ private:
      *  @param  trueSplitPositions the container to store found true split positions
      */
     void FindTrueSplitPositions(const lar_content::TwoDSlidingFitResult &clusterFit, const MCContaminantVector &mcContaminants,
-        pandora::CartesianPointVector &trueSplitPositions);
+        pandora::CartesianPointVector &trueSplitPositions) const;
 
     /**
      *  @brief  Fill the training tree
@@ -400,7 +403,7 @@ private:
      *  @param  features the input feature map
      */
     void FillTree(const pandora::CartesianPointVector &splitPositions, const MCParticleToHitListMap &mainHitListMap, 
-        const lar_content::TwoDSlidingFitResult &clusterFit, const Features &features);
+        const lar_content::TwoDSlidingFitResult &clusterFit, const Features &features) const;
 #endif
     std::string m_caloHitListNameU;   ///< The name of the U view CaloHitList
     std::string m_caloHitListNameV;   ///< The name of the V view CaloHitList
@@ -431,6 +434,7 @@ private:
     float m_kalmanMeasurementVarCoeff;     ///< the measurement variance coefficient for the Kalman filter
     float m_searchRegion1D;                ///< The width/length of the region in which to search for event hits
     unsigned int m_windowLength;           ///< The length of the window considered by the window/split point models
+    float m_maxEventHitSep;                ///< Overflow value for the EventHitSep var
     pandora::FloatVector m_longitudinalNormVals;  ///< mean/std of the longitudinal variable
     pandora::FloatVector m_transverseNormVals;    ///< mean/std of the transverse variable
     pandora::FloatVector m_energyNormVals;        ///< mean/std of the energy variable
@@ -485,6 +489,13 @@ inline DLThreeDClusterSplittingAlgorithm::ClusterHit::ClusterHit(const pandora::
     m_lBin(lBin),
     m_t(t)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float DLThreeDClusterSplittingAlgorithm::ClusterHit::GetDistanceToClusterHit(const ClusterHit &clusterHit) const
+{
+    return (this->m_pHit->GetPositionVector() - clusterHit.m_pHit->GetPositionVector()).GetMagnitude();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

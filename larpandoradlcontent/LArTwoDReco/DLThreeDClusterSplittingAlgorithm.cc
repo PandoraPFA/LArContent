@@ -10,13 +10,13 @@
 
 #include "larpandoracontent/LArHelpers/LArCaloHitHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArEigenHelper.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 #include "larpandoracontent/LArUtility/KalmanFilter.h"
-#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoradlcontent/LArTwoDReco/DLThreeDClusterSplittingAlgorithm.h"
 
@@ -43,6 +43,7 @@ DLThreeDClusterSplittingAlgorithm::DLThreeDClusterSplittingAlgorithm() :
     m_kalmanMeasurementVarCoeff(1.f),
     m_searchRegion1D(20.f),
     m_windowLength(48),
+    m_maxEventHitSep(20.f),
     m_longitudinalNormVals({0.0, 1.0}),
     m_transverseNormVals({-0.01, 2.57}),
     m_energyNormVals({0.49, 0.28}),
@@ -87,19 +88,8 @@ StatusCode DLThreeDClusterSplittingAlgorithm::Run()
     if (this->GetLists() != STATUS_CODE_SUCCESS)
         return STATUS_CODE_SUCCESS;
 
-    // For cluster features, we need a KDTree
-    std::vector<HitKDTree2D> viewTreeMap;
-    for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
-    {
-        const CaloHitList *pCaloHitList(hitType == TPC_VIEW_U ? m_pCaloHitListU : hitType == TPC_VIEW_V ? 
-            m_pCaloHitListV : m_pCaloHitListW);
-
-        HitKDNode2DList kdNode2DList;
-        KDTreeBox kdTreeBox(fill_and_bound_2d_kd_tree(*pCaloHitList, kdNode2DList));
-        viewTreeMap[hitType] = HitKDTree2D();
-        viewTreeMap[hitType].build(kdNode2DList, kdTreeBox);
-    }
-
+    // Within algorithm we need an Eigen::Matrix of our event hits (fill this within loop)
+    std::map<HitType, Eigen::MatrixXf> viewHitMatrixMap;
     // Find split positions in all three views
     CartesianPointVector splitPosU, splitPosV, splitPosW;
     std::map<const Cluster*, IntVector> clusterToSplitIndexU, clusterToSplitIndexV, clusterToSplitIndexW;
@@ -107,6 +97,8 @@ StatusCode DLThreeDClusterSplittingAlgorithm::Run()
 
     for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
+        const CaloHitList *pCaloHitList(hitType == TPC_VIEW_U ? m_pCaloHitListU : hitType == TPC_VIEW_V ? 
+            m_pCaloHitListV : m_pCaloHitListW);
         const ClusterList *pClusterList(hitType == TPC_VIEW_U ? m_pClusterListU : hitType == TPC_VIEW_V ? 
             m_pClusterListV : m_pClusterListW);
         std::map<const Cluster*, TwoDSlidingFitResult> &clusterFits(hitType == TPC_VIEW_U ? clusterFitsU : 
@@ -115,7 +107,14 @@ StatusCode DLThreeDClusterSplittingAlgorithm::Run()
         std::map<const Cluster*, IntVector> &clusterToSplitIndex(hitType == TPC_VIEW_U ? clusterToSplitIndexU :
             hitType == TPC_VIEW_V ? clusterToSplitIndexV : clusterToSplitIndexW);
 
-        this->FindSplitPositions(pClusterList, viewTreeMap[hitType], splitPos, clusterToSplitIndex, clusterFits);
+        // Form event hit Eigen::Matrix
+        CaloHitVector orderedHits(pCaloHitList->begin(), pCaloHitList->end());
+        std::sort(orderedHits.begin(), orderedHits.end(), LArClusterHelper::SortHitsByPosition);
+        Eigen::MatrixXf hitMatrix(orderedHits.size(), 2);
+        LArEigenHelper::Vectorize(orderedHits, hitMatrix);
+        viewHitMatrixMap.insert(std::make_pair(hitType, hitMatrix));
+
+        this->FindSplitPositions(pClusterList, viewHitMatrixMap.at(hitType), orderedHits, splitPos, clusterToSplitIndex, clusterFits);
     }
 
     // Leave if there's nothing to do
@@ -124,7 +123,7 @@ StatusCode DLThreeDClusterSplittingAlgorithm::Run()
 
     // Use 3D information to refine matches
     IntVector usedU, usedV, usedW;
-    this->PerformMatching(splitPosU, splitPosV, splitPosW, usedU, usedV, usedW);
+    this->PerformMatching(splitPosU, splitPosV, splitPosW, viewHitMatrixMap, usedU, usedV, usedW);
 
     // Split the clusters
     for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
@@ -177,7 +176,8 @@ StatusCode DLThreeDClusterSplittingAlgorithm::GetLists()
     if (this->GetList(m_pClusterListU, m_clusterListNameU) != STATUS_CODE_SUCCESS) { return STATUS_CODE_NOT_FOUND; }
     if (this->GetList(m_pClusterListV, m_clusterListNameV) != STATUS_CODE_SUCCESS) { return STATUS_CODE_NOT_FOUND; }
     if (this->GetList(m_pClusterListW, m_clusterListNameW) != STATUS_CODE_SUCCESS) { return STATUS_CODE_NOT_FOUND; }
-    if (this->GetList(m_pMCParticleList, m_mcParticleListName) != STATUS_CODE_SUCCESS) { return STATUS_CODE_NOT_FOUND; }
+    if (m_trainingMode)
+        if (this->GetList(m_pMCParticleList, m_mcParticleListName) != STATUS_CODE_SUCCESS) { return STATUS_CODE_NOT_FOUND; }
     if (this->GetList(m_pNuVertexList, m_nuVertexListName) != STATUS_CODE_SUCCESS) { return STATUS_CODE_NOT_FOUND; }
     if (m_pNuVertexList->size() != 1) { return STATUS_CODE_NOT_FOUND; }
     this->GetList(m_pSecVertexList, m_secVertexListName); // Do not mind if no secondary vertices have been found
@@ -201,7 +201,7 @@ StatusCode DLThreeDClusterSplittingAlgorithm::GetList(const T *&pList, const std
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLThreeDClusterSplittingAlgorithm::FindSplitPositions(const ClusterList *const pClusterList, HitKDTree2D &kdTree, 
+void DLThreeDClusterSplittingAlgorithm::FindSplitPositions(const ClusterList *const pClusterList, const Eigen::MatrixXf &eventHitMatrix, const CaloHitVector &orderedHits, 
     CartesianPointVector &splitPos, std::map<const Cluster*, IntVector> &clusterToSplitIndex, std::map<const Cluster*, TwoDSlidingFitResult> &clusterFits)
 {
     // Reproducability 
@@ -223,7 +223,7 @@ void DLThreeDClusterSplittingAlgorithm::FindSplitPositions(const ClusterList *co
                 LArGeometryHelper::GetWirePitch(this->GetPandora(), LArClusterHelper::GetClusterHitType(pCluster)));
 
             CartesianPointVector foundSplitPositions;
-            this->FindClusterSplitPositions(pCluster, clusterFit, kdTree, foundSplitPositions);
+            this->FindClusterSplitPositions(pCluster, clusterFit, eventHitMatrix, orderedHits, foundSplitPositions);
 
             // Store split points and the clusters to which they belong
             if (!m_trainingMode)
@@ -245,7 +245,7 @@ void DLThreeDClusterSplittingAlgorithm::FindSplitPositions(const ClusterList *co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLThreeDClusterSplittingAlgorithm::FindClusterSplitPositions(const Cluster *const pCluster, const TwoDSlidingFitResult &clusterFit, 
-    HitKDTree2D &kdTree, CartesianPointVector &splitPositions)
+    const Eigen::MatrixXf &eventHitMatrix, const CaloHitVector &orderedHits, CartesianPointVector &splitPositions)
 {
     // Find pathway through the cluster
     ClusterPath clusterPath;
@@ -257,7 +257,7 @@ void DLThreeDClusterSplittingAlgorithm::FindClusterSplitPositions(const Cluster 
     // Get features
     Features features;
     this->InitialiseFeatures(features);
-    this->FillFeatures(clusterPath, clusterFit, features, kdTree);
+    this->FillFeatures(clusterPath, clusterFit, features, eventHitMatrix, orderedHits);
 
     if (m_trainingMode)
     {
@@ -353,7 +353,7 @@ void DLThreeDClusterSplittingAlgorithm::InitialiseFeatures(Features &features) c
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLThreeDClusterSplittingAlgorithm::FillFeatures(const ClusterPath &clusterPath, const TwoDSlidingFitResult &clusterFit, Features &features,
-    HitKDTree2D &kdTree) const
+    const Eigen::MatrixXf &eventHitMatrix, const CaloHitVector &orderedHits) const
 {
     // Get path hits, and their total energy
     CaloHitList clusterPathHits; float totalEnergy(0.f);
@@ -362,6 +362,15 @@ void DLThreeDClusterSplittingAlgorithm::FillFeatures(const ClusterPath &clusterP
         const CaloHit *const pPathCaloHit(entry.m_pHit);
         totalEnergy += pPathCaloHit->GetElectromagneticEnergy();
         clusterPathHits.push_back(pPathCaloHit);
+    }
+
+    // Identify clusterPathHits in Eigen::Matrix
+    IntVector blacklist;
+    for (const CaloHit *const pClusterPathHit : clusterPathHits)
+    {
+        const auto iter(std::find(orderedHits.begin(), orderedHits.end(), pClusterPathHit));
+        const int index(iter - orderedHits.begin());
+        blacklist.emplace_back(index);
     }
 
     // Initialise KalmanFilter
@@ -413,9 +422,9 @@ void DLThreeDClusterSplittingAlgorithm::FillFeatures(const ClusterPath &clusterP
         features.at("SecVertex").AddToSequence(viewSecVtx.empty() ? -1.f :
             LArCaloHitHelper::GetClosestDistance(pPathCaloHit->GetPositionVector(), viewSecVtx));
         features.at("EventHitSep").AddToSequence(
-            this->GetDistanceToEventHit(kdTree, pPathCaloHit, clusterPathHits));
+            this->GetDistanceToEventHit(eventHitMatrix, blacklist, pPathCaloHit));
         features.at("ClusterHitSep").AddToSequence(i == (clusterPath.size() - 1) ? -1.f :
-            this->GetDistanceToClusterHit(clusterHit, clusterPath.at(i + 1)));
+            clusterHit.GetDistanceToClusterHit(clusterPath.at(i + 1)));
         features.at("GapSep").AddToSequence(i == 0 ? 1.f :
             LArCaloHitHelper::IsInSameVolume(clusterPath.at(i - 1).m_pHit, pPathCaloHit) ? 1.f : 0.f);
     }
@@ -480,36 +489,25 @@ void DLThreeDClusterSplittingAlgorithm::GetFilteredViewSecVertices(const TwoDSli
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float DLThreeDClusterSplittingAlgorithm::GetDistanceToEventHit(HitKDTree2D &kdTree, const CaloHit *const pCaloHit, const CaloHitList &clusterPathHits) const
+float DLThreeDClusterSplittingAlgorithm::GetDistanceToEventHit(const Eigen::MatrixXf &eventHitMatrix, const IntVector &blacklist, 
+    const CaloHit *const pCaloHit) const
 {
-    // Collect close hits
-    HitKDNode2DList foundHits;
-    KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
-    kdTree.search(searchRegionHits, foundHits);
+    // Now find distances
+    Eigen::RowVectorXf row(2);
+    row << pCaloHit->GetPositionVector().GetX(), pCaloHit->GetPositionVector().GetZ(); 
+    Eigen::VectorXf norms((eventHitMatrix.rowwise() - row).array().square().rowwise().sum());
 
-    // Filter
-    bool found(false);
-    float minDistSq(std::numeric_limits<float>::max());
-    for (const auto &hit : foundHits)
-    {
-        const CaloHit *const pFoundHit(hit.data);
+    // Apply blacklist (to avoid hits in the same cluster)
+    for (int i : blacklist)
+        norms(i) = std::numeric_limits<float>::infinity();
 
-        if (std::find(clusterPathHits.begin(), clusterPathHits.end(), pFoundHit) != clusterPathHits.end())
-            continue;
+    // Get smallest disance
+    Eigen::Index index; 
+    norms.col(0).minCoeff(&index); 
+    float minDist(norms(index, 0));
+    minDist = (minDist > (m_maxEventHitSep * m_maxEventHitSep)) ? -1.f : sqrt(minDist);
 
-        found = true;
-        minDistSq = std::min(minDistSq, (pCaloHit->GetPositionVector() - pFoundHit->GetPositionVector()).GetMagnitudeSquared());
-    }
-
-    return (found ? std::sqrt(minDistSq) : -1.f);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float DLThreeDClusterSplittingAlgorithm::GetDistanceToClusterHit(const ClusterHit &currentHit, 
-    const ClusterHit &nextHit) const
-{
-    return (currentHit.m_pHit->GetPositionVector() - nextHit.m_pHit->GetPositionVector()).GetMagnitude();
+    return minDist;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -700,18 +698,19 @@ void DLThreeDClusterSplittingAlgorithm::FilterSplitIndices(const ClusterPath &cl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLThreeDClusterSplittingAlgorithm::PerformMatching(const CartesianPointVector &splitPosU, const CartesianPointVector &splitPosV, 
-    const CartesianPointVector &splitPosW, IntVector &usedU, IntVector &usedV, IntVector &usedW)
+    const CartesianPointVector &splitPosW, const std::map<HitType, Eigen::MatrixXf> &viewHitMatrixMap, IntVector &usedU, 
+    IntVector &usedV, IntVector &usedW) const
 {
     this->ThreeViewMatching(splitPosU, splitPosV, splitPosW, usedU, usedV, usedW);
-    // this->TwoViewMatching(splitPosU, splitPosV, TPC_VIEW_U, TPC_VIEW_V, viewTreeMap[TPC_VIEW_W], usedU, usedV);
-    // this->TwoViewMatching(splitPosU, splitPosW, TPC_VIEW_U, TPC_VIEW_W, viewTreeMap[TPC_VIEW_V], usedU, usedW);
-    // this->TwoViewMatching(splitPosV, splitPosW, TPC_VIEW_V, TPC_VIEW_W, viewTreeMap[TPC_VIEW_U], usedV, usedW);
+    this->TwoViewMatching(splitPosU, splitPosV, TPC_VIEW_U, TPC_VIEW_V, viewHitMatrixMap.at(TPC_VIEW_W), usedU, usedV);
+    this->TwoViewMatching(splitPosU, splitPosW, TPC_VIEW_U, TPC_VIEW_W, viewHitMatrixMap.at(TPC_VIEW_V), usedU, usedW);
+    this->TwoViewMatching(splitPosV, splitPosW, TPC_VIEW_V, TPC_VIEW_W, viewHitMatrixMap.at(TPC_VIEW_U), usedV, usedW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLThreeDClusterSplittingAlgorithm::ThreeViewMatching(const CartesianPointVector &splitPosU, const CartesianPointVector &splitPosV, 
-    const CartesianPointVector &splitPosW, IntVector &usedU, IntVector &usedV, IntVector &usedW)
+    const CartesianPointVector &splitPosW, IntVector &usedU, IntVector &usedV, IntVector &usedW) const
 {
     for (unsigned int iU = 0; iU < splitPosU.size(); ++iU)
     {
@@ -756,7 +755,7 @@ void DLThreeDClusterSplittingAlgorithm::ThreeViewMatching(const CartesianPointVe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLThreeDClusterSplittingAlgorithm::TwoViewMatching(const CartesianPointVector &splitPos1, const CartesianPointVector &splitPos2, 
-    const HitType hitType1, const HitType hitType2, HitKDTree2D &kdTree, IntVector &used1, IntVector &used2)
+    const HitType hitType1, const HitType hitType2, const Eigen::MatrixXf &eventHitMatrix, IntVector &used1, IntVector &used2) const
 {
     for (unsigned int i1 = 0; i1 < splitPos1.size(); ++i1)
     {
@@ -774,12 +773,14 @@ void DLThreeDClusterSplittingAlgorithm::TwoViewMatching(const CartesianPointVect
             const float pred3(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, splitPos1.at(i1).GetZ(), splitPos2.at(i2).GetZ()));
             const CartesianVector predPosition3((splitPos1.at(i1).GetX() + splitPos2.at(i2).GetX()) * 0.5f, 0.f, pred3);
 
-            // Collect close hits
-            HitKDNode2DList foundHits;
-            KDTreeBox searchRegionHits(build_2d_kd_search_region(predPosition3, m_twoViewMatchSearchRegion, m_twoViewMatchSearchRegion));
-            kdTree.search(searchRegionHits, foundHits);
+            // Does the projection fall on a hit in the third-view?
+            Eigen::RowVectorXf row(2);
+            row << predPosition3.GetX(), predPosition3.GetZ();
+            Eigen::VectorXf norms((eventHitMatrix.rowwise() - row).array().square().rowwise().sum());
+            Eigen::Index index;;
+            norms.col(0).minCoeff(&index);;
 
-            if (foundHits.empty())
+            if (norms(index, 0) > (m_twoViewMatchSearchRegion * m_twoViewMatchSearchRegion))
                 continue;
 
             used1.push_back(i1); used2.push_back(i2);
@@ -863,7 +864,7 @@ void DLThreeDClusterSplittingAlgorithm::SplitCluster(const Cluster *const pClust
 //------------------------------------------------------------------------------------------------------------------------------------------
 #ifdef MONITORING
 void DLThreeDClusterSplittingAlgorithm::FillHitListMaps(const Cluster *const pCluster, MCParticleToHitListMap &mainHitListMap, 
-    MCParticleToHitListMap &contHitListMap) 
+    MCParticleToHitListMap &contHitListMap) const
 {
     CaloHitList clusterHits;
     LArClusterHelper::GetAllHits(pCluster, clusterHits);
@@ -890,7 +891,7 @@ void DLThreeDClusterSplittingAlgorithm::FillHitListMaps(const Cluster *const pCl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLThreeDClusterSplittingAlgorithm::FindContaminants(const MCParticleToHitListMap &mainHitListMap, const MCParticleToHitListMap &contHitListMap,
-    MCContaminantVector &mcContaminants)
+    MCContaminantVector &mcContaminants) const
 {
     // Sort
     MCParticleVector mcParticleVector;
@@ -933,7 +934,7 @@ void DLThreeDClusterSplittingAlgorithm::FindContaminants(const MCParticleToHitLi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLThreeDClusterSplittingAlgorithm::BuildMCContaminant(const MCParticle *const pMCContaminant, const CaloHitList &mainHitList, 
-    const CaloHitList &contHitList, MCContaminantVector &mcContaminants)
+    const CaloHitList &contHitList, MCContaminantVector &mcContaminants) const
 {
     const HitType hitType(mainHitList.front()->GetHitType());
     const CartesianVector trueStart(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCContaminant->GetVertex(), hitType));
@@ -1011,7 +1012,7 @@ void DLThreeDClusterSplittingAlgorithm::BuildMCContaminant(const MCParticle *con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLThreeDClusterSplittingAlgorithm::FindTrueSplitPositions(const TwoDSlidingFitResult &clusterFit, const MCContaminantVector &mcContaminants,
-    CartesianPointVector &trueSplitPositions)
+    CartesianPointVector &trueSplitPositions) const
 {
     if (mcContaminants.size() < 2)
         return;
@@ -1118,7 +1119,7 @@ void DLThreeDClusterSplittingAlgorithm::FindTrueSplitPositions(const TwoDSliding
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLThreeDClusterSplittingAlgorithm::FillTree(const CartesianPointVector &splitPositions, const MCParticleToHitListMap &mainHitListMap, 
-    const TwoDSlidingFitResult &clusterFit, const Features &features)
+    const TwoDSlidingFitResult &clusterFit, const Features &features) const
 {
     const bool isContaminated(!splitPositions.empty());
 
@@ -1250,6 +1251,9 @@ StatusCode DLThreeDClusterSplittingAlgorithm::ReadSettings(const TiXmlHandle xml
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
         XmlHelper::ReadValue(xmlHandle, "WindowLength", m_windowLength));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "MaxEventHitSep", m_maxEventHitSep));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
         XmlHelper::ReadValue(xmlHandle, "BackgroundThreshold", m_bkgThreshold));
