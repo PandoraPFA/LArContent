@@ -5,8 +5,8 @@
  *
  *  $Log: $
  */
-#ifndef LAR_SHOWER_PFO_MERGING_PFO_MOP_UP_ALGORITHM_H
-#define LAR_SHOWER_PFO_MERGING_PFO_MOP_UP_ALGORITHM_H 1
+#ifndef LAR_SHOWER_PFO_MOP_UP_ALGORITHM_H
+#define LAR_SHOWER_PFO_MOP_UP_ALGORITHM_H 1
 
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMopUpAlgorithm.h"
 

@@ -25,15 +25,11 @@ void PfoMopUpBaseAlgorithm::MergeAndDeletePfos(const ParticleFlowObject *const p
     const PfoList daughterPfos(pPfoToDelete->GetDaughterPfoList());
     const ClusterVector daughterClusters(pPfoToDelete->GetClusterList().begin(), pPfoToDelete->GetClusterList().end());
     const VertexVector daughterVertices(pPfoToDelete->GetVertexList().begin(), pPfoToDelete->GetVertexList().end());
-    
-   //std::cout << "Delete This " << pPfoToDelete << std::endl;
-   //std::cout << "List Name " << GetListName(pPfoToDelete) << std::endl;
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfoToDelete, this->GetListName(pPfoToDelete)));
 
     for (const ParticleFlowObject *const pDaughterPfo : daughterPfos)
     {
-       // std::cout << pPfoToEnlarge << " "  << pDaughterPfo << std::endl; 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPfoToEnlarge, pDaughterPfo));
     }
 
