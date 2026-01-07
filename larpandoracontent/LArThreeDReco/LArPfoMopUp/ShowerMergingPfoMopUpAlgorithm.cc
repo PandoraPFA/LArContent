@@ -25,7 +25,7 @@ namespace lar_content
 ShowerMergingPfoMopUpAlgorithm::ShowerMergingPfoMopUpAlgorithm() :
     m_alignmentAngle(0.99),
     m_maxVtxPfosSeparation(3.f),
-    m_stubShowerSeparation(2025)
+    m_stubShowerSeparationSquared(2025)
 {
 }
 
@@ -39,23 +39,15 @@ StatusCode ShowerMergingPfoMopUpAlgorithm::Run()
 
     for (const ParticleFlowObject *const pPfo1 : sortedPfos)
     {  
-       if (deletedPfos.find (pPfo1) != deletedPfos.end())
+       if (!pPfo1 || deletedPfos.find(pPfo1) != deletedPfos.end())
            continue;
         
-       if (!pPfo1)
-            continue;
-
        for (const ParticleFlowObject *const pPfo2 : sortedPfos)
         {   
-           if (deletedPfos.find (pPfo2) != deletedPfos.end())
+           if (!pPfo2 || pPfo1 == pPfo2 || deletedPfos.find(pPfo2) != deletedPfos.end())
                continue;
-           
-           if (!pPfo2)
-                continue;
-
-            if (pPfo1 == pPfo2)
-                continue;
-
+            
+           // Only consider merging secondary PFOs; skip if either has no parent   
             if (pPfo1->GetParentPfoList().empty() || pPfo2->GetParentPfoList().empty())
                 continue;
 
@@ -68,8 +60,9 @@ StatusCode ShowerMergingPfoMopUpAlgorithm::Run()
                 continue;
 
              bool invert{false};
-             {
-                for (const Pfo* const daughter : pPfo2->GetDaughterPfoList())
+             
+             for (const Pfo* const daughter : pPfo2->GetDaughterPfoList())
+             {    
                      if (daughter == pPfo1)
                      {    
                         invert=true;
@@ -204,7 +197,7 @@ bool ShowerMergingPfoMopUpAlgorithm::IsPfoVertexAssociated(const ParticleFlowObj
     if ( distNuVtxToShwStart < distNuVtxToStubEnd)
       return false;
     const float StubShwSep = ( ShwVtx - pStubEndPoint->GetPositionVector() ).GetMagnitudeSquared(); 
-    return StubShwSep<m_stubShowerSeparation;
+    return StubShwSep<m_stubShowerSeparationSquared;
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -214,7 +207,7 @@ StatusCode ShowerMergingPfoMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "AlignmentAngle", m_alignmentAngle));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxVtxPfosSeparation", m_maxVtxPfosSeparation));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "StubShowerSeparation", m_stubShowerSeparation));   
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "StubShowerSeparationSquared", m_stubShowerSeparationSquared));   
     
     return PfoMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }
