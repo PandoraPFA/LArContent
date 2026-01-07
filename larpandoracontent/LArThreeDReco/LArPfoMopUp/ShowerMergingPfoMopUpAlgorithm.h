@@ -57,7 +57,7 @@ private:
     pandora::StringVector m_inputPfoListNames;   ///< The input pfo list names 
     float m_alignmentAngle;                      ///< The maximum angular separation between two pfos
     float m_maxVtxPfosSeparation;                ///< The maximum distance between the neutrino vertex and start of the pfo 
-    float m_stubShowerSeparation;                ///< The maximum distance between the upstream stub and the downstream shower 
+    float m_stubShowerSeparationSquared;         ///< The square of the maximum distance between the upstream stub and the downstream shower 
 
 
 };
