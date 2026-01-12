@@ -81,7 +81,7 @@ DLTwoDShowerGrowingAlgorithm::~DLTwoDShowerGrowingAlgorithm()
     {
         PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName, m_trainingFileName, "UPDATE"));
 
-        for (const HitType &view : { TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W })
+        for ([[maybe_unused]] const HitType &view : { TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W })
         {
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName + "_view_data", "view", static_cast<int>(view)));
             PANDORA_MONITORING_API(SetTreeVariable(
