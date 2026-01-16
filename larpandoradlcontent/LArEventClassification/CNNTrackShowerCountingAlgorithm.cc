@@ -272,7 +272,9 @@ StatusCode CNNTrackShowerCountingAlgorithm::StorePredictions(const TrackShowerCo
         const std::string contextName{"DlTrackShowerCountingAlgorithm::Results::" + viewString};
         try
         {
-            PandoraContentApi::AddEventContextObject(*this, contextName, new TrackShowerCountingContextObject(result.GetNuScoresFromView(view), result.GetTrackScoresFromView(view), result.GetShowerScoresFromView(view)));
+            PandoraContentApi::AddEventContextObject(*this, contextName,
+                new TrackShowerCountingContextObject(
+                    result.GetNuScoresFromView(view), result.GetTrackScoresFromView(view), result.GetShowerScoresFromView(view)));
         }
         catch (StatusCodeException &)
         {
