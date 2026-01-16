@@ -280,8 +280,11 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
                     probShower *= recipSum;
                     probTrack *= recipSum;
                     LArCaloHit *pLArCaloHit{const_cast<LArCaloHit *>(dynamic_cast<const LArCaloHit *>(pCaloHit))};
-                    pLArCaloHit->SetShowerProbability(probShower);
-                    pLArCaloHit->SetTrackProbability(probTrack);
+                    if (pLArCaloHit)
+                    {
+                        pLArCaloHit->SetShowerProbability(probShower);
+                        pLArCaloHit->SetTrackProbability(probTrack);
+                    }
                 }
             }
         }

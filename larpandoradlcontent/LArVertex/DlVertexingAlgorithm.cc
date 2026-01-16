@@ -17,6 +17,8 @@
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
+#include "larpandoradlcontent/LArHelpers/LArCanvasHelper.h"
+
 #include "larpandoradlcontent/LArVertex/DlVertexingAlgorithm.h"
 
 using namespace pandora;
@@ -26,18 +28,10 @@ namespace lar_dl_content
 {
 
 DlVertexingAlgorithm::DlVertexingAlgorithm() :
-    m_trainingMode{false},
-    m_trainingOutputFile{""},
     m_event{-1},
-    m_pass{1},
-    m_nClasses{0},
-    m_height{256},
-    m_width{256},
-    m_driftStep{0.5f},
     m_visualise{false},
     m_writeTree{false},
-    m_rng(static_cast<std::mt19937::result_type>(std::chrono::high_resolution_clock::now().time_since_epoch().count())),
-    m_volumeType{"dune_fd_hd"}
+    m_rng(static_cast<std::mt19937::result_type>(std::chrono::high_resolution_clock::now().time_since_epoch().count()))
 {
 }
 
@@ -70,10 +64,14 @@ StatusCode DlVertexingAlgorithm::Run()
 
 StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
 {
+    const CaloHitList *pCaloHitList2D(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "CaloHitList2D", pCaloHitList2D));
+    const MCParticleList *pMCParticleList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
     LArMCParticleHelper::MCContributionMap mcToHitsMap;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetMCToHitsMap(mcToHitsMap));
+    LArMCParticleHelper::GetMCToHitsMap(pCaloHitList2D, pMCParticleList, mcToHitsMap);
     MCParticleList hierarchy;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CompleteMCHierarchy(mcToHitsMap, hierarchy));
+    LArMCParticleHelper::CompleteMCHierarchy(mcToHitsMap, hierarchy);
 
     // Get boundaries for hits and make x dimension common
     std::map<HitType, float> wireMin, wireMax;
@@ -178,8 +176,8 @@ StatusCode DlVertexingAlgorithm::Infer()
     {
         // INFO: Check if there is a zoom in region for the second pass.
         const VertexList *pVertexList(nullptr);
-        PandoraContentApi::GetList(*this, m_inputVertexListName, pVertexList);
-        if (pVertexList == nullptr || pVertexList->empty())
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, m_inputVertexListName, pVertexList) || pVertexList == nullptr ||
+            pVertexList->empty())
         {
             std::cout << "DLVertexing: Input vertex list is empty! Can't perform pass " << m_pass << std::endl;
             return STATUS_CODE_SUCCESS;
@@ -248,7 +246,7 @@ StatusCode DlVertexingAlgorithm::Infer()
             {
                 const int inner{static_cast<int>(std::round(std::ceil(scaleFactor * m_thresholds[cls - 1])))};
                 const int outer{static_cast<int>(std::round(std::ceil(scaleFactor * m_thresholds[cls])))};
-                this->DrawRing(canvas, row + rowOffset, col + colOffset, inner, outer, 1.f / (outer * outer - inner * inner));
+                LArCanvasHelper::DrawRing(canvas, row + rowOffset, col + colOffset, inner, outer, 1.f / (outer * outer - inner * inner));
             }
         }
 
@@ -266,10 +264,15 @@ StatusCode DlVertexingAlgorithm::Infer()
         if (m_visualise)
         {
             PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
-            try
+            const MCParticleList *pMCParticleList{nullptr};
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
+
+            CartesianVector trueVertex3D(0, 0, 0);
+            if (LArMCParticleHelper::GetTrueVertex(pMCParticleList, trueVertex3D))
             {
                 float x{0.f}, u{0.f}, v{0.f}, w{0.f};
-                this->GetTrueVertexPosition(x, u, v, w);
+                const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+                LArVertexHelper::GetTrueVertexPosition(trueVertex3D, transform, x, u, v, w);
                 if (isU)
                 {
                     const CartesianVector trueVertex(x, 0.f, u);
@@ -285,15 +288,11 @@ StatusCode DlVertexingAlgorithm::Infer()
                     const CartesianVector trueVertex(x, 0.f, w);
                     PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &trueVertex, "W(true)", BLUE, 3));
                 }
-            }
-            catch (StatusCodeException &e)
-            {
-                std::cerr << "DlVertexingAlgorithm: Warning. Couldn't find true vertex." << std::endl;
-            }
-            for (const auto &pos : positionVector)
-            {
-                std::string label{isU ? "U" : isV ? "V" : "W"};
-                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, label, RED, 3));
+                for (const auto &pos : positionVector)
+                {
+                    std::string label{isU ? "U" : isV ? "V" : "W"};
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, label, RED, 3));
+                }
             }
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
@@ -450,273 +449,6 @@ StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromCanvas(float **canv
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void DlVertexingAlgorithm::GetCanvasParameters(const LArDLHelper::TorchOutput &networkOutput, const PixelVector &pixelVector,
-    int &colOffset, int &rowOffset, int &width, int &height) const
-{
-    const double scaleFactor{std::sqrt(m_height * m_height + m_width * m_width)};
-    // output is a 1 x num_classes x height x width tensor
-    // we want the maximum value in the num_classes dimension (1) for every pixel
-    auto classes{torch::argmax(networkOutput, 1)};
-    // the argmax result is a 1 x height x width tensor where each element is a class id
-    auto classesAccessor{classes.accessor<int64_t, 3>()};
-    int colOffsetMin{0}, colOffsetMax{0}, rowOffsetMin{0}, rowOffsetMax{0};
-    for (const auto &[row, col] : pixelVector)
-    {
-        const auto cls{classesAccessor[0][row][col]};
-        const double threshold{m_thresholds[cls]};
-        if (threshold > 0. && threshold < 1.)
-        {
-            const int distance = static_cast<int>(std::round(std::ceil(scaleFactor * threshold)));
-            if ((row - distance) < rowOffsetMin)
-                rowOffsetMin = row - distance;
-            if ((row + distance) > rowOffsetMax)
-                rowOffsetMax = row + distance;
-            if ((col - distance) < colOffsetMin)
-                colOffsetMin = col - distance;
-            if ((col + distance) > colOffsetMax)
-                colOffsetMax = col + distance;
-        }
-    }
-    colOffset = colOffsetMin < 0 ? -colOffsetMin : 0;
-    rowOffset = rowOffsetMin < 0 ? -rowOffsetMin : 0;
-    width = std::max(colOffsetMax + colOffset + 1, m_width);
-    height = std::max(rowOffsetMax + rowOffset + 1, m_height);
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-void DlVertexingAlgorithm::DrawRing(float **canvas, const int row, const int col, const int inner, const int outer, const float weight) const
-{
-    // Set the starting position for each circle bounding the ring
-    int c1{inner}, r1{0}, c2{outer}, r2{0};
-    int inner2{inner * inner}, outer2{outer * outer};
-    while (c2 >= r2)
-    {
-        // Set the output pixel location
-        int rp2{r2}, cp2{c2};
-        // We're still within the octant for the inner ring, so use the inner pixel location (see Update comment below)
-        // Note also that the inner row is always the same as the outer row, so no need to define rp1
-        int cp1{c1};
-        if (c1 <= r1)
-        { // We've completed the arc of the inner ring already, so just move radially out from here (see Update comment below)
-            cp1 = r2;
-        }
-        // Fill the pixels from inner to outer in the current row and their mirror pixels in the other octants
-        for (int c = cp1; c <= cp2; ++c)
-        {
-            canvas[row + rp2][col + c] += weight;
-            if (rp2 != c)
-                canvas[row + c][col + rp2] += weight;
-            if (rp2 != 0 && cp2 != 0)
-            {
-                canvas[row - rp2][col - c] += weight;
-                if (rp2 != c)
-                    canvas[row - c][col - rp2] += weight;
-            }
-            if (rp2 != 0)
-            {
-                canvas[row - rp2][col + c] += weight;
-                if (rp2 != c)
-                    canvas[row + c][col - rp2] += weight;
-            }
-            if (cp2 != 0)
-            {
-                canvas[row + rp2][col - c] += weight;
-                if (rp2 != c)
-                    canvas[row - c][col + rp2] += weight;
-            }
-        }
-        // Only update the inner location while it remains in the octant (outer ring also remains in the octant of course, but the logic of
-        // the update means that the inner ring can leave its octant before the outer ring is complete, so we need to stop that)
-        if (c1 > r1)
-            this->Update(inner2, c1, r1);
-        // Update the outer location - increase the row position with every step, decrease the column position if conditions are met
-        this->Update(outer2, c2, r2);
-    }
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-void DlVertexingAlgorithm::Update(const int radius2, int &col, int &row) const
-{
-    // Bresenham midpoint circle algorithm to determine if we should update the column position
-    // This obscure looking block of code uses bit shifts and integer arithmetic to perform this check as efficiently as possible
-    const int a{1 - (col << 2)};
-    const int b{col * col + row * row - radius2 + (row << 2) + 1};
-    const int c{(a << 2) * b + a * a};
-    if (c < 0)
-    {
-        --col;
-        ++row;
-    }
-    else
-        ++row;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode DlVertexingAlgorithm::GetMCToHitsMap(LArMCParticleHelper::MCContributionMap &mcToHitsMap) const
-{
-    const CaloHitList *pCaloHitList2D(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "CaloHitList2D", pCaloHitList2D));
-    const MCParticleList *pMCParticleList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
-
-    LArMCParticleHelper::PrimaryParameters parameters;
-    parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
-    LArMCParticleHelper::SelectReconstructableMCParticles(
-        pMCParticleList, pCaloHitList2D, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcToHitsMap);
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode DlVertexingAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, MCParticleList &mcHierarchy) const
-{
-    try
-    {
-        for (const auto &[mc, hits] : mcToHitsMap)
-        {
-            (void)hits;
-            mcHierarchy.push_back(mc);
-            LArMCParticleHelper::GetAllAncestorMCParticles(mc, mcHierarchy);
-        }
-    }
-    catch (const StatusCodeException &e)
-    {
-        return e.GetStatusCode();
-    }
-
-    // Move the neutrino to the front of the list
-    auto pivot =
-        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); });
-    (void)pivot;
-    if (pivot != mcHierarchy.end())
-        std::rotate(mcHierarchy.begin(), pivot, std::next(pivot));
-    else
-        return STATUS_CODE_NOT_FOUND;
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-void DlVertexingAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax) const
-{
-    xMin = std::numeric_limits<float>::max();
-    xMax = -std::numeric_limits<float>::max();
-    zMin = std::numeric_limits<float>::max();
-    zMax = -std::numeric_limits<float>::max();
-    // Find the range of x and z values in the view
-    for (const CaloHit *pCaloHit : caloHitList)
-    {
-        const float x{pCaloHit->GetPositionVector().GetX()};
-        const float z{pCaloHit->GetPositionVector().GetZ()};
-        xMin = std::min(x, xMin);
-        xMax = std::max(x, xMax);
-        zMin = std::min(z, zMin);
-        zMax = std::max(z, zMax);
-    }
-
-    if (caloHitList.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    const HitType view{caloHitList.front()->GetHitType()};
-    const bool isU{view == TPC_VIEW_U}, isV{view == TPC_VIEW_V}, isW{view == TPC_VIEW_W};
-    if (!(isU || isV || isW))
-        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
-
-    // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
-    const LArTPC *const pTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
-    const float pitch(view == TPC_VIEW_U ? pTPC->GetWirePitchU() : view == TPC_VIEW_V ? pTPC->GetWirePitchV() : pTPC->GetWirePitchW());
-
-    if (m_pass > 1)
-    {
-        const VertexList *pVertexList(nullptr);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pVertexList));
-        if (pVertexList->empty())
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-        const CartesianVector &vertex{pVertexList->front()->GetPosition()};
-
-        // Get hit distribution left/right asymmetry
-        int nHitsLeft{0}, nHitsRight{0};
-        const double xVtx{vertex.GetX()};
-        for (const std::string &listname : m_caloHitListNames)
-        {
-            const CaloHitList *pCaloHitList(nullptr);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
-            if (pCaloHitList->empty())
-                continue;
-            for (const CaloHit *const pCaloHit : *pCaloHitList)
-            {
-                const CartesianVector &pos{pCaloHit->GetPositionVector()};
-                if (pos.GetX() <= xVtx)
-                    ++nHitsLeft;
-                else
-                    ++nHitsRight;
-            }
-        }
-        const int nHitsTotal{nHitsLeft + nHitsRight};
-        if (nHitsTotal == 0)
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-        const float xAsymmetry{nHitsLeft / static_cast<float>(nHitsTotal)};
-
-        // Vertices
-        const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
-        double zVtx{0.};
-        if (isW)
-            zVtx += transform->YZtoW(vertex.GetY(), vertex.GetZ());
-        else if (isV)
-            zVtx += transform->YZtoV(vertex.GetY(), vertex.GetZ());
-        else
-            zVtx = transform->YZtoU(vertex.GetY(), vertex.GetZ());
-
-        // Get hit distribution upstream/downstream asymmetry
-        int nHitsUpstream{0}, nHitsDownstream{0};
-        for (const CaloHit *const pCaloHit : caloHitList)
-        {
-            const CartesianVector &pos{pCaloHit->GetPositionVector()};
-            if (pos.GetZ() <= zVtx)
-                ++nHitsUpstream;
-            else
-                ++nHitsDownstream;
-        }
-        const int nHitsViewTotal{nHitsUpstream + nHitsDownstream};
-        if (nHitsViewTotal == 0)
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-        const float zAsymmetry{nHitsUpstream / static_cast<float>(nHitsViewTotal)};
-
-        const float xSpan{m_driftStep * (m_width - 1)};
-        xMin = xVtx - xAsymmetry * xSpan;
-        xMax = xMin + (m_driftStep * (m_width - 1));
-        const float zSpan{pitch * (m_height - 1)};
-        zMin = zVtx - zAsymmetry * zSpan;
-        zMax = zMin + zSpan;
-    }
-
-    // Avoid unreasonable rescaling of very small hit regions, pixels are assumed to be 0.5cm in x and wire pitch in z
-    // ATTN: Rescaling is to a size 1 pixel smaller than the intended image to ensure all hits fit within an imaged binned
-    // to be one pixel wider than this
-    const float xRange{xMax - xMin}, zRange{zMax - zMin};
-    const float minXSpan{m_driftStep * (m_width - 1)};
-    if (xRange < minXSpan)
-    {
-        const float padding{0.5f * (minXSpan - xRange)};
-        xMin -= padding;
-        xMax += padding;
-    }
-    const float minZSpan{pitch * (m_height - 1)};
-    if (zRange < minZSpan)
-    {
-        const float padding{0.5f * (minZSpan - zRange)};
-        zMin -= padding;
-        zMax += padding;
-    }
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode DlVertexingAlgorithm::MakeCandidateVertexList(const CartesianPointVector &positions)
 {
     const VertexList *pVertexList{nullptr};
@@ -737,53 +469,6 @@ StatusCode DlVertexingAlgorithm::MakeCandidateVertexList(const CartesianPointVec
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
 
     return STATUS_CODE_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-void DlVertexingAlgorithm::GetTrueVertexPosition(float &x, float &y, float &z) const
-{
-    const CartesianVector &trueVertex{this->GetTrueVertex()};
-    x = trueVertex.GetX();
-    y = trueVertex.GetY();
-    z = trueVertex.GetZ();
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-void DlVertexingAlgorithm::GetTrueVertexPosition(float &x, float &u, float &v, float &w) const
-{
-    const CartesianVector &trueVertex{this->GetTrueVertex()};
-    const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
-    x = trueVertex.GetX();
-    u = static_cast<float>(transform->YZtoU(trueVertex.GetY(), trueVertex.GetZ()));
-    v = static_cast<float>(transform->YZtoV(trueVertex.GetY(), trueVertex.GetZ()));
-    w = static_cast<float>(transform->YZtoW(trueVertex.GetY(), trueVertex.GetZ()));
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-const CartesianVector &DlVertexingAlgorithm::GetTrueVertex() const
-{
-    const MCParticleList *pMCParticleList{nullptr};
-    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pMCParticleList) && pMCParticleList)
-    {
-        MCParticleVector primaries;
-        LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
-        if (!primaries.empty())
-        {
-            const MCParticle *primary{primaries.front()};
-            const MCParticleList &parents{primary->GetParentList()};
-            if (parents.size() == 1)
-            {
-                const MCParticle *trueNeutrino{parents.front()};
-                if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
-                    return primaries.front()->GetVertex();
-            }
-        }
-    }
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 #ifdef MONITORING
@@ -854,125 +539,21 @@ void DlVertexingAlgorithm::PopulateRootTree(const std::vector<VertexTuple> &vert
 
 StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualise", m_visualise));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Pass", m_pass));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageHeight", m_height));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageWidth", m_width));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DriftStep", m_driftStep));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DistanceThresholds", m_thresholds));
-    m_nClasses = m_thresholds.size() - 1;
-    if (m_pass > 1)
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_inputVertexListName));
-    }
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, DlVertexingBaseAlgorithm::ReadSettings(xmlHandle));
 
-    if (m_trainingMode)
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualise", m_visualise));
+
+    if (!m_trainingMode)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrainingOutputFileName", m_trainingOutputFile));
-    }
-    else
-    {
-        std::string modelName;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameU", modelName));
-        modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
-        LArDLHelper::LoadModel(modelName, m_modelU);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameV", modelName));
-        modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
-        LArDLHelper::LoadModel(modelName, m_modelV);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameW", modelName));
-        modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
-        LArDLHelper::LoadModel(modelName, m_modelW);
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WriteTree", m_writeTree));
         if (m_writeTree)
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RootTreeName", m_rootTreeName));
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RootFileName", m_rootFileName));
         }
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
     }
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VolumeType", m_volumeType));
 
     return STATUS_CODE_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-DlVertexingAlgorithm::VertexTuple::VertexTuple(
-    const Pandora &pandora, const CartesianVector &vertexU, const CartesianVector &vertexV, const CartesianVector &vertexW) :
-    m_pos{0.f, 0.f, 0.f},
-    m_chi2{0.f}
-{
-    LArGeometryHelper::MergeThreePositions3D(pandora, TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, vertexU, vertexV, vertexW, m_pos, m_chi2);
-    if (m_chi2 > 1.f)
-    {
-        CartesianVector vertexUV(0.f, 0.f, 0.f);
-        float chi2UV{0.f};
-        LArGeometryHelper::MergeTwoPositions3D(pandora, TPC_VIEW_U, TPC_VIEW_V, vertexU, vertexV, vertexUV, chi2UV);
-
-        CartesianVector vertexUW(0.f, 0.f, 0.f);
-        float chi2UW{0.f};
-        LArGeometryHelper::MergeTwoPositions3D(pandora, TPC_VIEW_U, TPC_VIEW_W, vertexU, vertexW, vertexUW, chi2UW);
-
-        CartesianVector vertexVW(0.f, 0.f, 0.f);
-        float chi2VW{0.f};
-        LArGeometryHelper::MergeTwoPositions3D(pandora, TPC_VIEW_V, TPC_VIEW_W, vertexV, vertexW, vertexVW, chi2VW);
-
-        if (chi2UV < m_chi2)
-        {
-            m_pos = vertexUV;
-            m_chi2 = chi2UV;
-        }
-        if (chi2UW < m_chi2)
-        {
-            m_pos = vertexUW;
-            m_chi2 = chi2UW;
-        }
-        if (chi2VW < m_chi2)
-        {
-            m_pos = vertexVW;
-            m_chi2 = chi2VW;
-        }
-    }
-    //    std::cout << "Merging 3, position (" << m_pos.GetX() << ", " << m_pos.GetY() << ", " << m_pos.GetZ() << ") with chi2 " << m_chi2 <<
-    //        std::endl;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-DlVertexingAlgorithm::VertexTuple::VertexTuple(
-    const Pandora &pandora, const CartesianVector &vertex1, const CartesianVector &vertex2, const HitType view1, const HitType view2) :
-    m_pos{0.f, 0.f, 0.f},
-    m_chi2{0.f}
-{
-    LArGeometryHelper::MergeTwoPositions3D(pandora, view1, view2, vertex1, vertex2, m_pos, m_chi2);
-    std::cout << "Merging 2, position (" << m_pos.GetX() << ", " << m_pos.GetY() << ", " << m_pos.GetZ() << ") with chi2 " << m_chi2 << std::endl;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-const CartesianVector &DlVertexingAlgorithm::VertexTuple::GetPosition() const
-{
-    return m_pos;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-float DlVertexingAlgorithm::VertexTuple::GetChi2() const
-{
-    return m_chi2;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-std::string DlVertexingAlgorithm::VertexTuple::ToString() const
-{
-    const float x{m_pos.GetX()}, y{m_pos.GetY()}, z{m_pos.GetZ()};
-    return "3D pos: (" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")   X2 = " + std::to_string(m_chi2);
 }
 
 } // namespace lar_dl_content

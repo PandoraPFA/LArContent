@@ -22,6 +22,14 @@ public:
     typedef std::set<unsigned int> UIntSet;
 
     /**
+     *  @brief  Get all hits (ordered and isoltated) associated with a two dimensional cluster
+     *
+     *  @param  pCluster the address of the cluster
+     *  @param  caloHitList the output list of hits
+     */
+    static void GetAllHits(const pandora::Cluster *const pCluster, pandora::CaloHitList &caloHitList);
+
+    /**
      *  @brief  Get the hit type associated with a two dimensional cluster
      *
      *  @param  pCluster the address of the cluster
@@ -304,6 +312,17 @@ public:
      *  @return status code, faster than throwing in regular use-cases
      */
     static pandora::StatusCode GetAverageZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax, float &averageZ);
+
+    /**
+     *  @brief  Determines if there is a hit between two hits.
+     *
+     *  @param  caloHits the collection of hits under consideration
+     *  @param  pCaloHit1 the first calo hit
+     *  @param  pCaloHit2 the second calo hit
+     *
+     *  @return true if there is a hit between the two hits, false otherwise
+     */
+    static bool HasBlockedPath(const pandora::CaloHitVector &caloHits, const pandora::CaloHit *const pCaloHit1, const pandora::CaloHit *const pCaloHit2);
 
     /**
      *  @brief  Sort clusters by number of occupied layers, and by inner layer, then energy in event of a tie

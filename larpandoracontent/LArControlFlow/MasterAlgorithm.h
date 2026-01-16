@@ -215,8 +215,8 @@ protected:
      *  @param  pNewParentPfo the new parent of the new output pfo (nullptr if none)
      *  @param  newPfoList to receive the list of new pfos
      */
-    pandora::StatusCode Recreate(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ParticleFlowObject *const pNewParentPfo,
-        pandora::PfoList &newPfoList) const;
+    virtual pandora::StatusCode Recreate(const pandora::ParticleFlowObject *const pInputPfo,
+        const pandora::ParticleFlowObject *const pNewParentPfo, pandora::PfoList &newPfoList) const;
 
     /**
      *  @brief  Create a new calo hit in the current pandora instance, based upon the provided input calo hit

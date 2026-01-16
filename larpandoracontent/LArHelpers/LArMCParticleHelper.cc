@@ -227,6 +227,30 @@ void LArMCParticleHelper::GetTrueTestBeamParticles(const MCParticleList *const p
     std::sort(trueTestBeamParticles.begin(), trueTestBeamParticles.end(), LArMCParticleHelper::SortByMomentum);
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::GetTrueVertex(const MCParticleList *const pMCParticleList, CartesianVector &trueVertex)
+{
+    MCParticleVector primaries;
+    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
+    if (!primaries.empty())
+    {
+        const MCParticle *primary{primaries.front()};
+        const MCParticleList &parents{primary->GetParentList()};
+        if (parents.size() == 1)
+        {
+            const MCParticle *trueNeutrino{parents.front()};
+            if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
+            {
+                trueVertex = primaries.front()->GetVertex();
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *const pMCParticle)
@@ -470,6 +494,43 @@ void LArMCParticleHelper::GetMCToSelfMap(const MCParticleList *const pMCParticle
     {
         mcToSelfMap[pMCParticle] = pMCParticle;
     }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetMCToHitsMap(const CaloHitList *const pCaloHitList2D, const MCParticleList *const pMCParticleList,
+    LArMCParticleHelper::MCContributionMap &mcToHitsMap)
+{
+    PrimaryParameters parameters;
+    parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
+    LArMCParticleHelper::SelectReconstructableMCParticles(
+        pMCParticleList, pCaloHitList2D, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcToHitsMap);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::CompleteMCHierarchy(const LArMCParticleHelper::MCContributionMap &mcToHitsMap, MCParticleList &mcHierarchy)
+{
+    try
+    {
+        for (const auto &[mc, hits] : mcToHitsMap)
+        {
+            mcHierarchy.emplace_back(mc);
+            LArMCParticleHelper::GetAllAncestorMCParticles(mc, mcHierarchy);
+        }
+    }
+    catch (const StatusCodeException &e)
+    {
+        throw;
+    }
+
+    // Move the neutrino to the front of the list
+    auto pivot{
+        std::find_if(mcHierarchy.begin(), mcHierarchy.end(), [](const MCParticle *mc) -> bool { return LArMCParticleHelper::IsNeutrino(mc); })};
+    if (pivot != mcHierarchy.end())
+        std::rotate(mcHierarchy.begin(), pivot, std::next(pivot));
+    else
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

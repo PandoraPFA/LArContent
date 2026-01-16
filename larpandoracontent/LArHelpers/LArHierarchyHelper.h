@@ -440,8 +440,9 @@ public:
              *
              *  @param  hierarchy The parent hierarchy of this node
              *  @param  pPfo The primary PFO with which this node should be created
+             *  @param  tier The tier that should be assigned to this node
              */
-            Node(const RecoHierarchy &hierarchy, const pandora::ParticleFlowObject *pPfo);
+            Node(const RecoHierarchy &hierarchy, const pandora::ParticleFlowObject *pPfo, const int tier = 1);
 
             /**
              *  @brief  Create a node from a list of PFOs
@@ -449,8 +450,9 @@ public:
              *  @param  hierarchy The parent hierarchy of this node
              *  @param  pfoList The PFO list with which this node should be created
              *  @parasm caloHitList The CaloHit list with which this node should be created
+             *  @param  tier The tier that should be assigned to this node
              */
-            Node(const RecoHierarchy &hierarchy, const pandora::PfoList &pfoList, const pandora::CaloHitList &caloHitList);
+            Node(const RecoHierarchy &hierarchy, const pandora::PfoList &pfoList, const pandora::CaloHitList &caloHitList, const int tier = 1);
 
             /**
              *  @brief Destructor
@@ -509,6 +511,13 @@ public:
             int GetParticleId() const;
 
             /**
+             *  @brief  Retrieve the hierarchy tier of this node
+             *
+             *  @return The hierarchy tier of this node
+             */
+            int GetHierarchyTier() const;
+
+            /**
              *  @brief  Produce a string representation of the hierarchy
              *
              *  @return The string representation of the hierarchy
@@ -521,6 +530,7 @@ public:
             pandora::CaloHitList m_caloHits;              ///< The list of calo hits of which this node is composed
             NodeVector m_children;                        ///< The child nodes of this node
             const pandora::ParticleFlowObject *m_mainPfo; ///< The leading particle flow object for this node
+            int m_tier;                                   ///< The hierarchy tier for this node
             int m_pdg;                                    ///< The particle ID (track = muon, shower = electron)
         };
 
@@ -1004,6 +1014,14 @@ inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::
 inline const pandora::ParticleFlowObject *LArHierarchyHelper::RecoHierarchy::Node::GetLeadingPfo() const
 {
     return m_mainPfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline int LArHierarchyHelper::RecoHierarchy::Node::GetHierarchyTier() const
+{
+    return m_tier;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -8,8 +8,10 @@
 #ifndef LAR_VERTEX_HELPER_H
 #define LAR_VERTEX_HELPER_H 1
 
+#include "Objects/CartesianVector.h"
 #include "Objects/Cluster.h"
 #include "Objects/Vertex.h"
+#include "Plugins/LArTransformationPlugin.h"
 
 namespace lar_content
 {
@@ -56,6 +58,27 @@ public:
      *  @return true if in fiducial volume, false if not
      */
     static bool IsInFiducialVolume(const pandora::Pandora &pandora, const pandora::CartesianVector &vertex, const std::string &detector);
+
+    /**
+     *  @brief  Retrieve the true neutrino vertex position.
+     *  @param  vertex The cartesian vector containing the 3D vertex position
+     *  @param  x The output x coordinate
+     *  @param  u The output y coordinate
+     *  @param  v The output z coordinate
+     */
+    static void GetTrueVertexPosition(const pandora::CartesianVector &vertex, float &x, float &y, float &z);
+
+    /**
+     *  @brief  Retrieve the true neutrino vertex position.
+     *
+     *  @param  vertex The cartesian vector containing the 3D vertex position
+     *  @param  x The output drift coordinate
+     *  @param  u The output channel coordinate in the U plane
+     *  @param  v The output channel coordinate in the V plane
+     *  @param  w The output channel coordinate in the W plane
+     */
+    static void GetTrueVertexPosition(const pandora::CartesianVector &vertex, const pandora::LArTransformationPlugin *const pTransform,
+        float &x, float &u, float &v, float &w);
 };
 
 } // namespace lar_content
