@@ -15,6 +15,7 @@
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
+#include "larpandoracontent/LArObjects/LArTrackShowerCountingContextObject.h"
 
 #include "larpandoradlcontent/LArEventClassification/CNNTrackShowerCountingAlgorithm.h"
 
@@ -263,71 +264,22 @@ StatusCode CNNTrackShowerCountingAlgorithm::Infer()
 
 StatusCode CNNTrackShowerCountingAlgorithm::StorePredictions(const TrackShowerCountingResults &result)
 {
-    // For now we will create a fake PFParticle and store results as metadata.
-    // TODO: update this after changes to the SDK will allow us to store event-level information
-    const PfoList *pDummyEventPfoList{nullptr};
-    std::string dummyName;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pDummyEventPfoList, dummyName));
-
-    PandoraContentApi::ParticleFlowObject::Parameters dummyEventPfoParameters;
-    dummyEventPfoParameters.m_particleId = NU_MU;
-    dummyEventPfoParameters.m_charge = PdgTable::GetParticleCharge(dummyEventPfoParameters.m_particleId.Get());
-    dummyEventPfoParameters.m_mass = PdgTable::GetParticleMass(dummyEventPfoParameters.m_particleId.Get());
-    dummyEventPfoParameters.m_energy = 0.f;
-    dummyEventPfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    dummyEventPfoParameters.m_propertiesToAdd["IsNeutrino"] = 1.f;
-    const ParticleFlowObject *pDummyEventPfo{nullptr};
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, dummyEventPfoParameters, pDummyEventPfo));
-
-    // Now we add some metadata to the Pfo
-    object_creation::ParticleFlowObject::Metadata dummyEventPfoMetadata;
-
-    const std::vector<std::string> nuClassNames{"predNuScoreNC", "predNuScoreCCNumu", "predNuScoreCCNue"};
     const std::vector<HitType> views{TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W};
 
     for (const HitType &view : views)
     {
         const std::string viewString{view == TPC_VIEW_U ? "U" : (view == TPC_VIEW_V ? "V" : "W")};
-
-        const std::vector<float> nuScores{result.GetNuScoresFromView(view)};
-        for (unsigned int n = 0; n < nuClassNames.size(); ++n)
+        const std::string contextName{"DlTrackShowerCountingAlgorithm::Results::" + viewString};
+        try
         {
-            const std::string &nuClass{nuClassNames.at(n)};
-            dummyEventPfoMetadata.m_propertiesToAdd[nuClass + viewString] = nuScores.at(n);
+            PandoraContentApi::AddEventContextObject(*this, contextName, new TrackShowerCountingContextObject(result.GetNuScoresFromView(view), result.GetTrackScoresFromView(view), result.GetShowerScoresFromView(view)));
         }
-
-        const std::vector<float> trackScores{result.GetTrackScoresFromView(view)};
-        for (unsigned int t = 0; t < trackScores.size(); ++t)
+        catch (StatusCodeException &)
         {
-            const std::string &className{"predTrackScore" + std::to_string(t)};
-            dummyEventPfoMetadata.m_propertiesToAdd[className + viewString] = trackScores.at(t);
-        }
-
-        const std::vector<float> showerScores{result.GetShowerScoresFromView(view)};
-        for (unsigned int s = 0; s < showerScores.size(); ++s)
-        {
-            const std::string &className{"predShowerScore" + std::to_string(s)};
-            dummyEventPfoMetadata.m_propertiesToAdd[className + viewString] = showerScores.at(s);
+            std::cout << contextName << " already exists in EventContext" << std::endl;
+            return STATUS_CODE_FAILURE;
         }
     }
-
-    // Save the best class values too
-    dummyEventPfoMetadata.m_propertiesToAdd["predNuClassU"] = result.GetNuClassPredictionFromView(TPC_VIEW_U);
-    dummyEventPfoMetadata.m_propertiesToAdd["predNuClassV"] = result.GetNuClassPredictionFromView(TPC_VIEW_V);
-    dummyEventPfoMetadata.m_propertiesToAdd["predNuClassW"] = result.GetNuClassPredictionFromView(TPC_VIEW_W);
-
-    dummyEventPfoMetadata.m_propertiesToAdd["nPredTracksU"] = result.GetTrackClassPredictionFromView(TPC_VIEW_U);
-    dummyEventPfoMetadata.m_propertiesToAdd["nPredTracksV"] = result.GetTrackClassPredictionFromView(TPC_VIEW_V);
-    dummyEventPfoMetadata.m_propertiesToAdd["nPredTracksW"] = result.GetTrackClassPredictionFromView(TPC_VIEW_W);
-
-    dummyEventPfoMetadata.m_propertiesToAdd["nPredShowersU"] = result.GetShowerClassPredictionFromView(TPC_VIEW_U);
-    dummyEventPfoMetadata.m_propertiesToAdd["nPredShowersV"] = result.GetShowerClassPredictionFromView(TPC_VIEW_V);
-    dummyEventPfoMetadata.m_propertiesToAdd["nPredShowersW"] = result.GetShowerClassPredictionFromView(TPC_VIEW_W);
-
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pDummyEventPfo, dummyEventPfoMetadata));
-
-    if (!pDummyEventPfoList->empty())
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, dummyName, m_outputPfoListName));
 
     return STATUS_CODE_SUCCESS;
 }
