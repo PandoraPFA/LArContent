@@ -23,6 +23,7 @@
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlClusterCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h"
+#include "larpandoradlcontent/LArTrackShowerId/DlTrackCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlPfoCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTwoDReco/DLThreeDClusterSplittingAlgorithm.h"
 #include "larpandoradlcontent/LArTwoDReco/DlTrackShowerStreamSelectionAlgorithm.h"
@@ -42,6 +43,7 @@
     d("LArDLSecondaryVertexing",         DlSecondaryVertexingAlgorithm)                               \
     d("LArDLSNSignal",                   DlSNSignalAlgorithm)                                         \
     d("LArDLThreeDClusterSplitting",     DLThreeDClusterSplittingAlgorithm)                           \
+    d("LArDLTrackCharacterisation",      DlTrackCharacterisationAlgorithm)                            \
     d("LArDLTrackShowerStreamSelection", DlTrackShowerStreamSelectionAlgorithm)                       \
     d("LArDLVertexing",                  DlVertexingAlgorithm)                                        \
     d("LArCNNTrackShowerCounting",       CNNTrackShowerCountingAlgorithm)                             \
