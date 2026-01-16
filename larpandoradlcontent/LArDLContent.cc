@@ -30,17 +30,17 @@
 #include "larpandoradlcontent/LArDLContent.h"
 
 // clang-format off
-#define LAR_DL_ALGORITHM_LIST(d)                                                                      \
-    d("LArDLMaster",                     DLMasterAlgorithm)                                           \
-    d("LArDLClusterCharacterisation",    DlClusterCharacterisationAlgorithm)                          \
-    d("LArDLHitTrackShowerId",           DlHitTrackShowerIdAlgorithm)                                 \
-    d("LArDLHitValidation",              DlHitValidationAlgorithm)                                    \
-    d("LArDLNeutrinoHierarchy",          DLNeutrinoHierarchyAlgorithm)                                \
-    d("LArDLPfoCharacterisation",        DlPfoCharacterisationAlgorithm)                              \
-    d("LArDLSecondaryVertexing",         DlSecondaryVertexingAlgorithm)                               \
-    d("LArDLSNSignal",                   DlSNSignalAlgorithm)                                         \
-    d("LArCNNTrackShowerCounting",       CNNTrackShowerCountingAlgorithm)                             \
-    d("LArDLTrackShowerStreamSelection", DlTrackShowerStreamSelectionAlgorithm)                       \
+#define LAR_DL_ALGORITHM_LIST(d)                                                                                                          \
+    d("LArDLMaster",                     DLMasterAlgorithm)                                                                               \
+    d("LArDLClusterCharacterisation",    DlClusterCharacterisationAlgorithm)                                                              \
+    d("LArDLHitTrackShowerId",           DlHitTrackShowerIdAlgorithm)                                                                     \
+    d("LArDLHitValidation",              DlHitValidationAlgorithm)                                                                        \
+    d("LArDLNeutrinoHierarchy",          DLNeutrinoHierarchyAlgorithm)                                                                    \
+    d("LArDLPfoCharacterisation",        DlPfoCharacterisationAlgorithm)                                                                  \
+    d("LArDLSecondaryVertexing",         DlSecondaryVertexingAlgorithm)                                                                   \
+    d("LArDLSNSignal",                   DlSNSignalAlgorithm)                                                                             \
+    d("LArCNNTrackShowerCounting",       CNNTrackShowerCountingAlgorithm)                                                                 \
+    d("LArDLTrackShowerStreamSelection", DlTrackShowerStreamSelectionAlgorithm)                                                           \
     d("LArDLVertexing",                  DlVertexingAlgorithm)
 
 #define LAR_DL_ALGORITHM_TOOL_LIST(d)                                                                                                     \
