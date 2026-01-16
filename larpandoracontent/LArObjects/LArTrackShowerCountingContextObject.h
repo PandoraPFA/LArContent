@@ -52,15 +52,15 @@ public:
     const std::vector<float> &GetShowerCountingScores() const;
 
 private:
-
-    std::vector<float> m_nuScores;      ///< Vector of neutrino class scores 
-    std::vector<float> m_trackScores;   ///< Vector of track counting scores
-    std::vector<float> m_showerScores;  ///< Vector of shower counting scores
+    std::vector<float> m_nuScores;     ///< Vector of neutrino class scores
+    std::vector<float> m_trackScores;  ///< Vector of track counting scores
+    std::vector<float> m_showerScores; ///< Vector of shower counting scores
 };
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-inline TrackShowerCountingContextObject::TrackShowerCountingContextObject(const std::vector<float> &nuScores, const std::vector<float> &trackScores, const std::vector<float> &showerScores) :
+inline TrackShowerCountingContextObject::TrackShowerCountingContextObject(
+    const std::vector<float> &nuScores, const std::vector<float> &trackScores, const std::vector<float> &showerScores) :
     m_nuScores(nuScores),
     m_trackScores(trackScores),
     m_showerScores(showerScores)
@@ -88,6 +88,6 @@ inline const std::vector<float> &TrackShowerCountingContextObject::GetShowerCoun
     return m_showerScores;
 }
 
-}
+} // namespace lar_content
 
-#endif 
+#endif
