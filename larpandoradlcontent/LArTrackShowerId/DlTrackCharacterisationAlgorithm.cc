@@ -148,7 +148,6 @@ StatusCode DlTrackCharacterisationAlgorithm::CreateTrainingSample() const
 
 StatusCode DlTrackCharacterisationAlgorithm::Infer()
 {
-    std::cout << "Running inference" << std::endl;
     PfoToTrackFeaturesMap pfoToTrackFeaturesMap;
     StatusCode status = this->GetAllTrackFeatures(pfoToTrackFeaturesMap);
     if (status == STATUS_CODE_FAILURE)
@@ -159,13 +158,11 @@ StatusCode DlTrackCharacterisationAlgorithm::Infer()
 
     for (auto const &[pPfo, trackFeatures] : pfoToTrackFeaturesMap)
     {
-        std::cout << "Number of hits: " << trackFeatures.GetNHits(TPC_VIEW_U) << ", " << trackFeatures.GetNHits(TPC_VIEW_V) << ", "
-                  << trackFeatures.GetNHits(TPC_VIEW_W) << std::endl;
         // Check if we have at least one view above the minimum number of hits
         const bool uViewGood{trackFeatures.GetNHits(TPC_VIEW_U) >= m_minTrackHits};
         const bool vViewGood{trackFeatures.GetNHits(TPC_VIEW_V) >= m_minTrackHits};
         const bool wViewGood{trackFeatures.GetNHits(TPC_VIEW_W) >= m_minTrackHits};
-        if (!uViewGood && !vViewGood && !wViewGood)
+        if (!uViewGood || !vViewGood || !wViewGood)
             continue;
 
         LArDLHelper::TorchInput sequenceInputU;
@@ -187,10 +184,8 @@ StatusCode DlTrackCharacterisationAlgorithm::Infer()
         LArDLHelper::TorchOutput output;
 
         LArDLHelper::Forward(trackFeatures.GetExitingStatus() ? m_exitingModel : m_containedModel, inputs, output);
-        this->SaveResultsToPfoMetadata(pPfo, output);
 
-        std::cout << pPfo->GetPropertiesMap().at("muon_pid_score") << ", " << pPfo->GetPropertiesMap().at("pion_pid_score") << ", "
-                  << pPfo->GetPropertiesMap().at("proton_pid_score") << ", " << pPfo->GetPropertiesMap().at("kaon_pid_score") << std::endl;
+        this->SaveResultsToPfoMetadata(pPfo, output);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -361,19 +356,14 @@ void DlTrackCharacterisationAlgorithm::CreateSequenceInput(const TrackHitFeature
                 break;
 
             const std::vector<float> &hit{trackHitFeatures.at(firstHit + h)};
-            // Copy the values into the tensor, remembering to normalise the positions
             for (unsigned int f = 0; f < nFeatures; ++f)
-                accessor[0][firstSeq + h][f] = f < 2 ? hit.at(f) / 1000.f : hit.at(f);
-        }
-    }
-
-    // All initial values are initialised as zeros. We want to represent dummy values with -1e9 instead
-    if (nHits < m_sequenceLength)
-    {
-        for (unsigned int h = 0; h < m_sequenceLength - nHits; ++h)
-        {
-            for (unsigned int f = 0; f < nFeatures; ++f)
-                accessor[0][h][f] = -1e9 / 1000.f;
+            {
+                // Calculate positions relative to the first hit and normalise
+                if (f < 2)
+                    accessor[0][firstSeq + h][f] = (hit.at(f) - trackHitFeatures.at(0).at(f)) / 1000.f;
+                else
+                    accessor[0][firstSeq + h][f] = hit.at(f);
+            }
         }
     }
 }
@@ -386,7 +376,7 @@ void DlTrackCharacterisationAlgorithm::CreateAuxillaryInput(const TrackFeatures 
     LArDLHelper::InitialiseInput({1, static_cast<int>(auxFeatures.size())}, auxillaryInput);
     auto accessor = auxillaryInput.accessor<float, 2>();
 
-    // We need to do some normalisation here
+    // We need to do some normalisation here for number of hits variables
     for (unsigned int f = 0; f < auxFeatures.size(); ++f)
     {
         if (f == 3 || f > 4)
@@ -419,7 +409,7 @@ StatusCode DlTrackCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackPfoListName", m_trackPfoListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinTrackHits", m_minTrackHits));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxTrackHits", m_sequenceLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SequenceLength", m_sequenceLength));
 
     if (m_trainingMode)
     {
