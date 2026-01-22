@@ -58,7 +58,14 @@ MvaLowEClusterMergingAlgorithm<T>::~MvaLowEClusterMergingAlgorithm()
 {
     if (m_writeTree)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "RECREATE"));
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "RECREATE"));
+        }
+        catch (StatusCodeException e)
+        {
+            std::cout << "MvaLowEClusterMergingAlgorithm: Unable to write to ROOT tree" << std::endl;
+        }
     }
 }
 

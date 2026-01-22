@@ -44,11 +44,25 @@ HierarchyValidationAlgorithm::~HierarchyValidationAlgorithm()
 {
     if (m_writeEventTree)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_eventTreeName.c_str(), m_eventFileName.c_str(), "UPDATE"));
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_eventTreeName.c_str(), m_eventFileName.c_str(), "UPDATE"));
+        }
+        catch (StatusCodeException e)
+        {
+            std::cout << "HierarchyValidationAlgorithm: Unable to write to ROOT tree" << std::endl;
+        }
     }
     if (m_writeMCTree)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_MCTreeName.c_str(), m_MCFileName.c_str(), "UPDATE"));
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_MCTreeName.c_str(), m_MCFileName.c_str(), "UPDATE"));
+        }
+        catch (StatusCodeException e)
+        {
+            std::cout << "HierarchyValidationAlgorithm: Unable to write to ROOT tree" << std::endl;
+        }
     }
 }
 
