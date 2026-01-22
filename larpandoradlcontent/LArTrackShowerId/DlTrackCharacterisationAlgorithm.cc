@@ -91,22 +91,21 @@ StatusCode DlTrackCharacterisationAlgorithm::CreateTrainingSample() const
         for (auto const &[view, hitFeatures] : trackFeatures.GetViewToTrackHitFeaturesMap())
         {
             const unsigned int nHits(hitFeatures.size());
-            std::vector<float> x, z, q;
+            std::vector<float> x, wire, q;
             x.reserve(nHits);
-            z.reserve(nHits);
+            wire.reserve(nHits);
             q.reserve(nHits);
 
-            // Get the information ready for writing to a tree
             for (auto const &hit : hitFeatures)
             {
-                x.emplace_back(hit.at(0));
-                z.emplace_back(hit.at(1));
+                // Set position coords as relative to the first hit
+                x.emplace_back(hit.at(0) - hitFeatures.at(0).at(0));
+                wire.emplace_back(hit.at(1) - hitFeatures.at(0).at(1));
                 q.emplace_back(hit.at(2));
             }
             viewX[view] = x;
-            viewWire[view] = z;
+            viewWire[view] = wire;
             viewQ[view] = q;
-            //            viewNHits[view] = nHits;
         }
         for (auto &[view, x] : viewX)
         {
