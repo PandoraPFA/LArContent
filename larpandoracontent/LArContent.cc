@@ -51,6 +51,7 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
+#include "larpandoracontent/LArMonitoring/EventClusterValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/HierarchyMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/HierarchyValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/MCParticleMonitoringAlgorithm.h"
@@ -71,6 +72,8 @@
 
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 #include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
+#include "larpandoracontent/LArReclustering/LArExample/RandomClusteringAlgorithm.h"
+#include "larpandoracontent/LArReclustering/LArExample/RandomFigureOfMeritTool.h"
 #include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
 
 #include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
@@ -186,6 +189,7 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterCreation/ProvisionalClusteringAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 
@@ -219,6 +223,7 @@
 #include "larpandoracontent/LArUtility/ListPruningAlgorithm.h"
 #include "larpandoracontent/LArUtility/PfoHitCleaningAlgorithm.h"
 
+#include "larpandoracontent/LArReclustering/ThreeDMultiReclusteringAlgorithm.h"
 #include "larpandoracontent/LArReclustering/ThreeDReclusteringAlgorithm.h"
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
@@ -233,6 +238,7 @@
     d("LArMuonLeadingEventValidation",          MuonLeadingEventValidationAlgorithm)                                            \
     d("LArElectronInitialRegionRefinement",     ElectronInitialRegionRefinementAlgorithm)                                       \
     d("LArNeutrinoEventValidation",             NeutrinoEventValidationAlgorithm)                                               \
+    d("LArEventClusterValidation",              EventClusterValidationAlgorithm)                                                \
     d("LArTestBeamEventValidation",             TestBeamEventValidationAlgorithm)                                               \
     d("LArTestBeamHierarchyEventValidation",    TestBeamHierarchyEventValidationAlgorithm)                                      \
     d("LArHierarchyMonitoring",                 HierarchyMonitoringAlgorithm)                                                   \
@@ -310,6 +316,7 @@
     d("LArSimpleClusterMerging",                SimpleClusterMergingAlgorithm)                                                  \
     d("LArTransverseAssociation",               TransverseAssociationAlgorithm)                                                 \
     d("LArTransverseExtension",                 TransverseExtensionAlgorithm)                                                   \
+    d("LArProvisionalClustering",               ProvisionalClusteringAlgorithm)                                                 \
     d("LArSimpleClusterCreation",               SimpleClusterCreationAlgorithm)                                                 \
     d("LArTrackClusterCreation",                TrackClusterCreationAlgorithm)                                                  \
     d("LArClusteringParent",                    ClusteringParentAlgorithm)                                                      \
@@ -339,6 +346,8 @@
     d("LArPfoHitCleaning",                      PfoHitCleaningAlgorithm)                                                        \
     d("LArListPruning",                         ListPruningAlgorithm)                                                           \
     d("LArThreeDReclustering",                  ThreeDReclusteringAlgorithm)                                                    \
+    d("LArThreeDMultiReclustering",             ThreeDMultiReclusteringAlgorithm)                                               \
+    d("LArRandomClustering",                    RandomClusteringAlgorithm)                                                      \
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
@@ -347,6 +356,7 @@
     d("LArVertexRefinement",                    VertexRefinementAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
+    d("LArRandomFigureOfMeritTool",             RandomFigureOfMeritTool)                                                        \
     d("LArCheatedThreeDClusteringTool",         CheatedThreeDClusteringTool)                                                    \
     d("LArSimplePCAThreeDClusteringTool",       SimplePCAThreeDClusteringTool)                                                  \
     d("LArConnectionRegionFeatureTool",         ConnectionRegionFeatureTool)                                                    \
@@ -426,10 +436,12 @@
     d("LArTwoDVertexDistanceFeatureTool",       TwoDVertexDistanceFeatureTool)                                                  \
     d("LArThreeDVertexDistanceFeatureTool",     ThreeDVertexDistanceFeatureTool)                                                \
     d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
+    d("LArThreeDChargeFeatureTool_ICARUS",      ThreeDChargeFeatureTool_ICARUS)                                                 \
     d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
     d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  \
     d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)                                                        \
-    d("LArConeChargeFeatureTool",             	ConeChargeFeatureTool)
+    d("LArConeChargeFeatureTool",             	ConeChargeFeatureTool)                                                          \
+    d("LArConeChargeFeatureTool_ICARUS",        ConeChargeFeatureTool_ICARUS)
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)

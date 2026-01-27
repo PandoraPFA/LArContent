@@ -75,6 +75,47 @@ public:
      */
     static void PrintMatchingTable(const pandora::PfoVector &orderedPfoVector, const pandora::MCParticleVector &orderedMCParticleVector,
         const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const unsigned int nMatches);
+
+    // -- Rand index helpers
+
+    /**
+     *  @brief  Calculate the adjusted Rand Index for a given contingency table that summarises two clusterings A and B.
+     *          Adjusted Rand Index is a measure of the similarity of two clusterings that is bounded above by 1 (identical),
+     *          is 0 when the two clusterings are as similar as two random clusterings with the same number of clusters,
+     *          and has no lower bound. An index < 0 means very discordant clusterings and is rare in most cases.
+     *          Reference - https://link.springer.com/article/10.1007/BF01908075
+     *
+     *  @param[in] cTable Contingency table as a map of the object that defines the clustering A (e.g. pandora::Cluster)
+     *                    to a map of the object that defines the clustering B (e.g. pandora::MCParticle)
+     *                    to the value of the table at this entry (which is the intersection of the two clusters)
+     */
+    template <typename Ti, typename Tj>
+    static float CalcRandIndex(const std::map<const Ti, std::map<const Tj, int>> &cTable);
+
+    /**
+     *  @brief  Calculate the adjusted Rand Index for the clustering defined by MCPartices and by CaloHits.
+     *          Adjusted Rand Index is a measure of the similarity of two clusterings that is bounded above by 1 (identical),
+     *          is 0 when the two clusterings are as similar as two random clusterings with the same number of clusters,
+     *          and has no lower bound. An index < 0 means very discordant clusterings and is rare in most cases.
+     *          Reference - https://link.springer.com/article/10.1007/BF01908075
+     *
+     *  @param[in] caloHits List of hits
+     *  @param[in] clusters List of clusters
+     */
+    static float CalcRandIndex(const pandora::CaloHitList &caloHits, const pandora::ClusterList &clusters);
+
+    /**
+     *  @brief  Fill the contingency table for a set of CaloHits partitioned by Cluster and parent MCParticle.
+     *
+     *  @param[in]  caloHits List of hits to be considered
+     *  @param[in]  clusters List of clusters that contain the hits
+     *  @param[out] cTable   Contingency table as a map of Cluster to a map of MCParticle to the value of the table at this entry
+     *                       which is the intersection of clusterings defined by each object
+     */
+    static void FillContingencyTable(const pandora::CaloHitList &caloHits, const pandora::ClusterList &clusters,
+        std::map<const pandora::Cluster *const, std::map<const pandora::MCParticle *const, int>> &cTable);
+
+    // --
 };
 
 } // namespace lar_content

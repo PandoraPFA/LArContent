@@ -120,6 +120,21 @@ unsigned int LArPfoHelper::GetNumberOfTwoDHits(const ParticleFlowObject *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+unsigned int LArPfoHelper::GetNumberOfThreeDHits(const ParticleFlowObject *const pPfo)
+{
+    ClusterList clusterList3D;
+    LArPfoHelper::GetThreeDClusterList(pPfo, clusterList3D);
+
+    int total3DHits(0);
+
+    for (const Cluster *const pCluster3D : clusterList3D)
+        total3DHits += pCluster3D->GetNCaloHits();
+
+    return total3DHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPfoHelper::GetTwoDClusterList(const ParticleFlowObject *const pPfo, ClusterList &clusterList)
 {
     for (const Cluster *const pCluster : pPfo->GetClusterList())
@@ -357,6 +372,20 @@ bool LArPfoHelper::IsShower(const ParticleFlowObject *const pPfo)
 
     // electron, photon
     return ((E_MINUS == std::abs(pdg)) || (PHOTON == std::abs(pdg)));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArPfoHelper::GetTrackScore(const ParticleFlowObject *const pPfo)
+{
+    float trackScore(-999.f);
+
+    const PropertiesMap &metadata(pPfo->GetPropertiesMap());
+
+    if (metadata.find("TrackScore") != metadata.end())
+        trackScore = metadata.at("TrackScore");
+
+    return trackScore;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

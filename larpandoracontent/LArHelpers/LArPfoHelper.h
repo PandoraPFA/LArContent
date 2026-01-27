@@ -104,6 +104,14 @@ public:
     static unsigned int GetNumberOfTwoDHits(const pandora::ParticleFlowObject *const pPfo);
 
     /**
+     *  @brief  Get the number of 3D hits owned by a pfo
+     *
+     *  @param  pPfo a pointer to the pfo
+     *  @return The number of 3D hits
+     */
+    static unsigned int GetNumberOfThreeDHits(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
      *  @brief Get the list of 2D clusters from an input pfo
      *
      *  @param  pPfo the input Pfo
@@ -233,6 +241,14 @@ public:
      *  @param  pPfo the address of the Pfo
      */
     static bool IsShower(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Get the track/shower score of the pfo
+     *
+     *  @param  pPfo the address pf the pfo
+     *  @return the track score
+     */
+    static float GetTrackScore(const pandora::ParticleFlowObject *const pPfo);
 
     /**
      *  @brief  Get primary neutrino or antineutrino
