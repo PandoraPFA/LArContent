@@ -36,7 +36,7 @@ DLTwoDShowerGrowingAlgorithm::HitFeatures::HitFeatures() :
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
 DLTwoDShowerGrowingAlgorithm::ClusterGroup::ClusterGroup() :
-    m_clusters{std::unordered_set<const Cluster *>()},
+    m_clusters{ClusterSet()},
     m_representativeCluster{nullptr}
 {
 }
@@ -46,9 +46,7 @@ DLTwoDShowerGrowingAlgorithm::ClusterGroup::ClusterGroup() :
 void DLTwoDShowerGrowingAlgorithm::ClusterGroup::insert(const Cluster* pCluster)
 {
     if (m_clusters.empty())
-    {
         m_representativeCluster = pCluster;
-    }
     m_clusters.insert(pCluster);
 }
 
@@ -89,11 +87,6 @@ DLTwoDShowerGrowingAlgorithm::~DLTwoDShowerGrowingAlgorithm()
             PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName + "_view_data"));
         }
         PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName + "_view_data", m_trainingFileName, "UPDATE"));
-
-        const LArGeometryHelper::DetectorBoundaries detBounds{LArGeometryHelper::GetDetectorBoundaries(this->GetPandora())};
-        std::cout << "x: " << detBounds.m_xBoundaries.first << " - " << detBounds.m_xBoundaries.second << "\n";
-        std::cout << "z: " << detBounds.m_zBoundaries.first << " - " << detBounds.m_zBoundaries.second << "\n";
-        std::cout << "y: " << detBounds.m_yBoundaries.first << " - " << detBounds.m_yBoundaries.second << "\n";
     }
 }
 
@@ -102,13 +95,9 @@ DLTwoDShowerGrowingAlgorithm::~DLTwoDShowerGrowingAlgorithm()
 StatusCode DLTwoDShowerGrowingAlgorithm::Run()
 {
     if (m_trainingMode)
-    {
         return this->PrepareTrainingSample();
-    }
     else
-    {
         return this->Infer();
-    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -244,7 +233,7 @@ const MCParticle* DLTwoDShowerGrowingAlgorithm::GetMainMC(
 
 const MCParticle* DLTwoDShowerGrowingAlgorithm::FoldMCTo(const MCParticle *const pMC) const
 {
-    if (!this->IsEM(pMC))
+    if (!LArMCParticleHelper::IsEM(pMC))
     {
         return pMC;
     }
@@ -308,14 +297,6 @@ const MCParticle* DLTwoDShowerGrowingAlgorithm::FoldPotentialDeltaRayTo(const Ca
         return pParentMC;
     }
     return pMC;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-inline bool DLTwoDShowerGrowingAlgorithm::IsEM(const pandora::MCParticle *const pMC) const
-{
-    const int pdg{std::abs(pMC->GetParticleId())};
-    return (pdg == E_MINUS || pdg == PHOTON);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -428,9 +409,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::Infer()
             ClusterList clusterList;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetClusters(listName, clusterList));
             if (clusterList.empty())
-            {
                 break;
-            }
             const HitType view{LArClusterHelper::GetClusterHitType(clusterList.front())};
 
             // Use the trained model to predict pairwise cluster similarities
@@ -445,9 +424,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::Infer()
             PANDORA_RETURN_IF(STATUS_CODE_FAILURE, this->IsInvalidPartition(clusterGroups, clusterList)); // Sanity check
 
             if (this->IsSingletonPartition(clusterGroups))
-            {
                 break;
-            }
 
             if (m_similarityThresholdBeta >= 1.f) // Implies stage 2 is switched off
             {
@@ -562,21 +539,9 @@ StatusCode DLTwoDShowerGrowingAlgorithm::MakeClusterTensor(
         accessor[0][i][6] = zWidthFeat;
         accessor[0][i][7] = hitFeatures.m_distToXGap * m_cartesianXScaleFactor;
         accessor[0][i][8] = std::log(hitFeatures.m_energy);
-        accessor[0][i][9] = 0.f;
-        accessor[0][i][10] = 0.f;
-        accessor[0][i][11] = 0.f;
-        if (view == TPC_VIEW_U)
-        {
-            accessor[0][i][9] = 1.f;
-        }
-        else if (view == TPC_VIEW_V)
-        {
-            accessor[0][i][10] = 1.f;
-        }
-        else
-        {
-            accessor[0][i][11] = 1.f;
-        }
+        accessor[0][i][9] = view == TPC_VIEW_U ? 1.f : 0.f;
+        accessor[0][i][10] = view == TPC_VIEW_V ? 1.f : 0.f;
+        accessor[0][i][11] = view == TPC_VIEW_W ? 1.f : 0.f;
         if (m_includeHitCardinalityFeatures)
         {
             accessor[0][i][m_hitFeaturesNHitsIdx] = nHitsFeat;
@@ -683,7 +648,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PopulateAdjacencyLists(
 StatusCode DLTwoDShowerGrowingAlgorithm::CalculateConnectedGroups(
     const AdjacencyLists &clusterAdjLists, std::vector<ClusterGroup> &clusterGroups) const
 {
-    std::unordered_set<const Cluster *> visitedClusters;
+    ClusterSet visitedClusters;
     for (const auto &[pClusterRoot, _] : clusterAdjLists)
     {
         if (visitedClusters.find(pClusterRoot) != visitedClusters.end())
@@ -825,7 +790,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::MergeGroups(const std::vector<ClusterGr
 
 bool DLTwoDShowerGrowingAlgorithm::IsInvalidPartition(const std::vector<ClusterGroup> &clusterGroups, const ClusterList &clusterList) const
 {
-    std::unordered_set<const Cluster *> uniqueGroupedClusters;
+    ClusterSet uniqueGroupedClusters;
     size_t totalGroupedClusters{0};
     for (const ClusterGroup &group : clusterGroups)
     {
@@ -915,6 +880,13 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         1. / std::sqrt(std::pow(xHigh - xLow, 2.) + std::pow(yHigh - yLow, 2.) + std::pow(zHigh - zLow, 2.)));
     m_cartesianXScaleFactor = static_cast<float>(1. / (xHigh - xLow));
     m_cartesianZScaleFactor = static_cast<float>(1. / (zHigh - zLow));
+    if (m_trainingMode)
+    {
+        std::cout << "Scalefactors for this geometry\n"
+                  << "Polar R:     " << m_polarRScaleFactor << "\n" 
+                  << "Cartesian X: " << m_cartesianXScaleFactor << "\n"
+                  << "Cartesian Z: " << m_cartesianZScaleFactor << "\n";
+    }
 
     for (const DetectorGap *const pDetectorGap : this->GetPandora().GetGeometry()->GetDetectorGapList())
     {
