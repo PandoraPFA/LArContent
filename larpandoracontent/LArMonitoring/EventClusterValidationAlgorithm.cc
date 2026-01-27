@@ -290,7 +290,7 @@ void EventClusterValidationAlgorithm::GetHitParents(
 
 const MCParticle *EventClusterValidationAlgorithm::FoldMCTo(const MCParticle *const pMC) const
 {
-    if (!this->IsEM(pMC))
+    if (!LArMCParticleHelper::IsEM(pMC))
     {
         return pMC;
     }
@@ -353,14 +353,6 @@ bool EventClusterValidationAlgorithm::CausesShower(const MCParticle *const pMC, 
     }
 
     return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline bool EventClusterValidationAlgorithm::IsEM(const pandora::MCParticle *const pMC) const
-{
-    const int pdg{std::abs(pMC->GetParticleId())};
-    return (pdg == E_MINUS || pdg == PHOTON);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -557,7 +549,7 @@ void EventClusterValidationAlgorithm::GetClusterMetrics(const std::map<const Cal
         }
         completenessSumAll += summand;
 
-        if (this->IsEM(pMC))
+        if (LArMCParticleHelper::IsEM(pMC))
         {
             nHitsTrueShower += static_cast<int>(hits.size());
             nTrueClustersShower++;
@@ -599,7 +591,7 @@ void EventClusterValidationAlgorithm::GetClusterMetrics(const std::map<const Cal
         }
         puritySumAll += summand;
 
-        if (this->IsEM(pMC))
+        if (LArMCParticleHelper::IsEM(pMC))
         {
             nHitsMatchedShower += static_cast<int>(hits.size());
             nRecoClustersShower++;
@@ -796,7 +788,7 @@ void EventClusterValidationAlgorithm::CalcRandIndex(std::map<const CaloHit *cons
         std::map<const MCParticle *const, const Cluster *const> mcMergeTarget;
         for (const auto &[pCaloHit, parents] : hitParents)
         {
-            if (!this->IsEM(parents.m_pClusterMainMC))
+            if (!LArMCParticleHelper::IsEM(parents.m_pClusterMainMC))
             {
                 continue;
             }
@@ -836,7 +828,7 @@ void EventClusterValidationAlgorithm::CalcRandIndex(std::map<const CaloHit *cons
             continue;
         }
 
-        if (this->IsEM(pMC))
+        if (LArMCParticleHelper::IsEM(pMC))
         {
             showerRecoClusters.insert(pCluster);
             showerTrueClusters.insert(pMC);

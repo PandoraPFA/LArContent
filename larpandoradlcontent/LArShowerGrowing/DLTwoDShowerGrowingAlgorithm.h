@@ -41,16 +41,20 @@ private:
     {
         ClusterGroup();
 
+        /**
+         *  @brief Add a cluster to the group. If first cluster in the group, use it as the group's representative cluster
+         */
         void insert(const pandora::Cluster *pCluster);
+
         const pandora::Cluster *GetRepresentativeCluster() const { return m_representativeCluster; }
-        const std::unordered_set<const pandora::Cluster *> &GetClusters() const { return m_clusters; }
+        const pandora::ClusterSet &GetClusters() const { return m_clusters; }
         size_t size() const { return m_clusters.size(); }
         bool empty() const { return m_clusters.empty(); }
         auto begin() const { return m_clusters.begin(); }
         auto end() const { return m_clusters.end(); }
 
-        std::unordered_set<const pandora::Cluster *> m_clusters;
-        const pandora::Cluster *m_representativeCluster;
+        pandora::ClusterSet m_clusters;                  ///< Container of clusters in the group
+        const pandora::Cluster *m_representativeCluster; ///< The address of an arbitrary cluster in the group to use as a key for the group
     };
 
 public:
@@ -72,7 +76,8 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief Create output TTree for generating the training data
+     *  @brief Create output TTree for generating the training data. Note that for best results simulation should have EM roll-up
+     *         turned off to ensure delta rays are not folded into their parent tracks.
      */ 
     pandora::StatusCode PrepareTrainingSample();
 
@@ -81,7 +86,7 @@ private:
      */ 
     pandora::StatusCode Infer();
 
-    /*** Start training sample preparation methods ***/
+    /* Start training sample preparation methods */
 
     /**
      *  @brief Get the folded MCParticle that contributes the most to the CaloHit.
@@ -117,7 +122,8 @@ private:
 
     /**
      *  @brief Tries to identify and deal with impossible-to-cluster-correctly delta ray hits by assigning the hit to the
-     *         parent particle's cluster if some conditions are met.
+     *         parent particle's cluster if the delta-ray is short and does not shower
+     *         or the hit has charge contribution from the parent particle.
      *
      *  @param[in] pCaloHit The hit
      *  @param[in] pMC      The main MCParticle of the hit
@@ -126,18 +132,9 @@ private:
      */
     const pandora::MCParticle* FoldPotentialDeltaRayTo(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pMC) const;
 
-    /**
-     *  @brief Check if an MCParticle is electron or photon,
-     *
-     *  @param[in] pMC The MCParticle
-     *
-     *  @return Flag to indicate if the MCParticle if EM
-     */
-    bool IsEM(const pandora::MCParticle *const pMC) const;
+    /* End training sample preparation methods */
 
-    /*** End training sample preparation methods ***/
-
-    /*** Start general helpers ***/
+    /* Start general helpers */
 
     /**
      *  @brief Get the 2D reconstructed neutrino vertices for each view.
@@ -171,9 +168,9 @@ private:
     pandora::StatusCode CalculateHitFeatures(
         const pandora::CaloHit *const pCaloHit, const pandora::CartesianVector vtxPos, HitFeatures &hitFeatures) const;
 
-    /*** End general helpers ***/
+    /* End general helpers */
 
-    /*** Start inference methods ***/
+    /* Start inference methods */
 
     /**
      *  @brief Runs inference on the models to predict the similarity matrix for a 2D ClusterList.
@@ -308,9 +305,9 @@ private:
      */
     bool IsSingletonPartition(const std::vector<ClusterGroup> &clusterGroups) const;
 
-    /*** End inference methods ***/
+    /* End inference methods */
 
-    /*** Start shared mutable members ***/
+    /* Start shared mutable members */
 
     LArDLHelper::TorchModel m_modelEncoder; ///< TorchScript model for encoding hits in a cluster
     LArDLHelper::TorchModel m_modelAttn;    ///< TorchScript model for attention over encoded clusters in a view
@@ -331,9 +328,9 @@ private:
     float m_deltaRayParentWeightThreshold;                              ///< Threshold for weight contribution of parent particle for it take the delta ray's hit
     int m_hitFeatureDim;                                                ///< Feature dimensions of each hit
 
-    /*** End hardcoded members ***/
+    /* End hardcoded members */
 
-    /*** Start configurable via xml members ***/
+    /* Start configurable via xml members */
 
     bool m_trainingMode;                       ///< Training mode
     std::string m_trainingTreeName;            ///< Tree name for training data output
@@ -347,7 +344,7 @@ private:
     bool m_includeHitCardinalityFeatures;      ///< Option to include in hit feature vector the no. hits in cluster and no. clusters in event
     bool m_includeHitNIterationNumFeature;     ///< Option to include in hit feature vector the inference iteration number
 
-    /*** End configurable via xml members ***/
+    /* End configurable via xml members */
 };
 
 } // namespace lar_dl_content

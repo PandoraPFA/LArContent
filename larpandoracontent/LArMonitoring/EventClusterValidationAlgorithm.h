@@ -168,15 +168,6 @@ private:
     bool CausesShower(const pandora::MCParticle *const pMC, int nDescendentElectrons) const;
 
     /**
-     *  @brief Check if an MC particle is electron or photon,
-     *
-     *  @param[in] pMC he MC particle
-     *
-     *  @return Flag to indicate if the MC particle if EM
-     */
-    bool IsEM(const pandora::MCParticle *const pMC) const;
-
-    /**
      *  @brief Draw the true clusters being compared to
      *
      *  @param[in] hitParents Map of hits to the cluster/MC particle they belong to
