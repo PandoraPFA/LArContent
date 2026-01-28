@@ -15,6 +15,7 @@
 #include "larpandoradlcontent/LArCheating/DLCheatHierarchyTool.h"
 #include "larpandoradlcontent/LArControlFlow/DLMasterAlgorithm.h"
 #include "larpandoradlcontent/LArMonitoring/DlHitValidationAlgorithm.h"
+#include "larpandoradlcontent/LArShowerGrowing/DLTwoDShowerGrowingAlgorithm.h"
 #include "larpandoradlcontent/LArSignalId/DlSNSignalAlgorithm.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLLaterTierHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLNeutrinoHierarchyAlgorithm.h"
@@ -26,7 +27,6 @@
 #include "larpandoradlcontent/LArTwoDReco/DlTrackShowerStreamSelectionAlgorithm.h"
 #include "larpandoradlcontent/LArVertex/DlSecondaryVertexingAlgorithm.h"
 #include "larpandoradlcontent/LArVertex/DlVertexingAlgorithm.h"
-#include "larpandoradlcontent/LArShowerGrowing/DLTwoDShowerGrowingAlgorithm.h"
 
 #include "larpandoradlcontent/LArDLContent.h"
 

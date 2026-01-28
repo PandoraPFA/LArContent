@@ -33,30 +33,48 @@ private:
         float m_cosThetaRel;
         float m_sinThetaRel;
         float m_distToXGap;
-        float m_xWidth; 
+        float m_xWidth;
         float m_energy;
     };
 
     struct ClusterGroup
     {
-        public:
-            ClusterGroup();
+    public:
+        ClusterGroup();
 
-            /**
+        /**
              *  @brief Add a cluster to the group. If first cluster in the group, use it as the group's representative cluster
              */
-            void insert(const pandora::Cluster *pCluster);
+        void insert(const pandora::Cluster *pCluster);
 
-            const pandora::Cluster *GetRepresentativeCluster() const { return m_representativeCluster; }
-            const pandora::ClusterSet &GetClusters() const { return m_clusters; }
-            size_t size() const { return m_clusters.size(); }
-            bool empty() const { return m_clusters.empty(); }
-            auto begin() const { return m_clusters.begin(); }
-            auto end() const { return m_clusters.end(); }
-        
-        private:
-            pandora::ClusterSet m_clusters;                  ///< Container of clusters in the group
-            const pandora::Cluster *m_representativeCluster; ///< The address of an arbitrary cluster in the group to use as a key for the group
+        const pandora::Cluster *GetRepresentativeCluster() const
+        {
+            return m_representativeCluster;
+        }
+        const pandora::ClusterSet &GetClusters() const
+        {
+            return m_clusters;
+        }
+        size_t size() const
+        {
+            return m_clusters.size();
+        }
+        bool empty() const
+        {
+            return m_clusters.empty();
+        }
+        auto begin() const
+        {
+            return m_clusters.begin();
+        }
+        auto end() const
+        {
+            return m_clusters.end();
+        }
+
+    private:
+        pandora::ClusterSet m_clusters;                  ///< Container of clusters in the group
+        const pandora::Cluster *m_representativeCluster; ///< The address of an arbitrary cluster in the group to use as a key for the group
     };
 
 public:
@@ -80,12 +98,12 @@ private:
     /**
      *  @brief Create output TTree for generating the training data. Note that for best results simulation should have EM roll-up
      *         turned off to ensure delta rays are not folded into their parent tracks.
-     */ 
+     */
     pandora::StatusCode PrepareTrainingSample();
 
     /**
      *  @brief Do an inference. Includes network similarity prediction and subsequent merges.
-     */ 
+     */
     pandora::StatusCode Infer();
 
     /* Start training sample preparation methods */
@@ -97,9 +115,8 @@ private:
      *  @param[in,out] mcFoldTo A map for the folding of MCParticles, updates as new MCParticles are seen by the method
      *
      *  @return The folded MCParticle that contributed the most to the CaloHit
-     */ 
-    const pandora::MCParticle* GetMainMC(
-        const pandora::CaloHit *const pCaloHit,
+     */
+    const pandora::MCParticle *GetMainMC(const pandora::CaloHit *const pCaloHit,
         std::map<const pandora::MCParticle *const, const pandora::MCParticle *const> &mcFoldTo) const;
 
     /**
@@ -109,7 +126,7 @@ private:
      *
      *  @return The ancestor MCParticle, this will be the input pMC an MCParticle that should not be rolled-up
      */
-    const pandora::MCParticle* FoldMCTo(const pandora::MCParticle *const pMC) const;
+    const pandora::MCParticle *FoldMCTo(const pandora::MCParticle *const pMC) const;
 
     /**
      *  @brief Recursive function to check descendent particles for signature of a shower (e -> gamma -> e).
@@ -132,7 +149,7 @@ private:
      *
      *  @return The MCParticle the hit should be assigned to, this will either be the inputted MCParticle or the parent MCParticle
      */
-    const pandora::MCParticle* FoldPotentialDeltaRayTo(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pMC) const;
+    const pandora::MCParticle *FoldPotentialDeltaRayTo(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pMC) const;
 
     /* End training sample preparation methods */
 
@@ -156,7 +173,7 @@ private:
      *  @brief Get clusters from specified list.
      *
      *  @param[in]  clusterListName List name for clusters
-     *  @param[out] clusterList     List of clusters 
+     *  @param[out] clusterList     List of clusters
      */
     pandora::StatusCode GetClusters(const std::string clusterListName, pandora::ClusterList &clusterList) const;
 
@@ -167,8 +184,7 @@ private:
      *  @param[in]  vtxPos      The position of the 2D neutrino vertex associated with the hit
      *  @param[out] hitFeatures Struct to store calculated hit properties
      */
-    pandora::StatusCode CalculateHitFeatures(
-        const pandora::CaloHit *const pCaloHit, const pandora::CartesianVector vtxPos, HitFeatures &hitFeatures) const;
+    pandora::StatusCode CalculateHitFeatures(const pandora::CaloHit *const pCaloHit, const pandora::CartesianVector vtxPos, HitFeatures &hitFeatures) const;
 
     /* End general helpers */
 
@@ -183,12 +199,8 @@ private:
      *  @param[in]  iterationNum  The iteration of the inference (1 is the first)
      *  @param[out] clusterSimMat The similarity matrix encoding all predicted pairwise similarities of the input list of 2D clusters
      */
-    pandora::StatusCode PredictClusterSimilarityMatrix(
-        const pandora::ClusterList &clusterList,
-        const pandora::HitType view,
-        const pandora::CartesianVector &vtxPos,
-        const unsigned int iterationNum,
-        SimilarityMatrix &clusterSimMat);
+    pandora::StatusCode PredictClusterSimilarityMatrix(const pandora::ClusterList &clusterList, const pandora::HitType view,
+        const pandora::CartesianVector &vtxPos, const unsigned int iterationNum, SimilarityMatrix &clusterSimMat);
 
     /**
      *  @brief Construct the tensor that encodes a cluster.
@@ -199,12 +211,8 @@ private:
      *  @param[in]  iterationNum    The iteration of the inference (1 is the first)
      *  @param[out] tensorCluster   The tensor encoding the cluster as a sequence of hit feature vectors
      */
-    pandora::StatusCode MakeClusterTensor(
-        const std::vector<HitFeatures> &clusterFeatures,
-        const pandora::HitType view,
-        const size_t nClusters,
-        const unsigned int iterationNum,
-        torch::Tensor &tensorCluster) const;
+    pandora::StatusCode MakeClusterTensor(const std::vector<HitFeatures> &clusterFeatures, const pandora::HitType view,
+        const size_t nClusters, const unsigned int iterationNum, torch::Tensor &tensorCluster) const;
 
     /**
      *  @brief Populates a SimilarityMatrix from the Tensor output of model inference.
@@ -217,7 +225,7 @@ private:
         const torch::Tensor &tensorSimMat, const pandora::ClusterList &clusterList, SimilarityMatrix &clusterSimMat) const;
 
     /**
-     *  @brief Uses the predicted similarity matrix to partition the 2D clusters into groups that should be merged. First, core (larger) 
+     *  @brief Uses the predicted similarity matrix to partition the 2D clusters into groups that should be merged. First, core (larger)
      *         clusters are selected. Their similarities are thresholded to get edges. From these edges, the core clusters are partitioned
      *         by their connected subgraphs. Then, accessory (smaller) clusters are added to the groups of the core cluster partition.
      *         Finally, any remaining accessory clusters are partitioned via the connected subgraphs method.
@@ -237,11 +245,8 @@ private:
      *  @param[out] coreClusterAdjLists The resulting core cluster adjacencies
      *  @param[out] accClusterAdjLists  The resulting accessory cluster adjacencies
      */
-    pandora::StatusCode PopulateAdjacencyLists(
-        const SimilarityMatrix &simMat,
-        const float similarityThreshold,
-        AdjacencyLists &coreClusterAdjLists,
-        AdjacencyLists &accClusterAdjLists) const;
+    pandora::StatusCode PopulateAdjacencyLists(const SimilarityMatrix &simMat, const float similarityThreshold,
+        AdjacencyLists &coreClusterAdjLists, AdjacencyLists &accClusterAdjLists) const;
 
     /**
      *  @brief Generate a partition from cluster adjacencies (binary edges) using connected subgraphs.
@@ -262,11 +267,8 @@ private:
      *  @param[in]     similarityThreshold      The similarity threshold
      *  @param[in,out] clusterGroups            The initial cluster partition that may have clusters added to it
      */
-    pandora::StatusCode AddClustersToGroups(
-        const SimilarityMatrix &clusterSimMat,
-        AdjacencyLists &ungroupedClusterAdjLists,
-        const float similarityThreshold,
-        std::vector<ClusterGroup> &clusterGroups) const;
+    pandora::StatusCode AddClustersToGroups(const SimilarityMatrix &clusterSimMat, AdjacencyLists &ungroupedClusterAdjLists,
+        const float similarityThreshold, std::vector<ClusterGroup> &clusterGroups) const;
 
     /**
      *  @brief Populates a super-cluster similarity matrix from an initial similarity matrix and the cluster partition. The similarities
@@ -296,7 +298,7 @@ private:
      *
      *  @return Flag for if partition is invalid
      */
-    bool IsInvalidPartition(const std::vector<ClusterGroup> &clusterGroups, const pandora::ClusterList  &clusterList) const;
+    bool IsInvalidPartition(const std::vector<ClusterGroup> &clusterGroups, const pandora::ClusterList &clusterList) const;
 
     /**
      *  @brief Check if a cluster partition is all singletons.
@@ -327,24 +329,24 @@ private:
     /** Start hardcoded members ***/
 
     std::map<pandora::HitType, float> m_deltaRayLengthThresholdSquared; ///< Threshold for defining small delta rays that will be folded to the parent particle
-    float m_deltaRayParentWeightThreshold;                              ///< Threshold for weight contribution of parent particle for it take the delta ray's hit
-    int m_hitFeatureDim;                                                ///< Feature dimensions of each hit
+    float m_deltaRayParentWeightThreshold; ///< Threshold for weight contribution of parent particle for it take the delta ray's hit
+    int m_hitFeatureDim;                   ///< Feature dimensions of each hit
 
     /* End hardcoded members */
 
     /* Start configurable via xml members */
 
-    bool m_trainingMode;                       ///< Training mode
-    std::string m_trainingTreeName;            ///< Tree name for training data output
-    std::string m_trainingFileName;            ///< File name for training data output
-    pandora::StringVector m_clusterListNames;  ///< Names of cluster lists
-    std::string m_vertexListName;              ///< Name of vertex list
-    float m_similarityThreshold;               ///< Threshold value on similarity for clusters to be connected
-    float m_similarityThresholdBeta;           ///< Scaling factor for an optional second clustering pass
-    unsigned int m_accessoryClustersMaxHits;   ///< Clusters with this number of less hits are treated as accessory clusters during merging
-    unsigned int m_maxIterations;              ///< Max iterative applications of the cluster merging
-    bool m_includeHitCardinalityFeatures;      ///< Option to include in hit feature vector the no. hits in cluster and no. clusters in event
-    bool m_includeHitNIterationNumFeature;     ///< Option to include in hit feature vector the inference iteration number
+    bool m_trainingMode;                      ///< Training mode
+    std::string m_trainingTreeName;           ///< Tree name for training data output
+    std::string m_trainingFileName;           ///< File name for training data output
+    pandora::StringVector m_clusterListNames; ///< Names of cluster lists
+    std::string m_vertexListName;             ///< Name of vertex list
+    float m_similarityThreshold;              ///< Threshold value on similarity for clusters to be connected
+    float m_similarityThresholdBeta;          ///< Scaling factor for an optional second clustering pass
+    unsigned int m_accessoryClustersMaxHits;  ///< Clusters with this number of less hits are treated as accessory clusters during merging
+    unsigned int m_maxIterations;             ///< Max iterative applications of the cluster merging
+    bool m_includeHitCardinalityFeatures;     ///< Option to include in hit feature vector the no. hits in cluster and no. clusters in event
+    bool m_includeHitNIterationNumFeature;    ///< Option to include in hit feature vector the inference iteration number
 
     /* End configurable via xml members */
 };

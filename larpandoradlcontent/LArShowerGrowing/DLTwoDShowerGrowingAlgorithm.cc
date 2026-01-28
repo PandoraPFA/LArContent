@@ -11,9 +11,9 @@
 #include "larpandoradlcontent/LArShowerGrowing/DLTwoDShowerGrowingAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
-#include "larpandoracontent/LArHelpers/LArFileHelper.h"
 
 using namespace pandora;
 using namespace lar_content;
@@ -43,7 +43,7 @@ DLTwoDShowerGrowingAlgorithm::ClusterGroup::ClusterGroup() :
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void DLTwoDShowerGrowingAlgorithm::ClusterGroup::insert(const Cluster* pCluster)
+void DLTwoDShowerGrowingAlgorithm::ClusterGroup::insert(const Cluster *pCluster)
 {
     if (m_clusters.empty())
         m_representativeCluster = pCluster;
@@ -79,11 +79,11 @@ DLTwoDShowerGrowingAlgorithm::~DLTwoDShowerGrowingAlgorithm()
     {
         PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName, m_trainingFileName, "UPDATE"));
 
-        for ([[maybe_unused]] const HitType &view : { TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W })
+        for ([[maybe_unused]] const HitType &view : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName + "_view_data", "view", static_cast<int>(view)));
             PANDORA_MONITORING_API(SetTreeVariable(
-              this->GetPandora(), m_trainingTreeName + "_view_data", "pitch", LArGeometryHelper::GetWirePitch(this->GetPandora(), view)));
+                this->GetPandora(), m_trainingTreeName + "_view_data", "pitch", LArGeometryHelper::GetWirePitch(this->GetPandora(), view)));
             PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName + "_view_data"));
         }
         PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName + "_view_data", m_trainingFileName, "UPDATE"));
@@ -109,12 +109,12 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample()
     const ClusterList clusterList{this->GetAllClusters()};
 
     int currClusterID{0}, currMCID{0};
-    std::map<const MCParticle* const, int> mcToID = { { nullptr, -1 } }, mcToPDG = { { nullptr, 0 } };
+    std::map<const MCParticle *const, int> mcToID = {{nullptr, -1}}, mcToPDG = {{nullptr, 0}};
     std::vector<int> clusterView, clusterID;
-    std::vector<int> mcID = { -1 }, mcPDG = { 0 };
+    std::vector<int> mcID = {-1}, mcPDG = {0};
     std::vector<int> hitClusterID;
     std::vector<float> hitXRelPos, hitZRelPos;
-    std::vector<float> hitRRelPos, hitSinThetaRelPos, hitCosThetaRelPos;  // Polar coordinates
+    std::vector<float> hitRRelPos, hitSinThetaRelPos, hitCosThetaRelPos; // Polar coordinates
     std::vector<float> hitXWidth;
     std::vector<float> hitDistToXGap;
     std::vector<float> hitEnergy;
@@ -138,8 +138,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample()
             const MCParticle *const pMainMC{this->GetMainMC(pCaloHit, mcFoldTo)};
             if (mcToID.find(pMainMC) == mcToID.end())
             {
-                mcToID.insert({ pMainMC, currMCID++ });
-                mcToPDG.insert({ pMainMC, pMainMC->GetParticleId() });
+                mcToID.insert({pMainMC, currMCID++});
+                mcToPDG.insert({pMainMC, pMainMC->GetParticleId()});
                 mcID.emplace_back(mcToID.at(pMainMC));
                 mcPDG.emplace_back(mcToPDG.at(pMainMC));
             }
@@ -182,7 +182,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-const MCParticle* DLTwoDShowerGrowingAlgorithm::GetMainMC(
+const MCParticle *DLTwoDShowerGrowingAlgorithm::GetMainMC(
     const CaloHit *const pCaloHit, std::map<const MCParticle *const, const MCParticle *const> &mcFoldTo) const
 {
     MCParticleWeightMap weightMap{pCaloHit->GetMCParticleWeightMap()};
@@ -231,7 +231,7 @@ const MCParticle* DLTwoDShowerGrowingAlgorithm::GetMainMC(
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-const MCParticle* DLTwoDShowerGrowingAlgorithm::FoldMCTo(const MCParticle *const pMC) const
+const MCParticle *DLTwoDShowerGrowingAlgorithm::FoldMCTo(const MCParticle *const pMC) const
 {
     if (!LArMCParticleHelper::IsEM(pMC))
     {
@@ -258,7 +258,7 @@ const MCParticle* DLTwoDShowerGrowingAlgorithm::FoldMCTo(const MCParticle *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const MCParticle* DLTwoDShowerGrowingAlgorithm::FoldPotentialDeltaRayTo(const CaloHit *const pCaloHit, const MCParticle *const pMC) const
+const MCParticle *DLTwoDShowerGrowingAlgorithm::FoldPotentialDeltaRayTo(const CaloHit *const pCaloHit, const MCParticle *const pMC) const
 {
     // Not an electron -> not a delta ray -> do nothing
     if (pMC->IsRootParticle() || pMC->GetParticleId() != E_MINUS)
@@ -331,10 +331,9 @@ std::map<HitType, CartesianVector> DLTwoDShowerGrowingAlgorithm::Get2DVertices()
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_vertexListName, pVertexList));
     const Vertex *const pVertex{pVertexList->front()};
     PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, pVertex->GetVertexType() != VERTEX_3D);
-    return {
-        { TPC_VIEW_U, LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U) },
-        { TPC_VIEW_V, LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V) },
-        { TPC_VIEW_W, LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W) }};
+    return {{TPC_VIEW_U, LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U)},
+        {TPC_VIEW_V, LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V)},
+        {TPC_VIEW_W, LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W)}};
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -361,8 +360,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::GetClusters(const std::string clusterLi
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DLTwoDShowerGrowingAlgorithm::CalculateHitFeatures(
-    const CaloHit *const pCaloHit, CartesianVector vtxPos, HitFeatures &hitFeatures) const
+StatusCode DLTwoDShowerGrowingAlgorithm::CalculateHitFeatures(const CaloHit *const pCaloHit, CartesianVector vtxPos, HitFeatures &hitFeatures) const
 {
     const double x{static_cast<double>(pCaloHit->GetPositionVector().GetX())};
     const double xRel{x - static_cast<double>(vtxPos.GetX())};
@@ -370,8 +368,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::CalculateHitFeatures(
     const double zRel{z - static_cast<double>(vtxPos.GetZ())};
 
     const double rRel{std::sqrt(pow(xRel, 2.) + pow(zRel, 2.))};
-    const double cosThetaRel{ rRel != 0. ? xRel / rRel : 0. };
-    const double sinThetaRel{ rRel != 0. ? zRel / rRel : 0. };
+    const double cosThetaRel{rRel != 0. ? xRel / rRel : 0.};
+    const double sinThetaRel{rRel != 0. ? zRel / rRel : 0.};
 
     double distToXGap{std::numeric_limits<double>::max()};
     for (const double xGap : m_detectorXGaps)
@@ -419,8 +417,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::Infer()
 
             // Use the predicted similarities to partition the clusters into super-clusters
             std::vector<ClusterGroup> clusterGroups;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                this->ClusterFromSimilarity(clusterSimMat, m_similarityThreshold, clusterGroups));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ClusterFromSimilarity(clusterSimMat, m_similarityThreshold, clusterGroups));
             PANDORA_RETURN_IF(STATUS_CODE_FAILURE, this->IsInvalidPartition(clusterGroups, clusterList)); // Sanity check
 
             if (this->IsSingletonPartition(clusterGroups))
@@ -439,8 +436,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::Infer()
             // Get the similarities for the super-clusters
             // These similarities are the minimum predicted similarities for all pairs of the constituent clusters of the super-clusters
             SimilarityMatrix superClusterSimMat;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                this->PopulateSuperClusterSimilarityMatrix(clusterGroups, clusterSimMat, superClusterSimMat));
+            PANDORA_RETURN_RESULT_IF(
+                STATUS_CODE_SUCCESS, !=, this->PopulateSuperClusterSimilarityMatrix(clusterGroups, clusterSimMat, superClusterSimMat));
 
             // Do the first stage merges, the super-clusters are now just the clusters
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->MergeGroups(clusterGroups, listName));
@@ -461,12 +458,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::Infer()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DLTwoDShowerGrowingAlgorithm::PredictClusterSimilarityMatrix(
-    const ClusterList &clusterList,
-    const HitType view,
-    const CartesianVector &vtxPos,
-    const unsigned int iterationNum,
-    SimilarityMatrix &clusterSimMat)
+StatusCode DLTwoDShowerGrowingAlgorithm::PredictClusterSimilarityMatrix(const ClusterList &clusterList, const HitType view,
+    const CartesianVector &vtxPos, const unsigned int iterationNum, SimilarityMatrix &clusterSimMat)
 {
     torch::InferenceMode guard;
 
@@ -489,8 +482,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PredictClusterSimilarityMatrix(
         }
 
         torch::Tensor tensorCluster;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            this->MakeClusterTensor(clusterFeatures, view, clusterList.size(), iterationNum, tensorCluster));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->MakeClusterTensor(clusterFeatures, view, clusterList.size(), iterationNum, tensorCluster));
         torch::Tensor tensorEncodedCluster{m_modelEncoder.forward({tensorCluster}).toTensor()};
         tensorEncodedClusters.emplace_back(tensorEncodedCluster);
     }
@@ -510,12 +502,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PredictClusterSimilarityMatrix(
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DLTwoDShowerGrowingAlgorithm::MakeClusterTensor(
-    const std::vector<HitFeatures> &clusterFeatures,
-    const HitType view,
-    const size_t nClusters,
-    const unsigned int iterationNum,
-    torch::Tensor &tensorCluster) const
+StatusCode DLTwoDShowerGrowingAlgorithm::MakeClusterTensor(const std::vector<HitFeatures> &clusterFeatures, const HitType view,
+    const size_t nClusters, const unsigned int iterationNum, torch::Tensor &tensorCluster) const
 {
     const int nHits{static_cast<int>(clusterFeatures.size())};
 
@@ -563,8 +551,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PopulateClusterSimilarityMatrix(
 {
     PANDORA_RETURN_IF(STATUS_CODE_NOT_ALLOWED, !clusterSimMat.empty());
     const int64_t nClusters{static_cast<int64_t>(clusterList.size())};
-    PANDORA_RETURN_IF(STATUS_CODE_NOT_ALLOWED,
-        tensorSimMat.dim() != 3 || nClusters != tensorSimMat.size(-1) || nClusters != tensorSimMat.size(-2));
+    PANDORA_RETURN_IF(STATUS_CODE_NOT_ALLOWED, tensorSimMat.dim() != 3 || nClusters != tensorSimMat.size(-1) || nClusters != tensorSimMat.size(-2));
 
     auto accessor = tensorSimMat.accessor<float, 3>();
 
@@ -587,15 +574,14 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ClusterFromSimilarity(
     const SimilarityMatrix &clusterSimMat, const float similarityThreshold, std::vector<ClusterGroup> &clusterGroups) const
 {
     AdjacencyLists coreClusterAdjLists, accClusterAdjLists;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        this->PopulateAdjacencyLists(clusterSimMat, similarityThreshold, coreClusterAdjLists, accClusterAdjLists));
+    PANDORA_RETURN_RESULT_IF(
+        STATUS_CODE_SUCCESS, !=, this->PopulateAdjacencyLists(clusterSimMat, similarityThreshold, coreClusterAdjLists, accClusterAdjLists));
 
     // Connected grouping of core clusters
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CalculateConnectedGroups(coreClusterAdjLists, clusterGroups));
 
     // Add accessory clusters into the core groups
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        this->AddClustersToGroups(clusterSimMat, accClusterAdjLists, similarityThreshold, clusterGroups));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddClustersToGroups(clusterSimMat, accClusterAdjLists, similarityThreshold, clusterGroups));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CalculateConnectedGroups(accClusterAdjLists, clusterGroups));
 
@@ -645,8 +631,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PopulateAdjacencyLists(
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DLTwoDShowerGrowingAlgorithm::CalculateConnectedGroups(
-    const AdjacencyLists &clusterAdjLists, std::vector<ClusterGroup> &clusterGroups) const
+StatusCode DLTwoDShowerGrowingAlgorithm::CalculateConnectedGroups(const AdjacencyLists &clusterAdjLists, std::vector<ClusterGroup> &clusterGroups) const
 {
     ClusterSet visitedClusters;
     for (const auto &[pClusterRoot, _] : clusterAdjLists)
@@ -656,7 +641,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::CalculateConnectedGroups(
             continue;
         }
 
-        std::vector<const Cluster *> toSearch = { pClusterRoot };
+        std::vector<const Cluster *> toSearch = {pClusterRoot};
         ClusterGroup group;
         while (!toSearch.empty())
         {
@@ -683,11 +668,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::CalculateConnectedGroups(
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DLTwoDShowerGrowingAlgorithm::AddClustersToGroups(
-    const SimilarityMatrix &clusterSimMat,
-    AdjacencyLists &ungroupedClusterAdjLists,
-    const float similarityThreshold,
-    std::vector<ClusterGroup> &clusterGroups) const
+StatusCode DLTwoDShowerGrowingAlgorithm::AddClustersToGroups(const SimilarityMatrix &clusterSimMat,
+    AdjacencyLists &ungroupedClusterAdjLists, const float similarityThreshold, std::vector<ClusterGroup> &clusterGroups) const
 {
     std::map<const Cluster *const, int> plannedMerges;
     do
@@ -778,8 +760,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::MergeGroups(const std::vector<ClusterGr
             {
                 continue;
             }
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, *iter, listName, listName));
+            PANDORA_RETURN_RESULT_IF(
+                STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, *iter, listName, listName));
         }
     }
 
@@ -818,8 +800,7 @@ bool DLTwoDShowerGrowingAlgorithm::IsSingletonPartition(const std::vector<Cluste
 
 StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
     if (m_trainingMode)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrainingTreeName", m_trainingTreeName));
@@ -839,19 +820,17 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         LArDLHelper::LoadModel(modelSimName, m_modelSim);
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadVectorOfValues(xmlHandle, "ClusterListNames", m_clusterListNames));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "ClusterListNames", m_clusterListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF( STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "SimilarityThreshold", m_similarityThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SimilarityThreshold", m_similarityThreshold));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "SimilarityThresholdBeta", m_similarityThresholdBeta));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "AccessoryClusterMaxHits", m_accessoryClustersMaxHits));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MaxIterations", m_maxIterations));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxIterations", m_maxIterations));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "IncludeHitCardinalityFeatures", m_includeHitCardinalityFeatures));
     if (m_includeHitCardinalityFeatures)
@@ -867,23 +846,21 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     }
 
     m_deltaRayLengthThresholdSquared = {
-        { TPC_VIEW_U, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U), 2.)) },
-        { TPC_VIEW_V, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V), 2.)) },
-        { TPC_VIEW_W, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W), 2.)) }
-    };
+        {TPC_VIEW_U, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U), 2.))},
+        {TPC_VIEW_V, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V), 2.))},
+        {TPC_VIEW_W, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W), 2.))}};
 
     const LArGeometryHelper::DetectorBoundaries detBounds{LArGeometryHelper::GetDetectorBoundaries(this->GetPandora())};
     double xLow{static_cast<double>(detBounds.m_xBoundaries.first)}, xHigh{static_cast<double>(detBounds.m_xBoundaries.second)};
     double yLow{static_cast<double>(detBounds.m_yBoundaries.first)}, yHigh{static_cast<double>(detBounds.m_yBoundaries.second)};
     double zLow{static_cast<double>(detBounds.m_zBoundaries.first)}, zHigh{static_cast<double>(detBounds.m_zBoundaries.second)};
-    m_polarRScaleFactor = static_cast<float>(
-        1. / std::sqrt(std::pow(xHigh - xLow, 2.) + std::pow(yHigh - yLow, 2.) + std::pow(zHigh - zLow, 2.)));
+    m_polarRScaleFactor = static_cast<float>(1. / std::sqrt(std::pow(xHigh - xLow, 2.) + std::pow(yHigh - yLow, 2.) + std::pow(zHigh - zLow, 2.)));
     m_cartesianXScaleFactor = static_cast<float>(1. / (xHigh - xLow));
     m_cartesianZScaleFactor = static_cast<float>(1. / (zHigh - zLow));
     if (m_trainingMode)
     {
         std::cout << "Scalefactors for this geometry\n"
-                  << "Polar R:     " << m_polarRScaleFactor << "\n" 
+                  << "Polar R:     " << m_polarRScaleFactor << "\n"
                   << "Cartesian X: " << m_cartesianXScaleFactor << "\n"
                   << "Cartesian Z: " << m_cartesianZScaleFactor << "\n";
     }

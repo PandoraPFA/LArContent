@@ -83,7 +83,7 @@ public:
     ~EventClusterValidationAlgorithm();
 
 private:
-    template<typename Ti, typename Tj>
+    template <typename Ti, typename Tj>
     using ContingencyTable = std::map<Ti, std::map<Tj, int>>;
 
     pandora::StatusCode Run();
@@ -106,8 +106,7 @@ private:
      *  @param[in]  hitParents Map of hits being considered to the cluster/MC particle they belong to
      *  @param[out] metrics    Output metrics for the matched MC particles in this view
      */
-    void GetMatchedParticleMetrics(
-      const std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents, MatchedParticleMetrics &metrics) const;
+    void GetMatchedParticleMetrics(const std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents, MatchedParticleMetrics &metrics) const;
 
     /**
      *  @brief Calculate Rand Index for the reco clusters with the true clusters for all/track/shower hits.
@@ -145,7 +144,7 @@ private:
      *
      *  @return The MC particle the hit should be assigned to, this will either be the inputted MC particle or the parent MC particle
      */
-    const pandora::MCParticle* FoldPotentialDeltaRayTo(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pMC) const;
+    const pandora::MCParticle *FoldPotentialDeltaRayTo(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pMC) const;
 
     /**
      *  @brief Finds the ancestor that a child MC particle should be associated with to roll-up an EM shower
@@ -154,7 +153,7 @@ private:
      *
      *  @return The ancestor MC particle, this will be the inputted MC particle for an MC particle that should not be rolled-up
      */
-    const pandora::MCParticle* FoldMCTo(const pandora::MCParticle *const pMC) const;
+    const pandora::MCParticle *FoldMCTo(const pandora::MCParticle *const pMC) const;
 
     /**
      *  @brief Recursive function to check descendent particles for signature of a shower (e -> gamma -> e).
@@ -181,9 +180,8 @@ private:
      *  @param[in] hitParents Map of hits to the cluster/MC particle they belong to
      *  @param[in] hitParents Map of hits to the cluster they merge with for the Rand Index Calculation.
      */
-    void VisualizeRandIndexRecoClusters(
-      std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents,
-      std::map<const pandora::CaloHit *const, const pandora::Cluster *const> &hitMergeTargets) const;
+    void VisualizeRandIndexRecoClusters(std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents,
+        std::map<const pandora::CaloHit *const, const pandora::Cluster *const> &hitMergeTargets) const;
 
     /**
      *  @brief Erase hits associated with an MC particle that does meet a minimum number of hits in the view

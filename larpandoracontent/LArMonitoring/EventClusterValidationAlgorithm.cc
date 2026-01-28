@@ -663,16 +663,14 @@ void EventClusterValidationAlgorithm::GetMatchedParticleMetrics(
         }
     }
 
-    auto isBetterMatch =
-        [&mcMatchedCluster, &mcMatchedClusterCorrectHits, &mcMatchedClusterTotalHits]
-        (const MCParticle *const pMC, const int nCorrectHits, const int nTotalHits, const Cluster *const pCluster)
+    auto isBetterMatch = [&mcMatchedCluster, &mcMatchedClusterCorrectHits, &mcMatchedClusterTotalHits](
+                             const MCParticle *const pMC, const int nCorrectHits, const int nTotalHits, const Cluster *const pCluster)
     {
-        return
-            !mcMatchedCluster.at(pMC) ||                                                // No competitor
-            nCorrectHits > mcMatchedClusterCorrectHits.at(pMC) ||                       // More matched hits
-            (nCorrectHits == mcMatchedClusterCorrectHits.at(pMC) &&                     // Need to do a tie-breaker
-                (nTotalHits < mcMatchedClusterTotalHits.at(pMC) ||                      // Purity tie-breaker
-                LArClusterHelper::SortByPosition(pCluster, mcMatchedCluster.at(pMC)))); // Arbitrary tie-breaker
+        return !mcMatchedCluster.at(pMC) ||                                                 // No competitor
+            nCorrectHits > mcMatchedClusterCorrectHits.at(pMC) ||                           // More matched hits
+            (nCorrectHits == mcMatchedClusterCorrectHits.at(pMC) &&                         // Need to do a tie-breaker
+                (nTotalHits < mcMatchedClusterTotalHits.at(pMC) ||                          // Purity tie-breaker
+                    LArClusterHelper::SortByPosition(pCluster, mcMatchedCluster.at(pMC)))); // Arbitrary tie-breaker
     };
 
     if (!m_maximalMatching)
@@ -730,7 +728,7 @@ void EventClusterValidationAlgorithm::GetMatchedParticleMetrics(
         while (newMatch)
         {
             newMatch = false;
-            for (auto it = clusterOrderedMCs.begin(); it != clusterOrderedMCs.end(); )
+            for (auto it = clusterOrderedMCs.begin(); it != clusterOrderedMCs.end();)
             {
                 const Cluster *const pCluster{it->first};
                 // Exhausted this cluster's MC contributions, or the cluster was already matched in the previous loop
@@ -739,7 +737,8 @@ void EventClusterValidationAlgorithm::GetMatchedParticleMetrics(
                     it = clusterOrderedMCs.erase(it);
                     continue;
                 }
-                const MCParticle *const pMC{it->second.front()}; it->second.pop_front();
+                const MCParticle *const pMC{it->second.front()};
+                it->second.pop_front();
                 const int nTotalHits{clusterNHits.at(pCluster)};
                 const float totalHitsSumEnergy{clusterHitsSumEnergy.at(pCluster)};
                 const int nCorrectHits{clusterMCNHits.at(pCluster).at(pMC)};
@@ -913,30 +912,27 @@ void EventClusterValidationAlgorithm::SetBranches([[maybe_unused]] const Cluster
     {
         for (int i = 0; i < static_cast<int>(matchedParticleMetrics.m_pdg.size()); i++)
         {
-            PANDORA_MONITORING_API(SetTreeVariable(
-                this->GetPandora(), m_treeName + "_matching", "event", m_eventNumber - 1));
-            PANDORA_MONITORING_API(SetTreeVariable(
-                this->GetPandora(), m_treeName + "_matching", "view", static_cast<int>(view)));
-            PANDORA_MONITORING_API(SetTreeVariable(
-                this->GetPandora(), m_treeName + "_matching", "pdg", matchedParticleMetrics.m_pdg.at(i)));
-            PANDORA_MONITORING_API(SetTreeVariable(
-                this->GetPandora(), m_treeName + "_matching", "causes_shower", matchedParticleMetrics.m_causesShower.at(i)));
-            PANDORA_MONITORING_API(SetTreeVariable(
-                this->GetPandora(), m_treeName + "_matching", "is_primary", matchedParticleMetrics.m_isPrimary.at(i)));
-            PANDORA_MONITORING_API(SetTreeVariable(
-                this->GetPandora(), m_treeName + "_matching", "energy", matchedParticleMetrics.m_trueEnergy.at(i)));
-            PANDORA_MONITORING_API(SetTreeVariable(
-                this->GetPandora(), m_treeName + "_matching", "n_true_hits", matchedParticleMetrics.m_nTrueHits.at(i)));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_matching", "event", m_eventNumber - 1));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_matching", "view", static_cast<int>(view)));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_matching", "pdg", matchedParticleMetrics.m_pdg.at(i)));
+            PANDORA_MONITORING_API(
+                SetTreeVariable(this->GetPandora(), m_treeName + "_matching", "causes_shower", matchedParticleMetrics.m_causesShower.at(i)));
+            PANDORA_MONITORING_API(
+                SetTreeVariable(this->GetPandora(), m_treeName + "_matching", "is_primary", matchedParticleMetrics.m_isPrimary.at(i)));
+            PANDORA_MONITORING_API(
+                SetTreeVariable(this->GetPandora(), m_treeName + "_matching", "energy", matchedParticleMetrics.m_trueEnergy.at(i)));
+            PANDORA_MONITORING_API(
+                SetTreeVariable(this->GetPandora(), m_treeName + "_matching", "n_true_hits", matchedParticleMetrics.m_nTrueHits.at(i)));
             PANDORA_MONITORING_API(SetTreeVariable(
                 this->GetPandora(), m_treeName + "_matching", "true_hits_sum_energy", matchedParticleMetrics.m_trueHitsSumEnergy.at(i)));
             PANDORA_MONITORING_API(SetTreeVariable(
                 this->GetPandora(), m_treeName + "_matching", "n_correct_matched_hits", matchedParticleMetrics.m_nMatchedCorrectHits.at(i)));
-            PANDORA_MONITORING_API(SetTreeVariable(
-                this->GetPandora(), m_treeName + "_matching", "correct_matched_hits_sum_energy", matchedParticleMetrics.m_matchedCorrectHitsSumEnergy.at(i)));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_matching", "correct_matched_hits_sum_energy",
+                matchedParticleMetrics.m_matchedCorrectHitsSumEnergy.at(i)));
             PANDORA_MONITORING_API(SetTreeVariable(
                 this->GetPandora(), m_treeName + "_matching", "n_total_matched_hits", matchedParticleMetrics.m_nMatchedTotalHits.at(i)));
-            PANDORA_MONITORING_API(SetTreeVariable(
-                this->GetPandora(), m_treeName + "_matching", "total_matched_hits_sum_energy", matchedParticleMetrics.m_matchedTotalHitsSumEnergy.at(i)));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName + "_matching", "total_matched_hits_sum_energy",
+                matchedParticleMetrics.m_matchedTotalHitsSumEnergy.at(i)));
             PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName + "_matching"));
         }
     }
