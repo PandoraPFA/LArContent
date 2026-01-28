@@ -19,7 +19,6 @@ namespace lar_content
 class LArCaloHitHelper
 {
 public:
-
     /**
      *  @brief  Get closest distance between a specified position vector and a list of position vectors
      *
