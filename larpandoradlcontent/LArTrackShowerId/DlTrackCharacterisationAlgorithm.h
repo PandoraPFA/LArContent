@@ -35,6 +35,18 @@ public:
     typedef std::vector<std::vector<float>> TrackHitFeatures;
     typedef std::map<pandora::HitType, TrackHitFeatures> ViewToTrackHitFeaturesMap;
 
+    enum class AuxInputs
+    {
+        kNTrkChildren = 0,
+        kNShwChildren,
+        kNDescendants,
+        kNDescendantHits,
+        kRecoTier,
+        kNHitsU,
+        kNHitsV,
+        kNHitsW
+    };
+
     /**
     *  @brief  Simple class to store track features
     */
@@ -45,6 +57,7 @@ public:
          *  @brief  Add information from a CaloHit
          *
          *  @param  pCaloHit the hit to extract features from
+         *  @param  view the readout view that the hit is from
          *  @param  chargeThreshold to truncate the hit charge
          */
         void AddHit(const pandora::CaloHit *const pCaloHit, const pandora::HitType view, const float chargeThreshold);
@@ -68,7 +81,7 @@ public:
          *
          *  @return the features of all hits in the requested view
          */
-        const TrackHitFeatures &GetAllHits(const pandora::HitType view) const;
+        const TrackHitFeatures &GetAllHitFeatures(const pandora::HitType view) const;
 
         /**
          *  @brief  Get the features for a given hit
@@ -150,7 +163,7 @@ protected:
      *
      *  @return status code
      */
-    pandora::StatusCode CreateTrainingSample() const;
+    pandora::StatusCode PrepareTrainingSample() const;
 
     /**
      *  @brief  Perform the inference to get the predicted track properties

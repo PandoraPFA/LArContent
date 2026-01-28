@@ -65,14 +65,14 @@ StatusCode DlTrackCharacterisationAlgorithm::Run()
     this->GetDetectorLimits();
 
     if (m_trainingMode)
-        return this->CreateTrainingSample();
+        return this->PrepareTrainingSample();
     else
         return this->Infer();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlTrackCharacterisationAlgorithm::CreateTrainingSample() const
+StatusCode DlTrackCharacterisationAlgorithm::PrepareTrainingSample() const
 {
     // Get features in U, V and W for all tracks
     PfoToTrackFeaturesMap pfoToTrackFeaturesMap;
@@ -86,7 +86,6 @@ StatusCode DlTrackCharacterisationAlgorithm::CreateTrainingSample() const
     for (auto const &[pPfo, trackFeatures] : pfoToTrackFeaturesMap)
     {
         std::map<HitType, std::vector<float>> viewX, viewWire, viewQ;
-        //        std::map<HitType, unsigned int> viewNHits;
 
         for (auto const &[view, hitFeatures] : trackFeatures.GetViewToTrackHitFeaturesMap())
         {
@@ -124,14 +123,14 @@ StatusCode DlTrackCharacterisationAlgorithm::CreateTrainingSample() const
         }
 
         const std::vector<float> auxillaryFeatures(trackFeatures.GetAuxillaryFeatures());
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTrackChildren", auxillaryFeatures.at(0)));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nShowerChildren", auxillaryFeatures.at(1)));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTotalDescendants", auxillaryFeatures.at(2)));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nDescendantHits", auxillaryFeatures.at(3)));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "recoTier", auxillaryFeatures.at(4)));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "uViewNHits", static_cast<int>(auxillaryFeatures.at(5))));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "vViewNHits", static_cast<int>(auxillaryFeatures.at(6))));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "wViewNHits", static_cast<int>(auxillaryFeatures.at(7))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTrackChildren", auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNTrkChildren))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nShowerChildren", auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNShwChildren))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTotalDescendants", auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNDescendants))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nDescendantHits", auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNDescendantHits))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "recoTier", auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kRecoTier))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "uViewNHits", static_cast<int>(auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNHitsU)))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "vViewNHits", static_cast<int>(auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNHitsV)))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "wViewNHits", static_cast<int>(auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNHitsW)))));
 
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "truePdg", trackFeatures.GetTruePdg()));
         PANDORA_MONITORING_API(
@@ -326,7 +325,7 @@ bool DlTrackCharacterisationAlgorithm::IsTrackExiting(const CaloHitList &caloHit
 
     if (xMin < m_detLimitMinX + m_detEdgeTolerance || xMax > m_detLimitMaxX - m_detEdgeTolerance)
         return true;
-    if (yMin < m_detLimitMinY + m_detEdgeTolerance || xMax > m_detLimitMaxY - m_detEdgeTolerance)
+    if (yMin < m_detLimitMinY + m_detEdgeTolerance || yMax > m_detLimitMaxY - m_detEdgeTolerance)
         return true;
     if (zMin < m_detLimitMinZ + m_detEdgeTolerance || zMax > m_detLimitMaxZ - m_detEdgeTolerance)
         return true;
@@ -378,7 +377,8 @@ void DlTrackCharacterisationAlgorithm::CreateAuxillaryInput(const TrackFeatures 
     // We need to do some normalisation here for number of hits variables
     for (unsigned int f = 0; f < auxFeatures.size(); ++f)
     {
-        if (f == 3 || f > 4)
+        if (f == static_cast<unsigned int>(AuxInputs::kNDescendantHits) || f == static_cast<unsigned int>(AuxInputs::kNHitsU)
+         || f == static_cast<unsigned int>(AuxInputs::kNHitsV) || f == static_cast<unsigned int>(AuxInputs::kNHitsW))
             accessor[0][f] = auxFeatures.at(f) > 0 ? std::log10(auxFeatures.at(f)) / 5.f : 0.f;
         else
             accessor[0][f] = auxFeatures.at(f);
@@ -467,7 +467,7 @@ const DlTrackCharacterisationAlgorithm::ViewToTrackHitFeaturesMap &DlTrackCharac
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const DlTrackCharacterisationAlgorithm::TrackHitFeatures &DlTrackCharacterisationAlgorithm::TrackFeatures::GetAllHits(const HitType view) const
+const DlTrackCharacterisationAlgorithm::TrackHitFeatures &DlTrackCharacterisationAlgorithm::TrackFeatures::GetAllHitFeatures(const HitType view) const
 {
     return m_viewToTrackHitFeatures.at(view);
 }
