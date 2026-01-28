@@ -283,6 +283,7 @@ void DlTrackCharacterisationAlgorithm::GetTrackAuxillaryInfo(const ParticleFlowO
     // Descendents information
     PfoList allDescendantPfos;
     LArPfoHelper::GetAllDownstreamPfos(pPfo, allDescendantPfos);
+    // Pfo list includes the pfo in question so we need to subtract one to get the number of descendants
     const float nDescendants{(allDescendantPfos.size() - 1) < 5 ? static_cast<float>(allDescendantPfos.size() - 1) / 5.f : 1.f};
     trackFeatures.AddAuxillaryValue(nDescendants);
 
