@@ -39,22 +39,24 @@ private:
 
     struct ClusterGroup
     {
-        ClusterGroup();
+        public:
+            ClusterGroup();
 
-        /**
-         *  @brief Add a cluster to the group. If first cluster in the group, use it as the group's representative cluster
-         */
-        void insert(const pandora::Cluster *pCluster);
+            /**
+             *  @brief Add a cluster to the group. If first cluster in the group, use it as the group's representative cluster
+             */
+            void insert(const pandora::Cluster *pCluster);
 
-        const pandora::Cluster *GetRepresentativeCluster() const { return m_representativeCluster; }
-        const pandora::ClusterSet &GetClusters() const { return m_clusters; }
-        size_t size() const { return m_clusters.size(); }
-        bool empty() const { return m_clusters.empty(); }
-        auto begin() const { return m_clusters.begin(); }
-        auto end() const { return m_clusters.end(); }
-
-        pandora::ClusterSet m_clusters;                  ///< Container of clusters in the group
-        const pandora::Cluster *m_representativeCluster; ///< The address of an arbitrary cluster in the group to use as a key for the group
+            const pandora::Cluster *GetRepresentativeCluster() const { return m_representativeCluster; }
+            const pandora::ClusterSet &GetClusters() const { return m_clusters; }
+            size_t size() const { return m_clusters.size(); }
+            bool empty() const { return m_clusters.empty(); }
+            auto begin() const { return m_clusters.begin(); }
+            auto end() const { return m_clusters.end(); }
+        
+        private:
+            pandora::ClusterSet m_clusters;                  ///< Container of clusters in the group
+            const pandora::Cluster *m_representativeCluster; ///< The address of an arbitrary cluster in the group to use as a key for the group
     };
 
 public:
