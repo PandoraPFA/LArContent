@@ -15,6 +15,7 @@
 #include "larpandoradlcontent/LArCheating/DLCheatHierarchyTool.h"
 #include "larpandoradlcontent/LArControlFlow/DLMasterAlgorithm.h"
 #include "larpandoradlcontent/LArMonitoring/DlHitValidationAlgorithm.h"
+#include "larpandoradlcontent/LArShowerGrowing/DLTwoDShowerGrowingAlgorithm.h"
 #include "larpandoradlcontent/LArSignalId/DlSNSignalAlgorithm.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLLaterTierHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLNeutrinoHierarchyAlgorithm.h"
@@ -23,6 +24,7 @@
 #include "larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlTrackCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlPfoCharacterisationAlgorithm.h"
+#include "larpandoradlcontent/LArTwoDReco/DLThreeDClusterSplittingAlgorithm.h"
 #include "larpandoradlcontent/LArTwoDReco/DlTrackShowerStreamSelectionAlgorithm.h"
 #include "larpandoradlcontent/LArVertex/DlSecondaryVertexingAlgorithm.h"
 #include "larpandoradlcontent/LArVertex/DlVertexingAlgorithm.h"
@@ -40,8 +42,10 @@
     d("LArDLSecondaryVertexing",         DlSecondaryVertexingAlgorithm)                               \
     d("LArDLSNSignal",                   DlSNSignalAlgorithm)                                         \
     d("LArDLTrackCharacterisation",      DlTrackCharacterisationAlgorithm)                            \
+    d("LArDLThreeDClusterSplitting",     DLThreeDClusterSplittingAlgorithm)                           \
     d("LArDLTrackShowerStreamSelection", DlTrackShowerStreamSelectionAlgorithm)                       \
-    d("LArDLVertexing",                  DlVertexingAlgorithm)
+    d("LArDLVertexing",                  DlVertexingAlgorithm)                                        \
+    d("LArDLTwoDShowerGrowing",          DLTwoDShowerGrowingAlgorithm)
 
 #define LAR_DL_ALGORITHM_TOOL_LIST(d)                                                                                                     \
     d("LArDLCheatHierarchy",                    DLCheatHierarchyTool)                                                                     \
