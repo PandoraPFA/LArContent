@@ -28,39 +28,39 @@ public:
      *  @param  trackScores the vector of track counting scores
      *  @param  showerScores the vector of shower counting scores
      */
-    TrackShowerCountingContextObject(const std::vector<float> &nuScores, const std::vector<float> &trackScores, const std::vector<float> &showerScores);
+    TrackShowerCountingContextObject(const pandora::FloatVector &nuScores, const pandora::FloatVector &trackScores, const pandora::FloatVector &showerScores);
 
     /**
      *  @brief  Get the neutrino class scores
      *
      *  @return the vector of neutrino class scores
      */
-    const std::vector<float> &GetNuClassificationScores() const;
+    const pandora::FloatVector &GetNuClassificationScores() const;
 
     /**
      *  @brief  Get the track counting scores
      *
      *  @return the vector of track counting scores
      */
-    const std::vector<float> &GetTrackCountingScores() const;
+    const pandora::FloatVector &GetTrackCountingScores() const;
 
     /**
      *  @brief  Get the shower counting scores
      *
      *  @return the vector of shower counting scores
      */
-    const std::vector<float> &GetShowerCountingScores() const;
+    const pandora::FloatVector &GetShowerCountingScores() const;
 
 private:
-    std::vector<float> m_nuScores;     ///< Vector of neutrino class scores
-    std::vector<float> m_trackScores;  ///< Vector of track counting scores
-    std::vector<float> m_showerScores; ///< Vector of shower counting scores
+    pandora::FloatVector m_nuScores;     ///< Vector of neutrino class scores
+    pandora::FloatVector m_trackScores;  ///< Vector of track counting scores
+    pandora::FloatVector m_showerScores; ///< Vector of shower counting scores
 };
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
 inline TrackShowerCountingContextObject::TrackShowerCountingContextObject(
-    const std::vector<float> &nuScores, const std::vector<float> &trackScores, const std::vector<float> &showerScores) :
+    const pandora::FloatVector &nuScores, const pandora::FloatVector &trackScores, const pandora::FloatVector &showerScores) :
     m_nuScores(nuScores),
     m_trackScores(trackScores),
     m_showerScores(showerScores)
@@ -69,21 +69,21 @@ inline TrackShowerCountingContextObject::TrackShowerCountingContextObject(
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-inline const std::vector<float> &TrackShowerCountingContextObject::GetNuClassificationScores() const
+inline const pandora::FloatVector &TrackShowerCountingContextObject::GetNuClassificationScores() const
 {
     return m_nuScores;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-inline const std::vector<float> &TrackShowerCountingContextObject::GetTrackCountingScores() const
+inline const pandora::FloatVector &TrackShowerCountingContextObject::GetTrackCountingScores() const
 {
     return m_trackScores;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-inline const std::vector<float> &TrackShowerCountingContextObject::GetShowerCountingScores() const
+inline const pandora::FloatVector &TrackShowerCountingContextObject::GetShowerCountingScores() const
 {
     return m_showerScores;
 }
