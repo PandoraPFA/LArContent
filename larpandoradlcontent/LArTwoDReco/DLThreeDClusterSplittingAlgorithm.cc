@@ -226,7 +226,9 @@ template <typename T>
 StatusCode DLThreeDClusterSplittingAlgorithm::GetList(const T *&pList, const std::string listName)
 {
     pList = nullptr;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listName, pList));
+
+    if (PandoraContentApi::GetList(*this, listName, pList) != STATUS_CODE_SUCCESS)
+        return STATUS_CODE_NOT_FOUND;
 
     if ((!pList) || pList->empty())
         return STATUS_CODE_NOT_FOUND;
