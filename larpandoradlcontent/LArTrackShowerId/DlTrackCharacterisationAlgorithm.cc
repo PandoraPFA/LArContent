@@ -123,14 +123,22 @@ StatusCode DlTrackCharacterisationAlgorithm::PrepareTrainingSample() const
         }
 
         const std::vector<float> auxillaryFeatures(trackFeatures.GetAuxillaryFeatures());
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTrackChildren", auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNTrkChildren))));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nShowerChildren", auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNShwChildren))));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTotalDescendants", auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNDescendants))));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nDescendantHits", auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNDescendantHits))));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "recoTier", auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kRecoTier))));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "uViewNHits", static_cast<int>(auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNHitsU)))));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "vViewNHits", static_cast<int>(auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNHitsV)))));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "wViewNHits", static_cast<int>(auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNHitsW)))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTrackChildren",
+            auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNTrkChildren))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nShowerChildren",
+            auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNShwChildren))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nTotalDescendants",
+            auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNDescendants))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "nDescendantHits",
+            auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNDescendantHits))));
+        PANDORA_MONITORING_API(SetTreeVariable(
+            this->GetPandora(), m_trainingTreeName, "recoTier", auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kRecoTier))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "uViewNHits",
+            static_cast<int>(auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNHitsU)))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "vViewNHits",
+            static_cast<int>(auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNHitsV)))));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "wViewNHits",
+            static_cast<int>(auxillaryFeatures.at(static_cast<unsigned int>(AuxInputs::kNHitsW)))));
 
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "truePdg", trackFeatures.GetTruePdg()));
         PANDORA_MONITORING_API(
@@ -378,8 +386,8 @@ void DlTrackCharacterisationAlgorithm::CreateAuxillaryInput(const TrackFeatures 
     // We need to do some normalisation here for number of hits variables
     for (unsigned int f = 0; f < auxFeatures.size(); ++f)
     {
-        if (f == static_cast<unsigned int>(AuxInputs::kNDescendantHits) || f == static_cast<unsigned int>(AuxInputs::kNHitsU)
-         || f == static_cast<unsigned int>(AuxInputs::kNHitsV) || f == static_cast<unsigned int>(AuxInputs::kNHitsW))
+        if (f == static_cast<unsigned int>(AuxInputs::kNDescendantHits) || f == static_cast<unsigned int>(AuxInputs::kNHitsU) ||
+            f == static_cast<unsigned int>(AuxInputs::kNHitsV) || f == static_cast<unsigned int>(AuxInputs::kNHitsW))
             accessor[0][f] = auxFeatures.at(f) > 0 ? std::log10(auxFeatures.at(f)) / 5.f : 0.f;
         else
             accessor[0][f] = auxFeatures.at(f);
