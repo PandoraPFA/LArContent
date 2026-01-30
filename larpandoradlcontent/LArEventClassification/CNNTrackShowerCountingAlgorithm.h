@@ -55,7 +55,7 @@ public:
         *  @brief  Add information about the vertex position in the pixel map
         *
         *  @param  isDrift to determine if this is the wire or x coordiate
-        *  @param  bin the image row or column containing the vertex 
+        *  @param  bin the image row or column containing the vertex
         */
         void AddVertexBin(const bool isDrift, const unsigned int bin);
 

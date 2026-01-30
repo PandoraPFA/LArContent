@@ -28,7 +28,8 @@ public:
      *  @param  trackScores the vector of track counting scores
      *  @param  showerScores the vector of shower counting scores
      */
-    TrackShowerCountingContextObject(const pandora::FloatVector &nuScores, const pandora::FloatVector &trackScores, const pandora::FloatVector &showerScores);
+    TrackShowerCountingContextObject(
+        const pandora::FloatVector &nuScores, const pandora::FloatVector &trackScores, const pandora::FloatVector &showerScores);
 
     /**
      *  @brief  Get the neutrino class scores
