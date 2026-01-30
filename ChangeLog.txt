@@ -1,4 +1,12 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v04_19_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Add an algorithm to identify excessive track merges and split them
+Add an algorithm to classify events and count primary tracks and showers
+Add an algorithm to provide track PID
+Add an algorithm to merge 2D shower fragments
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v04_18_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Add an algorithm to identify and merge the MIP-like stub and shower cascade of broken electrons
