@@ -74,6 +74,7 @@ StatusCode CNNTrackShowerCountingAlgorithm::Run()
 
 StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
 {
+#ifdef MONITORING
     const MCParticleList *pMCParticleList{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
@@ -201,6 +202,7 @@ StatusCode CNNTrackShowerCountingAlgorithm::PrepareTrainingSample()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "pixelColumn", &pixel_column));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "pixelCharge", &pixel_charge));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName));
+#endif
 
     return STATUS_CODE_SUCCESS;
 }
