@@ -238,7 +238,7 @@ pandora::StatusCode DlTrackCharacterisationAlgorithm::GetAllTrackFeatures(PfoToT
         if (trackHits.empty())
             continue;
 
-        TrackFeatures trackFeatures = this->GetTrackFeatures(*iter, trackHits);
+        TrackFeatures trackFeatures = this->GetTrackFeatures(trackHits);
         this->GetTrackAuxillaryInfo(*iter, trackFeatures);
 
         // Use 3D hits for some auxillary information
@@ -260,8 +260,7 @@ pandora::StatusCode DlTrackCharacterisationAlgorithm::GetAllTrackFeatures(PfoToT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-DlTrackCharacterisationAlgorithm::TrackFeatures DlTrackCharacterisationAlgorithm::GetTrackFeatures(
-    const ParticleFlowObject *pPfo, const CaloHitList &caloHits) const
+DlTrackCharacterisationAlgorithm::TrackFeatures DlTrackCharacterisationAlgorithm::GetTrackFeatures(const CaloHitList &caloHits) const
 {
     TrackFeatures trackFeatures;
     // Add the hit information

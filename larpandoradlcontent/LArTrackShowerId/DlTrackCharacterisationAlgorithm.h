@@ -191,12 +191,11 @@ protected:
     /**
      *  @brief  Get the track features for a given pfo
      *
-     *  @param  pPfo the pointer to the pfo we want the track features for
      *  @param  caloHits the list of 3D calo hits associated to the pfo
      *
      *  @return the track features for this pfo
      */
-    TrackFeatures GetTrackFeatures(const pandora::ParticleFlowObject *pPfo, const pandora::CaloHitList &caloHits) const;
+    TrackFeatures GetTrackFeatures(const pandora::CaloHitList &caloHits) const;
 
     /**
      *  @brief  Get the track auxillary feature variables
