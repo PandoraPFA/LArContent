@@ -453,7 +453,8 @@ private:
      */
     template <typename T>
     static void SlidingFitTrajectoryImpl(const T *const pT, const pandora::CartesianVector &vertexPosition, const unsigned int layerWindow,
-        const float layerPitch, LArTrackStateVector &trackStateVector, pandora::IntVector *const pIndexVector = nullptr, const bool return3DCaloHit = false);
+        const float layerPitch, LArTrackStateVector &trackStateVector, pandora::IntVector *const pIndexVector = nullptr,
+        const bool return3DCaloHit = false);
 };
 
 } // namespace lar_content
