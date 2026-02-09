@@ -363,7 +363,7 @@ public:
      *
      *  @param  pointVector  the input list of 3D positions
      *  @param  vertexPosition  the input vertex position
-     *  @param  slidingFitHalfWindow  size of half window for sliding linear fit
+     *  @param  layerWindow  size of half window for sliding linear fit
      *  @param  layerPitch  size of pitch for sliding linear fit
      *  @param  trackStateVector  the output track trajectory
      *  @param  pIndexVector lookup vector of spacepoint indices to store trajectory point sorting
@@ -384,11 +384,11 @@ public:
         const unsigned int slidingFitHalfWindow, const float layerPitch, LArTrackStateVector &trackStateVector);
 
     /**
-     *  @brief  Apply 3D sliding fit to Pfo and return track trajectory
+     *  @brief  Apply 3D sliding fit to CaloHitList and return track trajectory
      *
      *  @param  pCaloHitList  the input list of calo hits
      *  @param  vertexPosition  the input vertex position
-     *  @param  slidingFitHalfWindow  size of half window for sliding linear fit
+     *  @param  layerWindow  size of half window for sliding linear fit
      *  @param  layerPitch  size of pitch for sliding linear fit
      *  @param  trackStateVector  the output track trajectory
      *  @param  pIndexVector  lookup vector of spacepoint indices to store trajectory point sorting
