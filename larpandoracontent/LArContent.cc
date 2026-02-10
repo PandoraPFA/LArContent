@@ -79,6 +79,7 @@
 #include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
 #include "larpandoracontent/LArReclustering/LArExample/RandomClusteringAlgorithm.h"
 #include "larpandoracontent/LArReclustering/LArExample/RandomFigureOfMeritTool.h"
+#include "larpandoracontent/LArReclustering/ShortTrackReclusteringAlgorithm.h"
 #include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
 
 #include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
@@ -357,6 +358,7 @@
     d("LArThreeDReclustering",                  ThreeDReclusteringAlgorithm)                                                    \
     d("LArThreeDMultiReclustering",             ThreeDMultiReclusteringAlgorithm)                                               \
     d("LArRandomClustering",                    RandomClusteringAlgorithm)                                                      \
+    d("LArShortTrackReclustering",              ShortTrackReclusteringAlgorithm)                                                \
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
