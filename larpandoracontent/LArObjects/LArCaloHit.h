@@ -339,10 +339,13 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("DaughterVolumeId", daughterVolumeId));
         if (m_version > 2) {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NHitLabels", nLabels));
-            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("HitScores", hitScores));
             for (unsigned int i = 0; i < nLabels; ++i) {
+                float score;
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("HitScore", score));
+                hitScores.emplace_back(std::move(score));
+
                 std::string label;
-                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("HitScoreLabels", label));
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("HitScoreLabel", label));
                 hitScoreLabels.emplace_back(std::move(label));
             }
         }
@@ -405,8 +408,8 @@ inline pandora::StatusCode LArCaloHitFactory::Write(const Object *const pObject,
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("NHitLabels", nLabels));
             for (unsigned int i = 0; i < nLabels; ++i)
             {
-                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("HitScores", hitScores.at(i)));
-                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("HitScoreLabels", hitScoreLabels.at(i)));
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("HitScore", hitScores.at(i)));
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("HitScoreLabel", hitScoreLabels.at(i)));
             }
         }
     }
