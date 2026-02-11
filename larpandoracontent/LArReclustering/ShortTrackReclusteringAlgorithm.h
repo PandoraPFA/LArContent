@@ -98,6 +98,15 @@ private:
         const size_t window = 3) const;
 
     /**
+     *  @brief  Gets the median value for a vector. The input vector need not be sorted.
+     *
+     *  @param  values a set of values for which to calculate the median
+     *  @return the median value for the input set of values
+     */
+    template <typename T>
+    double GetMedian(const std::vector<T> &values) const;
+
+    /**
      *  @brief  Gets the indices of hits in an ordered set of hits for which there is a step change in ADC values. This function looks for step changes in
      *          ADC, but with relatively stable ADC either side of the discontinuity, indicative of a decay or inelastic interaction. This method attempts
      *          to filter out Bragg peaks or regions of high volatility.
@@ -115,6 +124,62 @@ private:
      *  @param  normalizedAdc the vector in which to store the normalized ADC values for the hits
      */
     void NormalizeAdc(const pandora::CaloHitVector &hits, pandora::FloatVector &normalizedAdc) const;
+
+    /**
+     *  @brief  Identifies whether a set of hits exhibits a Bragg peak. This method considers the consensus view from computation of the linear slope,
+     *          quadratic curvature, contrast ratio and monotonicity.
+     *
+     *  @param  hits the set of hits for which to identify whether there is a Bragg peak
+     *  @param  start the index of the first hit in the set of hits to consider when looking for a Bragg peak
+     *  @param  end the index of the last hit in the set of hits to consider when looking for a Bragg peak
+     *
+     *  @return true if there is evidence for a Bragg peak in the specified range of hits, false otherwise
+     */
+    bool IsBraggPeak(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const;
+
+    /**
+     *  @brief  Gets a score indicative of the linear slope of the ADC values for a set of hits
+     *
+     *  @param  hits the set of hits for which to calculate the linear slope score
+     *  @param  start the index of the first hit in the set of hits to consider when calculating the linear slope score
+     *  @param  end the index of the last hit in the set of hits to consider when calculating the linear slope score
+     *
+     *  @return a score indicative of the linear slope of the ADC values for the specified range of hits
+     */
+    float GetLinearSlopeScore(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const;
+
+    /**
+     *  @brief  Gets a score indicative of the quadratic curvature of the ADC values for a set of hits
+     *
+     *  @param  hits the set of hits for which to calculate the quadratic curvature score
+     *  @param  start the index of the first hit in the set of hits to consider when calculating the quadratic curvature score
+     *  @param  end the index of the last hit in the set of hits to consider when calculating the quadratic curvature score
+     *
+     *  @return a score indicative of the quadratic curvature of the ADC values for the specified range of hits
+     */
+    float GetQuadraticCurvatureScore(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const;
+
+    /**
+     *  @brief  Gets a score indicative of the contrast in ADC values for a set of hits
+     *
+     *  @param  hits the set of hits for which to calculate the contrast score
+     *  @param  start the index of the first hit in the set of hits to consider when calculating the contrast score
+     *  @param  end the index of the last hit in the set of hits to consider when calculating the contrast score
+     *
+     *  @return a score indicative of the contrast in ADC values for the specified range of hits
+     */
+    float GetContrastScore(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const;
+
+    /**
+     *  @brief  Gets a score indicative of the monotonicity of the ADC values for a set of hits
+     *
+     *  @param  hits the set of hits for which to calculate the monotonicity score
+     *  @param  start the index of the first hit in the set of hits to consider when calculating the monotonicity score
+     *  @param  end the index of the last hit in the set of hits to consider when calculating the monotonicity score
+     *
+     *  @return a score indicative of the monotonicity of the ADC values for the specified range of hits
+     */
+    float GetMonotonicityScore(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

@@ -146,29 +146,56 @@ void ShortTrackReclusteringAlgorithm::GetAdcMovingAverage(const FloatVector &adc
     movingAverage.resize(nHits);
     movingVariance.resize(nHits);
 
+    FloatVector rollingWindow;
     float S{0.f}, V{0.f};
     size_t count{0};
     // initial window
     for (size_t i = 0; i < std::min(nHits, window); ++i)
     {
+        rollingWindow.emplace_back(adcs[i]);
         S += adcs[i];
         V += adcs[i] * adcs[i];
         ++count;
 
-        movingAverage[i] = S / count;
+        movingAverage[i] = static_cast<float>(this->GetMedian(rollingWindow));
         movingVariance[i] = count > 1 ? (V - S*S / count) / (count - 1) : 0.0; // sample variance
     }
     // rolling update
     for (size_t i = window; i < nHits; ++i)
     {
+        rollingWindow.erase(rollingWindow.begin());
+        rollingWindow.emplace_back(adcs[i]);
         const float o{adcs[i - window]};
         const float n{adcs[i]};
 
         S += n - o;
         V += n*n - o*o;
 
-        movingAverage[i] = S / count;
+        movingAverage[i] = static_cast<float>(this->GetMedian(rollingWindow));
         movingVariance[i] = (V - S*S / count) / (count - 1); // sample variance
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+double ShortTrackReclusteringAlgorithm::GetMedian(const std::vector<T> &values) const
+{
+    std::vector<T> copy(values);
+    const size_t mid{copy.size() / 2};
+
+    if (mid % 2 == 0)
+    {
+        std::nth_element(copy.begin(), copy.begin() + mid, copy.end());
+        const double upper{copy[mid]};
+        std::nth_element(copy.begin(), copy.begin() + mid - 1, copy.end());
+        const double lower{copy[mid - 1]};
+        return 0.5 * (lower + upper);
+    }
+    else
+    {
+        std::nth_element(copy.begin(), copy.begin() + mid, copy.end());
+        return copy[mid];
     }
 }
 
@@ -177,26 +204,51 @@ void ShortTrackReclusteringAlgorithm::GetAdcMovingAverage(const FloatVector &adc
 void ShortTrackReclusteringAlgorithm::GetStableAdcDiscontinuities(const pandora::CaloHitVector &hits, pandora::IntVector &discontinuities,
     const size_t window) const
 {
+    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1, -1, 1));
     PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, window == 0);
     FloatVector normalizedAdc, movingAverage, movingVariance;
     this->NormalizeAdc(hits, normalizedAdc);
     this->GetAdcMovingAverage(normalizedAdc, movingAverage, movingVariance, window);
-    (void)discontinuities;
 
-    /*
     // Look for step changes in ADC
-    std::cout << "Cluster with " << clusterHits.size() << std::endl;
-    int i{0};
-    for (const CaloHit *const pCaloHit : hits)
+    for (size_t i = window; i < hits.size(); ++i)
     {
-        const CartesianVector position(pCaloHit->GetPositionVector());
-        const float adc{pCaloHit->GetInputEnergy()};
-        std::cout << "Hit (" << position.GetX() << ", " << position.GetZ() << ") = " << adc << "(" << forwardAdcs[i] << ")" << std::endl;
-        if (i >= 3 && (forwardAdcs[i] > 2 * forwardAdcs[i - 3] || forwardAdcs[i] < 0.5f * forwardAdcs[i - 3]))
-            std::cout << "  Potential step change in ADC values!" << std::endl;
-        ++i;
+        const float current{movingAverage[i]}, previous{movingAverage[i - 1] > 0 ? movingAverage[i - 1] : 1.f},
+            previous2{((i >= 2) && (movingAverage[i - 2] > 0)) ? movingAverage[i - 2] : 1.f};
+        const float ratio{std::max(current / previous, current / previous2)};
+
+        if (ratio > 2.f)
+        {
+            // Possible discontinuity to more highly ionising particle, check local variance before step
+            int nLow{0}, nHigh{0};
+            for (size_t j = i - window; j < i; ++j)
+            {
+                if (movingVariance[j] < 0.3f) // Arbitrary threshold for now, but probably the right scale
+                    ++nLow;
+                else
+                    ++nHigh;
+            }
+            if (nHigh >= nLow)
+                continue;
+            // Check for possible Bragg peak if the step is to more highly ionising particle
+            const size_t start{i}, end{std::min(i + 2 * window - 1, hits.size() - 1)};
+            if (this->IsBraggPeak(hits, start, end))
+                continue;
+            discontinuities.emplace_back(i);
+        }
+        else
+        {
+            continue;
+        }
     }
-    */
+    std::cout << "Found " << discontinuities.size() << " discontinuities" << std::endl;
+    for (const int index : discontinuities)
+    {
+        const CartesianVector &position(hits[index]->GetPositionVector());
+        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, "d", RED, 2));
+    }
+    if (!discontinuities.empty())
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -204,32 +256,110 @@ void ShortTrackReclusteringAlgorithm::GetStableAdcDiscontinuities(const pandora:
 void ShortTrackReclusteringAlgorithm::NormalizeAdc(const pandora::CaloHitVector &hits, pandora::FloatVector &normalizedAdc) const
 {
     normalizedAdc.clear();
-    const size_t mid{hits.size() / 2};
-
     FloatVector adcs;
     for (const CaloHit *const pCaloHit : hits)
         adcs.emplace_back(pCaloHit->GetInputEnergy());
     // Find median via nth_element - generally faster than sorting (O(n) vs O(n log n))
-    float median{0.f};
-    if (mid % 2 == 0)
-    {
-        std::nth_element(adcs.begin(), adcs.begin() + mid, adcs.end());
-        const float upper{adcs[mid]};
-        std::nth_element(adcs.begin(), adcs.begin() + mid - 1, adcs.end());
-        const float lower{adcs[mid - 1]};
-        median = 0.5f * (lower + upper);
-    }
-    else
-    {
-        std::nth_element(adcs.begin(), adcs.begin() + mid, adcs.end());
-        median = adcs[mid];
-    }
+    float median{static_cast<float>(this->GetMedian(adcs))};
 
     // This shouldn't be an issue, but just in case
-    if (median < 1.f)
-        median = 1.f;
+    if (median < 1.)
+        median = 1.;
     for (const CaloHit *const pCaloHit : hits)
         normalizedAdc.emplace_back(pCaloHit->GetInputEnergy() / median);
+}
+
+bool ShortTrackReclusteringAlgorithm::IsBraggPeak(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const
+{
+    const float linearSlopeScore{this->GetLinearSlopeScore(hits, start, end)};
+    // Curvature needs at least 5 hits for calculation
+    const float curvatureScore{(end - start) >= 4 ? this->GetQuadraticCurvatureScore(hits, start, end) : 0.f};
+    const float contrastScore{this->GetContrastScore(hits, start, end)};
+    const float monotonicityScore{this->GetMonotonicityScore(hits, start, end)};
+
+    int consensus{0};
+    consensus += linearSlopeScore > 0.16f;
+    consensus += curvatureScore > 0.f;
+    consensus += contrastScore > 1.4f;
+    consensus += monotonicityScore > 0.5f;
+
+    return consensus >= 3;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ShortTrackReclusteringAlgorithm::GetLinearSlopeScore(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const
+{
+    FloatVector adcs;
+    for (size_t i = start; i <= end; ++i)
+        adcs.emplace_back(hits[i]->GetInputEnergy());
+    const size_t mid{adcs.size() / 2};
+    std::nth_element(adcs.begin(), adcs.begin() + mid, adcs.end());
+    const float median{adcs[mid]};
+
+    const float dx{hits[end]->GetPositionVector().GetX() - hits[start]->GetPositionVector().GetX()};
+    const float dz{hits[end]->GetPositionVector().GetZ() - hits[start]->GetPositionVector().GetZ()};
+    const float dr{std::sqrt(dx*dx + dz*dz)};
+
+    return (dr > 0) ? (hits[end]->GetInputEnergy() - hits[start]->GetInputEnergy()) / (median * dr) : 0.f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ShortTrackReclusteringAlgorithm::GetQuadraticCurvatureScore(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const
+{
+    // Use standard three-point non-uniform finite difference for second derivative
+    float curvature{0.f};
+    for (size_t i = start + 1; i < end; ++i)
+    {
+        const float a_m{hits[i - 1]->GetInputEnergy()};
+        const float a_0{hits[i]->GetInputEnergy()};
+        const float a_p{hits[i + 1]->GetInputEnergy()};
+        const float dx_m{hits[i]->GetPositionVector().GetX() - hits[i - 1]->GetPositionVector().GetX()};
+        const float dz_m{hits[i]->GetPositionVector().GetZ() - hits[i - 1]->GetPositionVector().GetZ()};
+        const float dr_m{std::sqrt(dx_m*dx_m + dz_m*dz_m)};
+        const float dx_p{hits[i + 1]->GetPositionVector().GetX() - hits[i]->GetPositionVector().GetX()};
+        const float dz_p{hits[i + 1]->GetPositionVector().GetZ() - hits[i]->GetPositionVector().GetZ()};
+        const float dr_p{std::sqrt(dx_p*dx_p + dz_p*dz_p)};
+
+        curvature += (2.f / (dr_m + dr_p)) * (((a_p - a_0) / dr_p) - ((a_0 - a_m) / dr_m));
+    }
+
+    return curvature / (end - start - 1);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ShortTrackReclusteringAlgorithm::GetContrastScore(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const
+{
+    const size_t mid{(start + end) / 2};
+    float muHead{0}, muTail{0};
+    for (size_t i = start; i <= mid; ++i)
+        muHead += hits[i]->GetInputEnergy();
+    muHead /= (mid - start + 1);
+
+    for (size_t i = mid + 1; i <= end; ++i)
+        muTail += hits[i]->GetInputEnergy();
+    muTail /= (end - mid);
+    
+    return (muHead > 0.f) ? muTail / muHead : 0.f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ShortTrackReclusteringAlgorithm::GetMonotonicityScore(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const
+{
+    if (start == end)
+        return 0.f;
+    float monotonicity{0.f};
+    for (size_t i = start + 1; i <= end; ++i)
+    {
+        const float delta{hits[i]->GetInputEnergy() - hits[i - 1]->GetInputEnergy()};
+        // We only care about monotonically increasing cases here
+        monotonicity += delta > 0.f ? 1.f : 0.f;
+    }
+    
+    return monotonicity / (end - start);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
