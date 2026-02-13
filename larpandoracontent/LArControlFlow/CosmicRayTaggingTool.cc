@@ -29,9 +29,9 @@ CosmicRayTaggingTool::CosmicRayTaggingTool() :
     m_minimumHits(15),
     m_inTimeMargin(5.f),
     m_inTimeMaxX0(1.f),
-    m_marginY(20.f),
-    m_marginZ(10.f),
-    m_marginX(20.f),
+    m_marginY(5.f),
+    m_marginZ(5.f),
+    m_marginX(5.f),
     m_maxNeutrinoCosTheta(0.2f),
     m_minCosmicCosTheta(0.6f),
     m_maxCosmicCurvature(0.04f),
@@ -490,8 +490,8 @@ void CosmicRayTaggingTool::CheckIfTopToBottom(const CRCandidateList &candidates,
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool CosmicRayTaggingTool::IsOutsideBox(const float x, const float y, const float z) const 
 {
-  const float BoxXmin = m_face_Xa - m_marginX;
-  const float BoxXmax = m_face_Xc + m_marginX;
+  const float BoxXmin = m_face_Xa + m_marginX;
+  const float BoxXmax = m_face_Xc - m_marginX;
 
   const float BoxYmin = m_face_Yb + m_marginY;
   const float BoxYmax = m_face_Yt - m_marginY;
