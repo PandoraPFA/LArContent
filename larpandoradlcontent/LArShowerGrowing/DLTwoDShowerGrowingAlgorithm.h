@@ -43,8 +43,8 @@ private:
         ClusterGroup();
 
         /**
-             *  @brief Add a cluster to the group. If first cluster in the group, use it as the group's representative cluster
-             */
+         *  @brief Add a cluster to the group. If first cluster in the group, use it as the group's representative cluster
+         */
         void insert(const pandora::Cluster *pCluster);
 
         const pandora::Cluster *GetRepresentativeCluster() const
@@ -324,9 +324,9 @@ private:
     int m_hitFeaturesNClustersIdx;          ///< Hit feature vector index for the optional no. clusters in event feature
     int m_hitFeaturesIterationNumIdx;       ///< Hit feature vector index for the optional no. clusters in event feature
 
-    /** End shared mutable members ***/
+    /* End shared mutable members */
 
-    /** Start hardcoded members ***/
+    /* Start hardcoded members */
 
     std::map<pandora::HitType, float> m_deltaRayLengthThresholdSquared; ///< Threshold for defining small delta rays that will be folded to the parent particle
     float m_deltaRayParentWeightThreshold; ///< Threshold for weight contribution of parent particle for it take the delta ray's hit

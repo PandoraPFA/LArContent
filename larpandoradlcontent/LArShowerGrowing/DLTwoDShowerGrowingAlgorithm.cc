@@ -611,9 +611,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PopulateAdjacencyLists(
         for (const auto &[pClusterJ, sim] : simRow)
         {
             if (pClusterI == pClusterJ || sim <= similarityThreshold)
-            {
                 continue;
-            }
+
             const bool jIsCore{pClusterJ->GetNCaloHits() > m_accessoryClustersMaxHits};
             if (iIsCore && jIsCore)
             {
@@ -637,9 +636,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::CalculateConnectedGroups(const Adjacenc
     for (const auto &[pClusterRoot, _] : clusterAdjLists)
     {
         if (visitedClusters.find(pClusterRoot) != visitedClusters.end())
-        {
             continue;
-        }
 
         std::vector<const Cluster *> toSearch = {pClusterRoot};
         ClusterGroup group;
@@ -653,9 +650,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::CalculateConnectedGroups(const Adjacenc
             for (const Cluster *const pClusterJ : clusterAdjLists.at(pClusterI))
             {
                 if (visitedClusters.find(pClusterJ) != visitedClusters.end())
-                {
                     continue;
-                }
+
                 toSearch.push_back(pClusterJ);
             }
         }
@@ -748,18 +744,15 @@ StatusCode DLTwoDShowerGrowingAlgorithm::MergeGroups(const std::vector<ClusterGr
     for (const ClusterGroup &clusterGroup : clusterGroups)
     {
         if (clusterGroup.empty())
-        {
             continue;
-        }
 
         auto iter{clusterGroup.begin()};
         const Cluster *const pClusterToEnlarge{clusterGroup.GetRepresentativeCluster()};
         for (; iter != clusterGroup.end(); ++iter)
         {
             if (*iter == pClusterToEnlarge)
-            {
                 continue;
-            }
+
             PANDORA_RETURN_RESULT_IF(
                 STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, *iter, listName, listName));
         }
