@@ -233,7 +233,7 @@ void EventClusterValidationAlgorithm::GetHitParents(
                 }
                 foldedWeightMap[pFoldedMC] += weight;
             }
-            weightMap = foldedWeightMap;
+            weightMap = std::move(foldedWeightMap);
         }
 
         const MCParticle *pMainMC{nullptr};

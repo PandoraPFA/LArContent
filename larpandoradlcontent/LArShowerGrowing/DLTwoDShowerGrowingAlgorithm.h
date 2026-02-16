@@ -99,7 +99,7 @@ private:
      *  @brief Create output TTree for generating the training data. Note that for best results simulation should have EM roll-up
      *         turned off to ensure delta rays are not folded into their parent tracks.
      */
-    pandora::StatusCode PrepareTrainingSample();
+    pandora::StatusCode PrepareTrainingSample() const;
 
     /**
      *  @brief Do an inference. Includes network similarity prediction and subsequent merges.
@@ -150,6 +150,8 @@ private:
      *  @return The MCParticle the hit should be assigned to, this will either be the inputted MCParticle or the parent MCParticle
      */
     const pandora::MCParticle *FoldPotentialDeltaRayTo(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pMC) const;
+
+    void WriteTrainingSample() const;
 
     /* End training sample preparation methods */
 

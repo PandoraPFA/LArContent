@@ -57,6 +57,9 @@ DLTwoDShowerGrowingAlgorithm::DLTwoDShowerGrowingAlgorithm() :
     m_cartesianXScaleFactor{1.f},
     m_cartesianZScaleFactor{1.f},
     m_detectorXGaps{std::set<double>{}},
+    m_hitFeaturesNHitsIdx{-1},
+    m_hitFeaturesNClustersIdx{-1},
+    m_hitFeaturesIterationNumIdx{-1},
     m_deltaRayLengthThresholdSquared{std::map<HitType, float>{}},
     m_deltaRayParentWeightThreshold{0.f},
     m_hitFeatureDim{12},
@@ -77,16 +80,14 @@ DLTwoDShowerGrowingAlgorithm::~DLTwoDShowerGrowingAlgorithm()
 {
     if (m_trainingMode)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName, m_trainingFileName, "UPDATE"));
-
-        for ([[maybe_unused]] const HitType &view : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+        try
         {
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName + "_view_data", "view", static_cast<int>(view)));
-            PANDORA_MONITORING_API(SetTreeVariable(
-                this->GetPandora(), m_trainingTreeName + "_view_data", "pitch", LArGeometryHelper::GetWirePitch(this->GetPandora(), view)));
-            PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName + "_view_data"));
+            this->WriteTrainingSample();
         }
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName + "_view_data", m_trainingFileName, "UPDATE"));
+        catch (StatusCodeException &e)
+        {
+            std::cout << "DLTwoDShowerGrowingAlgorithm: Error while writing out training sample ROOT tree" << std::endl;
+        }
     }
 }
 
@@ -102,7 +103,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::Run()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample()
+StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
 {
     const std::map<HitType, CartesianVector> viewToVtxPos{this->Get2DVertices()};
 
@@ -182,6 +183,22 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
+void DLTwoDShowerGrowingAlgorithm::WriteTrainingSample() const
+{
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName, m_trainingFileName, "UPDATE"));
+
+    for ([[maybe_unused]] const HitType &view : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    {
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName + "_view_data", "view", static_cast<int>(view)));
+        PANDORA_MONITORING_API(SetTreeVariable(
+            this->GetPandora(), m_trainingTreeName + "_view_data", "pitch", LArGeometryHelper::GetWirePitch(this->GetPandora(), view)));
+        PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName + "_view_data"));
+    }
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName + "_view_data", m_trainingFileName, "UPDATE"));
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
 const MCParticle *DLTwoDShowerGrowingAlgorithm::GetMainMC(
     const CaloHit *const pCaloHit, std::map<const MCParticle *const, const MCParticle *const> &mcFoldTo) const
 {
@@ -201,7 +218,7 @@ const MCParticle *DLTwoDShowerGrowingAlgorithm::GetMainMC(
         }
         foldedWeightMap[pFoldedMC] += weight;
     }
-    weightMap = foldedWeightMap;
+    weightMap = std::move(foldedWeightMap);
 
     const MCParticle *pMainMC{nullptr};
     float maxWeight{0.f};
@@ -442,7 +459,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::Infer()
             // Do the first stage merges, the super-clusters are now just the clusters
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->MergeGroups(clusterGroups, listName));
             clusterGroups.clear();
-            clusterSimMat = superClusterSimMat;
+            clusterSimMat = std::move(superClusterSimMat);
 
             // Second stage of clustering using the super-cluster similarity matrix
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
