@@ -13,6 +13,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArEigenHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -34,7 +35,6 @@ ShortTrackReclusteringAlgorithm::ShortTrackReclusteringAlgorithm()
 StatusCode ShortTrackReclusteringAlgorithm::Run()
 {
     // Note: This may become a tool within the reclustering paradigm, but I'll need to chat with Alex about that
-
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_RETURN_IF(STATUS_CODE_SUCCESS, !this->GetList(m_caloHitListName, pCaloHitList));
 
@@ -48,27 +48,30 @@ StatusCode ShortTrackReclusteringAlgorithm::Run()
     ClusterToPfoMap clusterToPfoMap;
     this->CollectClusters(*pPfoList, viewToClustersMap, clusterToPfoMap);
 
-    // Identify the end points of clusters in PFOs
-    for (const auto &[pCluster, pPfo] : clusterToPfoMap)
+    // Loop over clusters, and look for evidence of discontinuous changes in ADC deposition and collect the corresponding hits.
+    ClusterToHitsMap clusterToHitsMap;
+    this->FindAdcDiscontinuities(clusterToPfoMap, clusterToHitsMap);
+
+    // Find corresponding hits for discontinuity hits in other views.
+    PfoToHitTripletsMap pfoToHitTripletsMap;
+    this->MatchAdcDiscontinuities(clusterToHitsMap, clusterToPfoMap, pfoToHitTripletsMap);
+
+/*    for (const auto &[pPfo, hitTriplets] : pfoToHitTripletsMap)
     {
-        CaloHitList clusterHitList;
-        pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterHitList);
-        if (clusterHitList.empty())
-            continue;
-
-        CaloHitVector clusterHits(clusterHitList.begin(), clusterHitList.end());
-        HitType view{LArClusterHelper::GetClusterHitType(pCluster)};
-        const float nHalfWindow{2};
-        const float pitch{LArGeometryHelper::GetWirePitch(this->GetPandora(), view)};
-        LArPointingCluster pointingCluster(pCluster, nHalfWindow, pitch);
-
-        CaloHitVector forwardHits, backwardHits;
-        this->OrderHitsRelativeToVertex(clusterHits, pointingCluster.GetInnerVertex(), forwardHits);
-        this->OrderHitsRelativeToVertex(clusterHits, pointingCluster.GetOuterVertex(), backwardHits);
-
-        IntVector discontinuities;
-        this->GetStableAdcDiscontinuities(forwardHits, discontinuities);
-    }
+        std::cout << "PFO " << pPfo << ":" << std::endl;
+        for (const auto &[hitU, hitV, hitW] : hitTriplets)
+        {
+            const CartesianVector &posU{hitU->GetPositionVector()}, &posV{hitV->GetPositionVector()}, &posW{hitW->GetPositionVector()};
+            std::cout << "   ";
+            if (hitU)
+                std::cout << "U(" << posU.GetX() << "," << posU.GetZ() << ")";
+            if (hitV)
+                std::cout << " V(" << posV.GetX() << "," << posV.GetZ() << ")";
+            if (hitW)
+                std::cout << " W(" << posW.GetX() << "," << posW.GetZ() << ")";
+            std::cout << std::endl;
+        }
+    }*/
 
     return STATUS_CODE_SUCCESS;
 }
@@ -111,6 +114,156 @@ void ShortTrackReclusteringAlgorithm::CollectClusters(const PfoList &pfoList, Vi
         }
     }
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShortTrackReclusteringAlgorithm::FindAdcDiscontinuities(const ClusterToPfoMap &clusterToPfoMap, ClusterToHitsMap &clusterToHitsMap) const
+{
+    for (const auto &[pCluster, pPfo] : clusterToPfoMap)
+    {
+        CaloHitList clusterHitList;
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterHitList);
+        // Can't perform the pointing cluster's sliding linear fit without at least 3 hits
+        if (clusterHitList.size() < 3)
+            continue;
+
+        CaloHitVector clusterHits(clusterHitList.begin(), clusterHitList.end());
+        HitType view{LArClusterHelper::GetClusterHitType(pCluster)};
+        const float nHalfWindow{2};
+        const float pitch{LArGeometryHelper::GetWirePitch(this->GetPandora(), view)};
+        try
+        {
+            LArPointingCluster pointingCluster(pCluster, nHalfWindow, pitch);
+
+            CaloHitVector forwardHits, backwardHits;
+            this->OrderHitsRelativeToVertex(clusterHits, pointingCluster.GetInnerVertex(), forwardHits);
+            this->OrderHitsRelativeToVertex(clusterHits, pointingCluster.GetOuterVertex(), backwardHits);
+
+            IntVector discontinuities;
+            this->GetStableAdcDiscontinuities(forwardHits, discontinuities);
+            for (const int index : discontinuities)
+                clusterToHitsMap[pCluster].insert(forwardHits.at(index));
+            IntVector backwardDiscontinuities;
+            this->GetStableAdcDiscontinuities(backwardHits, backwardDiscontinuities);
+            for (const int index : backwardDiscontinuities)
+                clusterToHitsMap[pCluster].insert(backwardHits.at(index));
+        }
+        catch (const StatusCodeException &)
+        {
+            // Couldn't construct a pointing cluster, so skip this cluster
+            continue;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHitsMap &clusterToHitsMap, const ClusterToPfoMap &clusterToPfoMap,
+    PfoToHitTripletsMap &pfoToHitTripletsMap) const
+{
+    for (const auto &[pCluster, discontinuityHits] : clusterToHitsMap)
+    {
+        const Pfo *const pPfo{clusterToPfoMap.at(pCluster)};
+        CaloHitList caloHits3D;
+        CaloHitVector caloHits3Du, caloHits3Dv, caloHits3Dw;
+        LArPfoHelper::GetCaloHits(pPfo, TPC_3D, caloHits3D);
+        // Split 3D hits according to which 2D view their parent belongs
+        for (const CaloHit *const pCaloHit : caloHits3D)
+        {
+            const CaloHit *pParent{static_cast<const CaloHit *>(pCaloHit->GetParentAddress())};
+            if (!pParent)
+                continue;
+            switch (pParent->GetHitType())
+            {
+                case TPC_VIEW_U:
+                    caloHits3Du.emplace_back(pCaloHit);
+                    break;
+                case TPC_VIEW_V:
+                    caloHits3Dv.emplace_back(pCaloHit);
+                    break;
+                case TPC_VIEW_W:
+                    caloHits3Dw.emplace_back(pCaloHit);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // Find the closest matching 3D hit in each view for each discontinuity hit
+        Eigen::MatrixXf hitMatrixU(caloHits3Du.size(), 3);
+        LArEigenHelper::Vectorize3D(caloHits3Du, hitMatrixU);
+        Eigen::MatrixXf hitMatrixV(caloHits3Dv.size(), 3);
+        LArEigenHelper::Vectorize3D(caloHits3Dv, hitMatrixV);
+        Eigen::MatrixXf hitMatrixW(caloHits3Dw.size(), 3);
+        LArEigenHelper::Vectorize3D(caloHits3Dw, hitMatrixW);
+
+        for (const CaloHit *const pCaloHit : caloHits3D)
+        {
+            const CaloHit *pParent{static_cast<const CaloHit *>(pCaloHit->GetParentAddress())};
+            if (!pParent)
+                continue;
+
+            if (discontinuityHits.find(pParent) == discontinuityHits.end())
+                continue;
+
+            const CartesianVector &pos{pCaloHit->GetPositionVector()};
+            Eigen::RowVectorXf row(3);
+            row << pos.GetX(), pos.GetY(), pos.GetZ();
+
+            const HitType view{pParent->GetHitType()};
+            const CaloHit *pBestU{view == TPC_VIEW_U ? pCaloHit : nullptr}, *pBestV{view == TPC_VIEW_V ? pCaloHit : nullptr},
+                *pBestW{view == TPC_VIEW_W ? pCaloHit : nullptr};
+            if (view == TPC_VIEW_U || view == TPC_VIEW_V)
+            {
+                Eigen::MatrixXf norms((hitMatrixW.rowwise() - row).array().pow(2).rowwise().sum());
+                Eigen::Index index;
+                norms.col(0).minCoeff(&index);
+                pBestW = caloHits3Dw.at(index);
+            }
+            if (view == TPC_VIEW_U || view == TPC_VIEW_W)
+            {
+                Eigen::MatrixXf norms((hitMatrixV.rowwise() - row).array().pow(2).rowwise().sum());
+                Eigen::Index index;
+                norms.col(0).minCoeff(&index);
+                pBestV = caloHits3Dv.at(index);
+            }
+            if (view == TPC_VIEW_V || view == TPC_VIEW_W)
+            {
+                Eigen::MatrixXf norms((hitMatrixU.rowwise() - row).array().pow(2).rowwise().sum());
+                Eigen::Index index;
+                norms.col(0).minCoeff(&index);
+                pBestU = caloHits3Du.at(index);
+            }
+
+            // Calculate the distances between the found 3D hits and reject if the distances are too large
+            const CartesianVector &posU{pBestU->GetPositionVector()}, &posV{pBestV->GetPositionVector()}, &posW{pBestW->GetPositionVector()};
+            const float duv{(posU - posV).GetMagnitudeSquared()}, duw{(posU - posW).GetMagnitudeSquared()}, dvw{(posV - posW).GetMagnitudeSquared()};
+            const CaloHit *selectedU{static_cast<const CaloHit *>(pBestU->GetParentAddress())}, *selectedV{static_cast<const CaloHit *>(pBestV->GetParentAddress())}, *selectedW{static_cast<const CaloHit *>(pBestW->GetParentAddress())};
+            if (duv > 4.f && duw > 4.f)
+                selectedU = nullptr;
+            if (duv > 4.f && dvw > 4.f)
+                selectedV = nullptr;
+            if (duw > 4.f && dvw > 4.f)
+                selectedW = nullptr;
+
+            if (selectedU || selectedV || selectedW)
+            {
+                // We found candidates
+                pfoToHitTripletsMap[pPfo].emplace_back(std::make_tuple(selectedU, selectedV, selectedW));
+            }
+            else
+            {
+                // We found no matches, but retain the single 2D discontinuity hit to see if we can recover something later
+                selectedU = view == TPC_VIEW_U ? pParent : nullptr;
+                selectedV = view == TPC_VIEW_V ? pParent : nullptr;
+                selectedW = view == TPC_VIEW_W ? pParent : nullptr;
+                pfoToHitTripletsMap[pPfo].emplace_back(std::make_tuple(selectedU, selectedV, selectedW));
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void ShortTrackReclusteringAlgorithm::OrderHitsRelativeToVertex(const CaloHitVector &clusterHits, const LArPointingCluster::Vertex &vertex,
     CaloHitVector &orderedHits) const
@@ -204,7 +357,7 @@ double ShortTrackReclusteringAlgorithm::GetMedian(const std::vector<T> &values) 
 void ShortTrackReclusteringAlgorithm::GetStableAdcDiscontinuities(const pandora::CaloHitVector &hits, pandora::IntVector &discontinuities,
     const size_t window) const
 {
-    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1, -1, 1));
+    //PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1, -1, 1));
     PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, window == 0);
     FloatVector normalizedAdc, movingAverage, movingVariance;
     this->NormalizeAdc(hits, normalizedAdc);
@@ -241,14 +394,13 @@ void ShortTrackReclusteringAlgorithm::GetStableAdcDiscontinuities(const pandora:
             continue;
         }
     }
-    std::cout << "Found " << discontinuities.size() << " discontinuities" << std::endl;
-    for (const int index : discontinuities)
+/*    for (const int index : discontinuities)
     {
         const CartesianVector &position(hits[index]->GetPositionVector());
         PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, "d", RED, 2));
     }
     if (!discontinuities.empty())
-        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));*/
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

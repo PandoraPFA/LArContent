@@ -40,10 +40,13 @@ public:
     ~ShortTrackReclusteringAlgorithm() = default;
 
 private:
+    typedef std::tuple<const pandora::CaloHit *, const pandora::CaloHit *, const pandora::CaloHit *> HitTriplet;
     typedef std::unordered_map<pandora::HitType, pandora::CaloHitSet> ViewToHitsMap;
     typedef std::unordered_map<pandora::HitType, pandora::ClusterList> ViewToClustersMap;
     typedef std::unordered_map<const pandora::Cluster *, const pandora::Pfo *> ClusterToPfoMap;
     typedef std::unordered_map<const pandora::Cluster *, pandora::FloatVector> ClusterToAdcMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::CaloHitSet> ClusterToHitsMap;
+    typedef std::unordered_map<const pandora::Pfo *, std::vector<HitTriplet>> PfoToHitTripletsMap;
 
     pandora::StatusCode Run();
 
@@ -74,6 +77,26 @@ private:
      *  @param  clusterToPfoMap the map in which to store the mapping of clusters to their parent PFO
      */
     void CollectClusters(const pandora::PfoList &pfoList, ViewToClustersMap &viewToClustersMap, ClusterToPfoMap &clusterToPfoMap) const;
+
+    /**
+     *  @brief  Loops over clusters and looks for evidence of discontinuous changes in ADC values, and collects the corresponding hits
+     *
+     *  @param  clusterToPfoMap the map of clusters to their parent PFO
+     *  @param  clusterToHitsMap the map in which to store the mapping of clusters to the hits associated with any identified ADC discontinuities
+     */
+    void FindAdcDiscontinuities(const ClusterToPfoMap &clusterToPfoMap, ClusterToHitsMap &clusterToHitsMap) const;
+
+    /**
+     *  @brief  Loops over the hits associated with identified ADC discontinuities and looks for corresponding hits in other views, to identify
+     *  potential triplets of hits across views that are consistent with a common 3D position
+     *
+     *  @param  clusterToHitsMap the map of clusters to the hits associated with any identified ADC discontinuities
+     *  @param  clusterToPfoMap the map of clusters to their parent PFO
+     *  @param  pfoToHitTripletsMap the map in which to store the mapping of PFOs to triplets of hits across views that are consistent with
+     *          a common 3D position
+     */
+    void MatchAdcDiscontinuities(const ClusterToHitsMap &clusterToHitsMap, const ClusterToPfoMap &clusterToPfoMap,
+        PfoToHitTripletsMap &pfoToHitTripletsMap) const;
 
     /**
      *  @brief  Gets the hits associated with a cluster, ordered relative to a specified vertex
