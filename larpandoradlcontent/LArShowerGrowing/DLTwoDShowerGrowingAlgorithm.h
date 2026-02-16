@@ -151,6 +151,9 @@ private:
      */
     const pandora::MCParticle *FoldPotentialDeltaRayTo(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pMC) const;
 
+    /**
+     *  @brief Write out the filled training sample tree and fill and write out a tree containing auxiliary view information.
+     */
     void WriteTrainingSample() const;
 
     /* End training sample preparation methods */
