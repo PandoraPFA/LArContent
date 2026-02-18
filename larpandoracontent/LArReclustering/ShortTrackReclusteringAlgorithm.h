@@ -48,6 +48,14 @@ private:
     typedef std::unordered_map<const pandora::Cluster *, pandora::CaloHitSet> ClusterToHitsMap;
     typedef std::unordered_map<const pandora::Pfo *, std::vector<HitTriplet>> PfoToHitTripletsMap;
 
+    // Need to decide exactly what this is, but basically we want an object that can tell us which hits from which views belong together,
+    // and we want a way of knowing which PFO will become the owner, which PFO (if any) previously owned the hits, and which hits were
+    // formerly unclustered. We likely want a vector of these objects to describe the complete picture
+    struct Partition
+    {
+    };
+    typedef std::vector<Partition> PartitionVector;
+
     pandora::StatusCode Run();
 
     /**
@@ -97,6 +105,16 @@ private:
      */
     void MatchAdcDiscontinuities(const ClusterToHitsMap &clusterToHitsMap, const ClusterToPfoMap &clusterToPfoMap,
         PfoToHitTripletsMap &pfoToHitTripletsMap) const;
+
+    /**
+     *  @brief  Uses the identified discontinuity triplets to find coherent changes across all three views and proposes new partitions.
+     *
+     *  @param  pfoToHitTripletsMap the map of PFOs to triplets of hits across views that are consistent with a common 3D position
+     *  @param  viewToUnclusteredHitsMap the map of unclustered hits, mapped by view
+     *  @param  partitions the proposed partitions if coherent alternatives can be found
+     */
+    void PartitionDiscontinuities(const PfoToHitTripletsMap &pfoToHitTripletsMap, const ViewToHitsMap &viewToUnclusteredHitsMap,
+        PartitionVector &partitions) const;
 
     /**
      *  @brief  Gets the hits associated with a cluster, ordered relative to a specified vertex
