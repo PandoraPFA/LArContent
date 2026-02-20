@@ -103,8 +103,8 @@ private:
     float m_energyScaleThresholdE;  ///< Cell energy for which color is at top end of continous color palette
     float m_scalingFactor;          ///< TEve works with [cm], Pandora usually works with [mm] (but LArContent went with cm too)
 
-    bool m_showPfoVertices;  ///< Whether to display pfo vertices
-    bool m_showPfoHierarchy; ///< Whether to display daughter pfos only under parent pfo elements
+    bool m_showPfoVertices;           ///< Whether to display pfo vertices
+    bool m_showPfoHierarchy;          ///< Whether to display daughter pfos only under parent pfo elements
     bool m_partitionCaloHitsByVolume; ///< Whether to partition calo hits into unique TPC + daughter volumes for display
 
     pandora::StringVector m_suppressMCParticles; ///< List of PDG numbers and energies for MC particles to be suppressed (e.g. " 22:0.1 2112:1.0 ")

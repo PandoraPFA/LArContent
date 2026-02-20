@@ -214,7 +214,7 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
     for (const CaloHit *const pCaloHit : caloHitList)
     {
         const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
-        const std::pair<unsigned int, unsigned int> volId = { pLArCaloHit->GetLArTPCVolumeId(), pLArCaloHit->GetDaughterVolumeId() };
+        const std::pair<unsigned int, unsigned int> volId{ pLArCaloHit->GetLArTPCVolumeId(), pLArCaloHit->GetDaughterVolumeId() };
         volIdToCaloHits[volId].push_back(pCaloHit);
     }
 
@@ -223,7 +223,8 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
     {
         const std::string label{(listName.empty() ? "CurrentCaloHits" : listName) +
             ", volId ("  + std::to_string(volId.first) + ", " + std::to_string(volId.second) + ")"};
-        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHitListPartition, label.c_str(), static_cast<Color>(colorIter++)));
+        PANDORA_MONITORING_API(VisualizeCaloHits(
+            this->GetPandora(), &caloHitListPartition, label.c_str(), static_cast<Color>(colorIter++)));
         colorIter = static_cast<Color>(colorIter) == AUTO ? static_cast<int>(RED) : colorIter;
     }
 }
