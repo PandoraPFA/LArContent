@@ -17,6 +17,7 @@
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 #include "larpandoracontent/LArReclustering/ThreeDReclusteringFigureOfMeritBaseTool.h"
 
@@ -221,6 +222,29 @@ private:
      *  @return a score indicative of the monotonicity of the ADC values for the specified range of hits
      */
     float GetMonotonicityScore(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const;
+
+    /**
+     *  @brief  Gets the ratio of the median ADC value either side of the pivot.
+     *
+     *  @param  hits the set of hits for which to calculate the balance
+     *  @param  pivot the index of the hit about which to calculate the balance
+     *
+     *  @return the ratio of the median ADC value either side of the pivot
+     */
+    float GetBalance(const pandora::CaloHitVector &hits, const size_t pivot) const;
+
+    /**
+     *  @brief  Gets a windowed, ordered vector of hits along the direction of a sliding linear fit about the discontinuity hit.
+     *
+     *  @param  pCluster the cluster for which to retrieve the ordered hits
+     *  @param  pDiscontinuityHit the hit associated with the identified discontinuity
+     *  @param  sfr the result of the sliding linear fit to the cluster
+     *  @param  window the size of the window, in each direction, over which to retrieve hits, in cm
+     *  @param  orderedHits the vector in which to store the ordered hits
+     *
+     *  @return The index of the discontinuity hit in the ordered vector of hits
+     */
+    size_t OrderHitsAlongTrajectory(const pandora::Cluster *const pCluster, const pandora::CaloHit *const pDiscontinuityHit, const TwoDSlidingFitResult &sfr, const float window, pandora::CaloHitVector &orderedHits) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
