@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArMonitoring/VisualMonitoringAlgorithm.h"
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
 
 using namespace pandora;
 
@@ -34,7 +35,8 @@ VisualMonitoringAlgorithm::VisualMonitoringAlgorithm() :
     m_energyScaleThresholdE(1.f),
     m_scalingFactor(1.f),
     m_showPfoVertices(true),
-    m_showPfoHierarchy(true)
+    m_showPfoHierarchy(true),
+    m_partitionCaloHitsByVolume(false)
 {
 }
 
@@ -201,8 +203,29 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
         }
     }
 
-    PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHitList, listName.empty() ? "CurrentCaloHits" : listName.c_str(),
-        (m_hitColors.find("energy") != std::string::npos ? AUTOENERGY : GRAY)));
+    if (!m_partitionCaloHitsByVolume)
+    {
+        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHitList, listName.empty() ? "CurrentCaloHits" : listName.c_str(),
+            (m_hitColors.find("energy") != std::string::npos ? AUTOENERGY : GRAY)));
+        return;
+    }
+
+    std::map<std::pair<unsigned int, unsigned int>, CaloHitList> volIdToCaloHits;
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
+        const std::pair<unsigned int, unsigned int> volId = { pLArCaloHit->GetLArTPCVolumeId(), pLArCaloHit->GetDaughterVolumeId() };
+        volIdToCaloHits[volId].push_back(pCaloHit);
+    }
+
+    int colorIter{static_cast<int>(RED)};
+    for (const auto &[volId, caloHitListPartition] : volIdToCaloHits)
+    {
+        const std::string label{(listName.empty() ? "CurrentCaloHits" : listName) +
+            ", volId ("  + std::to_string(volId.first) + ", " + std::to_string(volId.second) + ")"};
+        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHitListPartition, label.c_str(), static_cast<Color>(colorIter++)));
+        colorIter = static_cast<Color>(colorIter) == AUTO ? static_cast<int>(RED) : colorIter;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -430,6 +453,9 @@ StatusCode VisualMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowPfoHierarchy", m_showPfoHierarchy));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PartitionCaloHitsByVolume", m_partitionCaloHitsByVolume));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadVectorOfValues(xmlHandle, "SuppressMCParticles", m_suppressMCParticles));

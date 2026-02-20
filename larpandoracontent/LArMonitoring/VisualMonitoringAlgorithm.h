@@ -97,7 +97,7 @@ private:
 
     bool m_showOnlyAvailable;       ///< Whether to show only available  (i.e. non-clustered) calohits and tracks
     bool m_showAssociatedTracks;    ///< Whether to display tracks associated to clusters when viewing cluster lists
-    std::string m_hitColors;        ///< Define the hit coloring scheme (default: pfo, choices: pfo, particleid)
+    std::string m_hitColors;        ///< Define the hit coloring scheme (default: iterate, choices: iterate, energy, particleid)
     float m_thresholdEnergy;        ///< Cell energy threshold for display (em scale)
     float m_transparencyThresholdE; ///< Cell energy for which transparency is saturated (0%, fully opaque)
     float m_energyScaleThresholdE;  ///< Cell energy for which color is at top end of continous color palette
@@ -105,6 +105,7 @@ private:
 
     bool m_showPfoVertices;  ///< Whether to display pfo vertices
     bool m_showPfoHierarchy; ///< Whether to display daughter pfos only under parent pfo elements
+    bool m_partitionCaloHitsByVolume; ///< Whether to partition calo hits into unique TPC + daughter volumes for display
 
     pandora::StringVector m_suppressMCParticles; ///< List of PDG numbers and energies for MC particles to be suppressed (e.g. " 22:0.1 2112:1.0 ")
     PdgCodeToEnergyMap m_particleSuppressionMap; ///< Map from pdg-codes to energy for suppression of particles types below specific energies
