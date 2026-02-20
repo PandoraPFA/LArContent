@@ -218,14 +218,15 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
         volIdToCaloHits[volId].push_back(pCaloHit);
     }
 
-    int colorIter{static_cast<int>(RED)};
+    [[maybe_unused]] int colorIter{0};
     for (const auto &[volId, caloHitListPartition] : volIdToCaloHits)
     {
         const std::string label{(listName.empty() ? "CurrentCaloHits" : listName) +
             ", volId ("  + std::to_string(volId.first) + ", " + std::to_string(volId.second) + ")"};
-        PANDORA_MONITORING_API(VisualizeCaloHits(
-            this->GetPandora(), &caloHitListPartition, label.c_str(), static_cast<Color>(colorIter++)));
-        colorIter = static_cast<Color>(colorIter) == AUTO ? static_cast<int>(RED) : colorIter;
+        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHitListPartition, label.c_str(),
+            static_cast<Color>(++colorIter) < AUTO          ? static_cast<Color>(colorIter)
+                : (colorIter % static_cast<int>(AUTO)) == 0 ? static_cast<Color>(++colorIter % static_cast<int>(AUTO))
+                                                            : static_cast<Color>(colorIter % static_cast<int>(AUTO))));
     }
 }
 
