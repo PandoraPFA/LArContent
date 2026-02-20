@@ -294,7 +294,6 @@ void ShortTrackReclusteringAlgorithm::PartitionDiscontinuities(const PfoToHitTri
     const ViewToHitsMap &viewToUnclusteredHitsMap, PartitionVector &partitions) const
 {
     (void)viewToUnclusteredHitsMap; (void)partitions;
-    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1, -1, 1));
     // Iterate over each PFO and get its respective discontinuities. Perform sliding linear fits on each of its clusters and use the
     // discontinuities to focus on the relevant part of the sliding fit. Walk from just before that point of the fit to just after
     // in all available views to see if a coherent picture emerges. If so, propose a new partition.
@@ -321,17 +320,58 @@ void ShortTrackReclusteringAlgorithm::PartitionDiscontinuities(const PfoToHitTri
                     break;
             }
         }
-        (void)pClusterU; (void)pClusterV; (void)pClusterW;
+        const TwoDSlidingFitResult sfrU(pClusterU, 2, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U));
+        const TwoDSlidingFitResult sfrV(pClusterV, 2, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V));
+        const TwoDSlidingFitResult sfrW(pClusterW, 2, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W));
+
+        const std::streamsize originalPrecision{std::cout.precision()};
+        const std::ios_base::fmtflags originalFormat{std::cout.flags()};
         for (const auto &[hitU, hitV, hitW] : hitTriplets)
         {
-            if (hitU)
-                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &hitU->GetPositionVector(), "u", RED, 2));
-            if (hitV)
-                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &hitV->GetPositionVector(), "v", GREEN, 2));
-            if (hitW)
-                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &hitW->GetPositionVector(), "w", BLUE, 2));
-            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+            std::cout << "Cluster" << std::endl;
+            std::cout << std::fixed << std::setprecision(1);
+            CaloHitVector orderedHitsU, orderedHitsV, orderedHitsW;
+            size_t indexU{0}, indexV{0}, indexW{0};
+            if (hitU && pClusterU)
+                indexU = this->OrderHitsAlongTrajectory(pClusterU, hitU, sfrU, 5.f, orderedHitsU);
+                // We now have a logically ordered list of hits in the cluster around the discontinuity
+                // Once we have a similarly ordered list in the other views, we can look for consistent patterns
+                // Ideally we'd like to correlate these hits so that we can start and stop in the same place in each view
+                // A quick Hungarian algorithm style matching of the hits may be useful here
+                // More generally however, just explore the changes either side of the discontinuity, and look to see if
+                // at least two of the views agree
+            if (hitV && pClusterV)
+                indexV = this->OrderHitsAlongTrajectory(pClusterV, hitV, sfrV, 5.f, orderedHitsV);
+            if (hitW && pClusterW)
+                indexW = this->OrderHitsAlongTrajectory(pClusterW, hitW, sfrW, 5.f, orderedHitsW);
+
+            for (size_t i = 0; i < std::max({orderedHitsU.size(), orderedHitsV.size(), orderedHitsW.size()}); ++i)
+            {
+                if (orderedHitsU.size() > i)
+                    std::cout << "(" << (i == indexU) << ") " << orderedHitsU.at(i)->GetInputEnergy();
+                else
+                    std::cout << "         ";
+                std::cout << " | ";
+                if (orderedHitsV.size() > i)
+                    std::cout << "(" << (i == indexV) << ") " << orderedHitsV.at(i)->GetInputEnergy();
+                else
+                    std::cout << "         ";
+                std::cout << " | ";
+                if (orderedHitsW.size() > i)
+                    std::cout << "(" << (i == indexW) << ") " << orderedHitsW.at(i)->GetInputEnergy();
+                else
+                    std::cout << "         ";
+                std::cout << std::endl;
+            }
+            std::cout << "========================" << std::endl;
+            const float balanceU{this->GetBalance(orderedHitsU, indexU)};
+            const float balanceV{this->GetBalance(orderedHitsV, indexV)};
+            const float balanceW{this->GetBalance(orderedHitsW, indexW)};
+            std::cout << "Balance: " << std::endl;
+            std::cout << "U: " << balanceU << " V: " << balanceV << " W: " << balanceW << std::endl;
         }
+        std::cout.precision(originalPrecision);
+        std::cout.flags(originalFormat);
     }
 }
 
@@ -584,6 +624,72 @@ float ShortTrackReclusteringAlgorithm::GetMonotonicityScore(const pandora::CaloH
     }
     
     return monotonicity / (end - start);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ShortTrackReclusteringAlgorithm::GetBalance(const pandora::CaloHitVector &hits, const size_t pivot) const
+{
+    FloatVector adcs;
+    // Get pre-pivot median
+    for (size_t i = 0; i < pivot; ++i)
+        adcs.emplace_back(hits[i]->GetInputEnergy());
+    size_t mid{adcs.size() / 2};
+    std::nth_element(adcs.begin(), adcs.begin() + mid, adcs.end());
+    const float medianDenom{!adcs.empty() ? adcs[mid] : 0.f};
+
+    adcs.clear();
+
+    // Get post-pivot median
+    for (size_t i = pivot + 1; i < hits.size(); ++i)
+        adcs.emplace_back(hits[i]->GetInputEnergy());
+    mid = adcs.size() / 2;
+    std::nth_element(adcs.begin(), adcs.begin() + mid, adcs.end());
+    const float medianNum{!adcs.empty() ? adcs[mid] : 0.f};
+
+    return medianDenom > 0 ? medianNum / medianDenom : 0.f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+size_t ShortTrackReclusteringAlgorithm::OrderHitsAlongTrajectory(const Cluster *const pCluster, const CaloHit *const pDiscontinuityHit,
+    const TwoDSlidingFitResult &sfr, const float window, CaloHitVector &orderedHits) const
+{
+    // Get the linear region around the discontinuity
+    float rL{0.f}, rT{0.f};
+    CartesianVector fitDir(0, 0, 0);
+    const CartesianVector &pos{pDiscontinuityHit->GetPositionVector()};
+    sfr.GetLocalPosition(pos, rL, rT);
+    sfr.GetGlobalFitDirection(rL, fitDir);
+    const CartesianVector start{pos - fitDir * window}, end{pos + fitDir * window};
+
+    // Collect the hits that project into the linear region and sort
+    CaloHitList clusterHitList;
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterHitList);
+    CaloHitVector clusterHits(clusterHitList.begin(), clusterHitList.end());
+    FloatVector projections;
+    std::vector<std::pair<float, const CaloHit*>> hitProjectionPairs;
+    for (const CaloHit *const pCaloHit : clusterHits)
+    {
+        const CartesianVector &hitPos{pCaloHit->GetPositionVector()};
+        const CartesianVector hitDir{hitPos - pos};
+        const float lPos{hitDir.GetDotProduct(fitDir)};
+
+        if (std::abs(lPos) <= window)
+            hitProjectionPairs.emplace_back(lPos, pCaloHit);
+    }
+    std::sort(hitProjectionPairs.begin(), hitProjectionPairs.end(), [](const auto a, const auto b) { return a.first < b.first; });
+
+    size_t localIndex{0}, pivot{0};
+    for (const auto &[_, pCaloHit] : hitProjectionPairs)
+    {
+        orderedHits.emplace_back(pCaloHit);
+        if (pCaloHit == pDiscontinuityHit)
+            pivot = localIndex;
+        ++localIndex;
+    }
+
+    return pivot;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
