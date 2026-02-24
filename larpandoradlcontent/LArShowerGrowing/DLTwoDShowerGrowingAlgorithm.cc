@@ -14,6 +14,7 @@
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
 
 using namespace pandora;
 using namespace lar_content;
@@ -120,6 +121,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
     std::vector<float> hitDistToXGap;
     std::vector<float> hitEnergy;
     std::vector<int> hitMCID;
+    std::vector<int> hitLArTPCVolID, hitDaughterVolID;
 
     std::map<const MCParticle *const, const MCParticle *const> mcFoldTo;
 
@@ -157,6 +159,10 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
             hitEnergy.emplace_back(hitFeatures.m_energy);
 
             hitMCID.emplace_back(mcToID.at(pMainMC));
+
+            const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit *>(pCaloHit));
+            hitLArTPCVolID.emplace_back(static_cast<int>(pLArCaloHit->GetLArTPCVolumeId()));
+            hitDaughterVolID.emplace_back(static_cast<int>(pLArCaloHit->GetDaughterVolumeId()));
         }
         currClusterID++;
     }
@@ -175,6 +181,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_x_gap_dist", &hitDistToXGap));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_energy", &hitEnergy));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_mc_id", &hitMCID));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_tpc_vol_id", &hitLArTPCVolID));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_daughter_vol_id", &hitDaughterVolID));
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName));
 
@@ -195,6 +203,15 @@ void DLTwoDShowerGrowingAlgorithm::WriteTrainingSample() const
         PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName + "_view_data"));
     }
     PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName + "_view_data", m_trainingFileName, "UPDATE"));
+
+    PANDORA_MONITORING_API(SetTreeVariable(
+        this->GetPandora(), m_trainingTreeName + "_event_data", "scalefactor_polar_r", m_polarRScaleFactor))
+    PANDORA_MONITORING_API(SetTreeVariable(
+        this->GetPandora(), m_trainingTreeName + "_event_data", "scalefactor_cartesian_x", m_cartesianXScaleFactor))
+    PANDORA_MONITORING_API(SetTreeVariable(
+        this->GetPandora(), m_trainingTreeName + "_event_data", "scalefactor_cartesian_z", m_cartesianZScaleFactor))
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName + "_event_data"));
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName + "_event_data", m_trainingFileName, "UPDATE"));
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
