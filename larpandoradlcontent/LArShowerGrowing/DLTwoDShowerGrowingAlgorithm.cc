@@ -30,7 +30,9 @@ DLTwoDShowerGrowingAlgorithm::HitFeatures::HitFeatures() :
     m_sinThetaRel{0.f},
     m_distToXGap{0.f},
     m_xWidth{0.f},
-    m_energy{0.f}
+    m_energy{0.f},
+    m_larTpcVolId{0},
+    m_daughterVolId{0}
 {
 }
 
@@ -71,7 +73,9 @@ DLTwoDShowerGrowingAlgorithm::DLTwoDShowerGrowingAlgorithm() :
     m_accessoryClustersMaxHits{2},
     m_maxIterations{1},
     m_includeHitCardinalityFeatures{true},
-    m_includeHitNIterationNumFeature{false}
+    m_includeHitNIterationNumFeature{false},
+    m_encodeLArTPCVolIDs{std::vector<unsigned int>{}},
+    m_encodeDaughterVolIDs{std::vector<unsigned int>{}}
 {
 }
 
@@ -157,12 +161,10 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
             hitXWidth.emplace_back(hitFeatures.m_xWidth);
             hitDistToXGap.emplace_back(hitFeatures.m_distToXGap);
             hitEnergy.emplace_back(hitFeatures.m_energy);
+            hitLArTPCVolID.emplace_back(static_cast<int>(hitFeatures.m_larTpcVolId));
+            hitDaughterVolID.emplace_back(static_cast<int>(hitFeatures.m_daughterVolId));
 
             hitMCID.emplace_back(mcToID.at(pMainMC));
-
-            const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit *>(pCaloHit));
-            hitLArTPCVolID.emplace_back(static_cast<int>(pLArCaloHit->GetLArTPCVolumeId()));
-            hitDaughterVolID.emplace_back(static_cast<int>(pLArCaloHit->GetDaughterVolumeId()));
         }
         currClusterID++;
     }
@@ -424,6 +426,10 @@ StatusCode DLTwoDShowerGrowingAlgorithm::CalculateHitFeatures(const CaloHit *con
     hitFeatures.m_xWidth = pCaloHit->GetCellSize1();
     hitFeatures.m_energy = pCaloHit->GetMipEquivalentEnergy();
 
+    const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit *>(pCaloHit));
+    hitFeatures.m_larTpcVolId = pLArCaloHit->GetLArTPCVolumeId();
+    hitFeatures.m_daughterVolId = pLArCaloHit->GetDaughterVolumeId();
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -564,6 +570,18 @@ StatusCode DLTwoDShowerGrowingAlgorithm::MakeClusterTensor(const std::vector<Hit
         accessor[0][i][9] = view == TPC_VIEW_U ? 1.f : 0.f;
         accessor[0][i][10] = view == TPC_VIEW_V ? 1.f : 0.f;
         accessor[0][i][11] = view == TPC_VIEW_W ? 1.f : 0.f;
+        for (size_t j = 12, k = 0; k < m_encodeLArTPCVolIDs.size(); j++, k++)
+        {
+            if (hitFeatures.m_larTpcVolId == m_encodeLArTPCVolIDs.at(k) && hitFeatures.m_daughterVolId == m_encodeDaughterVolIDs.at(k))
+            {
+                accessor[0][i][j] = 1.f;
+            }
+            else
+            {
+                accessor[0][i][j] = 0.f;
+            }
+
+        }
         if (m_includeHitCardinalityFeatures)
         {
             accessor[0][i][m_hitFeaturesNHitsIdx] = nHitsFeat;
@@ -863,6 +881,16 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MaxIterations", m_maxIterations));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "EncodeLarTpcVolIDs", m_encodeLArTPCVolIDs));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "EncodeDaughterVolIDs", m_encodeDaughterVolIDs));
+    PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, m_encodeLArTPCVolIDs.size() != m_encodeDaughterVolIDs.size());
+    if (!m_encodeLArTPCVolIDs.empty())
+    {
+        m_hitFeatureDim += m_encodeLArTPCVolIDs.size();
+    }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "IncludeHitCardinalityFeatures", m_includeHitCardinalityFeatures));
