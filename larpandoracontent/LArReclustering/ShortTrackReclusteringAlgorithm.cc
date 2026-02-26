@@ -240,6 +240,8 @@ void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHit
                 *pBestW{view == TPC_VIEW_W ? pCaloHit : nullptr};
             if (view == TPC_VIEW_U || view == TPC_VIEW_V)
             {
+                if (filteredHits3Dw.empty())
+                    continue;
                 Eigen::MatrixXf norms((hitMatrixW.rowwise() - row).array().pow(2).rowwise().sum());
                 Eigen::Index index;
                 norms.col(0).minCoeff(&index);
@@ -247,6 +249,8 @@ void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHit
             }
             if (view == TPC_VIEW_U || view == TPC_VIEW_W)
             {
+                if (filteredHits3Dv.empty())
+                    continue;
                 Eigen::MatrixXf norms((hitMatrixV.rowwise() - row).array().pow(2).rowwise().sum());
                 Eigen::Index index;
                 norms.col(0).minCoeff(&index);
@@ -254,6 +258,8 @@ void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHit
             }
             if (view == TPC_VIEW_V || view == TPC_VIEW_W)
             {
+                if (filteredHits3Du.empty())
+                    continue;
                 Eigen::MatrixXf norms((hitMatrixU.rowwise() - row).array().pow(2).rowwise().sum());
                 Eigen::Index index;
                 norms.col(0).minCoeff(&index);
@@ -293,11 +299,7 @@ void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHit
 void ShortTrackReclusteringAlgorithm::PartitionDiscontinuities(const PfoToHitTripletsMap &pfoToHitTripletsMap,
     const ViewToHitsMap &viewToUnclusteredHitsMap, PartitionVector &partitions) const
 {
-    (void)viewToUnclusteredHitsMap; (void)partitions;
-    // Iterate over each PFO and get its respective discontinuities. Perform sliding linear fits on each of its clusters and use the
-    // discontinuities to focus on the relevant part of the sliding fit. Walk from just before that point of the fit to just after
-    // in all available views to see if a coherent picture emerges. If so, propose a new partition.
-    // Once partitions have been identified, examine the unclustered hits to see if they can be added to the partition.
+    (void)viewToUnclusteredHitsMap;
     for (const auto &[pPfo, hitTriplets] : pfoToHitTripletsMap)
     {
         ClusterList pfoClusterList;
@@ -324,54 +326,62 @@ void ShortTrackReclusteringAlgorithm::PartitionDiscontinuities(const PfoToHitTri
         const TwoDSlidingFitResult sfrV(pClusterV, 2, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V));
         const TwoDSlidingFitResult sfrW(pClusterW, 2, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W));
 
-        const std::streamsize originalPrecision{std::cout.precision()};
-        const std::ios_base::fmtflags originalFormat{std::cout.flags()};
         for (const auto &[hitU, hitV, hitW] : hitTriplets)
         {
-            std::cout << "Cluster" << std::endl;
-            std::cout << std::fixed << std::setprecision(1);
             CaloHitVector orderedHitsU, orderedHitsV, orderedHitsW;
             size_t indexU{0}, indexV{0}, indexW{0};
             if (hitU && pClusterU)
                 indexU = this->OrderHitsAlongTrajectory(pClusterU, hitU, sfrU, 5.f, orderedHitsU);
-                // We now have a logically ordered list of hits in the cluster around the discontinuity
-                // Once we have a similarly ordered list in the other views, we can look for consistent patterns
-                // Ideally we'd like to correlate these hits so that we can start and stop in the same place in each view
-                // A quick Hungarian algorithm style matching of the hits may be useful here
-                // More generally however, just explore the changes either side of the discontinuity, and look to see if
-                // at least two of the views agree
             if (hitV && pClusterV)
                 indexV = this->OrderHitsAlongTrajectory(pClusterV, hitV, sfrV, 5.f, orderedHitsV);
             if (hitW && pClusterW)
                 indexW = this->OrderHitsAlongTrajectory(pClusterW, hitW, sfrW, 5.f, orderedHitsW);
 
-            for (size_t i = 0; i < std::max({orderedHitsU.size(), orderedHitsV.size(), orderedHitsW.size()}); ++i)
-            {
-                if (orderedHitsU.size() > i)
-                    std::cout << "(" << (i == indexU) << ") " << orderedHitsU.at(i)->GetInputEnergy();
-                else
-                    std::cout << "         ";
-                std::cout << " | ";
-                if (orderedHitsV.size() > i)
-                    std::cout << "(" << (i == indexV) << ") " << orderedHitsV.at(i)->GetInputEnergy();
-                else
-                    std::cout << "         ";
-                std::cout << " | ";
-                if (orderedHitsW.size() > i)
-                    std::cout << "(" << (i == indexW) << ") " << orderedHitsW.at(i)->GetInputEnergy();
-                else
-                    std::cout << "         ";
-                std::cout << std::endl;
-            }
-            std::cout << "========================" << std::endl;
+            // Don't split when clusters are too small
+            int nSmall{0};
+            nSmall += ((orderedHitsU.size() - indexU) < 3) || indexU < 3;
+            nSmall += ((orderedHitsV.size() - indexV) < 3) || indexV < 3;
+            nSmall += ((orderedHitsW.size() - indexW) < 3) || indexW < 3;
+            if (nSmall >= 2)
+                continue;
+
             const float balanceU{this->GetBalance(orderedHitsU, indexU)};
             const float balanceV{this->GetBalance(orderedHitsV, indexV)};
             const float balanceW{this->GetBalance(orderedHitsW, indexW)};
-            std::cout << "Balance: " << std::endl;
-            std::cout << "U: " << balanceU << " V: " << balanceV << " W: " << balanceW << std::endl;
+            int nStepUp{0}, nStepDown{0}, nMissing{0};
+            nStepUp += balanceU > 1.5f;
+            nStepDown += balanceU && balanceU < 0.67f;
+            nMissing += !balanceU;
+            nStepUp += balanceV > 1.5f;
+            nStepDown += balanceV && balanceV < 0.67f;
+            nMissing += !balanceV;
+            nStepUp += balanceW > 1.5f;
+            nStepDown += balanceW &&balanceW < 0.67f;
+            nMissing += !balanceW;
+            if (nStepUp >= 3 || nStepDown >= 3 || (nStepUp == 2 && nMissing == 1) || (nStepDown == 2 && nMissing == 1))
+            {
+                // We have a consistent discontinuous change in ADC across at least two views
+                std::cout << "Balance: " << "U: " << balanceU << " V: " << balanceV << " W: " << balanceW << std::endl;
+                partitions.emplace_back(Partition(pPfo, std::make_tuple(hitU, hitV, hitW), sfrU, sfrV, sfrW));
+                PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1, -1, 1));
+                if (hitU)
+                {
+                    const CartesianVector &pos(hitU->GetPositionVector());
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, "U", RED, 2));
+                }
+                if (hitV)
+                {
+                    const CartesianVector &pos(hitV->GetPositionVector());
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, "V", RED, 2));
+                }
+                if (hitW)
+                {
+                    const CartesianVector &pos(hitW->GetPositionVector());
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, "W", RED, 2));
+                }
+                PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+            }
         }
-        std::cout.precision(originalPrecision);
-        std::cout.flags(originalFormat);
     }
 }
 

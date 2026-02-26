@@ -49,11 +49,21 @@ private:
     typedef std::unordered_map<const pandora::Cluster *, pandora::CaloHitSet> ClusterToHitsMap;
     typedef std::unordered_map<const pandora::Pfo *, std::vector<HitTriplet>> PfoToHitTripletsMap;
 
-    // Need to decide exactly what this is, but basically we want an object that can tell us which hits from which views belong together,
-    // and we want a way of knowing which PFO will become the owner, which PFO (if any) previously owned the hits, and which hits were
-    // formerly unclustered. We likely want a vector of these objects to describe the complete picture
     struct Partition
     {
+        Partition(const pandora::Pfo *const pCurrentPfo, const HitTriplet &hitTriplet, const TwoDSlidingFitResult &sfrU,
+            const TwoDSlidingFitResult &sfrV, const TwoDSlidingFitResult &sfrW) :
+            m_pCurrentPfo(pCurrentPfo),
+            m_hitTriplet(hitTriplet),
+            m_sfrU(sfrU),
+            m_sfrV(sfrV),
+            m_sfrW(sfrW)
+        {
+        }
+
+        const pandora::Pfo *const m_pCurrentPfo;
+        const HitTriplet m_hitTriplet;
+        const TwoDSlidingFitResult m_sfrU, m_sfrV, m_sfrW;
     };
     typedef std::vector<Partition> PartitionVector;
 
