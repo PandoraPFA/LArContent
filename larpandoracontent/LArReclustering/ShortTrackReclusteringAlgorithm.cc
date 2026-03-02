@@ -86,6 +86,7 @@ void ShortTrackReclusteringAlgorithm::CollectUnclusteredHits(const CaloHitList &
 
 void ShortTrackReclusteringAlgorithm::CollectClusters(const PfoList &pfoList, ViewToClustersMap &viewToClustersMap, ClusterToPfoMap &clusterToPfoMap) const
 {
+    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1, -1, 1));
     for (const Pfo *const pPfo : pfoList)
     {
         for (const HitType view : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
@@ -96,6 +97,20 @@ void ShortTrackReclusteringAlgorithm::CollectClusters(const PfoList &pfoList, Vi
             {
                 viewToClustersMap[view].emplace_back(pCluster);
                 clusterToPfoMap[pCluster] = pPfo;
+
+                /////////
+                const TwoDSlidingFitResult sfr(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), view));
+                CaloHitList clusterHits;
+                LArClusterHelper::OrderHitsAlongTrajectory(pCluster, sfr, clusterHits);
+                int i{1};
+                for (const CaloHit *const pCaloHit : clusterHits)
+                {
+                    const CartesianVector &position(pCaloHit->GetPositionVector());
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, std::to_string(i), BLUE, 2));
+                    ++i;
+                }
+                PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+                /////////
             }
         }
     }
