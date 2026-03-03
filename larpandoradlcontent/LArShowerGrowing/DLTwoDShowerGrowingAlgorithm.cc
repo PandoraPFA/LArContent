@@ -115,9 +115,9 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
     const ClusterList clusterList{this->GetAllClusters()};
 
     int currClusterID{0}, currMCID{0};
-    std::map<const MCParticle *const, int> mcToID = {{nullptr, -1}}, mcToPDG = {{nullptr, 0}};
+    std::map<const MCParticle *const, int> mcToID = {{nullptr, -1}}; // Initialise for null MCParticle
     std::vector<int> clusterView, clusterID;
-    std::vector<int> mcID = {-1}, mcPDG = {0};
+    std::vector<int> mcID = {-1}, mcPDG = {0}, mcIsFromBeam = {0}; // Initialise for null MCParticle
     std::vector<int> hitClusterID;
     std::vector<float> hitXRelPos, hitZRelPos;
     std::vector<float> hitRRelPos, hitSinThetaRelPos, hitCosThetaRelPos; // Polar coordinates
@@ -146,9 +146,9 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
             if (mcToID.find(pMainMC) == mcToID.end())
             {
                 mcToID.insert({pMainMC, currMCID++});
-                mcToPDG.insert({pMainMC, pMainMC->GetParticleId()});
                 mcID.emplace_back(mcToID.at(pMainMC));
-                mcPDG.emplace_back(mcToPDG.at(pMainMC));
+                mcPDG.emplace_back(pMainMC->GetParticleId());
+                mcIsFromBeam.emplace_back(LArMCParticleHelper::IsBeamParticle(LArMCParticleHelper::GetParentMCParticle(pMainMC)) ? 1 : 0);
             }
 
             hitClusterID.emplace_back(currClusterID);
@@ -173,6 +173,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "cluster_view", &clusterView));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "mc_id", &mcID));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "mc_pdg", &mcPDG));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "mc_is_from_beam", &mcIsFromBeam));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_cluster_id", &hitClusterID));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_x_rel_pos", &hitXRelPos));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_z_rel_pos", &hitZRelPos));
