@@ -148,7 +148,10 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
                 mcToID.insert({pMainMC, currMCID++});
                 mcID.emplace_back(mcToID.at(pMainMC));
                 mcPDG.emplace_back(pMainMC->GetParticleId());
-                mcIsFromBeam.emplace_back(LArMCParticleHelper::IsBeamParticle(LArMCParticleHelper::GetParentMCParticle(pMainMC)) ? 1 : 0);
+                const MCParticle *const pMainMCParent{LArMCParticleHelper::GetParentMCParticle(pMainMC)};
+                mcIsFromBeam.emplace_back(
+                  (LArMCParticleHelper::IsBeamParticle(pMainMCParent) || LArMCParticleHelper::IsNeutrino(pMainMCParent)) ? 1 : 0
+                );
             }
 
             hitClusterID.emplace_back(currClusterID);
