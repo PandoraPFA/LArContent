@@ -51,19 +51,19 @@ private:
 
     struct Partition
     {
-        Partition(const pandora::Pfo *const pCurrentPfo, const HitTriplet &hitTriplet, const TwoDSlidingFitResult &sfrU,
-            const TwoDSlidingFitResult &sfrV, const TwoDSlidingFitResult &sfrW) :
+        Partition(const pandora::Pfo *const pCurrentPfo, const HitTriplet &hitTriplet, const pandora::CaloHitList &hitsU,
+            const pandora::CaloHitList &hitsV, const pandora::CaloHitList &hitsW) :
             m_pCurrentPfo(pCurrentPfo),
             m_hitTriplet(hitTriplet),
-            m_sfrU(sfrU),
-            m_sfrV(sfrV),
-            m_sfrW(sfrW)
+            m_hitsU(hitsU),
+            m_hitsV(hitsV),
+            m_hitsW(hitsW)
         {
         }
 
         const pandora::Pfo *const m_pCurrentPfo;
         const HitTriplet m_hitTriplet;
-        const TwoDSlidingFitResult m_sfrU, m_sfrV, m_sfrW;
+        const pandora::CaloHitList m_hitsU, m_hitsV, m_hitsW;
     };
     typedef std::vector<Partition> PartitionVector;
 
@@ -96,6 +96,14 @@ private:
      *  @param  clusterToPfoMap the map in which to store the mapping of clusters to their parent PFO
      */
     void CollectClusters(const pandora::PfoList &pfoList, ViewToClustersMap &viewToClustersMap, ClusterToPfoMap &clusterToPfoMap) const;
+
+    /**
+     *  @brief  Loops over clusters and performs a sliding linear fit to get an ordered set of hits along the cluster trajectory, and the
+     *          corresponding fit result, which are stored in maps for later use.
+     *
+     *  @param  viewToClustersMap the map of clusters mapped by view
+     */
+    void FitAndOrderClusters(const ViewToClustersMap &viewToClustersMap);
 
     /**
      *  @brief  Loops over clusters and looks for evidence of discontinuous changes in ADC values, and collects the corresponding hits
@@ -241,7 +249,7 @@ private:
      *
      *  @return the ratio of the median ADC value either side of the pivot
      */
-    float GetBalance(const pandora::CaloHitVector &hits, const size_t pivot) const;
+    float GetBalance(const pandora::CaloHitList &hits, const size_t pivot) const;
 
     /**
      *  @brief  Gets a windowed, ordered vector of hits along the direction of a sliding linear fit about the discontinuity hit.
@@ -260,6 +268,8 @@ private:
 
     std::string m_caloHitListName; ///< Name of list of calo hits to consider during reclustering
     std::string m_pfoListName; ///< Name of list of track-like pfos to consider for reclustering
+    std::unordered_map<const pandora::Cluster *, TwoDSlidingFitResult> m_clusterToSFRMap;
+    std::unordered_map<const pandora::Cluster *, pandora::CaloHitList> m_clusterToOrderedHitsMap;
 };
 
 } // namespace lar_content
