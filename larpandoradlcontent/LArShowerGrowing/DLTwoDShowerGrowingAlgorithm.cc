@@ -887,7 +887,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         XmlHelper::ReadValue(xmlHandle, "MaxIterations", m_maxIterations));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadVectorOfValues(xmlHandle, "EncodeLarTpcVolIDs", m_encodeLArTPCVolIDs));
+        XmlHelper::ReadVectorOfValues(xmlHandle, "EncodeLArTPCVolIDs", m_encodeLArTPCVolIDs));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadVectorOfValues(xmlHandle, "EncodeDaughterVolIDs", m_encodeDaughterVolIDs));
     PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, m_encodeLArTPCVolIDs.size() != m_encodeDaughterVolIDs.size());
