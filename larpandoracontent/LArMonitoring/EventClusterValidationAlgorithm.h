@@ -33,6 +33,7 @@ private:
         double m_trackAri;
         int m_nHits;
         int m_nHitsNullCluster;
+        int m_nHitsFromBeam;
         int m_nShowerTrueHits;
         int m_nTrackTrueHits;
         int m_nRecoClusters;

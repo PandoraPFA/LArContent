@@ -42,6 +42,7 @@ EventClusterValidationAlgorithm::ClusterMetrics::ClusterMetrics() :
     m_trackAri{0.},
     m_nHits{0},
     m_nHitsNullCluster{0},
+    m_nHitsFromBeam{0},
     m_nShowerTrueHits{0},
     m_nTrackTrueHits{0},
     m_nRecoClusters{0},
@@ -166,6 +167,13 @@ StatusCode EventClusterValidationAlgorithm::Run()
         std::map<const CaloHit *const, CaloHitParents> hitParents;
         this->GetHitParents(caloHits, clusters, hitParents);
         clusterMetrics.m_nHits = hitParents.size();
+        for (const auto &[pCaloHit, parents] : hitParents)
+        {
+            if ((LArMCParticleHelper::IsBeamParticle(parents.m_pMainMC) || LArMCParticleHelper::IsNeutrino(parents.m_pMainMC)))
+            {
+                clusterMetrics.m_nHitsFromBeam++;
+            }
+        }
 
         // Drop any hits with a main MC particle with insufficient activity
         this->ApplyMCParticleMinSumHits(hitParents);
@@ -873,6 +881,7 @@ void EventClusterValidationAlgorithm::SetBranches([[maybe_unused]] const Cluster
     // Just the all-hits ARI with some values that might be needed for cuts
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "n_hits", clusterMetrics.m_nHits));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "n_hits_null", clusterMetrics.m_nHitsNullCluster));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "n_hits_from_beam", clusterMetrics.m_nHitsFromBeam));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "adjusted_rand_idx", clusterMetrics.m_ari));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "n_true_clusters", clusterMetrics.m_nTrueClusters));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "n_ari_reco_clusters", clusterMetrics.m_nAriRecoClusters));
