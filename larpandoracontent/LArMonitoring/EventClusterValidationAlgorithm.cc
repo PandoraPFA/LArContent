@@ -773,7 +773,7 @@ void EventClusterValidationAlgorithm::GetMatchedParticleMetrics(
     {
         metrics.m_pdg.emplace_back(pMC->GetParticleId());
         metrics.m_causesShower.emplace_back(this->CausesShower(pMC, 0));
-        metrics.m_isPrimary.emplace_back(pMC->GetParentList().front()->IsRootParticle());
+        metrics.m_isPrimary.emplace_back(pMC->IsRootParticle() || pMC->GetParentList().front()->IsRootParticle());
         metrics.m_trueEnergy.emplace_back(pMC->GetEnergy());
         metrics.m_nTrueHits.emplace_back(mcNTrueHits.at(pMC));
         metrics.m_trueHitsSumEnergy.emplace_back(mcTrueHitsSumEnergy.at(pMC));
