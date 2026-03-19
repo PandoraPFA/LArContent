@@ -270,23 +270,11 @@ private:
      */
     float GetBalance(const pandora::CaloHitList &hits, const size_t pivot) const;
 
-    /**
-     *  @brief  Gets a windowed, ordered vector of hits along the direction of a sliding linear fit about the discontinuity hit.
-     *
-     *  @param  pCluster the cluster for which to retrieve the ordered hits
-     *  @param  pDiscontinuityHit the hit associated with the identified discontinuity
-     *  @param  sfr the result of the sliding linear fit to the cluster
-     *  @param  window the size of the window, in each direction, over which to retrieve hits, in cm
-     *  @param  orderedHits the vector in which to store the ordered hits
-     *
-     *  @return The index of the discontinuity hit in the ordered vector of hits
-     */
-    size_t OrderHitsAlongTrajectory(const pandora::Cluster *const pCluster, const pandora::CaloHit *const pDiscontinuityHit, const TwoDSlidingFitResult &sfr, const float window, pandora::CaloHitVector &orderedHits) const;
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string m_caloHitListName; ///< Name of list of calo hits to consider during reclustering
     std::string m_pfoListName; ///< Name of list of track-like pfos to consider for reclustering
+    pandora::StringVector m_clusterListNames; ///< Names of lists of clusters to consider during reclustering
     std::unordered_map<const pandora::Cluster *, TwoDSlidingFitResult> m_clusterToSFRMap;
     std::unordered_map<const pandora::Cluster *, pandora::CaloHitList> m_clusterToOrderedHitsMap;
 };
