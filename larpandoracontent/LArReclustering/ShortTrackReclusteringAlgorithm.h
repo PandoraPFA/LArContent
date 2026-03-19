@@ -136,6 +136,25 @@ private:
         PartitionVector &partitions) const;
 
     /**
+     *  @brief  Applies the reclustering described by a given partition vector
+     *
+     *  @param  partitions the proposed reclustering partitions
+     */
+    void Recluster(const PartitionVector &partitions) const;
+
+    /**
+     *  @brief  Utility function that performs the partitioning of a given set of hits according to a provided hit about which the split
+     *          should be performed. The split hit is then allocated to the partition that is most consistent with its ADC
+     *
+     *  @param  caloHits the set of hits to partition
+     *  @param  pSplitHit the hit about which to partition the set of hits
+     *  @param  cluster1Hits the vector in which to store the first set of partitioned hits
+     *  @param  cluster2Hits the vector in which to store the second set of partitioned hits
+     */
+    void PartitionHits(const pandora::CaloHitList &caloHits, const pandora::CaloHit *const pSplitHit, pandora::CaloHitList &cluster1Hits,
+        pandora::CaloHitList &cluster2Hits) const;
+
+    /**
      *  @brief  Gets the hits associated with a cluster, ordered relative to a specified vertex
      *
      *  @param  clusterHits the hits associated with the cluster for which to retrieve the ordered hits
