@@ -640,4 +640,40 @@ bool LArGeometryHelper::IsInDetector(const DetectorBoundaries &detectorBoundarie
     return true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArGeometryHelper::CalculateChiSquared(const Pandora &pandora, const CaloHit *const pCaloHitU, const CaloHit *const pCaloHitV,
+    const CaloHit *const pCaloHitW)
+{
+    const CartesianVector posU(pCaloHitU->GetPositionVector());
+    const CartesianVector posV(pCaloHitV->GetPositionVector());
+    const CartesianVector posW(pCaloHitW->GetPositionVector());
+
+    const float y_uv(pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoY(posU.GetZ(), posV.GetZ()));
+    const float y_uw(pandora.GetPlugins()->GetLArTransformationPlugin()->UWtoY(posU.GetZ(), posW.GetZ()));
+    const float y_vw(pandora.GetPlugins()->GetLArTransformationPlugin()->VWtoY(posV.GetZ(), posW.GetZ()));
+
+    const float z_uv(pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoZ(posU.GetZ(), posV.GetZ()));
+    const float z_uw(pandora.GetPlugins()->GetLArTransformationPlugin()->UWtoZ(posU.GetZ(), posW.GetZ()));
+    const float z_vw(pandora.GetPlugins()->GetLArTransformationPlugin()->VWtoZ(posV.GetZ(), posW.GetZ()));
+
+    const float x((posU.GetX() + posV.GetX() + posW.GetX()) / 3.f);
+    const float y((y_uv + y_uw + y_vw) / 3.f);
+    const float z((z_uv + z_uw + z_vw) / 3.f);
+
+    const float u(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(y, z));
+    const float v(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(y, z));
+    const float w(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoW(y, z));
+
+    const float sigma2_uvw{static_cast<float>(std::pow(LArGeometryHelper::GetSigmaUVW(pandora), 2))};
+    const float sigma2_x_u{static_cast<float>(std::pow(0.5f *pCaloHitU->GetCellSize1(), 2))};
+    const float sigma2_x_v{static_cast<float>(std::pow(0.5f * pCaloHitV->GetCellSize1(), 2))};
+    const float sigma2_x_w{static_cast<float>(std::pow(0.5f * pCaloHitW->GetCellSize1(), 2))};
+
+    float chiSquared = std::pow(x - posU.GetX(), 2) / sigma2_x_u + std::pow(x - posV.GetX(), 2) / sigma2_x_v + std::pow(x - posW.GetX(), 2) / sigma2_x_w;
+    chiSquared += (std::pow(u - posU.GetZ(), 2) + std::pow(v - posV.GetZ(), 2) + std::pow(w - posW.GetZ(), 2)) / sigma2_uvw;
+
+    return chiSquared;
+}
+
 } // namespace lar_content
