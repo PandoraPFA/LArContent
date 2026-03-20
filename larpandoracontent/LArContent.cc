@@ -122,6 +122,7 @@
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/PlaneSolverAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/TwoViewShowerHitsTool.h"
@@ -292,6 +293,7 @@
     d("LArTwoViewDeltaRayMatching",             TwoViewDeltaRayMatchingAlgorithm)                                               \
     d("LArOneViewDeltaRayMatching",             OneViewDeltaRayMatchingAlgorithm)                                               \
     d("LArUnattachedDeltaRays",                 UnattachedDeltaRaysAlgorithm)                                                   \
+    d("LArPlaneSolver",                         PlaneSolverAlgorithm)                                                           \
     d("LArThreeDHitCreation",                   ThreeDHitCreationAlgorithm)                                                     \
     d("LArThreeDLongitudinalTracks",            ThreeViewLongitudinalTracksAlgorithm)                                           \
     d("LArRecursivePfoMopUp",                   RecursivePfoMopUpAlgorithm)                                                     \
