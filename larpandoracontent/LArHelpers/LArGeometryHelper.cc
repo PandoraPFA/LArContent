@@ -666,7 +666,7 @@ float LArGeometryHelper::CalculateChiSquared(const Pandora &pandora, const CaloH
     const float w(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoW(y, z));
 
     const float sigma2_uvw{static_cast<float>(std::pow(LArGeometryHelper::GetSigmaUVW(pandora), 2))};
-    const float sigma2_x_u{static_cast<float>(std::pow(0.5f *pCaloHitU->GetCellSize1(), 2))};
+    const float sigma2_x_u{static_cast<float>(std::pow(0.5f * pCaloHitU->GetCellSize1(), 2))};
     const float sigma2_x_v{static_cast<float>(std::pow(0.5f * pCaloHitV->GetCellSize1(), 2))};
     const float sigma2_x_w{static_cast<float>(std::pow(0.5f * pCaloHitW->GetCellSize1(), 2))};
 
