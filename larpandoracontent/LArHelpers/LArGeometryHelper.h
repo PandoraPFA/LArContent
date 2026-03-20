@@ -304,6 +304,17 @@ public:
      *  @return Whether the input position is within the detector
      */
     static bool IsInDetector(const DetectorBoundaries &detectorBoundaries, const pandora::CartesianVector &position);
+
+    /**
+     *  @brief  Calculate a chi-squared value (including hit width) for a triplet of hits
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  pCaloHitU the calo hit in the U view
+     *  @param  pCaloHitV the calo hit in the V view
+     *  @param  pCaloHitW the calo hit in the W view
+     */
+    static float CalculateChiSquared(const pandora::Pandora &pandora, const pandora::CaloHit *const pCaloHitU,
+        const pandora::CaloHit *const pCaloHitV, const pandora::CaloHit *const pCaloHitW);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
