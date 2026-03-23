@@ -431,8 +431,15 @@ StatusCode DLTwoDShowerGrowingAlgorithm::CalculateHitFeatures(const CaloHit *con
     hitFeatures.m_energy = pCaloHit->GetMipEquivalentEnergy();
 
     const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit *>(pCaloHit));
-    hitFeatures.m_larTpcVolId = pLArCaloHit->GetLArTPCVolumeId();
-    hitFeatures.m_daughterVolId = pLArCaloHit->GetDaughterVolumeId();
+    if (pLArCaloHit)
+    {
+        hitFeatures.m_larTpcVolId = pLArCaloHit->GetLArTPCVolumeId();
+        hitFeatures.m_daughterVolId = pLArCaloHit->GetDaughterVolumeId();
+    }
+    else if (!m_encodeLArTPCVolIDs.empty())
+    {
+        return STATUS_CODE_FAILURE;
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -577,14 +584,9 @@ StatusCode DLTwoDShowerGrowingAlgorithm::MakeClusterTensor(const std::vector<Hit
         for (size_t j = 12, k = 0; k < m_encodeLArTPCVolIDs.size(); j++, k++)
         {
             if (hitFeatures.m_larTpcVolId == m_encodeLArTPCVolIDs.at(k) && hitFeatures.m_daughterVolId == m_encodeDaughterVolIDs.at(k))
-            {
                 accessor[0][i][j] = 1.f;
-            }
             else
-            {
                 accessor[0][i][j] = 0.f;
-            }
-
         }
         if (m_includeHitCardinalityFeatures)
         {
@@ -592,9 +594,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::MakeClusterTensor(const std::vector<Hit
             accessor[0][i][m_hitFeaturesNClustersIdx] = nClustersFeat;
         }
         if (m_includeHitNIterationNumFeature)
-        {
             accessor[0][i][m_hitFeaturesIterationNumIdx] = iterationNumFeat;
-        }
     }
 
     return STATUS_CODE_SUCCESS;
@@ -892,9 +892,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         XmlHelper::ReadVectorOfValues(xmlHandle, "EncodeDaughterVolIDs", m_encodeDaughterVolIDs));
     PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, m_encodeLArTPCVolIDs.size() != m_encodeDaughterVolIDs.size());
     if (!m_encodeLArTPCVolIDs.empty())
-    {
         m_hitFeatureDim += m_encodeLArTPCVolIDs.size();
-    }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "IncludeHitCardinalityFeatures", m_includeHitCardinalityFeatures));
@@ -906,9 +904,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "IncludeHitNIterationNumFeature", m_includeHitNIterationNumFeature));
     if (m_includeHitNIterationNumFeature)
-    {
         m_hitFeaturesIterationNumIdx = m_hitFeatureDim++;
-    }
 
     if (m_trainingMode)
     {
