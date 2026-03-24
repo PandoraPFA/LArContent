@@ -23,7 +23,7 @@ ThreeDAssociationAlgorithm::ThreeDAssociationAlgorithm() :
     m_minClusterLayers(4),
     m_maxGapLayers(7),
     m_fitLayers(30),
-    m_maxGapDistanceSquared(2.f),
+    m_maxGapDistanceSquared(10.f),
     m_minCosRelativeAngle(0.94f),
     m_minClusterLength(1.f),
     m_maxTransverseDisplacement(2.f),
@@ -74,19 +74,8 @@ void ThreeDAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVect
             if (pInnerCluster == pOuterCluster)
                 continue;
 
-                /*
-            if( !(iterJ - clusterVector.begin() == 27) || (iterI - clusterVector.begin() == 27) ){
-                continue;
-                this->VisualizeClusters(pInnerCluster, pOuterCluster, "Consider deeezz"sv);
-            } else {
-                continue;
-            }
-                */
-
             if (!this->AreClustersAssociated(pInnerCluster, pOuterCluster))
                 continue;
-
-            //this->VisualizeClusters(pInnerCluster, pOuterCluster, "Accepted"sv );
 
             clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
             clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
@@ -129,8 +118,14 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
 
     const float openingAngle{ innerDirection.GetCosOpeningAngle(outerDirection) };
 
-    if( openingAngle < m_minCosRelativeAngle )
+    // Bypass opening angle cut if a short cluster is the extension of a longer one
+    if( closestDistance > m_minClusterLength ){
+        if( openingAngle < m_minCosRelativeAngle )
+            return false;
+    } else if( (LArClusterHelper::GetLength(pInnerCluster) < 10*m_minClusterLength) == 
+               (LArClusterHelper::GetLength(pOuterCluster) < 10*m_minClusterLength) ){
         return false;
+    }
 
     const auto innerCaloHitList = clusterToHitListMap.at( pInnerCluster );
 
@@ -214,44 +209,14 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
         innerClusterEnd = innerCentroid + innerDirection * innerMaxDir;
     }
 
-    if( (outerClusterStart - innerClusterEnd).GetMagnitudeSquared() > m_maxGapDistanceSquared ){
+    const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), m_view)};
+
+    if( (outerClusterStart - innerClusterEnd).GetMagnitudeSquared() > ratio * ratio *  m_maxGapDistanceSquared ){
         //this->VisualizeClusters(pInnerCluster, pOuterCluster, "Rejected"sv );
         
         return false;
     }
     
-    //this->VisualizeClusters(pInnerCluster, pOuterCluster, "Accepted"sv );
-
-    /*
-    float endCluster1{ -std::numeric_limits<float>::max() };
-    float endCluster2{ +std::numeric_limits<float>::max() };
-
-    // Compute intercept and endpoints
-    for( const CaloHit *const pCaloHit : innerCaloHitList ){
-        endCluster1 = 
-            std::max(endCluster1, innerDirection.GetDotProduct(pCaloHit3D->GetPositionVector() - innerCentroid));
-        endCluster2 = 
-            std::min(endCluster2, outerDirection.GetDotProduct(pCaloHit3D->GetPositionVector() - outerCentroid));
-    }
-
-    const CartesianVector innerClusterEnd1 = innerCentroid + innerDirection*endCluster1;
-    const CartesianVector innerClusterEnd2 = outerCentroid + outerDirection*endCluster2;
-
-    float startCluster1{ +std::numeric_limits<float>::max() };
-    float startCluster2{ -std::numeric_limits<float>::max() };
-
-    // Compute intercept and endpoints
-    for( const CaloHit *const pCaloHit : outerCaloHitList ){
-        startCluster1 = 
-            std::min(startCluster1, outerDirection.GetDotProduct(pCaloHit3D->GetPositionVector() - outerCentroid));
-        startCluster2 = 
-            std::max(startCluster2, innerDirection.GetDotProduct(pCaloHit3D->GetPositionVector() - innerCentroid));
-    }
-
-    const CartesianVector outerClusterStart1 = outerCentroid + outerDirection*startCluster1;
-    const CartesianVector outerClusterStart2 = innerCentroid + innerDirection*startCluster2;
-    */
-
     return true;
 }
 
@@ -298,14 +263,9 @@ void ThreeDAssociationAlgorithm::PCAFit( const pandora::Cluster *const pCluster 
 
     this->PCAFit(clusterHits, centroid, direction);
 
-    clusterToHitListMap.insert(
-        std::make_pair(pCluster, clusterHits)
-    );
+    clusterToHitListMap.insert(std::make_pair(pCluster, clusterHits));
 
-    clusterToPCAMap.insert(
-        std::make_pair(pCluster, PCAAttr{centroid, direction})
-    );
-
+    clusterToPCAMap.insert(std::make_pair(pCluster, PCAAttr{centroid, direction}));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -336,12 +296,6 @@ void ThreeDAssociationAlgorithm::VisualizeClusters(const pandora::Cluster *const
     std::cout << str << "\n";
 
 	PandoraMonitoringApi::ViewEvent(this->GetPandora());
-}
-
-
-void ThreeDAssociationAlgorithm::PrintCluster( const pandora::Cluster *const pCluster ) const{
-    std::cout << "  Nhits: " << pCluster->GetNCaloHits() << "\n";
-    std::cout << "  Length: " << LArClusterHelper::GetLength(pCluster) << "\n";
 }
 
 } // namespace lar_content

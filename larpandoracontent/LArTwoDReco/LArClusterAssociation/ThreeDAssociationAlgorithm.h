@@ -56,8 +56,6 @@ private:
     // TODO: Remove
     void VisualizeClusters(const pandora::Cluster *const pInner, const pandora::Cluster *const pOuter, 
         const std::string_view str) const;
-    
-    void PrintCluster( const pandora::Cluster *const pCluster ) const;
 
     unsigned int m_minClusterLayers;     ///< minimum allowed number of layers for a clean cluster
     unsigned int m_maxGapLayers;         ///< maximum allowed number of layers between associated clusters
