@@ -47,20 +47,6 @@ private:
      */
     bool AreClustersAssociated(const pandora::Cluster *const pInnerCluster, const pandora::Cluster *const pOuterCluster) const;
 
-    /**
-     *  @brief  Determine whether two clusters are associated
-     *
-     *  @param  innerClusterEnd inner cluster end position
-     *  @param  outerClusterStart outer cluster start position
-     *  @param  innerFit inner cluster fit result
-     *  @param  outerFit outer cluster fit result
-     *
-     *  @return whether the clusters are associated
-     */
-    bool AreClustersAssociated(const pandora::CaloHitList &pInnerCluster, const pandora::CaloHitList &pOuterCluster,
-        const pandora::CartesianVector &innerCentroid, const pandora::CartesianVector &outerCentroid,
-        const pandora::CartesianVector &innerDirection, const pandora::CartesianVector &outerDirection) const;
-
     void PCAFit(const pandora::Cluster *pCluster) const;
 
     void PCAFit(const pandora::CaloHitList &mergedClusterCaloHit,
@@ -70,6 +56,8 @@ private:
     // TODO: Remove
     void VisualizeClusters(const pandora::Cluster *const pInner, const pandora::Cluster *const pOuter, 
         const std::string_view str) const;
+    
+    void PrintCluster( const pandora::Cluster *const pCluster ) const;
 
     unsigned int m_minClusterLayers;     ///< minimum allowed number of layers for a clean cluster
     unsigned int m_maxGapLayers;         ///< maximum allowed number of layers between associated clusters
