@@ -28,6 +28,7 @@ class LArMCParticleFactory;
 
 typedef std::vector<pandora::CaloHitList> SliceVector;
 typedef std::vector<pandora::PfoList> SliceHypotheses;
+typedef std::unordered_map<unsigned int, std::vector<const pandora::LArTPC *>> WorkerToLArTPCMap; 
 typedef std::unordered_map<const pandora::ParticleFlowObject *, const pandora::LArTPC *> PfoToLArTPCMap;
 typedef std::unordered_map<const pandora::ParticleFlowObject *, float> PfoToFloatMap;
 
@@ -99,8 +100,10 @@ protected:
 
     /**
      *  @brief  Initialize pandora worker instances
+     *  
+     *  @param workerToLArTPCMap to map each CR worker instance to the list of TPCs it acts on
      */
-    pandora::StatusCode InitializeWorkerInstances();
+    pandora::StatusCode InitializeWorkerInstances(WorkerToLArTPCMap& workerToLArTPCMap);
 
     /**
      *  @brief  Copy mc particles in the named input list to all pandora worker instances
@@ -118,8 +121,9 @@ protected:
      *  @brief  Run the cosmic-ray reconstruction worker instances
      *
      *  @param  volumeIdToHitListMap the volume id to hit list map
+     *  @param  workerToLArTPCMap the worker id to LArTPC list map
      */
-    pandora::StatusCode RunCosmicRayReconstruction(const VolumeIdToHitListMap &volumeIdToHitListMap) const;
+    pandora::StatusCode RunCosmicRayReconstruction(const VolumeIdToHitListMap &volumeIdToHitListMap, WorkerToLArTPCMap& workerToLArTPCMap) const;
 
     /**
      *  @brief  Recreate cosmic-ray pfos (created by worker instances) in the master instance

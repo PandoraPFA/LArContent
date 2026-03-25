@@ -154,8 +154,9 @@ StatusCode MasterAlgorithm::Run()
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Reset());
 
+    WorkerToLArTPCMap workerToLArTPCMap;
     if (!m_workerInstancesInitialized)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitializeWorkerInstances());
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitializeWorkerInstances(workerToLArTPCMap));
 
     if (m_passMCParticlesToWorkerInstances)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles());
@@ -166,7 +167,7 @@ StatusCode MasterAlgorithm::Run()
 
     if (m_shouldRunAllHitsCosmicReco)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayReconstruction(volumeIdToHitListMap));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayReconstruction(volumeIdToHitListMap, workerToLArTPCMap));
 
         PfoToLArTPCMap pfoToLArTPCMap;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RecreateCosmicRayPfos(pfoToLArTPCMap));
@@ -197,7 +198,7 @@ StatusCode MasterAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::InitializeWorkerInstances()
+StatusCode MasterAlgorithm::InitializeWorkerInstances(WorkerToLArTPCMap& workerToLArTPCMap)
 {
     // ATTN Used to be in the regular Initialize callback, but detector gap list cannot be extracted in client app before the first event
     if (m_workerInstancesInitialized)
@@ -213,6 +214,8 @@ StatusCode MasterAlgorithm::InitializeWorkerInstances()
             const unsigned int volumeId(mapEntry.second->GetLArTPCVolumeId());
             m_crWorkerInstances.push_back(
                 this->CreateWorkerInstance(*(mapEntry.second), gapList, m_crSettingsFile, "CRWorkerInstance" + std::to_string(volumeId)));
+
+            workerToLArTPCMap[volumeId].push_back(mapEntry.second);
         }
 
         if (m_shouldRunSlicing)
@@ -295,23 +298,33 @@ StatusCode MasterAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &volume
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::RunCosmicRayReconstruction(const VolumeIdToHitListMap &volumeIdToHitListMap) const
+StatusCode MasterAlgorithm::RunCosmicRayReconstruction(const VolumeIdToHitListMap &volumeIdToHitListMap, WorkerToLArTPCMap& workerToLArTPCMap) const
 {
-    unsigned int workerCounter(0);
-
     for (const Pandora *const pCRWorker : m_crWorkerInstances)
     {
-        const LArTPC &larTPC(pCRWorker->GetGeometry()->GetLArTPC());
-        VolumeIdToHitListMap::const_iterator iter(volumeIdToHitListMap.find(larTPC.GetLArTPCVolumeId()));
+        const LArTPC &worker_larTPC(pCRWorker->GetGeometry()->GetLArTPC());
+        const unsigned int worker_id = worker_larTPC.GetLArTPCVolumeId();
+        
+        // loop over worker's TPCs
+        for (const pandora::LArTPC * pLArTPC : workerToLArTPCMap[worker_id])
+        {
+          const unsigned int larTPC_id = (*pLArTPC).GetLArTPCVolumeId();
 
-        if (volumeIdToHitListMap.end() == iter)
+          // get all TPC's hits
+          VolumeIdToHitListMap::const_iterator iter(volumeIdToHitListMap.find(larTPC_id));
+
+          if (volumeIdToHitListMap.end() == iter)
             continue;
 
-        for (const CaloHit *const pCaloHit : iter->second.m_allHitList)
+          // copy hits into the worker
+          std::cout << "Copying " << iter->second.m_allHitList.size() << " hits from LArTPC " << larTPC_id << " to worker " << worker_id << "\n"; 
+          for (const CaloHit *const pCaloHit : iter->second.m_allHitList)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pCRWorker, pCaloHit));
+        }
+
 
         if (m_printOverallRecoStatus)
-            std::cout << "Running cosmic-ray reconstruction worker instance " << ++workerCounter << " of " << m_crWorkerInstances.size() << std::endl;
+            std::cout << "Running cosmic-ray reconstruction worker instance " << worker_id << " of " << m_crWorkerInstances.size() << std::endl;
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*pCRWorker));
     }
