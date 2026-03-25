@@ -156,6 +156,23 @@ private:
      */
     void CheckIfTopToBottom(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsTopToBottomMap) const;
 
+     /**
+     *  @brief Check if a 3D point is inside the detector boundaies with margins 
+     *
+     *  @param  x point x coordinate
+     *  @param  y point y coordinate
+     *  @param  z point z coordinate
+     */   
+    bool IsOutsideBox(const float x, const float y, const float z) const;
+
+    /**
+     *  @brief  Check if each candidate is throughgoing (i.e emerging and exiting from any of the detector boundaies)
+     *
+     *  @param  candidates input list of candidates
+     *  @param  pfoToIsThroughgoingMap output mapping between candidates Pfos and if they are top to bottom
+     */
+    void CheckIfThroughgoing(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsThroughgoingMap) const;
+
     typedef std::set<unsigned int> UIntSet;
     typedef std::unordered_map<int, bool> IntBoolMap;
 
@@ -178,9 +195,10 @@ private:
      *  @param  pfoToIsTopToBottomMap input mapping between candidate Pfos and if they are top to bottom
      *  @param  neutrinoSliceSet input set of slice indices containing a likely neutrino Pfo
      *  @param  pfoToIsLikelyCRMuonMap to receive the output mapping between Pfos and a boolean deciding if they are likely a CR muon
+     *  @param  pfoToIsLikelyCRMuonMap to receive the output mapping between Pfos and a boolean deciding if they are likely a rock muon
      */
     void TagCRMuons(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap, const PfoToBoolMap &pfoToIsTopToBottomMap,
-        const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap) const;
+        const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap, const PfoToBoolMap &pfoToIsThroughgoingMap) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -203,6 +221,8 @@ private:
 
     float m_inTimeMargin; ///< The maximum distance outside of the physical detector volume that a Pfo may be to still be considered in time
     float m_inTimeMaxX0;  ///< The maximum pfo x0 (determined from shifted vertex) to allow pfo to still be considered in time
+    bool m_tagRockMuons;  ///< bool to activate tagging of rock muons
+    float m_marginX;      ///< The minimum distance from a detector X-face for a Pfo to be associated
     float m_marginY;      ///< The minimum distance from a detector Y-face for a Pfo to be associated
     float m_marginZ;      ///< The minimum distance from a detector Z-face for a Pfo to be associated
     float m_maxNeutrinoCosTheta; ///< The maximum cos(theta) that a Pfo can have to be classified as a likely neutrino

@@ -56,6 +56,7 @@ public:
         pandora::InputBool m_shouldRunSlicing;            ///< Whether to slice events into separate regions for processing
         pandora::InputBool m_shouldRunNeutrinoRecoOption; ///< Whether to run neutrino reconstruction for each slice
         pandora::InputBool m_shouldRunCosmicRecoOption;   ///< Whether to run cosmic-ray reconstruction for each slice
+        pandora::InputBool m_shouldRunRockMus_Xworkers;   ///< Whether to run rock muons reconstruction using a columnar X worker
         pandora::InputBool m_shouldPerformSliceId;        ///< Whether to identify slices and select most appropriate pfos
         pandora::InputBool m_printOverallRecoStatus;      ///< Whether to print current operation status messages
     };
@@ -318,6 +319,7 @@ protected:
     bool m_shouldRunSlicing;            ///< Whether to slice events into separate regions for processing
     bool m_shouldRunNeutrinoRecoOption; ///< Whether to run neutrino reconstruction for each slice
     bool m_shouldRunCosmicRecoOption;   ///< Whether to run cosmic-ray reconstruction for each slice
+    bool m_shouldRunRockMus_Xworkers;   ///< Whether to run rock muons reconstruction using a columnar X worker
     bool m_shouldPerformSliceId;        ///< Whether to identify slices and select most appropriate pfos
     bool m_printOverallRecoStatus;      ///< Whether to print current operation status messages
     bool m_visualizeOverallRecoStatus;  ///< Whether to display results of current operations

@@ -28,8 +28,10 @@ CosmicRayTaggingTool::CosmicRayTaggingTool() :
     m_minimumHits(15),
     m_inTimeMargin(5.f),
     m_inTimeMaxX0(1.f),
-    m_marginY(20.f),
-    m_marginZ(10.f),
+    m_tagRockMuons(false),
+    m_marginX(5.f), // [cm]
+    m_marginY(5.f),
+    m_marginZ(5.f),
     m_maxNeutrinoCosTheta(0.2f),
     m_minCosmicCosTheta(0.6f),
     m_maxCosmicCurvature(0.04f),
@@ -104,6 +106,12 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
     m_face_Yt = parentMaxY;
     m_face_Zu = parentMinZ;
     m_face_Zd = parentMaxZ;
+    
+    if(m_tagRockMuons)
+     std::cout << "Detector boundaries to tag rock muons : x [" 
+               << parentMinX <<"," << parentMaxX << "] "
+               << "y [" << parentMinY <<"," << parentMaxY << "] "
+               << "z [" << parentMinZ <<"," << parentMaxZ << "] \n";
 
     PfoToPfoListMap pfoAssociationMap;
     this->GetPfoAssociations(parentCosmicRayPfos, pfoAssociationMap);
@@ -123,11 +131,15 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
     PfoToBoolMap pfoToIsTopToBottomMap;
     this->CheckIfTopToBottom(candidates, pfoToIsTopToBottomMap);
 
+    PfoToBoolMap pfoToIsThroughgoingMap;
+    if(m_tagRockMuons)
+      this->CheckIfThroughgoing(candidates, pfoToIsThroughgoingMap);
+
     UIntSet neutrinoSliceSet;
     this->GetNeutrinoSlices(candidates, pfoToInTimeMap, pfoToIsContainedMap, neutrinoSliceSet);
 
     PfoToBoolMap pfoToIsLikelyCRMuonMap;
-    this->TagCRMuons(candidates, pfoToInTimeMap, pfoToIsTopToBottomMap, neutrinoSliceSet, pfoToIsLikelyCRMuonMap);
+    this->TagCRMuons(candidates, pfoToInTimeMap, pfoToIsTopToBottomMap, neutrinoSliceSet, pfoToIsLikelyCRMuonMap, pfoToIsThroughgoingMap);
 
     for (const ParticleFlowObject *const pPfo : parentCosmicRayPfos)
     {
@@ -469,6 +481,40 @@ void CosmicRayTaggingTool::CheckIfTopToBottom(const CRCandidateList &candidates,
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+bool CosmicRayTaggingTool::IsOutsideBox(const float x, const float y, const float z) const 
+{
+  const float BoxXmin = m_face_Xa + m_marginX;
+  const float BoxXmax = m_face_Xc - m_marginX;
+
+  const float BoxYmin = m_face_Yb + m_marginY;
+  const float BoxYmax = m_face_Yt - m_marginY;
+
+  const float BoxZmin = m_face_Zu + m_marginZ;
+  const float BoxZmax = m_face_Zd - m_marginZ;
+
+  bool IsOutRangeX = (x < BoxXmin || x > BoxXmax);
+  bool IsOutRangeY = (y < BoxYmin || y > BoxYmax);
+  bool IsOutRangeZ = (z < BoxZmin || z > BoxZmax);
+
+  return (IsOutRangeZ || IsOutRangeY || IsOutRangeX);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+void CosmicRayTaggingTool::CheckIfThroughgoing(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsThroughgoingMap) const
+{
+    for (const CRCandidate &candidate : candidates)
+    {
+      bool isEndPoint1Outside = IsOutsideBox(candidate.m_endPoint1.GetX(), candidate.m_endPoint1.GetY(), candidate.m_endPoint1.GetZ());
+      bool isEndPoint2Outside = IsOutsideBox(candidate.m_endPoint2.GetX(), candidate.m_endPoint2.GetY(), candidate.m_endPoint2.GetZ());
+
+      bool isThroughgoing = (isEndPoint1Outside && isEndPoint2Outside);
+
+      if (!pfoToIsThroughgoingMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isThroughgoing)).second)
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+    }
+} 
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayTaggingTool::GetNeutrinoSlices(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap,
     const PfoToBoolMap &pfoToIsContainedMap, UIntSet &neutrinoSliceSet) const
@@ -500,7 +546,8 @@ void CosmicRayTaggingTool::GetNeutrinoSlices(const CRCandidateList &candidates, 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap,
-    const PfoToBoolMap &pfoToIsTopToBottomMap, const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap) const
+    const PfoToBoolMap &pfoToIsTopToBottomMap, const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap, 
+    const PfoToBoolMap &pfoToIsThroughgoingMap) const
 {
     for (const CRCandidate &candidate : candidates)
     {
@@ -510,8 +557,16 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
                     (pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
                         ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature))))));
 
-        if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
+        if(m_tagRockMuons && (pfoToIsThroughgoingMap.at(candidate.m_pPfo)))
+        {
+          const bool likelyRockMuon = true;
+          if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyRockMuon)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+        }else
+        {
+          if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+        }
     }
 }
 
@@ -597,6 +652,10 @@ StatusCode CosmicRayTaggingTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InTimeMargin", m_inTimeMargin));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InTimeMaxX0", m_inTimeMaxX0));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TagCRMuons", m_tagRockMuons));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MarginX", m_marginX));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MarginY", m_marginY));
 
