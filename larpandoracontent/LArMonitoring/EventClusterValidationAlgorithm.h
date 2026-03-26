@@ -9,6 +9,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "larpandoracontent/LArUtility/RollUp.h"
+
 namespace lar_content
 {
 
@@ -137,37 +139,6 @@ private:
     void GetClusterMainMC(std::map<const pandora::CaloHit *const, CaloHitParents> &hitParents) const;
 
     /**
-     *  @brief Tries to identify and deal with impossible-to-cluster-correctly delta ray hits by assigning the hit to the
-     *         parent particle's cluster if some conditions are met.
-     *
-     *  @param[in] pCaloHit The hit
-     *  @param[in] pMC      The main MC particle of the hit
-     *
-     *  @return The MC particle the hit should be assigned to, this will either be the inputted MC particle or the parent MC particle
-     */
-    const pandora::MCParticle *FoldPotentialDeltaRayTo(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pMC) const;
-
-    /**
-     *  @brief Finds the ancestor that a child MC particle should be associated with to roll-up an EM shower
-     *
-     *  @param[in] pMC The MC particle
-     *
-     *  @return The ancestor MC particle, this will be the inputted MC particle for an MC particle that should not be rolled-up
-     */
-    const pandora::MCParticle *FoldMCTo(const pandora::MCParticle *const pMC) const;
-
-    /**
-     *  @brief Recursive function to check descendent particles for signature of a shower (e -> gamma -> e).
-     *         Used to identify delta-rays that shower and photons that only undergo compton scatters leaving diffuse hits.
-     *
-     *  @param[in] pMC                  The MC particle to check descendents of
-     *  @param[in] nDescendentElectrons The number of electrons seen while descending from the original photon MC particle
-     *
-     *  @return Flag to indicate if more than 1 electron was seen while descending any of the descendent particle association paths
-     */
-    bool CausesShower(const pandora::MCParticle *const pMC, int nDescendentElectrons) const;
-
-    /**
      *  @brief Draw the true clusters being compared to
      *
      *  @param[in] hitParents Map of hits to the cluster/MC particle they belong to
@@ -209,9 +180,8 @@ private:
     void SetBranches(const ClusterMetrics &clusterMetrics, const MatchedParticleMetrics &matchedParticleMetrics, const int view) const;
 
     // members
-    int m_eventNumber;                                                  ///< To track the current event number
-    std::map<pandora::HitType, float> m_deltaRayLengthThresholdSquared; ///< Threshold for defining small delta rays that will be folded to the parent particle
-    float m_deltaRayParentWeightThreshold; ///< Threshold for weight contribution of parent particle for it take the delta ray's hit
+    int m_eventNumber;     ///< To track the current event number
+    RollUpper m_rollUpper; ///< To perform rolling up of EM activity
 
     // members that may be set from xml
     std::string m_fileName;                      ///< The filename of the ROOT output file
