@@ -587,6 +587,8 @@ public:
      */
     static bool IsPairProduction(const pandora::MCParticle *const pMCParticle);
 
+    static bool CausesShower(const pandora::MCParticle *const pMC, int nDescendantElectrons = 0);
+
     /**
      *  @brief  Determine if two MC particles are topologically continuous within a given tolerance.
      *          If the parent does not travel any distance, a travelling parent is sought and the comparison made between this and the child.

@@ -1033,6 +1033,25 @@ bool LArMCParticleHelper::IsPairProduction(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArMCParticleHelper::CausesShower(const MCParticle *const pMC, int nDescendantElectrons)
+{
+    if (nDescendantElectrons > 1)
+        return true;
+
+    if (std::abs(pMC->GetParticleId()) == E_MINUS)
+        nDescendantElectrons++; // Including the parent particle, ie. the first in the recursion, as a descendant
+
+    for (const MCParticle *pChildMC : pMC->GetDaughterList())
+    {
+        if (LArMCParticleHelper::CausesShower(pChildMC, nDescendantElectrons))
+            return true;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 CaloHitList LArMCParticleHelper::GetSharedHits(const CaloHitList &hitListA, const CaloHitList &hitListB)
 {
     CaloHitList sharedHits;

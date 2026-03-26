@@ -46,9 +46,6 @@ public:
 
     bool ShouldFoldCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
 
-protected:
-    bool CausesShower(const pandora::MCParticle *const pMC, int nDescendantElectrons) const;
-
 private:
     float m_deltaRayParentWeightThreshold;
     std::map<pandora::HitType, float> m_deltaRayLengthThresholdsSquared;
@@ -66,6 +63,8 @@ class RollUpper
 {
 public:
     RollUpper(std::unique_ptr<IRollUpPolicy> policy);
+
+    void Reset();
 
     const pandora::MCParticle *RollUpMC(const pandora::MCParticle *const pMC);
 

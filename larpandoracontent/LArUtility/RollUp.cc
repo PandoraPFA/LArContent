@@ -20,6 +20,12 @@ RollUpper::RollUpper(std::unique_ptr<IRollUpPolicy> policy) :
 {
 }
 
+void RollUpper::Reset()
+{
+    m_mcCache.clear();
+    m_caloHitCache.clear();
+}
+
 const MCParticle *RollUpper::RollUpMC(const MCParticle *const pMC)
 {
     if (m_mcCache.find(pMC) == m_mcCache.end())
@@ -132,7 +138,7 @@ bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::ShouldFoldCaloHit(
 
     // Delta ray doesn't shower and is short? -> roll-up this hit
     const float lengthThresholdSquared{m_deltaRayLengthThresholdsSquared.at(pCaloHit->GetHitType())};
-    if (!this->CausesShower(pRolledUpMainMC, 0) &&
+    if (!LArMCParticleHelper::CausesShower(pRolledUpMainMC, 0) &&
         (pRolledUpMainMC->GetVertex() - pRolledUpMainMC->GetEndpoint()).GetMagnitudeSquared() < lengthThresholdSquared)
         return true;
 
@@ -149,23 +155,6 @@ bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::ShouldFoldCaloHit(
     }
     if (parentWeight > m_deltaRayParentWeightThreshold)
         return true;
-
-    return false;
-}
-
-bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::CausesShower(const MCParticle *const pMC, int nDescendantElectrons) const
-{
-    if (nDescendantElectrons > 1)
-        return true;
-
-    if (std::abs(pMC->GetParticleId()) == E_MINUS)
-        nDescendantElectrons++; // Including the parent particle, ie. the first in the recursion, as a descendent
-
-    for (const MCParticle *pChildMC : pMC->GetDaughterList())
-    {
-        if (this->CausesShower(pChildMC, nDescendantElectrons))
-            return true;
-    }
 
     return false;
 }
@@ -188,7 +177,7 @@ const MCParticle *RollUpEMWithComptonFilterAndAmbiguousDeltaRayHitsPolicy::GetRo
     }
 
     // Don't roll-up chains of EM that consist only of compton scatters, prevents distant diffuse hits sharing the same true mc
-    if (!hasAncestorElectron && std::abs(pLeadingMC->GetParticleId()) != E_MINUS && !this->CausesShower(pLeadingMC, 0))
+    if (!hasAncestorElectron && std::abs(pLeadingMC->GetParticleId()) != E_MINUS && !LArMCParticleHelper::CausesShower(pLeadingMC, 0))
         return pMC;
 
     return pLeadingMC;
