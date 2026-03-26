@@ -19,6 +19,7 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -266,14 +267,17 @@ const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *con
     const MCParticle *pParentMCParticle = pMCParticle;
 
     while (pParentMCParticle->GetParentList().empty() == false)
-    {
-        if (1 != pParentMCParticle->GetParentList().size())
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
-    }
+        pParentMCParticle = LArMCParticleHelper::GetNextParentMCParticle(pParentMCParticle);
 
     return pParentMCParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const MCParticle *LArMCParticleHelper::GetNextParentMCParticle(const MCParticle *const pMCParticle)
+{
+    PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, pMCParticle->GetParentList().size() != 1);
+    return *(pMCParticle->GetParentList().begin());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

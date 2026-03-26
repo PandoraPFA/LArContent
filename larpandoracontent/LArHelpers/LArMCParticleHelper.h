@@ -245,6 +245,15 @@ public:
     static const pandora::MCParticle *GetParentMCParticle(const pandora::MCParticle *const pMCParticle);
 
     /**
+     *  @brief  Get the next parent mc particle one tier below the current mc particle
+     *
+     *  @param  pMCParticle the input mc particle
+     *
+     *  @return address of the parent mc particle one tier away
+     */
+    static const pandora::MCParticle *GetNextParentMCParticle(const pandora::MCParticle *const pMCParticle);
+
+    /**
      *  @brief  Get all descendent mc particles
      *
      *  @param  pMCParticle the input mc particle
