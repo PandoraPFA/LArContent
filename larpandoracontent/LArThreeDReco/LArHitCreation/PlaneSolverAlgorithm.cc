@@ -67,17 +67,22 @@ void PlaneSolverAlgorithm::Solve() const
     // relationships between the 2D hits in each unit.
     for (const auto &[_, readout] : m_planeToReadoutMap)
     {
-        IndexMatrix bestK;
-        CostMatrix costMatrix{this->ComputeCostMatrix(readout, 100.f, bestK)};
+        CostMatrix costMatrix{this->ComputeCostMatrix(readout, 100.f)};
         const IntVector assignment{this->KuhneMunkres(costMatrix)};
+        int nHitsU{static_cast<int>(readout.at(TPC_VIEW_U).size())};
+        int nHitsV{static_cast<int>(readout.at(TPC_VIEW_V).size())};
+        const PairVector pairs{this->BuildUVPairs(assignment, nHitsU, nHitsV)};
+        CostMatrix tripletCostMatrix{this->ComputeTripletCostMatrix(pairs, readout, 100.f)};
+        const IntVector tripletAssignment{this->KuhneMunkres(tripletCostMatrix)};
+        int nHitsW{static_cast<int>(readout.at(TPC_VIEW_W).size())};
+        const TripletVector triplets{this->BuildTriplets(pairs, tripletAssignment, nHitsW)};
         //CaloHitList hitsU{readout.at(TPC_VIEW_U).begin(), readout.at(TPC_VIEW_U).end()};
         //CaloHitList hitsV{readout.at(TPC_VIEW_V).begin(), readout.at(TPC_VIEW_V).end()};
         //PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hitsU, "U", RED));
         //PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hitsV, "V", GREEN));
-        int nHitsU{static_cast<int>(readout.at(TPC_VIEW_U).size())};
-        int nHitsV{static_cast<int>(readout.at(TPC_VIEW_V).size())};
-        int nHitsW{static_cast<int>(readout.at(TPC_VIEW_W).size())};
         int nMatchedU{0}, nMatchedV{0};
+        std::cout << "UV pairs with non-unique W" << std::endl;
+        std::cout << "-----------------------------" << std::endl;
         for (size_t i = 0; i < assignment.size(); ++i)
         {
             if (assignment[i] < 0)
@@ -102,13 +107,29 @@ void PlaneSolverAlgorithm::Solve() const
                 std::cout << "Assignment: i = " << i << "(" << readout.at(TPC_VIEW_U).size() << "), j = " << j << " (" <<
                     readout.at(TPC_VIEW_V).size() << ")" << std::endl;
 
-                const CaloHit *pHit3D{nullptr};
-                this->CreateThreeDHit(readout.at(TPC_VIEW_U)[i], readout.at(TPC_VIEW_V)[j], pHit3D);
-                hits3D.emplace_back(pHit3D);
+                //const CaloHit *pHit3D{nullptr};
+                //this->CreateThreeDHit(readout.at(TPC_VIEW_U)[i], readout.at(TPC_VIEW_V)[j], pHit3D);
+                //hits3D.emplace_back(pHit3D);
             }
         }
         std::cout << "Matched " << nMatchedU << " out of " << nHitsU << " U hits, and " << nMatchedV << " out of " << nHitsV << " V hits. " <<
             "The W view has " << nHitsW << std::endl;
+        std::cout << "-----------------------------" << std::endl;
+        std::cout << "Triplets" << std::endl;
+        std::cout << "-----------------------------" << std::endl;
+        for (size_t i = 0; i < triplets.size(); ++i)
+        {
+            std::cout << "Triplet: i = " << triplets[i].m_uIndex << ", j = " << triplets[i].m_vIndex << ", k = " << triplets[i].m_wIndex << std::endl;
+            const CaloHit *pHit3D{nullptr};
+            if (triplets[i].m_wIndex >= 0)
+                this->CreateThreeDHit(readout.at(TPC_VIEW_U)[triplets[i].m_uIndex], readout.at(TPC_VIEW_V)[triplets[i].m_vIndex],
+                    readout.at(TPC_VIEW_W)[triplets[i].m_wIndex], pHit3D);
+            else
+                this->CreateThreeDHit(readout.at(TPC_VIEW_U)[triplets[i].m_uIndex], readout.at(TPC_VIEW_V)[triplets[i].m_vIndex], pHit3D);
+            hits3D.emplace_back(pHit3D);
+        }
+        std::cout << "-----------------------------" << std::endl;
+        std::cout << "Number of triplets: " << triplets.size() << std::endl;
     }
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, hits3D, "KMHitList"));
     PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hits3D, "3D", BLACK));
@@ -117,8 +138,7 @@ void PlaneSolverAlgorithm::Solve() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeCostMatrix(const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost,
-    IndexMatrix &bestW) const
+PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeCostMatrix(const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost) const
 {
     const CaloHitVector &uHits(planeToHitsMap.at(TPC_VIEW_U));
     const CaloHitVector &vHits(planeToHitsMap.at(TPC_VIEW_V));
@@ -128,9 +148,8 @@ PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeCostMatrix(const P
     const int nW{static_cast<int>(wHits.size())};
     const int N{std::max(nU, nV)};
 
-    // Initialize the cost matrix with the cost for unmatched hits, and the best k matrix with -1 (indicating no match).
+    // Initialize the cost matrix with the cost for unmatched hits.
     CostMatrix C(N, FloatVector(N, unmatchedCost));
-    bestW.assign(nU, std::vector<int>(nV, -1));
 
     // Compute all chi-squared values
     for (int i = 0; i < nU; ++i)
@@ -172,15 +191,42 @@ PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeCostMatrix(const P
             }
 
             if (bestK >= 0)
-            {
                 C[i][j] = bestChi2;
-                bestW[i][j] = bestK;
-            }
         }
     }
 
     return C;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeTripletCostMatrix(const PairVector &uvPairs, const PlaneToHitsMap &planeToHitsMap,
+    const float unmatchedCost) const
+{
+    const CaloHitVector &uHits(planeToHitsMap.at(TPC_VIEW_U));
+    const CaloHitVector &vHits(planeToHitsMap.at(TPC_VIEW_V));
+    const CaloHitVector &wHits(planeToHitsMap.at(TPC_VIEW_W));
+    int nPairs{static_cast<int>(uvPairs.size())};
+    int nW{static_cast<int>(wHits.size())};
+    int N{std::max(nPairs, nW)};
+
+    CostMatrix C(N, FloatVector(N, unmatchedCost));
+    for (int p = 0; p < nPairs; ++p)
+    {
+        int i{uvPairs[p].m_uIndex};
+        int j{uvPairs[p].m_vIndex};
+
+        for (int k = 0; k < nW; ++k)
+        {
+            float chi2{LArGeometryHelper::CalculateChiSquared(this->GetPandora(), uHits[i], vHits[j], wHits[k])};
+            C[p][k] = chi2;
+        }
+    }
+
+    return C;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 IntVector PlaneSolverAlgorithm::KuhneMunkres(const CostMatrix& cost) const
 {
@@ -277,6 +323,43 @@ IntVector PlaneSolverAlgorithm::KuhneMunkres(const CostMatrix& cost) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+PlaneSolverAlgorithm::PairVector PlaneSolverAlgorithm::BuildUVPairs(const IntVector &assignment, int nU, int nV) const
+{
+    PairVector pairs;
+
+    for (int i = 0; i < nU; ++i)
+    {
+        int j{assignment[i]};
+
+        if (j < nV)
+            pairs.push_back({i, j});
+    }
+
+    return pairs;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+PlaneSolverAlgorithm::TripletVector PlaneSolverAlgorithm::BuildTriplets(const PairVector& uvPairs, const IntVector& assignment, int nW) const
+{
+    TripletVector result;
+    const int nPairs{static_cast<int>(uvPairs.size())};
+
+    for (int p = 0; p < nPairs; ++p)
+    {
+        int k{assignment[p]};
+
+        if (k < nW)
+            result.push_back({uvPairs[p].m_uIndex, uvPairs[p].m_vIndex, k});
+        else
+            result.push_back({uvPairs[p].m_uIndex, uvPairs[p].m_vIndex, -1});
+    }
+
+    return result;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void PlaneSolverAlgorithm::CreateThreeDHit(const CaloHit *const pCaloHitU, const CaloHit *const pCaloHitV, const CaloHit *&pCaloHit3D) const
 {
     float chi2{0.f};
@@ -308,6 +391,42 @@ void PlaneSolverAlgorithm::CreateThreeDHit(const CaloHit *const pCaloHitU, const
     parameters.m_isInOuterSamplingLayer = pCaloHit2D->IsInOuterSamplingLayer();
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*this, parameters, pCaloHit3D));
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PlaneSolverAlgorithm::CreateThreeDHit(const CaloHit *const pCaloHitU, const CaloHit *const pCaloHitV, const CaloHit *const pCaloHitW,
+    const CaloHit *&pCaloHit3D) const
+{
+    float chi2{0.f};
+    CartesianVector pos3D(0, 0, 0);
+    PandoraContentApi::CaloHit::Parameters parameters;
+    LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, pCaloHitU->GetPositionVector(),
+        pCaloHitV->GetPositionVector(), pCaloHitW->GetPositionVector(), pos3D, chi2);
+    parameters.m_positionVector = pos3D;
+    parameters.m_hitType = TPC_3D;
+
+    const CaloHit *const pCaloHit2D(pCaloHitU);
+    parameters.m_pParentAddress = static_cast<const void *>(pCaloHit2D);
+    parameters.m_cellThickness = pCaloHit2D->GetCellThickness();
+    parameters.m_cellGeometry = RECTANGULAR;
+    parameters.m_cellSize0 = pCaloHit2D->GetCellLengthScale();
+    parameters.m_cellSize1 = pCaloHit2D->GetCellLengthScale();
+    parameters.m_cellNormalVector = pCaloHit2D->GetCellNormalVector();
+    parameters.m_expectedDirection = pCaloHit2D->GetExpectedDirection();
+    parameters.m_nCellRadiationLengths = pCaloHit2D->GetNCellRadiationLengths();
+    parameters.m_nCellInteractionLengths = pCaloHit2D->GetNCellInteractionLengths();
+    parameters.m_time = pCaloHit2D->GetTime();
+    parameters.m_inputEnergy = pCaloHit2D->GetInputEnergy();
+    parameters.m_mipEquivalentEnergy = pCaloHit2D->GetMipEquivalentEnergy();
+    parameters.m_electromagneticEnergy = pCaloHit2D->GetElectromagneticEnergy();
+    parameters.m_hadronicEnergy = pCaloHit2D->GetHadronicEnergy();
+    parameters.m_isDigital = pCaloHit2D->IsDigital();
+    parameters.m_hitRegion = pCaloHit2D->GetHitRegion();
+    parameters.m_layer = pCaloHit2D->GetLayer();
+    parameters.m_isInOuterSamplingLayer = pCaloHit2D->IsInOuterSamplingLayer();
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*this, parameters, pCaloHit3D));
+}
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
