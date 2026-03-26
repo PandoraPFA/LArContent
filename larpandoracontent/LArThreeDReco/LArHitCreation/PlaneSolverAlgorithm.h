@@ -49,10 +49,11 @@ private:
         }
     };
 
-    struct UVPair
+    struct Pair
     {
-        int m_uIndex;
-        int m_vIndex;
+        int m_aIndex;
+        int m_bIndex;
+        float m_cost;
     };
 
     struct Triplet
@@ -60,13 +61,14 @@ private:
         int m_uIndex;
         int m_vIndex;
         int m_wIndex;
+        float m_cost;
     };
 
     typedef std::unordered_map<pandora::HitType, pandora::CaloHitVector> PlaneToHitsMap;
     typedef std::unordered_map<Volume, PlaneToHitsMap, VolumeHash> VolumeToReadoutMap;
     typedef std::vector<std::vector<int>> IndexMatrix;
     typedef std::vector<std::vector<float>> CostMatrix;
-    typedef std::vector<UVPair> PairVector;
+    typedef std::vector<Pair> PairVector;
     typedef std::vector<Triplet> TripletVector;
 
     pandora::StatusCode Run();
@@ -85,28 +87,31 @@ private:
 
     /**
      *  @brief  Compute the cost matrix for the hits, where the cost is based on the chi-squared value for hit triplets.
-     *          This function computes the cost of matching a UV pair, using the W hits to provide a constraint, but allows for the W hits
-     *          to be used more than once.
+     *          This function computes the cost of matching a pair, using the constraint hits to provide a constraint, but allows for the
+     *          constraint hits to be used more than once.
      *
      *  @param  planetoHitsMap the map of the 2D hits, keyed by view
      *  @param  unmatchedCost the cost to be assigned to unmatched hits
+     *  @param  constraintView the view to be used as the constraint in the chi-squared calculation
      *
      *  @return The cost matrix for the hits in the slice
      */
-    CostMatrix ComputeCostMatrix(const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost) const;
+    CostMatrix ComputeCostMatrix(const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost, const pandora::HitType constraintView) const;
 
     /**
      *  @brief  Compute the cost matrix for the hits, where the cost is based on the chi-squared value for hit triplets.
-     *          This function starts with the UV pairs from the first pass of the Kuhne-Munkres algorithm, and computes the cost of matching
-     *          each UV pair to a unique W hit, constructing triplet matches where possible, but retaining the doublet matches otherwise.
+     *          This function starts with the pairs from the first pass of the Kuhne-Munkres algorithm, and computes the cost of matching
+     *          each pair to a unique constraint hit, constructing triplet matches where possible, but retaining the doublet matches otherwise.
      *
-     *  @param  uVPairs the list of UV pairs to be considered for triplet matching
+     *  @param  pairs the list of pairs to be considered for triplet matching
      *  @param  planetoHitsMap the map of the 2D hits, keyed by view
      *  @param  unmatchedCost the cost to be assigned to unmatched hits
+     *  @param  constraintView the view to be used as the constraint in the chi-squared calculation
      *
      *  @return The cost matrix for the hits in the slice
      */
-    CostMatrix ComputeTripletCostMatrix(const PairVector &uvPairs, const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost) const;
+    CostMatrix ComputeTripletCostMatrix(const PairVector &pairs, const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost,
+        const pandora::HitType constraintView) const;
 
     /**
      *  @brief  Implementation of the Kunhne-Munkres (aka Hungarian) algorithm to solve the optimal matching between UV pairs and W hits.
@@ -120,35 +125,31 @@ private:
     pandora::IntVector KuhneMunkres(const CostMatrix& cost) const;
 
     /**
-     *  @brief  Build the list of UV pairs based on the assignment of V hits to U hits from the Kuhne-Munkres algorithm
+     *  @brief  Build the list of AB pairs based on the assignment of B hits to A hits from the Kuhne-Munkres algorithm
      *
-     *  @param  assignment the output of the Kuhne-Munkres algorithm, indicating the index of the assigned V hit for each U hit (or -1 if unmatched)
-     *  @param  nU the number of U hits
-     *  @param  nV the number of V hits
+     *  @param  assignment the output of the Kuhne-Munkres algorithm, indicating the index of the assigned B hit for each A hit (or -1 if unmatched)
+     *  @param  nA the number of A hits
+     *  @param  nB the number of B hits
+     *  @param  costMatrix the cost matrix that was used as input to the Kuhne-Munkres algorithm
      *
      *  @return The list of UV pairs
      */
-    PairVector BuildUVPairs(const pandora::IntVector &assignment, int nU, int nV) const;
+    PairVector BuildPairs(const pandora::IntVector &assignment, int nA, int nB, const CostMatrix& costMatrix) const;
 
     /**
-     *  @brief  Build the list of triplets based on the assignment of W hits to UV pairs from the second pass of the Kuhne-Munkres algorithm
+     *  @brief  Build the list of triplets based on the assignment of constraint hits to AB pairs from the second pass of the Kuhne-Munkres algorithm
      *
-     *  @param  uvPairs the list of UV pairs to be considered for triplet matching
-     *  @param  assignment the output of the Kuhne-Munkres algorithm, indicating the index of the assigned W hit for each UV pair (or -1 if unmatched)
-     *  @param  nW the number of W hits
+     *  @param  pairs the list of AB pairs to be considered for triplet matching
+     *  @param  assignment the output of the Kuhne-Munkres algorithm, indicating the index of the assigned constraint hit for each AB pair
+     *          (or -1 if unmatched)
+     *  @param  nC the number of constraint hits
+     *  @param  costMatrix the cost matrix that was used as input to the Kuhne-Munkres algorithm
+     *  @param  constraintView the view that was used as the constraint in the chi-squared calculation
      *
-     *  @return The list of triplets, where unmatched UV pairs are indicated with a W index of -1
+     *  @return The list of triplets, where unmatched AB pairs are indicated with a constraint index of -1
      */
-    TripletVector BuildTriplets(const PairVector& uvPairs, const pandora::IntVector& assignment, int nW) const;
-
-    /**
-     *  @brief  Create a 3D hit from a double of U and V hits
-     *
-     *  @param  pCaloHitU the U view hit
-     *  @param  pCaloHitV the V view hit
-     *  @param[out] pCaloHit3D the 3D hit to be created
-     */
-    void CreateThreeDHit(const pandora::CaloHit *const pCaloHitU, const pandora::CaloHit *const pCaloHitV, const pandora::CaloHit *&pCaloHit3D) const;
+    TripletVector BuildTriplets(const PairVector& pairs, const pandora::IntVector& assignment, int nC, const CostMatrix& costMatrix,
+        const pandora::HitType constraintView) const;
 
     /**
      *  @brief  Create a 3D hit from a triplet of U, V and W hits
@@ -160,6 +161,15 @@ private:
      */
     void CreateThreeDHit(const pandora::CaloHit *const pCaloHitU, const pandora::CaloHit *const pCaloHitV, const pandora::CaloHit *const pCaloHitW,
         const pandora::CaloHit *&pCaloHit3D) const;
+
+    /**
+     *  @brief  Select the pairing views based on the specified constraint view
+     *
+     *  @param  constraintView the view to be used as the constraint in the chi-squared calculation
+     *  @param[out] viewA the first view to be used for pairing
+     *  @param[out] viewB the second view to be used for pairing
+     */
+    void SelectViewPair(const pandora::HitType constraintView, pandora::HitType &viewA, pandora::HitType &viewB) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
