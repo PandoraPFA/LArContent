@@ -22,97 +22,90 @@ RollUpper::RollUpper(std::unique_ptr<IRollUpPolicy> policy) :
 
 const MCParticle *RollUpper::RollUpMC(const MCParticle *const pMC)
 {
-    if (m_mcCache.find(pMC) != m_mcCache.end())
-        return m_mcCache.at(pMC);
+    if (m_mcCache.find(pMC) == m_mcCache.end())
+        m_mcCache.insert({pMC, m_policy->GetRollUpTargetMC(pMC)});
 
-    const MCParticle *pLeadingMC{pMC};
-    while (!pLeadingMC->IsRootParticle())
-    {
-        if (!m_policy->ShouldRollUpMC(pLeadingMC))
-            break;
-        pLeadingMC = LArMCParticleHelper::GetNextParentMCParticle(pLeadingMC);
-    }
-
-    m_mcCache.insert({pMC, pLeadingMC});
-
-    return pLeadingMC;
+    return m_mcCache.at(pMC);
 }
 
 const MCParticle *RollUpper::RollUpCaloHit(const CaloHit *const pCaloHit)
 {
-    if (m_caloHitCache.find(pCaloHit) != m_caloHitCache.end())
-        return m_caloHitCache.at(pCaloHit);
-
-    const MCParticleWeightMap &weightMap{pCaloHit->GetMCParticleWeightMap()};
-    MCParticleWeightMap rollUpWeightMap;
-    for (const auto &[pMC, weight] : weightMap)
-        rollUpWeightMap[this->RollUpMC(pMC)] += weight;
-
-    const MCParticle *pMainMC{nullptr};
-    float maxWeight{0.f};
-    for (const auto &[pMC, weight] : rollUpWeightMap)
+    if (m_caloHitCache.find(pCaloHit) == m_caloHitCache.end())
     {
-        if (weight > maxWeight)
+        const MCParticleWeightMap &weightMap{pCaloHit->GetMCParticleWeightMap()};
+        MCParticleWeightMap rolledUpWeightMap;
+        for (const auto &[pMC, weight] : weightMap)
+            rolledUpWeightMap[this->RollUpMC(pMC)] += weight;
+
+        const MCParticle *pMainMC{nullptr};
+        float maxWeight{0.f};
+        for (const auto &[pMC, weight] : rolledUpWeightMap)
         {
-            pMainMC = pMC;
-            maxWeight = weight;
-        }
-        else if (weight == maxWeight) // tie-breaker (very unlikely)
-        {
-            if (LArMCParticleHelper::SortByMomentum(pMC, pMainMC))
+            if (weight > maxWeight)
+            {
                 pMainMC = pMC;
+                maxWeight = weight;
+            }
+            else if (weight == maxWeight) // tie-breaker (very unlikely)
+            {
+                if (LArMCParticleHelper::SortByMomentum(pMC, pMainMC))
+                    pMainMC = pMC;
+            }
         }
+
+        if (pMainMC && m_policy->ShouldFoldCaloHit(pCaloHit, pMainMC))
+            pMainMC = LArMCParticleHelper::GetNextParentMCParticle(pMainMC);
+
+        m_caloHitCache.insert({pCaloHit, pMainMC});
     }
 
-    if (pMainMC && m_policy->ShouldRollUpCaloHit(pCaloHit, pMainMC))
-        pMainMC = LArMCParticleHelper::GetNextParentMCParticle(pMainMC);
-
-    m_caloHitCache.insert({pCaloHit, pMainMC});
-
-    return pMainMC;
+    return m_caloHitCache.at(pCaloHit);
 }
 
-bool RollUpEMPolicy::ShouldRollUpMC(const MCParticle *const pMC) const
+const MCParticle *RollUpEMPolicy::GetRollUpTargetMC(const MCParticle *const pMC) const
 {
-    if (pMC->IsRootParticle() || !LArMCParticleHelper::IsEM(pMC))
-        return false;
+    if (!LArMCParticleHelper::IsEM(pMC))
+        return pMC;
 
-    const MCParticle *const pParentMC{LArMCParticleHelper::GetNextParentMCParticle(pMC)};
+    const MCParticle *pLeadingMC{pMC};
+    while (!pLeadingMC->IsRootParticle())
+    {
+        const MCParticle *const pParentMC{LArMCParticleHelper::GetNextParentMCParticle(pLeadingMC)};
+        if (!LArMCParticleHelper::IsEM(pParentMC))
+            break;
+        pLeadingMC = pParentMC;
+    }
 
-    if (LArMCParticleHelper::IsEM(pParentMC))
-        return true;
-
-    return false;
+    return pLeadingMC;
 }
 
-bool RollUpEMPolicy::ShouldRollUpCaloHit(
+bool RollUpEMPolicy::ShouldFoldCaloHit(
     [[maybe_unused]] const CaloHit *const pCaloHit, [[maybe_unused]] const MCParticle *const pRolledUpMainMC) const
 {
     return false;
 }
 
-bool RollUpEMAndDeltaRayPolicy::ShouldRollUpMC(const MCParticle *const pMC) const
+const MCParticle *RollUpEMAndDeltaRayPolicy::GetRollUpTargetMC(const MCParticle *const pMC) const
 {
-    if (pMC->IsRootParticle() || !LArMCParticleHelper::IsEM(pMC))
-        return false;
+    if (!LArMCParticleHelper::IsEM(pMC))
+        return pMC;
 
-    const MCParticle *const pParentMC{LArMCParticleHelper::GetNextParentMCParticle(pMC)};
+    const MCParticle *pLeadingMC{pMC};
+    while (!pLeadingMC->IsRootParticle())
+    {
+        const MCParticle *const pParentMC{LArMCParticleHelper::GetNextParentMCParticle(pLeadingMC)};
+        if (!LArMCParticleHelper::IsEM(pParentMC))
+        {
+            // Is electron and parent is a charged track -> jump up the chain by one to roll-up delta ray
+            const bool parentIsCharged{PdgTable::GetParticleCharge(pParentMC->GetParticleId()) != 0};
+            if (pLeadingMC->GetParticleId() == E_MINUS && parentIsCharged)
+                pLeadingMC = pParentMC;
+            break;
+        }
+        pLeadingMC = pParentMC;
+    }
 
-    if (LArMCParticleHelper::IsEM(pParentMC))
-        return true;
-
-    // is electron and parent is not EM and parent is charged -> is delta ray -> roll-up
-    const bool parentIsCharged{PdgTable::GetParticleCharge(pParentMC->GetParticleId()) != 0};
-    if (pMC->GetParticleId() == E_MINUS && parentIsCharged)
-        return true;
-
-    return false;
-}
-
-bool RollUpEMAndDeltaRayPolicy::ShouldRollUpCaloHit(
-    [[maybe_unused]] const CaloHit *const pCaloHit, [[maybe_unused]] const MCParticle *const pRolledUpMainMC) const
-{
-    return false;
+    return pLeadingMC;
 }
 
 RollUpEMAndAmbiguousDeltaRayHitsPolicy::RollUpEMAndAmbiguousDeltaRayHitsPolicy(
@@ -123,20 +116,7 @@ RollUpEMAndAmbiguousDeltaRayHitsPolicy::RollUpEMAndAmbiguousDeltaRayHitsPolicy(
         m_deltaRayLengthThresholdsSquared[view] = threshold * threshold;
 }
 
-bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::ShouldRollUpMC(const MCParticle *const pMC) const
-{
-    if (pMC->IsRootParticle() || !LArMCParticleHelper::IsEM(pMC))
-        return false;
-
-    const MCParticle *const pParentMC{LArMCParticleHelper::GetNextParentMCParticle(pMC)};
-
-    if (LArMCParticleHelper::IsEM(pParentMC))
-        return true;
-
-    return false;
-}
-
-bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::ShouldRollUpCaloHit(
+bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::ShouldFoldCaloHit(
     const CaloHit *const pCaloHit, const MCParticle *const pRolledUpMainMC) const
 {
     // Can't be a delta ray? -> don't roll-up this hit
@@ -150,7 +130,7 @@ bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::ShouldRollUpCaloHit(
     if (LArMCParticleHelper::IsEM(pParentMC) || !parentIsCharged)
         return false;
 
-    // Delta ray starts a shower and is short? -> roll-up this hit
+    // Delta ray doesn't shower and is short? -> roll-up this hit
     const float lengthThresholdSquared{m_deltaRayLengthThresholdsSquared.at(pCaloHit->GetHitType())};
     if (!this->CausesShower(pRolledUpMainMC, 0) &&
         (pRolledUpMainMC->GetVertex() - pRolledUpMainMC->GetEndpoint()).GetMagnitudeSquared() < lengthThresholdSquared)
@@ -188,6 +168,30 @@ bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::CausesShower(const MCParticle *cons
     }
 
     return false;
+}
+
+const MCParticle *RollUpEMWithComptonFilterAndAmbiguousDeltaRayHitsPolicy::GetRollUpTargetMC(const MCParticle *const pMC) const
+{
+    if (!LArMCParticleHelper::IsEM(pMC))
+        return pMC;
+
+    bool hasAncestorElectron{false};
+    const MCParticle *pLeadingMC{pMC};
+    while (!pLeadingMC->IsRootParticle())
+    {
+        const MCParticle *const pParentMC{LArMCParticleHelper::GetNextParentMCParticle(pLeadingMC)};
+        if (!LArMCParticleHelper::IsEM(pParentMC))
+            break;
+        if (std::abs(pParentMC->GetParticleId()) == E_MINUS)
+            hasAncestorElectron = true;
+        pLeadingMC = pParentMC;
+    }
+
+    // Don't roll-up chains of EM that consist only of compton scatters, prevents distant diffuse hits sharing the same true mc
+    if (!hasAncestorElectron && std::abs(pLeadingMC->GetParticleId()) != E_MINUS && !this->CausesShower(pLeadingMC, 0))
+        return pMC;
+
+    return pLeadingMC;
 }
 
 } // namespace lar_content

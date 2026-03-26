@@ -20,39 +20,46 @@ class IRollUpPolicy
 public:
     virtual ~IRollUpPolicy() = default;
 
-    virtual bool ShouldRollUpMC(const pandora::MCParticle *const pMC) const = 0;
+    virtual const pandora::MCParticle *GetRollUpTargetMC(const pandora::MCParticle *const pMC) const = 0;
 
-    virtual bool ShouldRollUpCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const = 0;
+    virtual bool ShouldFoldCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const = 0;
 };
 
 class RollUpEMPolicy : public IRollUpPolicy
 {
 public:
-    bool ShouldRollUpMC(const pandora::MCParticle *const pMC) const override;
-    bool ShouldRollUpCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
+    const pandora::MCParticle *GetRollUpTargetMC(const pandora::MCParticle *const pMC) const override;
+    bool ShouldFoldCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
 };
 
-class RollUpEMAndDeltaRayPolicy : public IRollUpPolicy
+class RollUpEMAndDeltaRayPolicy : public RollUpEMPolicy
 {
 public:
-    bool ShouldRollUpMC(const pandora::MCParticle *const pMC) const override;
-    bool ShouldRollUpCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
+    const pandora::MCParticle *GetRollUpTargetMC(const pandora::MCParticle *const pMC) const override;
 };
 
-class RollUpEMAndAmbiguousDeltaRayHitsPolicy : public IRollUpPolicy
+class RollUpEMAndAmbiguousDeltaRayHitsPolicy : public RollUpEMPolicy
 {
 public:
     RollUpEMAndAmbiguousDeltaRayHitsPolicy(
         const float deltaRayParentWeightThreshold, const std::map<pandora::HitType, float> deltaRayLengthThresholds);
 
-    bool ShouldRollUpMC(const pandora::MCParticle *const pMC) const override;
-    bool ShouldRollUpCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
+    bool ShouldFoldCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
 
-private:
+protected:
     bool CausesShower(const pandora::MCParticle *const pMC, int nDescendantElectrons) const;
 
+private:
     float m_deltaRayParentWeightThreshold;
     std::map<pandora::HitType, float> m_deltaRayLengthThresholdsSquared;
+};
+
+class RollUpEMWithComptonFilterAndAmbiguousDeltaRayHitsPolicy : public RollUpEMAndAmbiguousDeltaRayHitsPolicy
+{
+public:
+    using RollUpEMAndAmbiguousDeltaRayHitsPolicy::RollUpEMAndAmbiguousDeltaRayHitsPolicy;
+
+    const pandora::MCParticle *GetRollUpTargetMC(const pandora::MCParticle *const pMC) const override;
 };
 
 class RollUpper
