@@ -31,7 +31,7 @@ void RollUpper::Reset()
     m_caloHitCache.clear();
 }
 
-const MCParticle *RollUpper::RollUpMC(const MCParticle *const pMC)
+const MCParticle *RollUpper::RollUpMC(const MCParticle *const pMC) const
 {
     if (m_mcCache.find(pMC) == m_mcCache.end())
         m_mcCache.insert({pMC, m_policy->GetRollUpTargetMC(pMC)});
@@ -39,7 +39,7 @@ const MCParticle *RollUpper::RollUpMC(const MCParticle *const pMC)
     return m_mcCache.at(pMC);
 }
 
-const MCParticle *RollUpper::RollUpCaloHit(const CaloHit *const pCaloHit)
+const MCParticle *RollUpper::RollUpCaloHit(const CaloHit *const pCaloHit) const
 {
     if (m_caloHitCache.find(pCaloHit) == m_caloHitCache.end())
     {
@@ -154,7 +154,7 @@ bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::ShouldFoldCaloHit(
 
     // Delta ray doesn't shower and is short? -> roll-up this hit
     const float lengthThresholdSquared{m_deltaRayLengthThresholdsSquared.at(pCaloHit->GetHitType())};
-    if (!LArMCParticleHelper::CausesShower(pRolledUpMainMC, 0) &&
+    if (!LArMCParticleHelper::CausesShower(pRolledUpMainMC) &&
         (pRolledUpMainMC->GetVertex() - pRolledUpMainMC->GetEndpoint()).GetMagnitudeSquared() < lengthThresholdSquared)
         return true;
 
@@ -193,7 +193,7 @@ const MCParticle *RollUpEMWithComptonFilterAndAmbiguousDeltaRayHitsPolicy::GetRo
     }
 
     // Don't roll-up chains of EM that consist only of compton scatters, prevents distant diffuse hits sharing the same true mc
-    if (!hasAncestorElectron && std::abs(pLeadingMC->GetParticleId()) != E_MINUS && !LArMCParticleHelper::CausesShower(pLeadingMC, 0))
+    if (!hasAncestorElectron && std::abs(pLeadingMC->GetParticleId()) != E_MINUS && !LArMCParticleHelper::CausesShower(pLeadingMC))
         return pMC;
 
     return pLeadingMC;

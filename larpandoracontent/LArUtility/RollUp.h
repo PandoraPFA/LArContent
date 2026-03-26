@@ -70,18 +70,19 @@ class RollUpper
 {
 public:
     RollUpper();
+
     RollUpper(std::unique_ptr<IRollUpPolicy> policy);
 
     void Reset();
 
-    const pandora::MCParticle *RollUpMC(const pandora::MCParticle *const pMC);
+    const pandora::MCParticle *RollUpMC(const pandora::MCParticle *const pMC) const;
 
-    const pandora::MCParticle *RollUpCaloHit(const pandora::CaloHit *const pCaloHit);
+    const pandora::MCParticle *RollUpCaloHit(const pandora::CaloHit *const pCaloHit) const;
 
 private:
     std::unique_ptr<IRollUpPolicy> m_policy;
-    std::unordered_map<const pandora::MCParticle*, const pandora::MCParticle*> m_mcCache;
-    std::unordered_map<const pandora::CaloHit*, const pandora::MCParticle*> m_caloHitCache;
+    mutable std::unordered_map<const pandora::MCParticle*, const pandora::MCParticle*> m_mcCache;
+    mutable std::unordered_map<const pandora::CaloHit*, const pandora::MCParticle*> m_caloHitCache;
 };
 
 } // namespace lar_content
