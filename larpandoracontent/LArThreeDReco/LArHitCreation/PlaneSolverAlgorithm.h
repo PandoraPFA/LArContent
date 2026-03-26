@@ -49,10 +49,25 @@ private:
         }
     };
 
+    struct UVPair
+    {
+        int m_uIndex;
+        int m_vIndex;
+    };
+
+    struct Triplet
+    {
+        int m_uIndex;
+        int m_vIndex;
+        int m_wIndex;
+    };
+
     typedef std::unordered_map<pandora::HitType, pandora::CaloHitVector> PlaneToHitsMap;
     typedef std::unordered_map<Volume, PlaneToHitsMap, VolumeHash> VolumeToReadoutMap;
     typedef std::vector<std::vector<int>> IndexMatrix;
     typedef std::vector<std::vector<float>> CostMatrix;
+    typedef std::vector<UVPair> PairVector;
+    typedef std::vector<Triplet> TripletVector;
 
     pandora::StatusCode Run();
 
@@ -69,15 +84,29 @@ private:
     void Solve() const;
 
     /**
-     *  @brief  Compute the cost matrix for the hits in a given slice, where the cost is based on the chi-squared value for triplets and doublets of hits
+     *  @brief  Compute the cost matrix for the hits, where the cost is based on the chi-squared value for hit triplets.
+     *          This function computes the cost of matching a UV pair, using the W hits to provide a constraint, but allows for the W hits
+     *          to be used more than once.
      *
-     *  @param  planetoHitsMap the map of the 2D hits in the slice, keyed by view
+     *  @param  planetoHitsMap the map of the 2D hits, keyed by view
      *  @param  unmatchedCost the cost to be assigned to unmatched hits
-     *  @param  bestK the matrix to be filled with the index of the best matching hit in the W view for each UV pair
      *
      *  @return The cost matrix for the hits in the slice
      */
-    CostMatrix ComputeCostMatrix(const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost, IndexMatrix &bestK) const;
+    CostMatrix ComputeCostMatrix(const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost) const;
+
+    /**
+     *  @brief  Compute the cost matrix for the hits, where the cost is based on the chi-squared value for hit triplets.
+     *          This function starts with the UV pairs from the first pass of the Kuhne-Munkres algorithm, and computes the cost of matching
+     *          each UV pair to a unique W hit, constructing triplet matches where possible, but retaining the doublet matches otherwise.
+     *
+     *  @param  uVPairs the list of UV pairs to be considered for triplet matching
+     *  @param  planetoHitsMap the map of the 2D hits, keyed by view
+     *  @param  unmatchedCost the cost to be assigned to unmatched hits
+     *
+     *  @return The cost matrix for the hits in the slice
+     */
+    CostMatrix ComputeTripletCostMatrix(const PairVector &uvPairs, const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost) const;
 
     /**
      *  @brief  Implementation of the Kunhne-Munkres (aka Hungarian) algorithm to solve the optimal matching between UV pairs and W hits.
@@ -91,6 +120,28 @@ private:
     pandora::IntVector KuhneMunkres(const CostMatrix& cost) const;
 
     /**
+     *  @brief  Build the list of UV pairs based on the assignment of V hits to U hits from the Kuhne-Munkres algorithm
+     *
+     *  @param  assignment the output of the Kuhne-Munkres algorithm, indicating the index of the assigned V hit for each U hit (or -1 if unmatched)
+     *  @param  nU the number of U hits
+     *  @param  nV the number of V hits
+     *
+     *  @return The list of UV pairs
+     */
+    PairVector BuildUVPairs(const pandora::IntVector &assignment, int nU, int nV) const;
+
+    /**
+     *  @brief  Build the list of triplets based on the assignment of W hits to UV pairs from the second pass of the Kuhne-Munkres algorithm
+     *
+     *  @param  uvPairs the list of UV pairs to be considered for triplet matching
+     *  @param  assignment the output of the Kuhne-Munkres algorithm, indicating the index of the assigned W hit for each UV pair (or -1 if unmatched)
+     *  @param  nW the number of W hits
+     *
+     *  @return The list of triplets, where unmatched UV pairs are indicated with a W index of -1
+     */
+    TripletVector BuildTriplets(const PairVector& uvPairs, const pandora::IntVector& assignment, int nW) const;
+
+    /**
      *  @brief  Create a 3D hit from a double of U and V hits
      *
      *  @param  pCaloHitU the U view hit
@@ -98,6 +149,17 @@ private:
      *  @param[out] pCaloHit3D the 3D hit to be created
      */
     void CreateThreeDHit(const pandora::CaloHit *const pCaloHitU, const pandora::CaloHit *const pCaloHitV, const pandora::CaloHit *&pCaloHit3D) const;
+
+    /**
+     *  @brief  Create a 3D hit from a triplet of U, V and W hits
+     *
+     *  @param  pCaloHitU the U view hit
+     *  @param  pCaloHitV the V view hit
+     *  @param  pCaloHitW the W view hit
+     *  @param[out] pCaloHit3D the 3D hit to be created
+     */
+    void CreateThreeDHit(const pandora::CaloHit *const pCaloHitU, const pandora::CaloHit *const pCaloHitV, const pandora::CaloHit *const pCaloHitW,
+        const pandora::CaloHit *&pCaloHit3D) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
