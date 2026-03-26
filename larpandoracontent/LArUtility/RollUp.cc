@@ -15,6 +15,11 @@ using namespace pandora;
 namespace lar_content
 {
 
+RollUpper::RollUpper() :
+    m_policy{std::make_unique<RollUpNullPolicy>()}
+{
+}
+
 RollUpper::RollUpper(std::unique_ptr<IRollUpPolicy> policy) :
     m_policy{std::move(policy)}
 {
@@ -66,6 +71,17 @@ const MCParticle *RollUpper::RollUpCaloHit(const CaloHit *const pCaloHit)
     }
 
     return m_caloHitCache.at(pCaloHit);
+}
+
+const MCParticle *RollUpNullPolicy::GetRollUpTargetMC(const MCParticle *const pMC) const
+{
+    return pMC;
+}
+
+bool RollUpNullPolicy::ShouldFoldCaloHit(
+    [[maybe_unused]] const CaloHit *const pCaloHit, [[maybe_unused]] const MCParticle *const pRolledUpMainMC) const
+{
+    return false;
 }
 
 const MCParticle *RollUpEMPolicy::GetRollUpTargetMC(const MCParticle *const pMC) const

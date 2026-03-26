@@ -25,6 +25,13 @@ public:
     virtual bool ShouldFoldCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const = 0;
 };
 
+class RollUpNullPolicy : public IRollUpPolicy
+{
+public:
+    const pandora::MCParticle *GetRollUpTargetMC(const pandora::MCParticle *const pMC) const override;
+    bool ShouldFoldCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
+};
+
 class RollUpEMPolicy : public IRollUpPolicy
 {
 public:
@@ -62,6 +69,7 @@ public:
 class RollUpper
 {
 public:
+    RollUpper();
     RollUpper(std::unique_ptr<IRollUpPolicy> policy);
 
     void Reset();
