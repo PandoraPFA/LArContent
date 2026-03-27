@@ -93,10 +93,12 @@ private:
      *  @param  planetoHitsMap the map of the 2D hits, keyed by view
      *  @param  unmatchedCost the cost to be assigned to unmatched hits
      *  @param  constraintView the view to be used as the constraint in the chi-squared calculation
+     *  @param  usedHits the set of hits that have already been used in a match
      *
      *  @return The cost matrix for the hits in the slice
      */
-    CostMatrix ComputeCostMatrix(const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost, const pandora::HitType constraintView) const;
+    CostMatrix ComputeCostMatrix(const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost, const pandora::HitType constraintView,
+        const pandora::CaloHitSet &usedHits) const;
 
     /**
      *  @brief  Compute the cost matrix for the hits, where the cost is based on the chi-squared value for hit triplets.
@@ -107,11 +109,12 @@ private:
      *  @param  planetoHitsMap the map of the 2D hits, keyed by view
      *  @param  unmatchedCost the cost to be assigned to unmatched hits
      *  @param  constraintView the view to be used as the constraint in the chi-squared calculation
+     *  @param  usedHits the set of hits that have already been used in a match
      *
      *  @return The cost matrix for the hits in the slice
      */
     CostMatrix ComputeTripletCostMatrix(const PairVector &pairs, const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost,
-        const pandora::HitType constraintView) const;
+        const pandora::HitType constraintView, const pandora::CaloHitSet &usedHits) const;
 
     /**
      *  @brief  Implementation of the Kunhne-Munkres (aka Hungarian) algorithm to solve the optimal matching between UV pairs and W hits.
@@ -131,10 +134,11 @@ private:
      *  @param  nA the number of A hits
      *  @param  nB the number of B hits
      *  @param  costMatrix the cost matrix that was used as input to the Kuhne-Munkres algorithm
+     *  @param  chi2Threshold the chi-squared threshold below which a pair is considered a valid match
      *
      *  @return The list of UV pairs
      */
-    PairVector BuildPairs(const pandora::IntVector &assignment, int nA, int nB, const CostMatrix& costMatrix) const;
+    PairVector BuildPairs(const pandora::IntVector &assignment, int nA, int nB, const CostMatrix& costMatrix, float chi2Threshold) const;
 
     /**
      *  @brief  Build the list of triplets based on the assignment of constraint hits to AB pairs from the second pass of the Kuhne-Munkres algorithm
@@ -145,11 +149,12 @@ private:
      *  @param  nC the number of constraint hits
      *  @param  costMatrix the cost matrix that was used as input to the Kuhne-Munkres algorithm
      *  @param  constraintView the view that was used as the constraint in the chi-squared calculation
+     *  @param  chi2Threshold the chi-squared threshold below which a triplet is considered a valid match
      *
      *  @return The list of triplets, where unmatched AB pairs are indicated with a constraint index of -1
      */
     TripletVector BuildTriplets(const PairVector& pairs, const pandora::IntVector& assignment, int nC, const CostMatrix& costMatrix,
-        const pandora::HitType constraintView) const;
+        const pandora::HitType constraintView, float chi2Threshold) const;
 
     /**
      *  @brief  Create a 3D hit from a triplet of U, V and W hits
