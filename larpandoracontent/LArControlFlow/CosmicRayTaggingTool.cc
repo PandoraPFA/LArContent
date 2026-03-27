@@ -14,6 +14,7 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
+#include <limits>
 
 using namespace pandora;
 
@@ -109,9 +110,9 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
     
     if(m_tagRockMuons)
      std::cout << "Detector boundaries to tag rock muons : x [" 
-               << parentMinX <<"," << parentMaxX << "] "
-               << "y [" << parentMinY <<"," << parentMaxY << "] "
-               << "z [" << parentMinZ <<"," << parentMaxZ << "] \n";
+               << m_face_Xa + m_marginX <<"," << m_face_Xc - m_marginX<< "] "
+               << "y [" << m_face_Yb + m_marginY <<"," << m_face_Yt - m_marginY<< "] "
+               << "z [" << m_face_Zu + m_marginZ <<"," << m_face_Zd - m_marginZ << "] \n";
 
     PfoToPfoListMap pfoAssociationMap;
     this->GetPfoAssociations(parentCosmicRayPfos, pfoAssociationMap);
@@ -504,13 +505,13 @@ void CosmicRayTaggingTool::CheckIfThroughgoing(const CRCandidateList &candidates
 {
     for (const CRCandidate &candidate : candidates)
     {
-      bool isEndPoint1Outside = IsOutsideBox(candidate.m_endPoint1.GetX(), candidate.m_endPoint1.GetY(), candidate.m_endPoint1.GetZ());
-      bool isEndPoint2Outside = IsOutsideBox(candidate.m_endPoint2.GetX(), candidate.m_endPoint2.GetY(), candidate.m_endPoint2.GetZ());
-
-      bool isThroughgoing = (isEndPoint1Outside && isEndPoint2Outside);
+      bool isThroughgoing = (
+          (candidate.m_endPoint1.GetX() != std::numeric_limits<float>::max()) && // for some reason some candidates happen to have "default" values set as inf 
+          IsOutsideBox(candidate.m_endPoint1.GetX(), candidate.m_endPoint1.GetY(), candidate.m_endPoint1.GetZ()) &&
+          IsOutsideBox(candidate.m_endPoint2.GetX(), candidate.m_endPoint2.GetY(), candidate.m_endPoint2.GetZ()));
 
       if (!pfoToIsThroughgoingMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isThroughgoing)).second)
-            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
     }
 } 
 
@@ -549,6 +550,7 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
     const PfoToBoolMap &pfoToIsTopToBottomMap, const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap, 
     const PfoToBoolMap &pfoToIsThroughgoingMap) const
 {
+    int nof_rock_mu_tagged = 0;
     for (const CRCandidate &candidate : candidates)
     {
         const bool likelyCRMuon(!neutrinoSliceSet.count(candidate.m_sliceId) &&
@@ -559,6 +561,7 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
 
         if(m_tagRockMuons && (pfoToIsThroughgoingMap.at(candidate.m_pPfo)))
         {
+          nof_rock_mu_tagged++;
           const bool likelyRockMuon = true;
           if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyRockMuon)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -568,6 +571,7 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
     }
+    std::cout << "Number of rock muons tagged : " << nof_rock_mu_tagged << "\n";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -653,7 +657,7 @@ StatusCode CosmicRayTaggingTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InTimeMaxX0", m_inTimeMaxX0));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TagCRMuons", m_tagRockMuons));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TagRockMuons", m_tagRockMuons));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MarginX", m_marginX));
 
