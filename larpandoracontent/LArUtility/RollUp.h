@@ -73,7 +73,7 @@ public:
 
     RollUpper(std::unique_ptr<IRollUpPolicy> policy);
 
-    void Reset();
+    void Reset() const;
 
     const pandora::MCParticle *RollUpMC(const pandora::MCParticle *const pMC) const;
 

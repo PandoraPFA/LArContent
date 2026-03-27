@@ -25,7 +25,7 @@ RollUpper::RollUpper(std::unique_ptr<IRollUpPolicy> policy) :
 {
 }
 
-void RollUpper::Reset()
+void RollUpper::Reset() const
 {
     m_mcCache.clear();
     m_caloHitCache.clear();
