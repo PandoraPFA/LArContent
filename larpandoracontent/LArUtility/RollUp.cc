@@ -1,7 +1,7 @@
 /**
- *  @file   
+ *  @file   larpandoracontent/LArUtility/RollUp.cc
  *
- *  @brief  
+ *  @brief  Implementation file for classes related to roll-up of EM activity. 
  *
  *  $Log: $
  */
@@ -20,16 +20,22 @@ RollUpper::RollUpper() :
 {
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
 RollUpper::RollUpper(std::unique_ptr<IRollUpPolicy> policy) :
     m_policy{std::move(policy)}
 {
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 void RollUpper::Reset() const
 {
     m_mcCache.clear();
     m_caloHitCache.clear();
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 const MCParticle *RollUpper::RollUpMC(const MCParticle *const pMC) const
 {
@@ -38,6 +44,8 @@ const MCParticle *RollUpper::RollUpMC(const MCParticle *const pMC) const
 
     return m_mcCache.at(pMC);
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 const MCParticle *RollUpper::RollUpCaloHit(const CaloHit *const pCaloHit) const
 {
@@ -73,16 +81,24 @@ const MCParticle *RollUpper::RollUpCaloHit(const CaloHit *const pCaloHit) const
     return m_caloHitCache.at(pCaloHit);
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
 const MCParticle *RollUpNullPolicy::GetRollUpTargetMC(const MCParticle *const pMC) const
 {
     return pMC;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 bool RollUpNullPolicy::ShouldFoldCaloHit(
     [[maybe_unused]] const CaloHit *const pCaloHit, [[maybe_unused]] const MCParticle *const pRolledUpMainMC) const
 {
     return false;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 const MCParticle *RollUpEMPolicy::GetRollUpTargetMC(const MCParticle *const pMC) const
 {
@@ -101,11 +117,16 @@ const MCParticle *RollUpEMPolicy::GetRollUpTargetMC(const MCParticle *const pMC)
     return pLeadingMC;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
 bool RollUpEMPolicy::ShouldFoldCaloHit(
     [[maybe_unused]] const CaloHit *const pCaloHit, [[maybe_unused]] const MCParticle *const pRolledUpMainMC) const
 {
     return false;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 const MCParticle *RollUpEMAndDeltaRayPolicy::GetRollUpTargetMC(const MCParticle *const pMC) const
 {
@@ -130,6 +151,9 @@ const MCParticle *RollUpEMAndDeltaRayPolicy::GetRollUpTargetMC(const MCParticle 
     return pLeadingMC;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
 RollUpEMAndAmbiguousDeltaRayHitsPolicy::RollUpEMAndAmbiguousDeltaRayHitsPolicy(
     const float deltaRayParentWeightThreshold, const std::map<HitType, float> deltaRayLengthThresholds) :
     m_deltaRayParentWeightThreshold{deltaRayParentWeightThreshold}
@@ -137,6 +161,8 @@ RollUpEMAndAmbiguousDeltaRayHitsPolicy::RollUpEMAndAmbiguousDeltaRayHitsPolicy(
     for (const auto &[view, threshold] : deltaRayLengthThresholds)
         m_deltaRayLengthThresholdsSquared[view] = threshold * threshold;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::ShouldFoldCaloHit(
     const CaloHit *const pCaloHit, const MCParticle *const pRolledUpMainMC) const
@@ -174,6 +200,9 @@ bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::ShouldFoldCaloHit(
 
     return false;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 const MCParticle *RollUpEMWithComptonFilterAndAmbiguousDeltaRayHitsPolicy::GetRollUpTargetMC(const MCParticle *const pMC) const
 {
