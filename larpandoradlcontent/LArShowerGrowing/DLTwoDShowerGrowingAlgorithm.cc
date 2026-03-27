@@ -63,8 +63,6 @@ DLTwoDShowerGrowingAlgorithm::DLTwoDShowerGrowingAlgorithm() :
     m_hitFeaturesNHitsIdx{-1},
     m_hitFeaturesNClustersIdx{-1},
     m_hitFeaturesIterationNumIdx{-1},
-    m_deltaRayLengthThresholdSquared{std::map<HitType, float>{}},
-    m_deltaRayParentWeightThreshold{0.f},
     m_hitFeatureDim{12},
     m_trainingMode{false},
     m_trainingTreeName{""},
@@ -110,6 +108,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::Run()
 
 StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
 {
+    m_rollUpper.Reset();
+
     const std::map<HitType, CartesianVector> viewToVtxPos{this->Get2DVertices()};
 
     const ClusterList clusterList{this->GetAllClusters()};
@@ -127,7 +127,6 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
     std::vector<int> hitMCID;
     std::vector<int> hitLArTPCVolID, hitDaughterVolID;
 
-    std::map<const MCParticle *const, const MCParticle *const> mcFoldTo;
 
     for (const Cluster *const pCluster : clusterList)
     {
@@ -142,7 +141,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
             HitFeatures hitFeatures;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CalculateHitFeatures(pCaloHit, viewToVtxPos.at(view), hitFeatures));
 
-            const MCParticle *const pMainMC{this->GetMainMC(pCaloHit, mcFoldTo)};
+            const MCParticle *const pMainMC{m_rollUpper.RollUpCaloHit(pCaloHit)};
             if (mcToID.find(pMainMC) == mcToID.end())
             {
                 mcToID.insert({pMainMC, currMCID++});
@@ -214,149 +213,6 @@ void DLTwoDShowerGrowingAlgorithm::WriteTrainingSample() const
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName + "_event_data", "scalefactor_cartesian_z", m_cartesianZScaleFactor))
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName + "_event_data"));
     PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName + "_event_data", m_trainingFileName, "UPDATE"));
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-const MCParticle *DLTwoDShowerGrowingAlgorithm::GetMainMC(
-    const CaloHit *const pCaloHit, std::map<const MCParticle *const, const MCParticle *const> &mcFoldTo) const
-{
-    MCParticleWeightMap weightMap{pCaloHit->GetMCParticleWeightMap()};
-    MCParticleWeightMap foldedWeightMap;
-    for (const auto &[pMC, weight] : weightMap)
-    {
-        const MCParticle *pFoldedMC{nullptr};
-        if (mcFoldTo.find(pMC) != mcFoldTo.end())
-        {
-            pFoldedMC = mcFoldTo.at(pMC);
-        }
-        else
-        {
-            pFoldedMC = this->FoldMCTo(pMC);
-            mcFoldTo.insert({pMC, pFoldedMC});
-        }
-        foldedWeightMap[pFoldedMC] += weight;
-    }
-    weightMap = std::move(foldedWeightMap);
-
-    const MCParticle *pMainMC{nullptr};
-    float maxWeight{0.f};
-    for (const auto &[pMC, weight] : weightMap)
-    {
-        if (weight > maxWeight)
-        {
-            pMainMC = pMC;
-            maxWeight = weight;
-        }
-        if (weight == maxWeight) // tie-breaker (very unlikely)
-        {
-            if (LArMCParticleHelper::SortByMomentum(pMC, pMainMC))
-            {
-                pMainMC = pMC;
-            }
-        }
-    }
-
-    if (pMainMC)
-    {
-        pMainMC = this->FoldPotentialDeltaRayTo(pCaloHit, pMainMC);
-    }
-
-    return pMainMC;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-const MCParticle *DLTwoDShowerGrowingAlgorithm::FoldMCTo(const MCParticle *const pMC) const
-{
-    if (!LArMCParticleHelper::IsEM(pMC))
-    {
-        return pMC;
-    }
-
-    const MCParticle *pCurrentMC{pMC};
-    const MCParticle *pLeadingMC{pMC};
-    while (!pCurrentMC->IsRootParticle())
-    {
-        const MCParticle *const pParentMC{*(pCurrentMC->GetParentList().begin())};
-        const int parentPdg{std::abs(pParentMC->GetParticleId())};
-        if (parentPdg == PHOTON || parentPdg == E_MINUS)
-        {
-            pCurrentMC = pParentMC;
-            continue;
-        }
-        pLeadingMC = pCurrentMC;
-        break;
-    }
-
-    return pLeadingMC;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const MCParticle *DLTwoDShowerGrowingAlgorithm::FoldPotentialDeltaRayTo(const CaloHit *const pCaloHit, const MCParticle *const pMC) const
-{
-    // Not an electron -> not a delta ray -> do nothing
-    if (pMC->IsRootParticle() || pMC->GetParticleId() != E_MINUS)
-    {
-        return pMC;
-    }
-
-    // Did not come from a track-like particle -> not a delta ray -> do nothing
-    const MCParticle *const pParentMC{*(pMC->GetParentList().begin())};
-    const int parentPdg{std::abs(pParentMC->GetParticleId())};
-    if (parentPdg == PHOTON || parentPdg == E_MINUS || PdgTable::GetParticleCharge(parentPdg) == 0)
-    {
-        return pMC;
-    }
-
-    // Delta ray that does not start a shower and is short -> fold into parent particle
-    if (!this->CausesShower(pMC, 0) &&
-        (pMC->GetVertex() - pMC->GetEndpoint()).GetMagnitudeSquared() < m_deltaRayLengthThresholdSquared.at(pCaloHit->GetHitType()))
-    {
-        return pParentMC;
-    }
-
-    // Now have a delta ray that we would like to cluster but only the hits that are not overlapping with the parent particle
-    float parentWeight{std::numeric_limits<float>::lowest()};
-    const MCParticleWeightMap &weightMap{pCaloHit->GetMCParticleWeightMap()};
-    for (const auto &[pContributingMC, weight] : weightMap)
-    {
-        if (pContributingMC == pParentMC)
-        {
-            parentWeight = weight;
-            break;
-        }
-    }
-    if (parentWeight > m_deltaRayParentWeightThreshold)
-    {
-        return pParentMC;
-    }
-    return pMC;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-bool DLTwoDShowerGrowingAlgorithm::CausesShower(const MCParticle *const pMC, int nDescendentElectrons) const
-{
-    if (nDescendentElectrons > 1)
-    {
-        return true;
-    }
-
-    if (std::abs(pMC->GetParticleId()) == E_MINUS)
-    {
-        nDescendentElectrons++; // Including the parent particle, ie. the first in the recursion, as a descendent
-    }
-    for (const MCParticle *pChildMC : pMC->GetDaughterList())
-    {
-        if (this->CausesShower(pChildMC, nDescendentElectrons))
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -850,6 +706,11 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrainingTreeName", m_trainingTreeName));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrainingFileName", m_trainingFileName));
+        const std::map<HitType, float> lengthThresholds{
+            { TPC_VIEW_U, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U) },
+            { TPC_VIEW_V, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V) },
+            { TPC_VIEW_W, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W) }};
+        m_rollUpper = RollUpper(std::make_unique<RollUpEMAndAmbiguousDeltaRayHitsPolicy>(0.f, lengthThresholds));
     }
     else
     {
@@ -905,6 +766,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         double xLow{static_cast<double>(detBounds.m_xBoundaries.first)}, xHigh{static_cast<double>(detBounds.m_xBoundaries.second)};
         double yLow{static_cast<double>(detBounds.m_yBoundaries.first)}, yHigh{static_cast<double>(detBounds.m_yBoundaries.second)};
         double zLow{static_cast<double>(detBounds.m_zBoundaries.first)}, zHigh{static_cast<double>(detBounds.m_zBoundaries.second)};
+        // NOTE this should really be in the x-z plane, too much of a pain to fix and shouldn't matter (I hope)
         m_polarRScaleFactor =
             static_cast<float>(1. / std::sqrt(std::pow(xHigh - xLow, 2.) + std::pow(yHigh - yLow, 2.) + std::pow(zHigh - zLow, 2.)));
         m_cartesianXScaleFactor = static_cast<float>(1. / (xHigh - xLow));
@@ -920,11 +782,6 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CartesianXScaleFactor", m_cartesianXScaleFactor));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CartesianZScaleFactor", m_cartesianZScaleFactor));
     }
-
-    m_deltaRayLengthThresholdSquared = {
-        {TPC_VIEW_U, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U), 2.))},
-        {TPC_VIEW_V, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V), 2.))},
-        {TPC_VIEW_W, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W), 2.))}};
 
     for (const DetectorGap *const pDetectorGap : this->GetPandora().GetGeometry()->GetDetectorGapList())
     {
