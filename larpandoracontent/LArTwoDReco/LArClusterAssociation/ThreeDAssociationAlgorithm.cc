@@ -23,7 +23,7 @@ ThreeDAssociationAlgorithm::ThreeDAssociationAlgorithm() :
     m_minClusterLayers(4),
     m_maxGapLayers(7),
     m_fitLayers(30),
-    m_maxGapDistanceSquared(10.f),
+    m_maxGapDistanceSquared(5.f),
     m_minCosRelativeAngle(0.94f),
     m_minClusterLength(1.f),
     m_maxTransverseDisplacement(2.f),
@@ -55,7 +55,7 @@ void ThreeDAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const
         clusterVector.push_back(pCluster);
     }
 
-    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByInnerLayer);
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByInnerPosition);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -103,41 +103,92 @@ bool ThreeDAssociationAlgorithm::IsExtremalCluster(const bool isForward, const C
 
 bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInnerCluster, const Cluster *const pOuterCluster) const
 {
-    if (pOuterCluster->GetInnerPseudoLayer() < pInnerCluster->GetInnerPseudoLayer())
-        throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-    float closestDistance = LArClusterHelper::GetClosestDistance(pInnerCluster, pOuterCluster);
+    const float closestDistance = LArClusterHelper::GetClosestDistance(pInnerCluster, pOuterCluster);
 
-    if( closestDistance > 4 * m_minClusterLength )
+    if( closestDistance > 5 * m_minClusterLength )
         return false;
+
+    // TODO: Need a better way to hand this as computing extremal coordinates will be expensive
+    CartesianVector innerClusterInnerCoordinate(0.f, 0.f, 0.f);
+    CartesianVector innerClusterOuterCoordinate(0.f, 0.f, 0.f);
+    CartesianVector outerClusterInnerCoordinate(0.f, 0.f, 0.f);
+    CartesianVector outerClusterOuterCoordinate(0.f, 0.f, 0.f);
+
+    LArClusterHelper::GetExtremalCoordinates(pInnerCluster, innerClusterInnerCoordinate, innerClusterOuterCoordinate);
+    LArClusterHelper::GetExtremalCoordinates(pOuterCluster, outerClusterInnerCoordinate, outerClusterOuterCoordinate);
+
+    if( !LArClusterHelper::SortCoordinatesByPosition(innerClusterInnerCoordinate, outerClusterInnerCoordinate) )
+        throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
     const CartesianVector innerDirection = clusterToPCAMap.at(pInnerCluster).direction;
     const CartesianVector outerDirection = clusterToPCAMap.at(pOuterCluster).direction;
-    const CartesianVector innerCentroid = clusterToPCAMap.at(pInnerCluster).centroid;
-    const CartesianVector outerCentroid = clusterToPCAMap.at(pOuterCluster).centroid;
+    const CartesianVector innerCentroid  = clusterToPCAMap.at(pInnerCluster).centroid;
+    const CartesianVector outerCentroid  = clusterToPCAMap.at(pOuterCluster).centroid;
 
     const float openingAngle{ innerDirection.GetCosOpeningAngle(outerDirection) };
 
     // Bypass opening angle cut if a short cluster is the extension of a longer one
-    if( closestDistance > m_minClusterLength ){
+    if( (closestDistance > m_minClusterLength) ||
+        ((LArClusterHelper::GetLength(pInnerCluster) < 5*m_minClusterLength) ==
+         (LArClusterHelper::GetLength(pOuterCluster) < 5*m_minClusterLength) )){
+
         if( openingAngle < m_minCosRelativeAngle )
             return false;
-    } else if( (LArClusterHelper::GetLength(pInnerCluster) < 10*m_minClusterLength) == 
-               (LArClusterHelper::GetLength(pOuterCluster) < 10*m_minClusterLength) ){
+    }
+
+    const CartesianVector innerEndFit1{ innerCentroid +  innerDirection * innerDirection.GetDotProduct(innerClusterOuterCoordinate - innerCentroid) }; 
+    const CartesianVector innerEndFit2{ outerCentroid +  outerDirection * outerDirection.GetDotProduct(innerClusterOuterCoordinate - outerCentroid) }; 
+
+    const CartesianVector outerStartFit1{ outerCentroid +  outerDirection * outerDirection.GetDotProduct(outerClusterInnerCoordinate - outerCentroid) }; 
+    const CartesianVector outerEndFit1{ outerCentroid +  outerDirection * outerDirection.GetDotProduct(outerClusterOuterCoordinate - outerCentroid) }; 
+    const CartesianVector outerStartFit2{ innerCentroid +  innerDirection * innerDirection.GetDotProduct(outerClusterInnerCoordinate - innerCentroid) }; 
+    const CartesianVector outerEndFit2{ innerCentroid +  innerDirection * innerDirection.GetDotProduct(outerClusterOuterCoordinate - innerCentroid) }; 
+
+    // Check for overlapping clusters
+    if( ((innerEndFit1 - innerCentroid).GetMagnitudeSquared() > (outerStartFit2 - innerCentroid).GetMagnitudeSquared() + 2.56f) ){
+        std::cout << (innerEndFit1 - innerCentroid).GetMagnitudeSquared() << "/n";
+        std::cout << (outerStartFit2 - innerCentroid).GetMagnitudeSquared() << "/n";
+
+        this->VisualizeClusters(pInnerCluster, pOuterCluster, "Rejected"sv );
+
         return false;
     }
 
+
+        /*
+    if( (innerEndFit1 - innerCentroid).GetMagnitudeSquared() > (outerStartFit2 - innerCentroid).GetMagnitudeSquared() + 1.f ){
+        //(innerEndFit2 - outerCentroid).GetMagnitudeSquared() < (outerStartFit1 - outerCentroid).GetMagnitudeSquared() + 0.16f ){
+        return false;
+    }
+    */
+
+    //const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), m_view)};
+
+    if( (innerClusterOuterCoordinate - outerClusterInnerCoordinate).GetMagnitudeSquared() < m_maxGapDistanceSquared )
+        return true;
+
+    if( (innerEndFit1 - outerStartFit2).GetMagnitudeSquared() < m_maxGapDistanceSquared )
+        return true;
+
+    if( (innerEndFit2 - outerStartFit1).GetMagnitudeSquared() < m_maxGapDistanceSquared )
+        return true;
+
+    return false;
+
+    /*
     const auto innerCaloHitList = clusterToHitListMap.at( pInnerCluster );
 
     constexpr float float_limit = std::numeric_limits<float>::max();
 
     float innerMinAvgDir{ +float_limit };
-    float innerMaxAvgDir{ -float_limit };
+    float innerMaxAvgDir{ -float_limi
+
     float innerMinDir{ +float_limit };
     float innerMaxDir{ -float_limit };
 
     // Project the start and end of the first and second clusters on the average direction
-    // and their respective principal axis
+    // akjasdfasdfnd their respective principal axis
     CartesianVector averageDirection{ ((innerDirection + outerDirection) * 0.5).GetUnitVector() };
 
     for( const CaloHit *const pCaloHit : innerCaloHitList ){ 
@@ -181,18 +232,10 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
 
     // Overlapping clusters
 
-    /* 
-    * C1: *----------*
-    * C2:       *--------* 
-    */
-    if( (outerMinAvgDir + 0.4f > innerMinAvgDir && outerMinAvgDir + 0.4f < innerMaxAvgDir) || 
+        if( (outerMinAvgDir + 0.4f > innerMinAvgDir && outerMinAvgDir + 0.4f < innerMaxAvgDir) || 
         (innerMinAvgDir + 0.4f > outerMinAvgDir && innerMinAvgDir + 0.4f < outerMinAvgDir) )
         return false;
 
-    /*
-    * C1:       *--------*
-    * C2:  *--------*
-    */
     if( (outerMaxAvgDir - 0.4f > innerMinAvgDir && outerMaxAvgDir - 0.4f < innerMaxAvgDir) || 
         (innerMaxAvgDir - 0.4f > outerMinAvgDir && innerMaxAvgDir - 0.4f < outerMaxAvgDir) )
         return false;
@@ -218,6 +261,7 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
     }
     
     return true;
+    */
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
