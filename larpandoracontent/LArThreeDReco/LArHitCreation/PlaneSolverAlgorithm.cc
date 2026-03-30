@@ -62,15 +62,15 @@ void PlaneSolverAlgorithm::FillHitMap(const CaloHitList &caloHitList)
 
 void PlaneSolverAlgorithm::Solve() const
 {
-    // STATUS: Seems like lot so pairs/triplets can be found in pass 2, but not actually added to the 3D hits, investigate.
-
     const float chi2Threshold{6.f};
     CaloHitList hits3D;
-    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+    //PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
     // Loop over each read out volume (e.g. an APA in a horizontal drift detector) and solve for the optimal set of triplet and doublet
     // relationships between the 2D hits in each unit.
     for (const auto &[_, readout] : m_planeToReadoutMap)
     {
+        if (readout.size() < 3)
+            continue;
         // Set the used view to an "invalid" type for the first pass
         HitType usedView{HIT_CUSTOM};
         CaloHitSet usedHits;
@@ -204,11 +204,10 @@ void PlaneSolverAlgorithm::Solve() const
             if (pHit3D)
                 hits3D.emplace_back(pHit3D);
         }
-        std::cout << "Number of 3D hits: " << hits3D.size() << std::endl;
     }
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, hits3D, "KMHitList"));
-    PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hits3D, "3D", BLACK));
-    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    //PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hits3D, "3D", BLACK));
+    //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -218,7 +217,6 @@ PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeCostMatrix(const P
 {
     HitType viewA, viewB;
     this->SelectViewPair(constraintView, viewA, viewB);
-    std::cout << "View A: " << viewA << ", View B: " << viewB << ", Constraint view: " << constraintView << std::endl;
     const CaloHitVector &aHits(planeToHitsMap.at(viewA));
     const CaloHitVector &bHits(planeToHitsMap.at(viewB));
     const CaloHitVector &cHits(planeToHitsMap.at(constraintView));
