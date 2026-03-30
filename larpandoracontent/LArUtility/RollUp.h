@@ -43,7 +43,8 @@ public:
      *
      *  @return  whether the hit should be further folded to the parent of hit's rolled-up MC particle
      */
-    virtual bool ShouldFoldCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const = 0;
+    virtual bool ShouldFurtherRollUpCaloHit(
+        const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const = 0;
 };
 
 /**
@@ -55,7 +56,8 @@ class RollUpNullPolicy : public IRollUpPolicy
 {
 public:
     const pandora::MCParticle *GetRollUpTargetMC(const pandora::MCParticle *const pMC) const override;
-    bool ShouldFoldCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
+    bool ShouldFurtherRollUpCaloHit(
+        const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
 };
 
 /**
@@ -67,7 +69,8 @@ class RollUpEMPolicy : public IRollUpPolicy
 {
 public:
     const pandora::MCParticle *GetRollUpTargetMC(const pandora::MCParticle *const pMC) const override;
-    bool ShouldFoldCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
+    bool ShouldFurtherRollUpCaloHit(
+        const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
 };
 
 /**
@@ -100,7 +103,8 @@ public:
     RollUpEMAndAmbiguousDeltaRayHitsPolicy(
         const float deltaRayParentWeightThreshold, const std::map<pandora::HitType, float> deltaRayLengthThresholds);
 
-    bool ShouldFoldCaloHit(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
+    bool ShouldFurtherRollUpCaloHit(
+        const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pRolledUpMainMC) const override;
 
 private:
     float m_deltaRayParentWeightThreshold;                               ///< Minimum parent weight for a hit to be folded to the parent track
@@ -111,8 +115,8 @@ private:
  *  @brief  The RollUpEMWithComptonFilterAndAmbiguousDeltaRayHitsPolicy class
  *
  *  A concisely named class that extends RollUpEMAndAmbiguousDeltaRayHitsPolicy with a Compton scatter filter.
- *  Pure Compton chains (photon → electron(s) with no bremms) are not rolled up,
- *  preventing potential associations been distant and diffuse hits.
+ *  Pure Compton scatter chains (photon → electron(s) with succeeding Brems) are blocked from roll-up,
+ *  preventing potential associations between distant and diffuse hits.
  */
 class RollUpEMWithComptonFilterAndAmbiguousDeltaRayHitsPolicy : public RollUpEMAndAmbiguousDeltaRayHitsPolicy
 {

@@ -39,6 +39,9 @@ void RollUpper::Reset() const
 
 const MCParticle *RollUpper::RollUpMC(const MCParticle *const pMC) const
 {
+    if (!pMC)
+        return pMC;
+
     if (m_mcCache.find(pMC) == m_mcCache.end())
         m_mcCache.insert({pMC, m_policy->GetRollUpTargetMC(pMC)});
 
@@ -72,7 +75,7 @@ const MCParticle *RollUpper::RollUpCaloHit(const CaloHit *const pCaloHit) const
             }
         }
 
-        if (pMainMC && m_policy->ShouldFoldCaloHit(pCaloHit, pMainMC))
+        if (pMainMC && m_policy->ShouldFurtherRollUpCaloHit(pCaloHit, pMainMC))
             pMainMC = LArMCParticleHelper::GetNextParentMCParticle(pMainMC);
 
         m_caloHitCache.insert({pCaloHit, pMainMC});
@@ -91,7 +94,7 @@ const MCParticle *RollUpNullPolicy::GetRollUpTargetMC(const MCParticle *const pM
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-bool RollUpNullPolicy::ShouldFoldCaloHit(
+bool RollUpNullPolicy::ShouldFurtherRollUpCaloHit(
     [[maybe_unused]] const CaloHit *const pCaloHit, [[maybe_unused]] const MCParticle *const pRolledUpMainMC) const
 {
     return false;
@@ -119,7 +122,7 @@ const MCParticle *RollUpEMPolicy::GetRollUpTargetMC(const MCParticle *const pMC)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-bool RollUpEMPolicy::ShouldFoldCaloHit(
+bool RollUpEMPolicy::ShouldFurtherRollUpCaloHit(
     [[maybe_unused]] const CaloHit *const pCaloHit, [[maybe_unused]] const MCParticle *const pRolledUpMainMC) const
 {
     return false;
@@ -164,7 +167,7 @@ RollUpEMAndAmbiguousDeltaRayHitsPolicy::RollUpEMAndAmbiguousDeltaRayHitsPolicy(
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::ShouldFoldCaloHit(
+bool RollUpEMAndAmbiguousDeltaRayHitsPolicy::ShouldFurtherRollUpCaloHit(
     const CaloHit *const pCaloHit, const MCParticle *const pRolledUpMainMC) const
 {
     // Can't be a delta ray? -> don't roll-up this hit

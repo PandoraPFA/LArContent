@@ -587,6 +587,15 @@ public:
      */
     static bool IsPairProduction(const pandora::MCParticle *const pMCParticle);
 
+    /**
+     *  @brief  Check whether an MC particle's decay tree contains more than one electron, indicating an EM shower.
+     *
+     *  @param  pMC                   The MC particle that defines the root of the subtree to check
+     *  @param  nDescendantElectrons  The running count of electrons seen so far,
+     *                                this is a recursive parameter that should be 0 at the top level
+     *
+     *  @return  Whether the MC particle's subtree contains more than one electron
+     */
     static bool CausesShower(const pandora::MCParticle *const pMC, int nDescendantElectrons = 0);
 
     /**
