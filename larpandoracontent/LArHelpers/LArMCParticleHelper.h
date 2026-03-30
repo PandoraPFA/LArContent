@@ -111,6 +111,11 @@ public:
     static bool IsCosmicRay(const pandora::MCParticle *const pMCParticle);
 
     /**
+     *  @brief  Return true if passed a photon or electorn/position
+     */
+    static bool IsEM(const pandora::MCParticle *const pMCParticle);
+
+    /**
      *  @brief  Get the nuance code of an MCParticle
      */
     static unsigned int GetNuanceCode(const pandora::MCParticle *const pMCParticle);

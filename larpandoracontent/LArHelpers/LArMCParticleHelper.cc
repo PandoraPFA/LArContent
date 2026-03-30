@@ -116,6 +116,14 @@ bool LArMCParticleHelper::IsCosmicRay(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArMCParticleHelper::IsEM(const MCParticle *const pMCParticle)
+{
+    const int pdg{std::abs(pMCParticle->GetParticleId())};
+    return (pdg == E_MINUS || pdg == PHOTON);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 unsigned int LArMCParticleHelper::GetNuanceCode(const MCParticle *const pMCParticle)
 {
     const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle *>(pMCParticle));

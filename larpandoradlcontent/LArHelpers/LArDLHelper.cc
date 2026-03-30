@@ -53,4 +53,16 @@ void LArDLHelper::Forward(TorchModel &model, const TorchInputVector &input, Torc
     output = model.forward(input).toTensor();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArDLHelper::Forward(TorchModel &model, const TorchInputVector &input, TorchMultiOutput &output)
+{
+    // Set torch to no_grad mode to avoid tracking gradients, which are not
+    // needed during inference.
+    // This uses RAII, so the guard is only active within this scope.
+    torch::NoGradGuard guard;
+
+    output = model.forward(input);
+}
+
 } // namespace lar_dl_content

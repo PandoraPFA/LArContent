@@ -28,16 +28,18 @@ CartesianVector LArObjectHelper::TypeAdaptor::GetPosition(const CaloHit *const &
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <>
-const CaloHit *LArObjectHelper::TypeAdaptor::GetCaloHit(const CartesianVector &)
+const CaloHit *LArObjectHelper::TypeAdaptor::GetCaloHit(const CartesianVector &, [[maybe_unused]] const bool retSelf)
 {
     return nullptr;
 }
 
 template <>
-const CaloHit *LArObjectHelper::TypeAdaptor::GetCaloHit(const CaloHit *const &pCaloHit3D)
+const CaloHit *LArObjectHelper::TypeAdaptor::GetCaloHit(const CaloHit *const &pCaloHit3D, const bool retSelf)
 {
-    const CaloHit *const pCaloHit2D = static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress());
-    return pCaloHit2D;
+    if (retSelf)
+        return static_cast<const CaloHit *>(pCaloHit3D);
+    else
+        return static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress());
 }
 
 } // namespace lar_content

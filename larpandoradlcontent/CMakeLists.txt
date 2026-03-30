@@ -11,6 +11,8 @@ cet_make_library(LIBRARY_NAME ${LAR_DL_CONTENT_LIBRARY_NAME}
   ${LAR_CONTENT_LIBRARY_NAME}
   PandoraPFA::PandoraSDK
   torch
+  PRIVATE
+  Eigen3::Eigen
 )
 
 install_source(SUBDIRS ${subdir_list})

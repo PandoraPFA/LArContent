@@ -26,6 +26,7 @@ public:
     typedef torch::Tensor TorchInput;
     typedef std::vector<torch::jit::IValue> TorchInputVector;
     typedef at::Tensor TorchOutput;
+    typedef at::IValue TorchMultiOutput;
 
     /**
      *  @brief  Loads a deep learning model
@@ -53,6 +54,15 @@ public:
      *  @param  output the tensor to store the output in
      */
     static void Forward(TorchModel &model, const TorchInputVector &input, TorchOutput &output);
+
+    /**
+     *  @brief  Run a deep learning model
+     *
+     *  @param  model the model to run
+     *  @param  input the input to run over
+     *  @param  output the at::IValue to store the output in
+     */
+    static void Forward(TorchModel &model, const TorchInputVector &input, TorchMultiOutput &output);
 };
 
 } // namespace lar_dl_content
