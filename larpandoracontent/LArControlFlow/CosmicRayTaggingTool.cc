@@ -30,9 +30,9 @@ CosmicRayTaggingTool::CosmicRayTaggingTool() :
     m_inTimeMargin(5.f),
     m_inTimeMaxX0(1.f),
     m_tagRockMuons(false),
-    m_marginX(5.f), // [cm]
-    m_marginY(5.f),
-    m_marginZ(5.f),
+    m_marginX(20.f),
+    m_marginY(10.f),
+    m_marginZ(10.f),
     m_maxNeutrinoCosTheta(0.2f),
     m_minCosmicCosTheta(0.6f),
     m_maxCosmicCurvature(0.04f),
@@ -550,7 +550,6 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
     const PfoToBoolMap &pfoToIsTopToBottomMap, const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap, 
     const PfoToBoolMap &pfoToIsThroughgoingMap) const
 {
-    int nof_rock_mu_tagged = 0;
     for (const CRCandidate &candidate : candidates)
     {
         const bool likelyCRMuon(!neutrinoSliceSet.count(candidate.m_sliceId) &&
@@ -561,7 +560,6 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
 
         if(m_tagRockMuons && (pfoToIsThroughgoingMap.at(candidate.m_pPfo)))
         {
-          nof_rock_mu_tagged++;
           const bool likelyRockMuon = true;
           if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyRockMuon)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -571,7 +569,6 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
     }
-    std::cout << "Number of rock muons tagged : " << nof_rock_mu_tagged << "\n";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
