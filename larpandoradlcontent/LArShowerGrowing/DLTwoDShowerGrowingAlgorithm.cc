@@ -56,20 +56,18 @@ void DLTwoDShowerGrowingAlgorithm::ClusterGroup::insert(const Cluster *pCluster)
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
 DLTwoDShowerGrowingAlgorithm::DLTwoDShowerGrowingAlgorithm() :
+    m_hitFeatureDim{11},
     m_polarRScaleFactor{1.f},
     m_cartesianXScaleFactor{1.f},
     m_cartesianZScaleFactor{1.f},
     m_detectorXGaps{std::set<double>{}},
-    m_hitFeaturesNHitsIdx{-1},
-    m_hitFeaturesNClustersIdx{-1},
-    m_hitFeaturesIterationNumIdx{-1},
-    m_hitFeatureDim{12},
     m_trainingMode{false},
     m_trainingTreeName{""},
     m_similarityThreshold{0.5f},
     m_similarityThresholdBeta{1.f},
     m_accessoryClustersMaxHits{2},
     m_maxIterations{1},
+    m_includeDistToXGapFeature{true},
     m_includeHitCardinalityFeatures{true},
     m_includeHitNIterationNumFeature{false},
     m_encodeLArTPCVolIDs{std::vector<unsigned int>{}},
@@ -418,35 +416,41 @@ StatusCode DLTwoDShowerGrowingAlgorithm::MakeClusterTensor(const std::vector<Hit
     tensorCluster = torch::zeros({1, nHits, m_hitFeatureDim});
     auto accessor = tensorCluster.accessor<float, 3>();
 
-    for (int i = 0; i < nHits; i++)
+    for (int iHit = 0; iHit < nHits; iHit++)
     {
-        const HitFeatures hitFeatures{clusterFeatures.at(i)};
-        accessor[0][i][0] = hitFeatures.m_rRel * m_polarRScaleFactor;
-        accessor[0][i][1] = hitFeatures.m_cosThetaRel;
-        accessor[0][i][2] = hitFeatures.m_sinThetaRel;
-        accessor[0][i][3] = hitFeatures.m_xRel * m_cartesianXScaleFactor;
-        accessor[0][i][4] = hitFeatures.m_zRel * m_cartesianZScaleFactor;
-        accessor[0][i][5] = hitFeatures.m_xWidth * m_cartesianXScaleFactor;
-        accessor[0][i][6] = zWidthFeat;
-        accessor[0][i][7] = hitFeatures.m_distToXGap * m_cartesianXScaleFactor;
-        accessor[0][i][8] = std::log(hitFeatures.m_energy);
-        accessor[0][i][9] = view == TPC_VIEW_U ? 1.f : 0.f;
-        accessor[0][i][10] = view == TPC_VIEW_V ? 1.f : 0.f;
-        accessor[0][i][11] = view == TPC_VIEW_W ? 1.f : 0.f;
-        for (size_t j = 12, k = 0; k < m_encodeLArTPCVolIDs.size(); j++, k++)
+        const HitFeatures &hitFeatures = clusterFeatures.at(iHit);
+        int iFeat{0};
+        auto addFeat = [&accessor, &iHit, &iFeat](const float val) -> void { accessor[0][iHit][iFeat++] = val; };
+        addFeat(hitFeatures.m_rRel * m_polarRScaleFactor);
+        addFeat(hitFeatures.m_cosThetaRel);
+        addFeat(hitFeatures.m_sinThetaRel);
+        addFeat(hitFeatures.m_xRel * m_cartesianXScaleFactor);
+        addFeat(hitFeatures.m_zRel * m_cartesianZScaleFactor);
+        addFeat(hitFeatures.m_xWidth * m_cartesianXScaleFactor);
+        addFeat(zWidthFeat);
+        if (m_includeDistToXGapFeature)
+            addFeat(hitFeatures.m_distToXGap * m_cartesianXScaleFactor);
+        addFeat(std::log(hitFeatures.m_energy));
+        addFeat(view == TPC_VIEW_U ? 1.f : 0.f);
+        addFeat(view == TPC_VIEW_V ? 1.f : 0.f);
+        addFeat(view == TPC_VIEW_W ? 1.f : 0.f);
+        for (size_t iVol = 0; iVol < m_encodeLArTPCVolIDs.size(); iVol++)
         {
-            if (hitFeatures.m_larTpcVolId == m_encodeLArTPCVolIDs.at(k) && hitFeatures.m_daughterVolId == m_encodeDaughterVolIDs.at(k))
-                accessor[0][i][j] = 1.f;
+            if (hitFeatures.m_larTpcVolId == m_encodeLArTPCVolIDs.at(iVol) &&
+                hitFeatures.m_daughterVolId == m_encodeDaughterVolIDs.at(iVol))
+                addFeat(1.f);
             else
-                accessor[0][i][j] = 0.f;
+                addFeat(0.f);
         }
         if (m_includeHitCardinalityFeatures)
         {
-            accessor[0][i][m_hitFeaturesNHitsIdx] = nHitsFeat;
-            accessor[0][i][m_hitFeaturesNClustersIdx] = nClustersFeat;
+            addFeat(nHitsFeat);
+            addFeat(nClustersFeat);
         }
         if (m_includeHitNIterationNumFeature)
-            accessor[0][i][m_hitFeaturesIterationNumIdx] = iterationNumFeat;
+            addFeat(iterationNumFeat);
+
+        PANDORA_RETURN_IF(STATUS_CODE_NOT_ALLOWED, iFeat != m_hitFeatureDim);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -748,17 +752,17 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     if (!m_encodeLArTPCVolIDs.empty())
         m_hitFeatureDim += m_encodeLArTPCVolIDs.size();
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IncludeDistToXGapFeature", m_includeDistToXGapFeature));
+    if (m_includeDistToXGapFeature)
+        ++m_hitFeatureDim;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "IncludeHitCardinalityFeatures", m_includeHitCardinalityFeatures));
     if (m_includeHitCardinalityFeatures)
-    {
-        m_hitFeaturesNHitsIdx = m_hitFeatureDim++;
-        m_hitFeaturesNClustersIdx = m_hitFeatureDim++;
-    }
+        m_hitFeatureDim += 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "IncludeHitNIterationNumFeature", m_includeHitNIterationNumFeature));
     if (m_includeHitNIterationNumFeature)
-        m_hitFeaturesIterationNumIdx = m_hitFeatureDim++;
+        ++m_hitFeatureDim;
 
     if (m_trainingMode)
     {

@@ -281,20 +281,16 @@ private:
     LArDLHelper::TorchModel m_modelEncoder; ///< TorchScript model for encoding hits in a cluster
     LArDLHelper::TorchModel m_modelAttn;    ///< TorchScript model for attention over encoded clusters in a view
     LArDLHelper::TorchModel m_modelSim;     ///< TorchScript model for pairwise similarities over clusters after attention
+    int m_hitFeatureDim;                    ///< Feature dimensions of each hit
     float m_polarRScaleFactor;              ///< Scale factor for polar r coordinate input features
     float m_cartesianXScaleFactor;          ///< Scale factor for cartesian x coordinate input features
     float m_cartesianZScaleFactor;          ///< Scale factor for cartesian z coordinate input features
     std::set<double> m_detectorXGaps;       ///< X coordinates where gaps in X direction start/end
-    int m_hitFeaturesNHitsIdx;              ///< Hit feature vector index for the optional no. hits in cluster feature
-    int m_hitFeaturesNClustersIdx;          ///< Hit feature vector index for the optional no. clusters in event feature
-    int m_hitFeaturesIterationNumIdx;       ///< Hit feature vector index for the optional no. clusters in event feature
     lar_content::RollUpper m_rollUpper;                  ///< Class to perform rolling up of EM activity
 
     /* End shared mutable members */
 
     /* Start hardcoded members */
-
-    int m_hitFeatureDim; ///< Feature dimensions of each hit
 
     /* End hardcoded members */
 
@@ -309,6 +305,7 @@ private:
     float m_similarityThresholdBeta;          ///< Scaling factor for an optional second clustering pass
     unsigned int m_accessoryClustersMaxHits;  ///< Clusters with this number of less hits are treated as accessory clusters during merging
     unsigned int m_maxIterations;             ///< Max iterative applications of the cluster merging
+    bool m_includeDistToXGapFeature;          ///< Option to include in hit feature vector the X distance to the nearest drift gap
     bool m_includeHitCardinalityFeatures;     ///< Option to include in hit feature vector the no. hits in cluster and no. clusters in event
     bool m_includeHitNIterationNumFeature;    ///< Option to include in hit feature vector the inference iteration number
     std::vector<unsigned int> m_encodeLArTPCVolIDs; ///< LArTPC vol IDs for one-hot encoding of drift vols in hit feature vector, must be same size as m_encodeDaughterVolIDs
