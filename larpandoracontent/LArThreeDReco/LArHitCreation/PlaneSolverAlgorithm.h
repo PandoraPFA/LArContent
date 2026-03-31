@@ -102,7 +102,7 @@ private:
 
     /**
      *  @brief  Compute the cost matrix for the hits, where the cost is based on the chi-squared value for hit triplets.
-     *          This function starts with the pairs from the first pass of the Kuhne-Munkres algorithm, and computes the cost of matching
+     *          This function starts with the pairs from the first pass of the Kuhn-Munkres algorithm, and computes the cost of matching
      *          each pair to a unique constraint hit, constructing triplet matches where possible, but retaining the doublet matches otherwise.
      *
      *  @param  pairs the list of pairs to be considered for triplet matching
@@ -120,20 +120,25 @@ private:
      *  @brief  Implementation of the Kunhne-Munkres (aka Hungarian) algorithm to solve the optimal matching between UV pairs and W hits.
      *          For each row, attempt to assign it and if there is a conflict, reroute via an augmenting path.
      *
+     *          Based on Andrey Lopatin's implementation as described at https://cp-algorithms.com/graph/hungarian-algorithm.html
+     *
+     *          H. W. Kuhn, “The Hungarian Method for the Assignment Problem,” Naval Research Logistics Quarterly, 1955.
+     *          J. Munkres, “Algorithms for the Assignment and Transportation Problems,” 1957.
+     *
      *  @param  cost the cost matrix for the hits in a volume
      *
      *  @return The optimal matching between UV pairs and W hits, where the vector elements align with the U hits and indicate matched index
      *          in the V hits (or -1 if unmatched)
      */
-    pandora::IntVector KuhneMunkres(const CostMatrix& cost) const;
+    pandora::IntVector KuhnMunkres(const CostMatrix& cost) const;
 
     /**
-     *  @brief  Build the list of AB pairs based on the assignment of B hits to A hits from the Kuhne-Munkres algorithm
+     *  @brief  Build the list of AB pairs based on the assignment of B hits to A hits from the Kuhn-Munkres algorithm
      *
-     *  @param  assignment the output of the Kuhne-Munkres algorithm, indicating the index of the assigned B hit for each A hit (or -1 if unmatched)
+     *  @param  assignment the output of the Kuhn-Munkres algorithm, indicating the index of the assigned B hit for each A hit (or -1 if unmatched)
      *  @param  nA the number of A hits
      *  @param  nB the number of B hits
-     *  @param  costMatrix the cost matrix that was used as input to the Kuhne-Munkres algorithm
+     *  @param  costMatrix the cost matrix that was used as input to the Kuhn-Munkres algorithm
      *  @param  chi2Threshold the chi-squared threshold below which a pair is considered a valid match
      *
      *  @return The list of UV pairs
@@ -141,13 +146,13 @@ private:
     PairVector BuildPairs(const pandora::IntVector &assignment, int nA, int nB, const CostMatrix& costMatrix, float chi2Threshold) const;
 
     /**
-     *  @brief  Build the list of triplets based on the assignment of constraint hits to AB pairs from the second pass of the Kuhne-Munkres algorithm
+     *  @brief  Build the list of triplets based on the assignment of constraint hits to AB pairs from the second pass of the Kuhn-Munkres algorithm
      *
      *  @param  pairs the list of AB pairs to be considered for triplet matching
-     *  @param  assignment the output of the Kuhne-Munkres algorithm, indicating the index of the assigned constraint hit for each AB pair
+     *  @param  assignment the output of the Kuhn-Munkres algorithm, indicating the index of the assigned constraint hit for each AB pair
      *          (or -1 if unmatched)
      *  @param  nC the number of constraint hits
-     *  @param  costMatrix the cost matrix that was used as input to the Kuhne-Munkres algorithm
+     *  @param  costMatrix the cost matrix that was used as input to the Kuhn-Munkres algorithm
      *  @param  constraintView the view that was used as the constraint in the chi-squared calculation
      *  @param  chi2Threshold the chi-squared threshold below which a triplet is considered a valid match
      *
@@ -178,7 +183,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    int m_chi2Threshold; ///< The chi-squared threshold below which a triplet is considered a valid match
     std::string m_caloHitListName; ///< The name of the calo hit list containing all of the 2D hits
+    std::string m_eventContextName; ///< The name of the EventContext object in which to persist the relationships between the 2D hits
     VolumeToReadoutMap m_planeToReadoutMap; ///< A map from volume, to readout plane, to the 2D hits in that plane
 };
 

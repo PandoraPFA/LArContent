@@ -10,8 +10,11 @@
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
+#include "larpandoracontent/LArObjects/LArPlaneContextObject.h"
 
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/PlaneSolverAlgorithm.h"
+
+#include <ranges>
 
 using namespace pandora;
 
@@ -19,7 +22,9 @@ namespace lar_content
 {
 
 PlaneSolverAlgorithm::PlaneSolverAlgorithm() :
-    m_caloHitListName{"CaloHitList2D"}
+    m_chi2Threshold(6.f),
+    m_caloHitListName{"CaloHitList2D"},
+    m_eventContextName{"PlaneContext"}
 {
 }
 
@@ -62,9 +67,7 @@ void PlaneSolverAlgorithm::FillHitMap(const CaloHitList &caloHitList)
 
 void PlaneSolverAlgorithm::Solve() const
 {
-    const float chi2Threshold{6.f};
-    CaloHitList hits3D;
-    //PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+    LArPlaneContextObject *pPlaneContextObject{new LArPlaneContextObject()};
     // Loop over each read out volume (e.g. an APA in a horizontal drift detector) and solve for the optimal set of triplet and doublet
     // relationships between the 2D hits in each unit.
     for (const auto &[_, readout] : m_planeToReadoutMap)
@@ -114,7 +117,7 @@ void PlaneSolverAlgorithm::Solve() const
                     constraintView = nHitsV <= nHitsU ? TPC_VIEW_V : TPC_VIEW_U;
             }
             CostMatrix costMatrix{this->ComputeCostMatrix(readout, 100.f, constraintView, usedHits)};
-            const IntVector assignment{this->KuhneMunkres(costMatrix)};
+            const IntVector assignment{this->KuhnMunkres(costMatrix)};
             HitType viewA, viewB;
             this->SelectViewPair(constraintView, viewA, viewB);
             int nHitsA{static_cast<int>(readout.at(viewA).size())};
@@ -128,14 +131,13 @@ void PlaneSolverAlgorithm::Solve() const
             }
             if (nHitsA == 0 || nHitsB == 0)
                 continue;
-            const PairVector pairs{this->BuildPairs(assignment, nHitsA, nHitsB, costMatrix, chi2Threshold)};
+            const PairVector pairs{this->BuildPairs(assignment, nHitsA, nHitsB, costMatrix, m_chi2Threshold)};
             CostMatrix tripletCostMatrix{this->ComputeTripletCostMatrix(pairs, readout, 100.f, constraintView, usedHits)};
-            const IntVector tripletAssignment{this->KuhneMunkres(tripletCostMatrix)};
+            const IntVector tripletAssignment{this->KuhnMunkres(tripletCostMatrix)};
             int nHitsC{static_cast<int>(readout.at(constraintView).size())};
-            const TripletVector triplets{this->BuildTriplets(pairs, tripletAssignment, nHitsC, tripletCostMatrix, constraintView, chi2Threshold)};
+            const TripletVector triplets{this->BuildTriplets(pairs, tripletAssignment, nHitsC, tripletCostMatrix, constraintView, m_chi2Threshold)};
             for (size_t i = 0; i < triplets.size(); ++i)
             {
-                const CaloHit *pHit3D{nullptr};
                 if (triplets[i].m_uIndex >= 0 && triplets[i].m_vIndex >= 0 && triplets[i].m_wIndex >= 0)
                 {
                     const CaloHit *pHitU{readout.at(TPC_VIEW_U)[triplets[i].m_uIndex]};
@@ -157,15 +159,12 @@ void PlaneSolverAlgorithm::Solve() const
                         if ((pHitU && usedHits.count(pHitU)) || (pHitV && usedHits.count(pHitV)) || (pHitW && usedHits.count(pHitW)))
                             continue;
                     }
-                    this->CreateThreeDHit(pHitU, pHitV, pHitW, pHit3D);
-                    if (pass == 1)
+                    if (pass == 1 && pPlaneContextObject->AddHitTriplet(pHitU, pHitV, pHitW))
                     {
                         usedHits.insert(pHitU);
                         usedHits.insert(pHitV);
                         usedHits.insert(pHitW);
                     }
-                    if (pHit3D)
-                        hits3D.emplace_back(pHit3D);
                 }
                 else
                 {
@@ -174,17 +173,13 @@ void PlaneSolverAlgorithm::Solve() const
                     const CaloHit *pHitW{(triplets[i].m_wIndex >= 0) ? readout.at(TPC_VIEW_W)[triplets[i].m_wIndex] : nullptr};
                     if ((pHitU && usedHits.count(pHitU)) || (pHitV && usedHits.count(pHitV)) || (pHitW && usedHits.count(pHitW)))
                         continue;
-                    this->CreateThreeDHit(pHitU, pHitV, pHitW, pHit3D);
                     if (pass == 1)
-                    {
                         fallbackTriplets.push_back({triplets[i].m_uIndex, triplets[i].m_vIndex, triplets[i].m_wIndex, triplets[i].m_cost});
-                    }
-                    if (pass == 2 && pHit3D)
+                    if (pass == 2 && pPlaneContextObject->AddHitTriplet(pHitU, pHitV, pHitW))
                     {
                         usedHits.insert(pHitU);
                         usedHits.insert(pHitV);
                         usedHits.insert(pHitW);
-                        hits3D.emplace_back(pHit3D);
                     }
                 }
             }
@@ -193,21 +188,16 @@ void PlaneSolverAlgorithm::Solve() const
         // Add in the fallback triplets that were not picked up in the second pass
         for (const auto& triplet : fallbackTriplets)
         {
-            const CaloHit *pHit3D{nullptr};
             const CaloHit *pHitU{(triplet.m_uIndex >= 0) ? readout.at(TPC_VIEW_U)[triplet.m_uIndex] : nullptr};
             const CaloHit *pHitV{(triplet.m_vIndex >= 0) ? readout.at(TPC_VIEW_V)[triplet.m_vIndex] : nullptr};
             const CaloHit *pHitW{(triplet.m_wIndex >= 0) ? readout.at(TPC_VIEW_W)[triplet.m_wIndex] : nullptr};
             if ((pHitU && usedHits.count(pHitU)) || (pHitV && usedHits.count(pHitV)) || (pHitW && usedHits.count(pHitW)))
                 continue;
 
-            this->CreateThreeDHit(pHitU, pHitV, pHitW, pHit3D);
-            if (pHit3D)
-                hits3D.emplace_back(pHit3D);
+            pPlaneContextObject->AddHitTriplet(pHitU, pHitV, pHitW);
         }
     }
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, hits3D, "KMHitList"));
-    //PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hits3D, "3D", BLACK));
-    //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    PandoraContentApi::AddEventContextObject(*this, m_eventContextName, pPlaneContextObject);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -343,7 +333,7 @@ PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeTripletCostMatrix(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-IntVector PlaneSolverAlgorithm::KuhneMunkres(const CostMatrix& cost) const
+IntVector PlaneSolverAlgorithm::KuhnMunkres(const CostMatrix& cost) const
 {
     const int N{static_cast<int>(cost.size())};
     // Define the dual variables for rows (u) and columns (v), enforcing u[i] + v[j] <= cost[i][j]
@@ -554,16 +544,7 @@ void PlaneSolverAlgorithm::CreateThreeDHit(const CaloHit *const pCaloHitU, const
     parameters.m_hitRegion = pCaloHit2D->GetHitRegion();
     parameters.m_layer = pCaloHit2D->GetLayer();
     parameters.m_isInOuterSamplingLayer = pCaloHit2D->IsInOuterSamplingLayer();
-    try
-    {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*this, parameters, pCaloHit3D));
-    }
-    catch (const StatusCodeException &e)
-    {
-        std::cout << "Failed to create 3D hit from U: " << (pCaloHitU ? pCaloHitU->GetPositionVector().GetX() : -1) << ", V: "
-            << (pCaloHitV ? pCaloHitV->GetPositionVector().GetX() : -1) << ", W: " << (pCaloHitW ? pCaloHitW->GetPositionVector().GetX() : -1)
-            << " with chi2: " << chi2 << std::endl;
-    }
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*this, parameters, pCaloHit3D));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -593,7 +574,9 @@ void PlaneSolverAlgorithm::SelectViewPair(const HitType constraintView, HitType 
 
 StatusCode PlaneSolverAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Chi2Threshold", m_chi2Threshold));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EventContextName", m_eventContextName));
 
     return STATUS_CODE_SUCCESS;
 }
