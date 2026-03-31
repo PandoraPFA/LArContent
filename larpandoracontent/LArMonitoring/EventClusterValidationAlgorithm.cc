@@ -168,7 +168,8 @@ StatusCode EventClusterValidationAlgorithm::Run()
         clusterMetrics.m_nHits = hitParents.size();
         for (const auto &[pCaloHit, parents] : hitParents)
         {
-            if ((LArMCParticleHelper::IsBeamParticle(parents.m_pMainMC) || LArMCParticleHelper::IsNeutrino(parents.m_pMainMC)))
+            const MCParticle *const pMainMCParent{LArMCParticleHelper::GetParentMCParticle(parents.m_pMainMC)};
+            if ((LArMCParticleHelper::IsBeamParticle(pMainMCParent) || LArMCParticleHelper::IsNeutrino(pMainMCParent)))
             {
                 clusterMetrics.m_nHitsFromBeam++;
             }
