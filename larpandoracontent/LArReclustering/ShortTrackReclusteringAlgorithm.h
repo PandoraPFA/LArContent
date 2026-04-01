@@ -67,6 +67,15 @@ private:
     };
     typedef std::vector<Partition> PartitionVector;
 
+    struct ProtoPfo
+    {
+        PandoraContentApi::ParticleFlowObject::Parameters m_pfoParameters;
+        const pandora::Pfo *m_pOldPfo;
+        std::unordered_map<pandora::HitType, const pandora::Cluster *> m_viewToClusterMap;
+        std::unordered_map<pandora::HitType, pandora::CaloHitList> m_viewToHitsMap;
+    };
+    typedef std::vector<ProtoPfo> ProtoPfoVector;
+
     pandora::StatusCode Run();
 
     /**
@@ -79,14 +88,6 @@ private:
      */
     template <typename T>
     bool GetList(const std::string &listName, const T *&pList) const;
-
-    /**
-     *  @brief  Collects the hits not currently assigned to a PFO, and maps them by view
-     *
-     *  @param  caloHitList the list of calo hits to consider
-     *  @param  viewToUnclusteredHitsMap the map in which to store the unclustered hits, mapped by view
-     */
-    void CollectUnclusteredHits(const pandora::CaloHitList &caloHitList, ViewToHitsMap &viewToUnclusteredHitsMap) const;
 
     /**
      *  @brief  Collects the clusters currently assigned to PFOs, and maps them by view, and also maps clusters to their parent PFO
@@ -129,11 +130,9 @@ private:
      *  @brief  Uses the identified discontinuity triplets to find coherent changes across all three views and proposes new partitions.
      *
      *  @param  pfoToHitTripletsMap the map of PFOs to triplets of hits across views that are consistent with a common 3D position
-     *  @param  viewToUnclusteredHitsMap the map of unclustered hits, mapped by view
      *  @param  partitions the proposed partitions if coherent alternatives can be found
      */
-    void PartitionDiscontinuities(const PfoToHitTripletsMap &pfoToHitTripletsMap, const ViewToHitsMap &viewToUnclusteredHitsMap,
-        PartitionVector &partitions) const;
+    void PartitionDiscontinuities(const PfoToHitTripletsMap &pfoToHitTripletsMap, PartitionVector &partitions) const;
 
     /**
      *  @brief  Applies the reclustering described by a given partition vector

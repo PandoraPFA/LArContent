@@ -34,15 +34,12 @@ ShortTrackReclusteringAlgorithm::ShortTrackReclusteringAlgorithm()
 
 StatusCode ShortTrackReclusteringAlgorithm::Run()
 {
-    // Note: This may become a tool within the reclustering paradigm, but I'll need to chat with Alex about that
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_RETURN_IF(STATUS_CODE_SUCCESS, !this->GetList(m_caloHitListName, pCaloHitList));
 
-    ViewToHitsMap viewToUnclusteredHitsMap;
-    this->CollectUnclusteredHits(*pCaloHitList, viewToUnclusteredHitsMap);
-
     const PfoList *pPfoList{nullptr};
-    PANDORA_RETURN_IF(STATUS_CODE_SUCCESS, !this->GetList(m_pfoListName, pPfoList));
+    if (!this->GetList(m_pfoListName, pPfoList))
+        return STATUS_CODE_SUCCESS;
 
     ViewToClustersMap viewToClustersMap;
     ClusterToPfoMap clusterToPfoMap;
@@ -59,7 +56,7 @@ StatusCode ShortTrackReclusteringAlgorithm::Run()
     this->MatchAdcDiscontinuities(clusterToHitsMap, clusterToPfoMap, pfoToHitTripletsMap);
 
     PartitionVector partitions;
-    this->PartitionDiscontinuities(pfoToHitTripletsMap, viewToUnclusteredHitsMap, partitions);
+    this->PartitionDiscontinuities(pfoToHitTripletsMap, partitions);
 
     if (!partitions.empty())
         this->Recluster(partitions);
@@ -74,17 +71,6 @@ bool ShortTrackReclusteringAlgorithm::GetList(const std::string &listName, const
 {
     PandoraContentApi::GetList(*this, listName, pList);
     return pList && !pList->empty();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ShortTrackReclusteringAlgorithm::CollectUnclusteredHits(const CaloHitList &caloHitList, ViewToHitsMap &viewToUnclusteredHitsMap) const
-{
-    for (const CaloHit *const pCaloHit : caloHitList)
-    {
-        if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
-            viewToUnclusteredHitsMap[pCaloHit->GetHitType()].insert(pCaloHit);
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -311,10 +297,8 @@ void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShortTrackReclusteringAlgorithm::PartitionDiscontinuities(const PfoToHitTripletsMap &pfoToHitTripletsMap,
-    const ViewToHitsMap &viewToUnclusteredHitsMap, PartitionVector &partitions) const
+void ShortTrackReclusteringAlgorithm::PartitionDiscontinuities(const PfoToHitTripletsMap &pfoToHitTripletsMap, PartitionVector &partitions) const
 {
-    (void)viewToUnclusteredHitsMap;
     for (const auto &[pPfo, hitTriplets] : pfoToHitTripletsMap)
     {
         ClusterList pfoClusterList;
@@ -431,27 +415,54 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
     std::string tempPfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, tempPfoListName));
 
+    std::unordered_map<const CaloHit *, int> hitCount;
+    ProtoPfoVector protoPfos;
     for (const auto &[pPfo, hitTriplet, hitsU, hitsV, hitsW] : partitions)
     {
-        CaloHitList pfoHits3D;
-        LArPfoHelper::GetCaloHits(pPfo, TPC_3D, pfoHits3D);
+        ProtoPfo protoPfo;
+        protoPfo.m_pfoParameters.m_particleId = pPfo->GetParticleId();
+        protoPfo.m_pfoParameters.m_charge = PdgTable::GetParticleCharge(pPfo->GetParticleId());
+        protoPfo.m_pfoParameters.m_mass = PdgTable::GetParticleMass(pPfo->GetParticleId());
+        protoPfo.m_pfoParameters.m_energy = 0.f;
+        protoPfo.m_pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
+        protoPfo.m_pOldPfo = pPfo;
 
-        PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-        pfoParameters.m_particleId = pPfo->GetParticleId();
-        pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
-        pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
-        pfoParameters.m_energy = 0.f;
-        pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
         for (const HitType view : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             const CaloHitList &hits{view == TPC_VIEW_U ? hitsU : (view == TPC_VIEW_V ? hitsV : hitsW)};
             const CaloHit *hit{view == TPC_VIEW_U ? std::get<0>(hitTriplet) : (view == TPC_VIEW_V ? std::get<1>(hitTriplet) : std::get<2>(hitTriplet))};
             CaloHitList cluster1Hits, cluster2Hits;
             this->PartitionHits(hits, hit, cluster1Hits, cluster2Hits);
+            protoPfo.m_viewToHitsMap[view] = std::move(cluster2Hits);
+            for (const CaloHit *const pCaloHit : protoPfo.m_viewToHitsMap[view])
+                if (hitCount.find(pCaloHit) == hitCount.end())
+                    hitCount[pCaloHit] = 1;
+                else
+                    ++hitCount[pCaloHit];
+        }
+        protoPfos.emplace_back(std::move(protoPfo));
+    }
 
+    for (const auto &[pCaloHit, count] : hitCount)
+    {
+        if (count > 1)
+            std::cout << "Hit " << pCaloHit << " is shared " << count << " times across partitions" << std::endl;
+    }
+
+    // Remove merge hits from their original PFOs, along with associated 3D hits
+    for (auto &protoPfo : protoPfos)
+    {
+        const Pfo *const pPfo{protoPfo.m_pOldPfo};
+        CaloHitList pfoHits3D;
+        LArPfoHelper::GetCaloHits(pPfo, TPC_3D, pfoHits3D);
+
+        for (const HitType view : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+        {
+            const CaloHitList &clusterHits{protoPfo.m_viewToHitsMap[view]};
             ClusterList clusterList;
             LArPfoHelper::GetClusters(pPfo, view, clusterList);
-            for (const CaloHit *const pCaloHit : cluster2Hits)
+            std::cout << "Removing view " << view << " hits" << std::endl;
+            for (const CaloHit *const pCaloHit : clusterHits)
                 PandoraContentApi::RemoveFromCluster(*this, clusterList.front(), pCaloHit);
 
             ClusterList clusterList3D;
@@ -459,25 +470,37 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
             for (const CaloHit *const pCaloHit : pfoHits3D)
             {
                 const CaloHit *pParent{static_cast<const CaloHit *>(pCaloHit->GetParentAddress())};
-                if (std::find(cluster2Hits.begin(), cluster2Hits.end(), pParent) != cluster2Hits.end())
+                if (std::find(clusterHits.begin(), clusterHits.end(), pParent) != clusterHits.end())
                     PandoraContentApi::RemoveFromCluster(*this, clusterList3D.front(), pCaloHit);
             }
+        }
+    }
+    std::cout << "Creating new clusters" << std::endl;
 
-            std::string newClusterListName;
-            const ClusterList *pClusterList{nullptr};
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, newClusterListName));
+    // Create the new clusters and associate to the proto PFOs
+    for (const HitType view : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    {
+        std::string newClusterListName;
+        const ClusterList *pClusterList{nullptr};
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, newClusterListName));
+
+        for (auto &protoPfo : protoPfos)
+        {
             PandoraContentApi::Cluster::Parameters parameters;
-            parameters.m_caloHitList = std::move(cluster2Hits);
+            parameters.m_caloHitList = std::move(protoPfo.m_viewToHitsMap[view]);
 
             const Cluster *pNewCluster(nullptr);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pNewCluster));
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, viewToClusterListNameMap.at(view)));
-
-            pfoParameters.m_clusterList.emplace_back(pNewCluster);
+            protoPfo.m_pfoParameters.m_clusterList.emplace_back(pNewCluster);
         }
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, viewToClusterListNameMap.at(view)));
+    }
 
-        const Pfo *pNewPfo(nullptr);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pNewPfo));
+    // Create the new PFOs
+    for (auto &protoPfo : protoPfos)
+    {
+        const Pfo *pNewPfo{nullptr};
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, protoPfo.m_pfoParameters, pNewPfo));
     }
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, tempPfoListName, m_pfoListName));
 
