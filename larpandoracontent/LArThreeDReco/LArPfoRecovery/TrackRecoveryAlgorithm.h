@@ -33,7 +33,6 @@ private:
     typedef std::unordered_map<const pandora::Cluster *, const TwoDSlidingFitResult> ClusterToFitMap;
     typedef std::unordered_map<const pandora::CaloHit *, const pandora::Cluster *> HitToClusterToMap;
     typedef std::unordered_map<const pandora::Cluster *, const pandora::Pfo *> ClusterToPfoMap;
-    typedef std::unordered_map<pandora::HitType, pandora::CaloHitList> ViewToHitsMap;
 
     pandora::StatusCode Run();
 
@@ -74,6 +73,15 @@ private:
      */
     void IdentifyHitsToMerge(const pandora::Cluster *pCluster, const pandora::CaloHitList &clusterHits, const pandora::CaloHitSet &unmatchedHits,
         const ClusterToFitMap &clusterToFitMap, pandora::CaloHitList &mergeHits) const;
+
+    /**
+     *  @brief  Filters a list of hits to merge based on their perpendicular distance to the sliding fit for the cluster.
+     *          This is a final quality cut to ensure we only merge hits that are consistent with the existing cluster.
+     *
+     *  @param  sfr the sliding fit result for the cluster
+     *  @param[in,out]  mergeHits the list of hits provisionally identified for merging, which is filtered in place
+     */
+    void FilterHitsToMerge(const TwoDSlidingFitResult &sfr, pandora::CaloHitList &mergeHits) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
