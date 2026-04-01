@@ -150,7 +150,7 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
         std::cout << (innerEndFit1 - innerCentroid).GetMagnitudeSquared() << "/n";
         std::cout << (outerStartFit2 - innerCentroid).GetMagnitudeSquared() << "/n";
 
-        this->VisualizeClusters(pInnerCluster, pOuterCluster, "Rejected"sv );
+        //this->VisualizeClusters(pInnerCluster, pOuterCluster, "Rejected"sv );
 
         return false;
     }
