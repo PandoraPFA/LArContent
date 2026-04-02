@@ -32,7 +32,8 @@ StatusCode TrackRecoveryAlgorithm::Run()
 {
     // Get the list of track-like PFOs
     const PfoList *pPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
+    if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList))
+        return STATUS_CODE_SUCCESS;
 
     // Get maps between PFOs, views, clusters and hits
     PfoToViewClusterMap pfoToViewClusterMap;
@@ -109,23 +110,42 @@ StatusCode TrackRecoveryAlgorithm::Run()
             newPosU.emplace_back(pCaloHit->GetPositionVector());
         for (const CaloHit *const pCaloHit : mergeHitsU)
             newPosU.emplace_back(pCaloHit->GetPositionVector());
-        TwoDSlidingFitResult sfrU(&newPosU, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U));
+        try
+        {
+            TwoDSlidingFitResult sfrU(&newPosU, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U));
+            this->FilterHitsToMerge(sfrU, mergeHitsU);
+        }
+        catch (const StatusCodeException &)
+        {
+        }
+
         CartesianPointVector newPosV;
         for (const CaloHit *const pCaloHit : hitsV)
             newPosV.emplace_back(pCaloHit->GetPositionVector());
         for (const CaloHit *const pCaloHit : mergeHitsV)
             newPosV.emplace_back(pCaloHit->GetPositionVector());
-        TwoDSlidingFitResult sfrV(&newPosV, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V));
+        try
+        {
+            TwoDSlidingFitResult sfrV(&newPosV, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V));
+            this->FilterHitsToMerge(sfrV, mergeHitsV);
+        }
+        catch (const StatusCodeException &)
+        {
+        }
+
         CartesianPointVector newPosW;
         for (const CaloHit *const pCaloHit : hitsW)
             newPosW.emplace_back(pCaloHit->GetPositionVector());
         for (const CaloHit *const pCaloHit : mergeHitsW)
             newPosW.emplace_back(pCaloHit->GetPositionVector());
-        TwoDSlidingFitResult sfrW(&newPosW, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W));
-
-        this->FilterHitsToMerge(sfrU, mergeHitsU);
-        this->FilterHitsToMerge(sfrV, mergeHitsV);
-        this->FilterHitsToMerge(sfrW, mergeHitsW);
+        try
+        {
+            TwoDSlidingFitResult sfrW(&newPosW, 2, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W));
+            this->FilterHitsToMerge(sfrW, mergeHitsW);
+        }
+        catch (const StatusCodeException &)
+        {
+        }
 
         for (const CaloHit *const pCaloHit : mergeHitsU)
         {
