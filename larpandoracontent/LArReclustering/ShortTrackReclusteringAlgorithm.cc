@@ -57,6 +57,7 @@ StatusCode ShortTrackReclusteringAlgorithm::Run()
 
     PartitionVector partitions;
     this->PartitionDiscontinuities(pfoToHitTripletsMap, partitions);
+    this->FilterPartitions(partitions);
 
     if (!partitions.empty())
         this->Recluster(partitions);
@@ -386,6 +387,24 @@ void ShortTrackReclusteringAlgorithm::PartitionDiscontinuities(const PfoToHitTri
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ShortTrackReclusteringAlgorithm::FilterPartitions(PartitionVector &partitions) const
+{
+    for (auto iter1 = partitions.begin(); iter1 != partitions.end(); ++iter1)
+    {
+        const Pfo *const pPfo1{iter1->m_pCurrentPfo};
+        for (auto iter2 = std::next(iter1); iter2 != partitions.end();)
+        {
+            const Pfo *const pPfo2{iter2->m_pCurrentPfo};
+            if (pPfo2 == pPfo1)
+                iter2 = partitions.erase(iter2);
+            else
+                ++iter2;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partitions) const
 {
     std::string initialPfoListName;
@@ -416,6 +435,7 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, tempPfoListName));
 
     std::unordered_map<const CaloHit *, int> hitCount;
+    std::unordered_map<const Pfo *, int> pfoCount;
     ProtoPfoVector protoPfos;
     for (const auto &[pPfo, hitTriplet, hitsU, hitsV, hitsW] : partitions)
     {
@@ -434,19 +454,8 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
             CaloHitList cluster1Hits, cluster2Hits;
             this->PartitionHits(hits, hit, cluster1Hits, cluster2Hits);
             protoPfo.m_viewToHitsMap[view] = std::move(cluster2Hits);
-            for (const CaloHit *const pCaloHit : protoPfo.m_viewToHitsMap[view])
-                if (hitCount.find(pCaloHit) == hitCount.end())
-                    hitCount[pCaloHit] = 1;
-                else
-                    ++hitCount[pCaloHit];
         }
         protoPfos.emplace_back(std::move(protoPfo));
-    }
-
-    for (const auto &[pCaloHit, count] : hitCount)
-    {
-        if (count > 1)
-            std::cout << "Hit " << pCaloHit << " is shared " << count << " times across partitions" << std::endl;
     }
 
     // Remove merge hits from their original PFOs, along with associated 3D hits
@@ -461,7 +470,6 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
             const CaloHitList &clusterHits{protoPfo.m_viewToHitsMap[view]};
             ClusterList clusterList;
             LArPfoHelper::GetClusters(pPfo, view, clusterList);
-            std::cout << "Removing view " << view << " hits" << std::endl;
             for (const CaloHit *const pCaloHit : clusterHits)
                 PandoraContentApi::RemoveFromCluster(*this, clusterList.front(), pCaloHit);
 
@@ -475,7 +483,6 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
             }
         }
     }
-    std::cout << "Creating new clusters" << std::endl;
 
     // Create the new clusters and associate to the proto PFOs
     for (const HitType view : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
