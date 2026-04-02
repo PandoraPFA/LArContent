@@ -61,9 +61,9 @@ private:
         {
         }
 
-        const pandora::Pfo *const m_pCurrentPfo;
-        const HitTriplet m_hitTriplet;
-        const pandora::CaloHitList m_hitsU, m_hitsV, m_hitsW;
+        const pandora::Pfo * m_pCurrentPfo;
+        HitTriplet m_hitTriplet;
+        pandora::CaloHitList m_hitsU, m_hitsV, m_hitsW;
     };
     typedef std::vector<Partition> PartitionVector;
 
@@ -133,6 +133,13 @@ private:
      *  @param  partitions the proposed partitions if coherent alternatives can be found
      */
     void PartitionDiscontinuities(const PfoToHitTripletsMap &pfoToHitTripletsMap, PartitionVector &partitions) const;
+
+    /**
+     *  @brief  Different partitions can have overlap. This function throws filters out the smaller partitions
+     *  
+     *  @param[in,out]  partitions the proposed partitions, which are filtered in place
+     */
+    void FilterPartitions(PartitionVector &partitions) const;
 
     /**
      *  @brief  Applies the reclustering described by a given partition vector
