@@ -70,16 +70,19 @@ private:
     mutable pandora::HitType m_view;     ///< The view to which the hits under consideration belong
 
     // struct to cache PCA attributes
-    struct PCAAttr {
-        pandora::CartesianVector centroid;
-        pandora::CartesianVector direction;
+    struct ClusterAttr {
+        float length;
+        pandora::CartesianVector innerCoordinate = pandora::CartesianVector(0.f, 0.f, 0.f);
+        pandora::CartesianVector outerCoordinate = pandora::CartesianVector(0.f, 0.f, 0.f);
+        pandora::CartesianVector centroid = pandora::CartesianVector(0.f, 0.f, 0.f);
+        pandora::CartesianVector direction = pandora::CartesianVector(0.f, 0.f, 0.f);
     };
 
-    typedef std::unordered_map<const pandora::Cluster*, PCAAttr> ClusterPCAMap;
-    mutable ClusterPCAMap clusterToPCAMap;
+    typedef std::unordered_map<const pandora::Cluster*, ClusterAttr> ClusterAttrMap;
+    mutable ClusterAttrMap clusterAttrMap;
 
-    typedef std::map<const pandora::Cluster*, pandora::CaloHitList> ClusterToHitListMap;
-    mutable ClusterToHitListMap clusterToHitListMap;
+    //typedef std::map<const pandora::Cluster*, pandora::CaloHitList> ClusterToHitListMap;
+    //mutable ClusterToHitListMap clusterToHitListMap;
 };
 
 } // namespace lar_content
