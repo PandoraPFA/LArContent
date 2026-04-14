@@ -23,9 +23,9 @@ ThreeDAssociationAlgorithm::ThreeDAssociationAlgorithm() :
     m_minClusterLayers(4),
     m_maxGapLayers(7),
     m_fitLayers(30),
-    m_maxGapDistanceSquared(5.f),
+    m_maxGapDistanceSquared(7.f),
     m_minCosRelativeAngle(0.94f),
-    m_minClusterLength(1.f),
+    m_minClusterLength(1.1f),
     m_maxTransverseDisplacement(2.f),
     m_maxLongitudinalDisplacement(2.f),
     m_hitSizeZ(0.3f),
@@ -81,11 +81,6 @@ void ThreeDAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVect
             if (pInnerCluster == pOuterCluster)
                 continue;
 
-            /*
-            std::cout << &pInnerCluster << ": " << clusterAttrMap.at(pInnerCluster).length << "cm & " <<
-                &pOuterCluster << ": " << clusterAttrMap.at(pOuterCluster).length << "cm" << std::endl;
-            */
-
             if (!this->AreClustersAssociated(pInnerCluster, pOuterCluster))
                 continue;
 
@@ -99,11 +94,11 @@ void ThreeDAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVect
 
 bool ThreeDAssociationAlgorithm::IsExtremalCluster(const bool isForward, const Cluster *const pCurrentCluster, const Cluster *const pTestCluster) const
 {
+    CartesianVector currentClusterInnerCoordinate{ clusterAttrMap.at(pCurrentCluster).innerCoordinate };
+    CartesianVector currentClusterOuterCoordinate{ clusterAttrMap.at(pCurrentCluster).outerCoordinate };
 
-    CartesianVector currentClusterInnerCoordinate( clusterAttrMap.at(pCurrentCluster).innerCoordinate );
-    CartesianVector currentClusterOuterCoordinate( clusterAttrMap.at(pCurrentCluster).outerCoordinate );
-    CartesianVector testClusterInnerCoordinate( clusterAttrMap.at(pTestCluster).innerCoordinate );
-    CartesianVector testClusterOuterCoordinate( clusterAttrMap.at(pTestCluster).outerCoordinate );
+    CartesianVector testClusterInnerCoordinate{ clusterAttrMap.at(pTestCluster).innerCoordinate };
+    CartesianVector testClusterOuterCoordinate{ clusterAttrMap.at(pTestCluster).outerCoordinate };
 
     const CartesianVector currentPosition{ isForward ? currentClusterOuterCoordinate : currentClusterInnerCoordinate };
     const CartesianVector testPosition{ isForward ? testClusterOuterCoordinate : testClusterInnerCoordinate };
@@ -126,7 +121,7 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
 
     const float closestDistance = LArClusterHelper::GetClosestDistance(pInnerCluster, pOuterCluster);
 
-    if( closestDistance > 5 * m_minClusterLength )
+    if( closestDistance > m_maxGapDistanceSquared )
         return false;
 
     CartesianVector innerClusterInnerCoordinate{ clusterAttrMap.at(pInnerCluster).innerCoordinate };
@@ -144,44 +139,34 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
 
     const float openingAngle{ innerDirection.GetCosOpeningAngle(outerDirection) };
 
-    const float shortClusterMaxLength = 3 * m_minClusterLength;
+    constexpr float shortClusterLength = 2.50f;
 
     // Bypass opening angle cut if a short cluster is the extension of a longer one
-    if( (closestDistance > m_minClusterLength) ||
-        ((LArClusterHelper::GetLength(pInnerCluster) < shortClusterMaxLength ) ==
-         (LArClusterHelper::GetLength(pOuterCluster) < shortClusterMaxLength))){
+    if( (closestDistance > 0.5f) ||
+        ((clusterAttrMap.at(pInnerCluster).length <= shortClusterLength ) == (clusterAttrMap.at(pOuterCluster).length <= shortClusterLength))){
 
         if( openingAngle < m_minCosRelativeAngle )
             return false;
     }
 
-    const CartesianVector innerEndFit1{ innerCentroid +  innerDirection * innerDirection.GetDotProduct(innerClusterOuterCoordinate - innerCentroid) }; 
-    const CartesianVector innerEndFit2{ outerCentroid +  outerDirection * outerDirection.GetDotProduct(innerClusterOuterCoordinate - outerCentroid) }; 
+    const CartesianVector innerStartFit1{ innerCentroid +  innerDirection * innerDirection.GetDotProduct(innerClusterInnerCoordinate - innerCentroid) }; 
+    const CartesianVector innerEndFit1  { innerCentroid +  innerDirection * innerDirection.GetDotProduct(innerClusterOuterCoordinate - innerCentroid) }; 
+    const CartesianVector innerStartFit2{ outerCentroid +  outerDirection * outerDirection.GetDotProduct(innerClusterInnerCoordinate - outerCentroid) }; 
+    const CartesianVector innerEndFit2  { outerCentroid +  outerDirection * outerDirection.GetDotProduct(innerClusterOuterCoordinate - outerCentroid) }; 
 
     const CartesianVector outerStartFit1{ outerCentroid +  outerDirection * outerDirection.GetDotProduct(outerClusterInnerCoordinate - outerCentroid) }; 
-    const CartesianVector outerEndFit1{ outerCentroid +  outerDirection * outerDirection.GetDotProduct(outerClusterOuterCoordinate - outerCentroid) }; 
+    const CartesianVector outerEndFit1  { outerCentroid +  outerDirection * outerDirection.GetDotProduct(outerClusterOuterCoordinate - outerCentroid) }; 
     const CartesianVector outerStartFit2{ innerCentroid +  innerDirection * innerDirection.GetDotProduct(outerClusterInnerCoordinate - innerCentroid) }; 
-    const CartesianVector outerEndFit2{ innerCentroid +  innerDirection * innerDirection.GetDotProduct(outerClusterOuterCoordinate - innerCentroid) }; 
+    const CartesianVector outerEndFit2  { innerCentroid +  innerDirection * innerDirection.GetDotProduct(outerClusterOuterCoordinate - innerCentroid) }; 
 
     // Check for overlapping clusters
-    if( ((innerEndFit1 - innerCentroid).GetMagnitudeSquared() > (outerStartFit2 - innerCentroid).GetMagnitudeSquared() + 2.56f) ){
-        //std::cout << (innerEndFit1 - innerCentroid).GetMagnitudeSquared() << "/n";
-        //std::cout << (outerStartFit2 - innerCentroid).GetMagnitudeSquared() << "/n";
-
-        //this->VisualizeClusters(pInnerCluster, pOuterCluster, "Rejected"sv );
-
+    if( ((outerStartFit2 - innerCentroid).GetMagnitudeSquared() + shortClusterLength < (innerEndFit1 - innerCentroid).GetMagnitudeSquared()) || 
+        ((innerEndFit2 - outerCentroid).GetMagnitudeSquared() + shortClusterLength < (outerStartFit1 - outerCentroid).GetMagnitudeSquared()) )
         return false;
-    }
 
-
-        /*
-    if( (innerEndFit1 - innerCentroid).GetMagnitudeSquared() > (outerStartFit2 - innerCentroid).GetMagnitudeSquared() + 1.f ){
-        //(innerEndFit2 - outerCentroid).GetMagnitudeSquared() < (outerStartFit1 - outerCentroid).GetMagnitudeSquared() + 0.16f ){
+    if( ((outerEndFit2 - innerCentroid).GetMagnitudeSquared() + 0.14f < (innerEndFit1 - innerCentroid).GetMagnitudeSquared()) ||
+        ((innerStartFit2 - outerCentroid).GetMagnitudeSquared() + 0.14f < (outerStartFit1 - outerCentroid).GetMagnitudeSquared()) )
         return false;
-    }
-    */
-
-    //const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), m_view)};
 
     if( (innerClusterOuterCoordinate - outerClusterInnerCoordinate).GetMagnitudeSquared() < m_maxGapDistanceSquared )
         return true;
