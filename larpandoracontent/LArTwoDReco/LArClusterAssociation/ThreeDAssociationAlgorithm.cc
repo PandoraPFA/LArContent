@@ -41,6 +41,8 @@ void ThreeDAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const
     if (!pClusterList->empty())
         m_view = LArClusterHelper::GetClusterHitType(pClusterList->front());
 
+    clusterAttrMap.clear();
+
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster = *iter;
@@ -160,12 +162,15 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
     const CartesianVector outerEndFit2  { innerCentroid +  innerDirection * innerDirection.GetDotProduct(outerClusterOuterCoordinate - innerCentroid) }; 
 
     // Check for overlapping clusters
-    if( ((outerStartFit2 - innerCentroid).GetMagnitudeSquared() + shortClusterLength < (innerEndFit1 - innerCentroid).GetMagnitudeSquared()) || 
-        ((innerEndFit2 - outerCentroid).GetMagnitudeSquared() + shortClusterLength < (outerStartFit1 - outerCentroid).GetMagnitudeSquared()) )
+    if( !LArClusterHelper::SortCoordinatesByPosition(outerClusterOuterCoordinate, innerClusterOuterCoordinate) ) 
         return false;
 
-    if( ((outerEndFit2 - innerCentroid).GetMagnitudeSquared() + 0.14f < (innerEndFit1 - innerCentroid).GetMagnitudeSquared()) ||
-        ((innerStartFit2 - outerCentroid).GetMagnitudeSquared() + 0.14f < (outerStartFit1 - outerCentroid).GetMagnitudeSquared()) )
+    if( ((outerStartFit2 - innerCentroid).GetMagnitudeSquared() + shortClusterLength  < (innerEndFit1 - innerCentroid).GetMagnitudeSquared()) || 
+        ((outerEndFit2 - innerCentroid).GetMagnitudeSquared() < (innerEndFit1 - innerCentroid).GetMagnitudeSquared()) )
+        return false;
+
+    if( ((innerEndFit2 - outerCentroid).GetMagnitudeSquared() + shortClusterLength < (outerStartFit1 - outerCentroid).GetMagnitudeSquared()) || 
+        ((innerStartFit2 - outerCentroid).GetMagnitudeSquared() < (outerStartFit1 - outerCentroid).GetMagnitudeSquared()) )
         return false;
 
     if( (innerClusterOuterCoordinate - outerClusterInnerCoordinate).GetMagnitudeSquared() < m_maxGapDistanceSquared )
