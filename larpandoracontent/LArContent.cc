@@ -48,7 +48,12 @@
 #include "larpandoracontent/LArCustomParticles/PcaShowerParticleBuildingAlgorithm.h"
 #include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArMetrics/ValidationAlgorithm.h"
+#include "larpandoracontent/LArMetrics/EventValidationTool.h"
+#include "larpandoracontent/LArMetrics/HierarchyValidationTool.h"
+#include "larpandoracontent/LArMetrics/ShowerValidationTool.h"
+#include "larpandoracontent/LArMetrics/TrackValidationTool.h"
+#include "larpandoracontent/LArMetrics/PFPValidationTool.h"
 
 #include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
 #include "larpandoracontent/LArMonitoring/EventClusterValidationAlgorithm.h"
@@ -236,7 +241,7 @@
 
 // clang-format off
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
-    d("LArMuonLeadingEventValidation",          MuonLeadingEventValidationAlgorithm)                                            \
+    d("LArValidation",                          ValidationAlgorithm)                                                            \
     d("LArElectronInitialRegionRefinement",     ElectronInitialRegionRefinementAlgorithm)                                       \
     d("LArNeutrinoEventValidation",             NeutrinoEventValidationAlgorithm)                                               \
     d("LArEventClusterValidation",              EventClusterValidationAlgorithm)                                                \
@@ -358,6 +363,11 @@
     d("LArVertexRefinement",                    VertexRefinementAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
+    d("LArEventValidationTool",                 EventValidationTool)                                                            \
+    d("LArHierarchyValidationTool",             HierarchyValidationTool)                                                        \
+    d("LArShowerValidationTool",                ShowerValidationTool)                                                           \
+    d("LArTrackValidationTool",                 TrackValidationTool)                                                            \
+    d("LArPFPValidationTool",                   PFPValidationTool)                                                              \
     d("LArRandomFigureOfMeritTool",             RandomFigureOfMeritTool)                                                        \
     d("LArCheatedThreeDClusteringTool",         CheatedThreeDClusteringTool)                                                    \
     d("LArSimplePCAThreeDClusteringTool",       SimplePCAThreeDClusteringTool)                                                  \
