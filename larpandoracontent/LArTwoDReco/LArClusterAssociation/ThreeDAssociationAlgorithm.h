@@ -49,9 +49,6 @@ private:
 
     void PCAFit(const pandora::Cluster *pCluster) const;
 
-    void PCAFit(const pandora::CaloHitList &mergedClusterCaloHit,
-        pandora::CartesianVector &centroid, pandora::CartesianVector &direction ) const;
-    
     // For debugging purposes
     // TODO: Remove
     void VisualizeClusters(const pandora::Cluster *const pInner, const pandora::Cluster *const pOuter, 
@@ -75,7 +72,8 @@ private:
         pandora::CartesianVector innerCoordinate = pandora::CartesianVector(0.f, 0.f, 0.f);
         pandora::CartesianVector outerCoordinate = pandora::CartesianVector(0.f, 0.f, 0.f);
         pandora::CartesianVector centroid = pandora::CartesianVector(0.f, 0.f, 0.f);
-        pandora::CartesianVector direction = pandora::CartesianVector(0.f, 0.f, 0.f);
+        LArPcaHelper::EigenValues eigenValues = LArPcaHelper::EigenValues(0.f, 0.f, 0.f);
+        LArPcaHelper::EigenVectors eigenVectors;
     };
 
     typedef std::unordered_map<const pandora::Cluster*, ClusterAttr> ClusterAttrMap;

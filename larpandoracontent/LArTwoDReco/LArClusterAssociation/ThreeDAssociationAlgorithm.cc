@@ -23,7 +23,7 @@ ThreeDAssociationAlgorithm::ThreeDAssociationAlgorithm() :
     m_minClusterLayers(4),
     m_maxGapLayers(7),
     m_fitLayers(30),
-    m_maxGapDistanceSquared(7.f),
+    m_maxGapDistanceSquared(8.f),
     m_minCosRelativeAngle(0.94f),
     m_minClusterLength(1.1f),
     m_maxTransverseDisplacement(2.f),
@@ -96,6 +96,18 @@ void ThreeDAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVect
 
 bool ThreeDAssociationAlgorithm::IsExtremalCluster(const bool isForward, const Cluster *const pCurrentCluster, const Cluster *const pTestCluster) const
 {
+
+    const unsigned int currentLayer(isForward ? pCurrentCluster->GetOuterPseudoLayer() : pCurrentCluster->GetInnerPseudoLayer());
+    const unsigned int testLayer(isForward ? pTestCluster->GetOuterPseudoLayer() : pTestCluster->GetInnerPseudoLayer());
+
+    if (isForward && ((testLayer > currentLayer) || ((testLayer == currentLayer) && LArClusterHelper::SortByNHits(pTestCluster, pCurrentCluster))))
+        return true;
+
+    if (!isForward && ((testLayer < currentLayer) || ((testLayer == currentLayer) && LArClusterHelper::SortByNHits(pTestCluster, pCurrentCluster))))
+        return true;
+
+    return false;
+    /*
     CartesianVector currentClusterInnerCoordinate{ clusterAttrMap.at(pCurrentCluster).innerCoordinate };
     CartesianVector currentClusterOuterCoordinate{ clusterAttrMap.at(pCurrentCluster).outerCoordinate };
 
@@ -114,6 +126,7 @@ bool ThreeDAssociationAlgorithm::IsExtremalCluster(const bool isForward, const C
         return true;
 
     return false;
+    */
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -126,20 +139,29 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
     if( closestDistance > m_maxGapDistanceSquared )
         return false;
 
-    CartesianVector innerClusterInnerCoordinate{ clusterAttrMap.at(pInnerCluster).innerCoordinate };
-    CartesianVector innerClusterOuterCoordinate{ clusterAttrMap.at(pInnerCluster).outerCoordinate };
-    CartesianVector outerClusterInnerCoordinate{ clusterAttrMap.at(pOuterCluster).innerCoordinate };
-    CartesianVector outerClusterOuterCoordinate{ clusterAttrMap.at(pOuterCluster).outerCoordinate };
+    const CartesianVector innerClusterInnerCoordinate{ clusterAttrMap.at(pInnerCluster).innerCoordinate };
+    const CartesianVector innerClusterOuterCoordinate{ clusterAttrMap.at(pInnerCluster).outerCoordinate };
+    const CartesianVector outerClusterInnerCoordinate{ clusterAttrMap.at(pOuterCluster).innerCoordinate };
+    const CartesianVector outerClusterOuterCoordinate{ clusterAttrMap.at(pOuterCluster).outerCoordinate };
 
     if( !LArClusterHelper::SortCoordinatesByPosition(innerClusterInnerCoordinate, outerClusterInnerCoordinate) )
         throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-    const CartesianVector innerDirection = clusterAttrMap.at(pInnerCluster).direction;
-    const CartesianVector outerDirection = clusterAttrMap.at(pOuterCluster).direction;
-    const CartesianVector innerCentroid  = clusterAttrMap.at(pInnerCluster).centroid;
-    const CartesianVector outerCentroid  = clusterAttrMap.at(pOuterCluster).centroid;
+    const LArPcaHelper::EigenVectors innerVectors{ clusterAttrMap.at(pInnerCluster).eigenVectors };
+    const LArPcaHelper::EigenVectors outerVectors{ clusterAttrMap.at(pOuterCluster).eigenVectors };
 
-    const float openingAngle{ innerDirection.GetCosOpeningAngle(outerDirection) };
+    const CartesianVector innerPrimaryAxis  { innerVectors.at(0).GetZ() > 0.f ? innerVectors.at(0) : innerVectors.at(0) * -1.f };
+    const CartesianVector innerSecondaryAxis{ innerVectors.at(1).GetZ() > 0.f ? innerVectors.at(1) : innerVectors.at(1) * -1.f };
+    const CartesianVector innerTertiaryAxis { innerVectors.at(2).GetZ() > 0.f ? innerVectors.at(2) : innerVectors.at(2) * -1.f };
+
+    const CartesianVector outerPrimaryAxis  { outerVectors.at(0).GetZ() > 0.f ? outerVectors.at(0) : outerVectors.at(0) * -1.f };
+    const CartesianVector outerSecondaryAxis{ outerVectors.at(1).GetZ() > 0.f ? outerVectors.at(1) : outerVectors.at(1) * -1.f };
+    const CartesianVector outerTertiaryAxis { outerVectors.at(2).GetZ() > 0.f ? outerVectors.at(2) : outerVectors.at(2) * -1.f };
+
+    const CartesianVector innerCentroid{ clusterAttrMap.at(pInnerCluster).centroid };
+    const CartesianVector outerCentroid{ clusterAttrMap.at(pOuterCluster).centroid };
+
+    const float openingAngle{ innerPrimaryAxis.GetCosOpeningAngle(outerPrimaryAxis) };
 
     constexpr float shortClusterLength = 2.50f;
 
@@ -151,26 +173,60 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
             return false;
     }
 
-    const CartesianVector innerStartFit1{ innerCentroid +  innerDirection * innerDirection.GetDotProduct(innerClusterInnerCoordinate - innerCentroid) }; 
-    const CartesianVector innerEndFit1  { innerCentroid +  innerDirection * innerDirection.GetDotProduct(innerClusterOuterCoordinate - innerCentroid) }; 
-    const CartesianVector innerStartFit2{ outerCentroid +  outerDirection * outerDirection.GetDotProduct(innerClusterInnerCoordinate - outerCentroid) }; 
-    const CartesianVector innerEndFit2  { outerCentroid +  outerDirection * outerDirection.GetDotProduct(innerClusterOuterCoordinate - outerCentroid) }; 
+    //if( openingAngle < m_minCosRelativeAngle )
+    //      return false;
 
-    const CartesianVector outerStartFit1{ outerCentroid +  outerDirection * outerDirection.GetDotProduct(outerClusterInnerCoordinate - outerCentroid) }; 
-    const CartesianVector outerEndFit1  { outerCentroid +  outerDirection * outerDirection.GetDotProduct(outerClusterOuterCoordinate - outerCentroid) }; 
-    const CartesianVector outerStartFit2{ innerCentroid +  innerDirection * innerDirection.GetDotProduct(outerClusterInnerCoordinate - innerCentroid) }; 
-    const CartesianVector outerEndFit2  { innerCentroid +  innerDirection * innerDirection.GetDotProduct(outerClusterOuterCoordinate - innerCentroid) }; 
+    bool isInnerLongest{ LArClusterHelper::SortByNHits(pInnerCluster, pOuterCluster) && 
+        (clusterAttrMap.at(pInnerCluster).length > clusterAttrMap.at(pOuterCluster).length) };
+    
+    const CartesianVector centroid{ isInnerLongest ? innerCentroid : outerCentroid };
 
-    // Check for overlapping clusters
-    if( !LArClusterHelper::SortCoordinatesByPosition(outerClusterOuterCoordinate, innerClusterOuterCoordinate) ) 
+    const CartesianVector primaryAxis  { isInnerLongest ? innerPrimaryAxis   : outerPrimaryAxis   };
+    const CartesianVector secondaryAxis{ isInnerLongest ? innerSecondaryAxis : outerSecondaryAxis };
+    const CartesianVector tertiaryAxis { isInnerLongest ? innerTertiaryAxis  : outerTertiaryAxis  };
+
+    const CartesianVector innerEndPrimaryAxis  { centroid + primaryAxis * primaryAxis.GetDotProduct(innerClusterOuterCoordinate - centroid) };
+    const CartesianVector outerStartPrimaryAxis{ centroid + primaryAxis * primaryAxis.GetDotProduct(outerClusterInnerCoordinate - centroid) };
+
+    const CartesianVector innerEndSecondaryAxis  { centroid + secondaryAxis * secondaryAxis.GetDotProduct(innerClusterOuterCoordinate - centroid) };
+    const CartesianVector outerStartSecondaryAxis{ centroid + secondaryAxis * secondaryAxis.GetDotProduct(outerClusterInnerCoordinate - centroid) };
+    
+    const CartesianVector innerEndTertiaryAxis  { centroid + tertiaryAxis * tertiaryAxis.GetDotProduct(innerClusterOuterCoordinate - centroid) };
+    const CartesianVector outerStartTertiaryAxis{ centroid + tertiaryAxis * tertiaryAxis.GetDotProduct(outerClusterInnerCoordinate - centroid) };
+
+    if( (innerEndTertiaryAxis - outerStartTertiaryAxis).GetMagnitudeSquared() > shortClusterLength )
         return false;
 
+    if( (innerEndSecondaryAxis - outerStartSecondaryAxis).GetMagnitudeSquared() > shortClusterLength )
+        return false;
+
+    if( (innerEndPrimaryAxis - outerStartPrimaryAxis).GetMagnitudeSquared() < m_maxGapDistanceSquared )
+        return true;
+
+    return false;
+    /*
+    const CartesianVector innerStartFit1{ innerCentroid + innerDirection * innerDirection.GetDotProduct(innerClusterInnerCoordinate - innerCentroid) }; 
+    const CartesianVector innerEndFit1  { innerCentroid + innerDirection * innerDirection.GetDotProduct(innerClusterOuterCoordinate - innerCentroid) }; 
+    const CartesianVector innerStartFit2{ outerCentroid + outerDirection * outerDirection.GetDotProduct(innerClusterInnerCoordinate - outerCentroid) }; 
+    const CartesianVector innerEndFit2  { outerCentroid + outerDirection * outerDirection.GetDotProduct(innerClusterOuterCoordinate - outerCentroid) }; 
+
+    const CartesianVector outerStartFit1{ outerCentroid + outerDirection * outerDirection.GetDotProduct(outerClusterInnerCoordinate - outerCentroid) }; 
+    const CartesianVector outerEndFit1  { outerCentroid + outerDirection * outerDirection.GetDotProduct(outerClusterOuterCoordinate - outerCentroid) }; 
+    const CartesianVector outerStartFit2{ innerCentroid + innerDirection * innerDirection.GetDotProduct(outerClusterInnerCoordinate - innerCentroid) }; 
+    const CartesianVector outerEndFit2  { innerCentroid + innerDirection * innerDirection.GetDotProduct(outerClusterOuterCoordinate - innerCentroid) }; 
+
+    // Check for overlapping clusters
+    //if( LArClusterHelper::SortCoordinatesByPosition(outerClusterOuterCoordinate, innerClusterOuterCoordinate) ) 
+    //  return false;
+
     if( ((outerStartFit2 - innerCentroid).GetMagnitudeSquared() + shortClusterLength  < (innerEndFit1 - innerCentroid).GetMagnitudeSquared()) || 
-        ((outerEndFit2 - innerCentroid).GetMagnitudeSquared() < (innerEndFit1 - innerCentroid).GetMagnitudeSquared()) )
+        ((outerEndFit2 - innerCentroid).GetMagnitudeSquared() + shortClusterLength < (innerEndFit1 - innerCentroid).GetMagnitudeSquared()) ||
+        ((outerStartFit2 - innerCentroid).GetMagnitudeSquared() > (innerStartFit1 - innerCentroid).GetMagnitudeSquared()) + shortClusterLength )
         return false;
 
     if( ((innerEndFit2 - outerCentroid).GetMagnitudeSquared() + shortClusterLength < (outerStartFit1 - outerCentroid).GetMagnitudeSquared()) || 
-        ((innerStartFit2 - outerCentroid).GetMagnitudeSquared() < (outerStartFit1 - outerCentroid).GetMagnitudeSquared()) )
+        ((innerStartFit2 - outerCentroid).GetMagnitudeSquared() + shortClusterLength < (outerStartFit1 - outerCentroid).GetMagnitudeSquared()) || 
+        ((outerEndFit1 - outerCentroid).GetMagnitudeSquared() + shortClusterLength < (innerEndFit2 - outerCentroid).GetMagnitudeSquared()) )
         return false;
 
     if( (innerClusterOuterCoordinate - outerClusterInnerCoordinate).GetMagnitudeSquared() < m_maxGapDistanceSquared )
@@ -184,7 +240,6 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
 
     return false;
 
-    /*
     const auto innerCaloHitList = clusterToHitListMap.at( pInnerCluster );
 
     constexpr float float_limit = std::numeric_limits<float>::max();
@@ -313,27 +368,17 @@ void ThreeDAssociationAlgorithm::PCAFit( const pandora::Cluster *const pCluster 
     CartesianVector centroid (0.f, 0.f, 0.f);
     CartesianVector direction(0.f, 0.f, 0.f);
 
-    this->PCAFit(clusterHits, centroid, direction);
+    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+    LArPcaHelper::EigenVectors eigenVectors;
 
-    //clusterToHitListMap.insert(std::make_pair(pCluster, clusterHits));
+    LArPcaHelper::RunPca(clusterHits, centroid, eigenValues, eigenVectors);
 
-    clusterAttrMap[pCluster].centroid  = centroid;
-    clusterAttrMap[pCluster].direction = direction;
+    clusterAttrMap[pCluster].centroid = centroid;
+    clusterAttrMap[pCluster].eigenValues = eigenValues;
+    clusterAttrMap[pCluster].eigenVectors = eigenVectors;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDAssociationAlgorithm::PCAFit( const CaloHitList& mergedClusterCaloHit,  CartesianVector &centroid, CartesianVector &direction ) const
-{
-    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-    LArPcaHelper::EigenVectors eigenVecs;
-
-    LArPcaHelper::RunPca(mergedClusterCaloHit, centroid, eigenValues, eigenVecs);
-
-    // Compute direction: Eigen vector that has a positive z-component -> By convention
-    direction = eigenVecs.at(0).GetZ() > 0.f ? eigenVecs.at(0) : eigenVecs.at(0) * -1.f;
-}
-
 
 void ThreeDAssociationAlgorithm::VisualizeClusters(const pandora::Cluster *const pInner, const pandora::Cluster *const pOuter, 
     const std::string_view str) const
