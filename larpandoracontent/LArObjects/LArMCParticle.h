@@ -83,8 +83,14 @@ enum MCProcess
 class LArMCParticleParameters : public object_creation::MCParticle::Parameters
 {
 public:
-    pandora::InputInt m_nuanceCode; ///< The nuance code
-    pandora::InputInt m_process;    ///< The process creating the particle
+    pandora::InputInt m_nuanceCode;      ///< The nuance code
+    pandora::InputInt m_process;         ///< The process creating the particle
+    pandora::InputFloat m_visibleEnergy; ///< Energy 'seen' in the detector
+    pandora::InputCartesianVector m_endDirection; ///< Obtained from the momentum at the penultimate trajectory point
+    pandora::InputInt m_nTrajPoints;    ///< Number of trajectory points
+    pandora::FloatVector m_trajPointsX; ///< x-coordinates of the MCParticle trajectory points
+    pandora::FloatVector m_trajPointsY; ///< y-coordinates of the MCParticle trajectory points
+    pandora::FloatVector m_trajPointsZ; ///< z-coordinates of the MCParticle trajectory points
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -123,9 +129,57 @@ public:
      */
     MCProcess GetProcess() const;
 
+    /**
+     *  @brief  Get the visible energy
+     *
+     *  @return the visible energy
+     */
+    float GetVisibleEnergy() const;
+
+    /**
+     *  @brief  Get the end direction
+     *
+     *  @return the end direction
+     */
+    pandora::CartesianVector GetEndDirection() const;
+
+    /**
+     *  @brief  Get the number of trajectory points
+     *
+     *  @return the number of trajectory points
+     */
+    int GetNTrajPoints() const;
+
+    /**
+     *  @brief  Get the x positions
+     *
+     *  @return the x positions
+     */
+    pandora::FloatVector GetTrajPointsX() const;
+
+    /**
+     *  @brief  Get the y positions
+     *
+     *  @return the y positions
+     */
+    pandora::FloatVector GetTrajPointsY() const;
+
+    /**
+     *  @brief  Get the z positions
+     *
+     *  @return the z positions
+     */
+    pandora::FloatVector GetTrajPointsZ() const;
+
 private:
     int m_nuanceCode; ///< The nuance code
     int m_process;    ///< The process that created the particle
+    float m_visibleEnergy; ///< Energy 'seen' in the detector
+    pandora::CartesianVector m_endDirection; ///< Obtained from the momentum at the penultimate trajectory point
+    int m_nTrajPoints;                  ///< The number of trajectory points
+    pandora::FloatVector m_trajPointsX; ///< x-coordinates of the MCParticle trajectory points
+    pandora::FloatVector m_trajPointsY; ///< y-coordinates of the MCParticle trajectory points
+    pandora::FloatVector m_trajPointsZ; ///< z-coordinates of the MCParticle trajectory points
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -141,7 +195,7 @@ public:
      *
      *  @param  version the LArMCParticle version
      */
-    LArMCParticleFactory(const unsigned int version = 2);
+    LArMCParticleFactory(const unsigned int version = 3);
 
     /**
      *  @brief  Create new parameters instance on the heap (memory-management to be controlled by user)
@@ -184,7 +238,13 @@ private:
 inline LArMCParticle::LArMCParticle(const LArMCParticleParameters &parameters) :
     object_creation::MCParticle::Object(parameters),
     m_nuanceCode(parameters.m_nuanceCode.Get()),
-    m_process(parameters.m_process.Get())
+    m_process(parameters.m_process.Get()),
+    m_visibleEnergy(parameters.m_visibleEnergy.Get()),
+    m_endDirection(parameters.m_endDirection.Get()),
+    m_nTrajPoints(parameters.m_nTrajPoints.Get()),
+    m_trajPointsX(parameters.m_trajPointsX),
+    m_trajPointsY(parameters.m_trajPointsY),
+    m_trajPointsZ(parameters.m_trajPointsZ)
 {
 }
 
@@ -197,9 +257,57 @@ inline int LArMCParticle::GetNuanceCode() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline float LArMCParticle::GetVisibleEnergy() const
+{
+    return m_visibleEnergy;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::CartesianVector LArMCParticle::GetEndDirection() const
+{
+    return m_endDirection;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline int LArMCParticle::GetNTrajPoints() const
+{
+    return m_nTrajPoints;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::FloatVector LArMCParticle::GetTrajPointsX() const
+{
+    return m_trajPointsX;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::FloatVector LArMCParticle::GetTrajPointsY() const
+{
+    return m_trajPointsY;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::FloatVector LArMCParticle::GetTrajPointsZ() const
+{
+    return m_trajPointsZ;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline void LArMCParticle::FillParameters(LArMCParticleParameters &parameters) const
 {
     parameters.m_nuanceCode = this->GetNuanceCode();
+    parameters.m_visibleEnergy = this->GetVisibleEnergy();
+    parameters.m_endDirection = this->GetEndDirection();
+    parameters.m_nTrajPoints = this->GetNTrajPoints();
+    parameters.m_trajPointsX = this->GetTrajPointsX();
+    parameters.m_trajPointsY = this->GetTrajPointsY();
+    parameters.m_trajPointsZ = this->GetTrajPointsZ();
     parameters.m_process = this->GetProcess();
     parameters.m_energy = this->GetEnergy();
     parameters.m_momentum = this->GetMomentum();
@@ -250,6 +358,10 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
     // ATTN: To receive this call-back must have already set file reader mc particle factory to this factory
     int nuanceCode(0);
     int process(0);
+    float visibleEnergy(0.f);
+    pandora::CartesianVector endDirection(0.f, 0.f, 0.f);
+    int nTrajPoints(0);
+    pandora::FloatVector trajPointsX, trajPointsY, trajPointsZ;
 
     if (pandora::BINARY == fileReader.GetFileType())
     {
@@ -258,6 +370,22 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
 
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(process));
+
+        if (m_version > 2)
+        {
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(visibleEnergy));
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(endDirection));
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nTrajPoints));
+
+            for (int iTraj = 0; iTraj < nTrajPoints; ++iTraj)
+            {
+                float trajPointX(0.f), trajPointY(0.f), trajPointZ(0.f);
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(trajPointX));
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(trajPointY));
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(trajPointZ));
+                trajPointsX.push_back(trajPointX); trajPointsY.push_back(trajPointY); trajPointsZ.push_back(trajPointZ);
+            }
+        }
     }
     else if (pandora::XML == fileReader.GetFileType())
     {
@@ -266,6 +394,22 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
 
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("Process", process));
+
+        if (m_version > 2)
+        {
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("VisibleEnergy", visibleEnergy));
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("EndDirection", endDirection));
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NTrajPoints", nTrajPoints));
+
+            for (int iTraj = 0; iTraj < nTrajPoints; ++iTraj)
+            {
+                float trajPointX(0.f), trajPointY(0.f), trajPointZ(0.f);
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("TrajPointX", trajPointX));
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("TrajPointY", trajPointY));
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("TrajPointZ", trajPointZ));
+                trajPointsX.push_back(trajPointX); trajPointsY.push_back(trajPointY); trajPointsZ.push_back(trajPointZ);
+            }
+        }
     }
     else
     {
@@ -275,6 +419,11 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
     LArMCParticleParameters &larMCParticleParameters(dynamic_cast<LArMCParticleParameters &>(parameters));
     larMCParticleParameters.m_nuanceCode = nuanceCode;
     larMCParticleParameters.m_process = process;
+    larMCParticleParameters.m_visibleEnergy = visibleEnergy;
+    larMCParticleParameters.m_endDirection = endDirection;
+    larMCParticleParameters.m_trajPointsX = trajPointsX;
+    larMCParticleParameters.m_trajPointsY = trajPointsY;
+    larMCParticleParameters.m_trajPointsZ = trajPointsZ;
 
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -297,6 +446,32 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(
                 pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(static_cast<int>(pLArMCParticle->GetProcess())));
+
+        if (m_version > 2)
+        {
+            PANDORA_RETURN_RESULT_IF(
+                pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(static_cast<float>(pLArMCParticle->GetVisibleEnergy())));
+
+            PANDORA_RETURN_RESULT_IF(
+                pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArMCParticle->GetEndDirection()));
+
+            const int nTrajPoints(pLArMCParticle->GetNTrajPoints());
+
+            PANDORA_RETURN_RESULT_IF(
+                pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(static_cast<int>(nTrajPoints)));
+
+            for (int iTraj = 0; iTraj < nTrajPoints; ++iTraj)
+            {
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, 
+                    binaryFileWriter.WriteVariable(static_cast<float>(pLArMCParticle->GetTrajPointsX().at(iTraj))));
+
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, 
+                    binaryFileWriter.WriteVariable(static_cast<float>(pLArMCParticle->GetTrajPointsY().at(iTraj))));
+
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, 
+                    binaryFileWriter.WriteVariable(static_cast<float>(pLArMCParticle->GetTrajPointsZ().at(iTraj))));
+            }
+        }
     }
     else if (pandora::XML == fileWriter.GetFileType())
     {
@@ -306,6 +481,32 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(
                 pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("Process", static_cast<int>(pLArMCParticle->GetProcess())));
+
+        if (m_version > 2)
+        {
+            PANDORA_RETURN_RESULT_IF(
+                pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("VisibleEnergy", static_cast<float>(pLArMCParticle->GetVisibleEnergy())));
+
+            PANDORA_RETURN_RESULT_IF(
+                pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("EndDirection", (pLArMCParticle->GetEndDirection())));
+
+            const int nTrajPoints(pLArMCParticle->GetNTrajPoints());
+
+            PANDORA_RETURN_RESULT_IF(
+                pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("NTrajPoints", static_cast<int>(nTrajPoints)));
+
+            for (int iTraj = 0; iTraj < nTrajPoints; ++iTraj)
+            {
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, 
+                    xmlFileWriter.WriteVariable("TrajPointX", static_cast<float>(pLArMCParticle->GetTrajPointsX().at(iTraj))));
+
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, 
+                    xmlFileWriter.WriteVariable("TrajPointY", static_cast<float>(pLArMCParticle->GetTrajPointsY().at(iTraj))));
+
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, 
+                    xmlFileWriter.WriteVariable("TrajPointZ", static_cast<float>(pLArMCParticle->GetTrajPointsZ().at(iTraj))));
+            }
+        }
     }
     else
     {
