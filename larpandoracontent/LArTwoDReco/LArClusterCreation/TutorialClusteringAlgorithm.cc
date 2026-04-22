@@ -38,7 +38,7 @@ StatusCode TutorialClusteringAlgorithm::Run()
     PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), pCaloHitList, "Hits", GRAY));
     PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
-    // Create the tmeporary list to hold new clusters
+    // Create the temporary list to hold new clusters
     const ClusterList *pTemporaryList(nullptr);
     std::string temporaryListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTemporaryList, temporaryListName));
