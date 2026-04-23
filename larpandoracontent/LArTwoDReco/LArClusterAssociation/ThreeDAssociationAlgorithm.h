@@ -47,23 +47,16 @@ private:
      */
     bool AreClustersAssociated(const pandora::Cluster *const pInnerCluster, const pandora::Cluster *const pOuterCluster) const;
 
+    /**
+     *  @brief Perform PCA fitting on a cluster
+     *
+     *  @param  pCluster address of the cluster used to fitting
+     */
     void PCAFit(const pandora::Cluster *pCluster) const;
 
-    // For debugging purposes
-    // TODO: Remove
-    void VisualizeClusters(const pandora::Cluster *const pInner, const pandora::Cluster *const pOuter, 
-        const std::string_view str) const;
-
-    unsigned int m_minClusterLayers;     ///< minimum allowed number of layers for a clean cluster
-    unsigned int m_maxGapLayers;         ///< maximum allowed number of layers between associated clusters
-    unsigned int m_fitLayers;            ///< number of layers to fit at start and end of cluster
-    float m_maxGapDistanceSquared;       ///< maximum allowed distance (squared) between associated clusters
-    float m_minCosRelativeAngle;         ///< maximum allowed relative angle between associated clusters
     float m_minClusterLength;            ///< minimum cluster length
-    float m_maxTransverseDisplacement;   ///< maximum allowed transverse displacement after extrapolation (normalised to cell size)
-    float m_maxLongitudinalDisplacement; ///< maximum allowed longitudinal displacement after extrapolation (normalised to cell size)
-    float m_hitSizeZ;                    ///< estimated hit size in z (wire number) dimension, units cm
-    float m_hitSizeX;                    ///< estimated hit size in x (drift time) dimension, units cm
+    float m_minCosRelativeAngle;         ///< maximum allowed relative angle between associated clusters
+    float m_maxGapDistanceSquared;       ///< maximum allowed distance (squared) between associated clusters
     mutable pandora::HitType m_view;     ///< The view to which the hits under consideration belong
 
     // struct to cache PCA attributes
@@ -78,9 +71,6 @@ private:
 
     typedef std::unordered_map<const pandora::Cluster*, ClusterAttr> ClusterAttrMap;
     mutable ClusterAttrMap clusterAttrMap;
-
-    //typedef std::map<const pandora::Cluster*, pandora::CaloHitList> ClusterToHitListMap;
-    //mutable ClusterToHitListMap clusterToHitListMap;
 };
 
 } // namespace lar_content
