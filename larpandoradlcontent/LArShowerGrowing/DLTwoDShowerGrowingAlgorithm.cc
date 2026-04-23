@@ -14,6 +14,7 @@
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
 
 using namespace pandora;
 using namespace lar_content;
@@ -29,7 +30,9 @@ DLTwoDShowerGrowingAlgorithm::HitFeatures::HitFeatures() :
     m_sinThetaRel{0.f},
     m_distToXGap{0.f},
     m_xWidth{0.f},
-    m_energy{0.f}
+    m_energy{0.f},
+    m_larTpcVolId{0},
+    m_daughterVolId{0}
 {
 }
 
@@ -53,24 +56,22 @@ void DLTwoDShowerGrowingAlgorithm::ClusterGroup::insert(const Cluster *pCluster)
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
 DLTwoDShowerGrowingAlgorithm::DLTwoDShowerGrowingAlgorithm() :
+    m_hitFeatureDim{11},
     m_polarRScaleFactor{1.f},
     m_cartesianXScaleFactor{1.f},
     m_cartesianZScaleFactor{1.f},
     m_detectorXGaps{std::set<double>{}},
-    m_hitFeaturesNHitsIdx{-1},
-    m_hitFeaturesNClustersIdx{-1},
-    m_hitFeaturesIterationNumIdx{-1},
-    m_deltaRayLengthThresholdSquared{std::map<HitType, float>{}},
-    m_deltaRayParentWeightThreshold{0.f},
-    m_hitFeatureDim{12},
     m_trainingMode{false},
     m_trainingTreeName{""},
     m_similarityThreshold{0.5f},
     m_similarityThresholdBeta{1.f},
     m_accessoryClustersMaxHits{2},
     m_maxIterations{1},
+    m_includeDistToXGapFeature{true},
     m_includeHitCardinalityFeatures{true},
-    m_includeHitNIterationNumFeature{false}
+    m_includeHitNIterationNumFeature{false},
+    m_encodeLArTPCVolIDs{std::vector<unsigned int>{}},
+    m_encodeDaughterVolIDs{std::vector<unsigned int>{}}
 {
 }
 
@@ -105,14 +106,16 @@ StatusCode DLTwoDShowerGrowingAlgorithm::Run()
 
 StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
 {
+    m_rollUpper.Reset();
+
     const std::map<HitType, CartesianVector> viewToVtxPos{this->Get2DVertices()};
 
     const ClusterList clusterList{this->GetAllClusters()};
 
     int currClusterID{0}, currMCID{0};
-    std::map<const MCParticle *const, int> mcToID = {{nullptr, -1}}, mcToPDG = {{nullptr, 0}};
+    std::map<const MCParticle *const, int> mcToID = {{nullptr, -1}}; // Initialise for null MCParticle
     std::vector<int> clusterView, clusterID;
-    std::vector<int> mcID = {-1}, mcPDG = {0};
+    std::vector<int> mcID = {-1}, mcPDG = {0}, mcIsFromBeam = {0}; // Initialise for null MCParticle
     std::vector<int> hitClusterID;
     std::vector<float> hitXRelPos, hitZRelPos;
     std::vector<float> hitRRelPos, hitSinThetaRelPos, hitCosThetaRelPos; // Polar coordinates
@@ -120,8 +123,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
     std::vector<float> hitDistToXGap;
     std::vector<float> hitEnergy;
     std::vector<int> hitMCID;
-
-    std::map<const MCParticle *const, const MCParticle *const> mcFoldTo;
+    std::vector<int> hitLArTPCVolID, hitDaughterVolID;
 
     for (const Cluster *const pCluster : clusterList)
     {
@@ -136,13 +138,15 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
             HitFeatures hitFeatures;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CalculateHitFeatures(pCaloHit, viewToVtxPos.at(view), hitFeatures));
 
-            const MCParticle *const pMainMC{this->GetMainMC(pCaloHit, mcFoldTo)};
+            const MCParticle *const pMainMC{m_rollUpper.RollUpCaloHit(pCaloHit)};
             if (mcToID.find(pMainMC) == mcToID.end())
             {
                 mcToID.insert({pMainMC, currMCID++});
-                mcToPDG.insert({pMainMC, pMainMC->GetParticleId()});
                 mcID.emplace_back(mcToID.at(pMainMC));
-                mcPDG.emplace_back(mcToPDG.at(pMainMC));
+                mcPDG.emplace_back(pMainMC->GetParticleId());
+                const MCParticle *const pMainMCParent{LArMCParticleHelper::GetParentMCParticle(pMainMC)};
+                mcIsFromBeam.emplace_back(
+                    (LArMCParticleHelper::IsBeamParticle(pMainMCParent) || LArMCParticleHelper::IsNeutrino(pMainMCParent)) ? 1 : 0);
             }
 
             hitClusterID.emplace_back(currClusterID);
@@ -155,6 +159,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
             hitXWidth.emplace_back(hitFeatures.m_xWidth);
             hitDistToXGap.emplace_back(hitFeatures.m_distToXGap);
             hitEnergy.emplace_back(hitFeatures.m_energy);
+            hitLArTPCVolID.emplace_back(static_cast<int>(hitFeatures.m_larTpcVolId));
+            hitDaughterVolID.emplace_back(static_cast<int>(hitFeatures.m_daughterVolId));
 
             hitMCID.emplace_back(mcToID.at(pMainMC));
         }
@@ -165,6 +171,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "cluster_view", &clusterView));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "mc_id", &mcID));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "mc_pdg", &mcPDG));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "mc_is_from_beam", &mcIsFromBeam));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_cluster_id", &hitClusterID));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_x_rel_pos", &hitXRelPos));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_z_rel_pos", &hitZRelPos));
@@ -175,6 +182,8 @@ StatusCode DLTwoDShowerGrowingAlgorithm::PrepareTrainingSample() const
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_x_gap_dist", &hitDistToXGap));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_energy", &hitEnergy));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_mc_id", &hitMCID));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_tpc_vol_id", &hitLArTPCVolID));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName, "hit_daughter_vol_id", &hitDaughterVolID));
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName));
 
@@ -195,149 +204,12 @@ void DLTwoDShowerGrowingAlgorithm::WriteTrainingSample() const
         PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName + "_view_data"));
     }
     PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName + "_view_data", m_trainingFileName, "UPDATE"));
-}
 
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-const MCParticle *DLTwoDShowerGrowingAlgorithm::GetMainMC(
-    const CaloHit *const pCaloHit, std::map<const MCParticle *const, const MCParticle *const> &mcFoldTo) const
-{
-    MCParticleWeightMap weightMap{pCaloHit->GetMCParticleWeightMap()};
-    MCParticleWeightMap foldedWeightMap;
-    for (const auto &[pMC, weight] : weightMap)
-    {
-        const MCParticle *pFoldedMC{nullptr};
-        if (mcFoldTo.find(pMC) != mcFoldTo.end())
-        {
-            pFoldedMC = mcFoldTo.at(pMC);
-        }
-        else
-        {
-            pFoldedMC = this->FoldMCTo(pMC);
-            mcFoldTo.insert({pMC, pFoldedMC});
-        }
-        foldedWeightMap[pFoldedMC] += weight;
-    }
-    weightMap = std::move(foldedWeightMap);
-
-    const MCParticle *pMainMC{nullptr};
-    float maxWeight{0.f};
-    for (const auto &[pMC, weight] : weightMap)
-    {
-        if (weight > maxWeight)
-        {
-            pMainMC = pMC;
-            maxWeight = weight;
-        }
-        if (weight == maxWeight) // tie-breaker (very unlikely)
-        {
-            if (LArMCParticleHelper::SortByMomentum(pMC, pMainMC))
-            {
-                pMainMC = pMC;
-            }
-        }
-    }
-
-    if (pMainMC)
-    {
-        pMainMC = this->FoldPotentialDeltaRayTo(pCaloHit, pMainMC);
-    }
-
-    return pMainMC;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-const MCParticle *DLTwoDShowerGrowingAlgorithm::FoldMCTo(const MCParticle *const pMC) const
-{
-    if (!LArMCParticleHelper::IsEM(pMC))
-    {
-        return pMC;
-    }
-
-    const MCParticle *pCurrentMC{pMC};
-    const MCParticle *pLeadingMC{pMC};
-    while (!pCurrentMC->IsRootParticle())
-    {
-        const MCParticle *const pParentMC{*(pCurrentMC->GetParentList().begin())};
-        const int parentPdg{std::abs(pParentMC->GetParticleId())};
-        if (parentPdg == PHOTON || parentPdg == E_MINUS)
-        {
-            pCurrentMC = pParentMC;
-            continue;
-        }
-        pLeadingMC = pCurrentMC;
-        break;
-    }
-
-    return pLeadingMC;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const MCParticle *DLTwoDShowerGrowingAlgorithm::FoldPotentialDeltaRayTo(const CaloHit *const pCaloHit, const MCParticle *const pMC) const
-{
-    // Not an electron -> not a delta ray -> do nothing
-    if (pMC->IsRootParticle() || pMC->GetParticleId() != E_MINUS)
-    {
-        return pMC;
-    }
-
-    // Did not come from a track-like particle -> not a delta ray -> do nothing
-    const MCParticle *const pParentMC{*(pMC->GetParentList().begin())};
-    const int parentPdg{std::abs(pParentMC->GetParticleId())};
-    if (parentPdg == PHOTON || parentPdg == E_MINUS || PdgTable::GetParticleCharge(parentPdg) == 0)
-    {
-        return pMC;
-    }
-
-    // Delta ray that does not start a shower and is short -> fold into parent particle
-    if (!this->CausesShower(pMC, 0) &&
-        (pMC->GetVertex() - pMC->GetEndpoint()).GetMagnitudeSquared() < m_deltaRayLengthThresholdSquared.at(pCaloHit->GetHitType()))
-    {
-        return pParentMC;
-    }
-
-    // Now have a delta ray that we would like to cluster but only the hits that are not overlapping with the parent particle
-    float parentWeight{std::numeric_limits<float>::lowest()};
-    const MCParticleWeightMap &weightMap{pCaloHit->GetMCParticleWeightMap()};
-    for (const auto &[pContributingMC, weight] : weightMap)
-    {
-        if (pContributingMC == pParentMC)
-        {
-            parentWeight = weight;
-            break;
-        }
-    }
-    if (parentWeight > m_deltaRayParentWeightThreshold)
-    {
-        return pParentMC;
-    }
-    return pMC;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-bool DLTwoDShowerGrowingAlgorithm::CausesShower(const MCParticle *const pMC, int nDescendentElectrons) const
-{
-    if (nDescendentElectrons > 1)
-    {
-        return true;
-    }
-
-    if (std::abs(pMC->GetParticleId()) == E_MINUS)
-    {
-        nDescendentElectrons++; // Including the parent particle, ie. the first in the recursion, as a descendent
-    }
-    for (const MCParticle *pChildMC : pMC->GetDaughterList())
-    {
-        if (this->CausesShower(pChildMC, nDescendentElectrons))
-        {
-            return true;
-        }
-    }
-
-    return false;
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName + "_event_data", "scalefactor_polar_r", m_polarRScaleFactor))
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName + "_event_data", "scalefactor_cartesian_x", m_cartesianXScaleFactor))
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_trainingTreeName + "_event_data", "scalefactor_cartesian_z", m_cartesianZScaleFactor))
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_trainingTreeName + "_event_data"));
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_trainingTreeName + "_event_data", m_trainingFileName, "UPDATE"));
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -406,6 +278,17 @@ StatusCode DLTwoDShowerGrowingAlgorithm::CalculateHitFeatures(const CaloHit *con
     hitFeatures.m_distToXGap = static_cast<float>(distToXGap);
     hitFeatures.m_xWidth = pCaloHit->GetCellSize1();
     hitFeatures.m_energy = pCaloHit->GetMipEquivalentEnergy();
+
+    const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit *>(pCaloHit));
+    if (pLArCaloHit)
+    {
+        hitFeatures.m_larTpcVolId = pLArCaloHit->GetLArTPCVolumeId();
+        hitFeatures.m_daughterVolId = pLArCaloHit->GetDaughterVolumeId();
+    }
+    else if (!m_encodeLArTPCVolIDs.empty())
+    {
+        return STATUS_CODE_FAILURE;
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -532,30 +415,40 @@ StatusCode DLTwoDShowerGrowingAlgorithm::MakeClusterTensor(const std::vector<Hit
     tensorCluster = torch::zeros({1, nHits, m_hitFeatureDim});
     auto accessor = tensorCluster.accessor<float, 3>();
 
-    for (int i = 0; i < nHits; i++)
+    for (int iHit = 0; iHit < nHits; iHit++)
     {
-        const HitFeatures hitFeatures{clusterFeatures.at(i)};
-        accessor[0][i][0] = hitFeatures.m_rRel * m_polarRScaleFactor;
-        accessor[0][i][1] = hitFeatures.m_cosThetaRel;
-        accessor[0][i][2] = hitFeatures.m_sinThetaRel;
-        accessor[0][i][3] = hitFeatures.m_xRel * m_cartesianXScaleFactor;
-        accessor[0][i][4] = hitFeatures.m_zRel * m_cartesianZScaleFactor;
-        accessor[0][i][5] = hitFeatures.m_xWidth * m_cartesianXScaleFactor;
-        accessor[0][i][6] = zWidthFeat;
-        accessor[0][i][7] = hitFeatures.m_distToXGap * m_cartesianXScaleFactor;
-        accessor[0][i][8] = std::log(hitFeatures.m_energy);
-        accessor[0][i][9] = view == TPC_VIEW_U ? 1.f : 0.f;
-        accessor[0][i][10] = view == TPC_VIEW_V ? 1.f : 0.f;
-        accessor[0][i][11] = view == TPC_VIEW_W ? 1.f : 0.f;
+        const HitFeatures &hitFeatures = clusterFeatures.at(iHit);
+        int iFeat{0};
+        auto addFeat = [&accessor, &iHit, &iFeat](const float val) -> void { accessor[0][iHit][iFeat++] = val; };
+        addFeat(hitFeatures.m_rRel * m_polarRScaleFactor);
+        addFeat(hitFeatures.m_cosThetaRel);
+        addFeat(hitFeatures.m_sinThetaRel);
+        addFeat(hitFeatures.m_xRel * m_cartesianXScaleFactor);
+        addFeat(hitFeatures.m_zRel * m_cartesianZScaleFactor);
+        addFeat(hitFeatures.m_xWidth * m_cartesianXScaleFactor);
+        addFeat(zWidthFeat);
+        if (m_includeDistToXGapFeature)
+            addFeat(hitFeatures.m_distToXGap * m_cartesianXScaleFactor);
+        addFeat(std::log(hitFeatures.m_energy));
+        addFeat(view == TPC_VIEW_U ? 1.f : 0.f);
+        addFeat(view == TPC_VIEW_V ? 1.f : 0.f);
+        addFeat(view == TPC_VIEW_W ? 1.f : 0.f);
+        for (size_t iVol = 0; iVol < m_encodeLArTPCVolIDs.size(); iVol++)
+        {
+            if (hitFeatures.m_larTpcVolId == m_encodeLArTPCVolIDs.at(iVol) && hitFeatures.m_daughterVolId == m_encodeDaughterVolIDs.at(iVol))
+                addFeat(1.f);
+            else
+                addFeat(0.f);
+        }
         if (m_includeHitCardinalityFeatures)
         {
-            accessor[0][i][m_hitFeaturesNHitsIdx] = nHitsFeat;
-            accessor[0][i][m_hitFeaturesNClustersIdx] = nClustersFeat;
+            addFeat(nHitsFeat);
+            addFeat(nClustersFeat);
         }
         if (m_includeHitNIterationNumFeature)
-        {
-            accessor[0][i][m_hitFeaturesIterationNumIdx] = iterationNumFeat;
-        }
+            addFeat(iterationNumFeat);
+
+        PANDORA_RETURN_IF(STATUS_CODE_NOT_ALLOWED, iFeat != m_hitFeatureDim);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -815,6 +708,10 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrainingTreeName", m_trainingTreeName));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrainingFileName", m_trainingFileName));
+        const std::map<HitType, float> lengthThresholds{{TPC_VIEW_U, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)},
+            {TPC_VIEW_V, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)},
+            {TPC_VIEW_W, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)}};
+        m_rollUpper = RollUpper(std::make_unique<RollUpEMAndAmbiguousDeltaRayHitsPolicy>(0.f, lengthThresholds));
     }
     else
     {
@@ -838,41 +735,54 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SimilarityThreshold", m_similarityThreshold));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "SimilarityThresholdBeta", m_similarityThresholdBeta));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "AccessoryClusterMaxHits", m_accessoryClustersMaxHits));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxIterations", m_maxIterations));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "EncodeLArTPCVolIDs", m_encodeLArTPCVolIDs));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "EncodeDaughterVolIDs", m_encodeDaughterVolIDs));
+    PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, m_encodeLArTPCVolIDs.size() != m_encodeDaughterVolIDs.size());
+    if (!m_encodeLArTPCVolIDs.empty())
+        m_hitFeatureDim += m_encodeLArTPCVolIDs.size();
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "IncludeDistToXGapFeature", m_includeDistToXGapFeature));
+    if (m_includeDistToXGapFeature)
+        ++m_hitFeatureDim;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "IncludeHitCardinalityFeatures", m_includeHitCardinalityFeatures));
     if (m_includeHitCardinalityFeatures)
-    {
-        m_hitFeaturesNHitsIdx = m_hitFeatureDim++;
-        m_hitFeaturesNClustersIdx = m_hitFeatureDim++;
-    }
+        m_hitFeatureDim += 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "IncludeHitNIterationNumFeature", m_includeHitNIterationNumFeature));
     if (m_includeHitNIterationNumFeature)
-    {
-        m_hitFeaturesIterationNumIdx = m_hitFeatureDim++;
-    }
+        ++m_hitFeatureDim;
 
-    m_deltaRayLengthThresholdSquared = {
-        {TPC_VIEW_U, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U), 2.))},
-        {TPC_VIEW_V, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V), 2.))},
-        {TPC_VIEW_W, static_cast<float>(std::pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W), 2.))}};
-
-    const LArGeometryHelper::DetectorBoundaries detBounds{LArGeometryHelper::GetDetectorBoundaries(this->GetPandora())};
-    double xLow{static_cast<double>(detBounds.m_xBoundaries.first)}, xHigh{static_cast<double>(detBounds.m_xBoundaries.second)};
-    double yLow{static_cast<double>(detBounds.m_yBoundaries.first)}, yHigh{static_cast<double>(detBounds.m_yBoundaries.second)};
-    double zLow{static_cast<double>(detBounds.m_zBoundaries.first)}, zHigh{static_cast<double>(detBounds.m_zBoundaries.second)};
-    m_polarRScaleFactor = static_cast<float>(1. / std::sqrt(std::pow(xHigh - xLow, 2.) + std::pow(yHigh - yLow, 2.) + std::pow(zHigh - zLow, 2.)));
-    m_cartesianXScaleFactor = static_cast<float>(1. / (xHigh - xLow));
-    m_cartesianZScaleFactor = static_cast<float>(1. / (zHigh - zLow));
     if (m_trainingMode)
     {
+        const LArGeometryHelper::DetectorBoundaries detBounds{LArGeometryHelper::GetDetectorBoundaries(this->GetPandora())};
+        double xLow{static_cast<double>(detBounds.m_xBoundaries.first)}, xHigh{static_cast<double>(detBounds.m_xBoundaries.second)};
+        double yLow{static_cast<double>(detBounds.m_yBoundaries.first)}, yHigh{static_cast<double>(detBounds.m_yBoundaries.second)};
+        double zLow{static_cast<double>(detBounds.m_zBoundaries.first)}, zHigh{static_cast<double>(detBounds.m_zBoundaries.second)};
+        // NOTE this should really be in the x-z plane, too much of a pain to fix and shouldn't matter (I hope)
+        m_polarRScaleFactor =
+            static_cast<float>(1. / std::sqrt(std::pow(xHigh - xLow, 2.) + std::pow(yHigh - yLow, 2.) + std::pow(zHigh - zLow, 2.)));
+        m_cartesianXScaleFactor = static_cast<float>(1. / (xHigh - xLow));
+        m_cartesianZScaleFactor = static_cast<float>(1. / (zHigh - zLow));
         std::cout << "Scalefactors for this geometry\n"
                   << "Polar R:     " << m_polarRScaleFactor << "\n"
                   << "Cartesian X: " << m_cartesianXScaleFactor << "\n"
                   << "Cartesian Z: " << m_cartesianZScaleFactor << "\n";
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PolarRScaleFactor", m_polarRScaleFactor));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CartesianXScaleFactor", m_cartesianXScaleFactor));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CartesianZScaleFactor", m_cartesianZScaleFactor));
     }
 
     for (const DetectorGap *const pDetectorGap : this->GetPandora().GetGeometry()->GetDetectorGapList())

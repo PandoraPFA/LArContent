@@ -13,6 +13,7 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArUtility/RollUp.h"
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 
 namespace lar_dl_content
@@ -35,6 +36,8 @@ private:
         float m_distToXGap;
         float m_xWidth;
         float m_energy;
+        unsigned int m_larTpcVolId;
+        unsigned int m_daughterVolId;
     };
 
     struct ClusterGroup
@@ -107,49 +110,6 @@ private:
     pandora::StatusCode Infer();
 
     /* Start training sample preparation methods */
-
-    /**
-     *  @brief Get the folded MCParticle that contributes the most to the CaloHit.
-     *
-     *  @param[in]     pCaloHit The hit
-     *  @param[in,out] mcFoldTo A map for the folding of MCParticles, updates as new MCParticles are seen by the method
-     *
-     *  @return The folded MCParticle that contributed the most to the CaloHit
-     */
-    const pandora::MCParticle *GetMainMC(const pandora::CaloHit *const pCaloHit,
-        std::map<const pandora::MCParticle *const, const pandora::MCParticle *const> &mcFoldTo) const;
-
-    /**
-     *  @brief Finds the ancestor that a MCParticle should be folded to in order to roll-up an EM shower
-     *
-     *  @param[in] pMC The MCParticle
-     *
-     *  @return The ancestor MCParticle, this will be the input pMC an MCParticle that should not be rolled-up
-     */
-    const pandora::MCParticle *FoldMCTo(const pandora::MCParticle *const pMC) const;
-
-    /**
-     *  @brief Recursive function to check descendent particles for signature of a shower (e -> gamma -> e).
-     *         Used to identify delta-rays that shower and photons that only undergo compton scatters leaving diffuse hits.
-     *
-     *  @param[in] pMC                  The MCParticle to check descendents of
-     *  @param[in] nDescendentElectrons The number of electrons seen while descending from the original photon MCParticle
-     *
-     *  @return Flag to indicate if more than 1 electron was seen while descending any of the descendent particle association paths
-     */
-    bool CausesShower(const pandora::MCParticle *const pMC, int nDescendentElectrons) const;
-
-    /**
-     *  @brief Tries to identify and deal with impossible-to-cluster-correctly delta ray hits by assigning the hit to the
-     *         parent particle's cluster if the delta-ray is short and does not shower
-     *         or the hit has charge contribution from the parent particle.
-     *
-     *  @param[in] pCaloHit The hit
-     *  @param[in] pMC      The main MCParticle of the hit
-     *
-     *  @return The MCParticle the hit should be assigned to, this will either be the inputted MCParticle or the parent MCParticle
-     */
-    const pandora::MCParticle *FoldPotentialDeltaRayTo(const pandora::CaloHit *const pCaloHit, const pandora::MCParticle *const pMC) const;
 
     /**
      *  @brief Write out the filled training sample tree and fill and write out a tree containing auxiliary view information.
@@ -321,21 +281,16 @@ private:
     LArDLHelper::TorchModel m_modelEncoder; ///< TorchScript model for encoding hits in a cluster
     LArDLHelper::TorchModel m_modelAttn;    ///< TorchScript model for attention over encoded clusters in a view
     LArDLHelper::TorchModel m_modelSim;     ///< TorchScript model for pairwise similarities over clusters after attention
+    int m_hitFeatureDim;                    ///< Feature dimensions of each hit
     float m_polarRScaleFactor;              ///< Scale factor for polar r coordinate input features
     float m_cartesianXScaleFactor;          ///< Scale factor for cartesian x coordinate input features
     float m_cartesianZScaleFactor;          ///< Scale factor for cartesian z coordinate input features
     std::set<double> m_detectorXGaps;       ///< X coordinates where gaps in X direction start/end
-    int m_hitFeaturesNHitsIdx;              ///< Hit feature vector index for the optional no. hits in cluster feature
-    int m_hitFeaturesNClustersIdx;          ///< Hit feature vector index for the optional no. clusters in event feature
-    int m_hitFeaturesIterationNumIdx;       ///< Hit feature vector index for the optional no. clusters in event feature
+    lar_content::RollUpper m_rollUpper;     ///< Class to perform rolling up of EM activity
 
     /* End shared mutable members */
 
     /* Start hardcoded members */
-
-    std::map<pandora::HitType, float> m_deltaRayLengthThresholdSquared; ///< Threshold for defining small delta rays that will be folded to the parent particle
-    float m_deltaRayParentWeightThreshold; ///< Threshold for weight contribution of parent particle for it take the delta ray's hit
-    int m_hitFeatureDim;                   ///< Feature dimensions of each hit
 
     /* End hardcoded members */
 
@@ -350,8 +305,11 @@ private:
     float m_similarityThresholdBeta;          ///< Scaling factor for an optional second clustering pass
     unsigned int m_accessoryClustersMaxHits;  ///< Clusters with this number of less hits are treated as accessory clusters during merging
     unsigned int m_maxIterations;             ///< Max iterative applications of the cluster merging
+    bool m_includeDistToXGapFeature;          ///< Option to include in hit feature vector the X distance to the nearest drift gap
     bool m_includeHitCardinalityFeatures;     ///< Option to include in hit feature vector the no. hits in cluster and no. clusters in event
     bool m_includeHitNIterationNumFeature;    ///< Option to include in hit feature vector the inference iteration number
+    std::vector<unsigned int> m_encodeLArTPCVolIDs; ///< LArTPC vol IDs for one-hot encoding of drift vols in hit feature vector, must be same size as m_encodeDaughterVolIDs
+    std::vector<unsigned int> m_encodeDaughterVolIDs; ///< Daughter vol IDs for one-hot encoding of drift vols in hit feature vector, must be sae size as m_encodeLArTPCVolIDs
 
     /* End configurable via xml members */
 };

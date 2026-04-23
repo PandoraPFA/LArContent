@@ -16,6 +16,7 @@
 #include "Pandora/StatusCodes.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
@@ -266,14 +267,17 @@ const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *con
     const MCParticle *pParentMCParticle = pMCParticle;
 
     while (pParentMCParticle->GetParentList().empty() == false)
-    {
-        if (1 != pParentMCParticle->GetParentList().size())
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
-    }
+        pParentMCParticle = LArMCParticleHelper::GetNextParentMCParticle(pParentMCParticle);
 
     return pParentMCParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const MCParticle *LArMCParticleHelper::GetNextParentMCParticle(const MCParticle *const pMCParticle)
+{
+    PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, pMCParticle->GetParentList().size() != 1);
+    return *(pMCParticle->GetParentList().begin());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1022,6 +1026,25 @@ bool LArMCParticleHelper::IsPairProduction(const MCParticle *const pMCParticle)
             return true;
         default:
             return false;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::CausesShower(const MCParticle *const pMC, int nDescendantElectrons)
+{
+    if (nDescendantElectrons > 1)
+        return true;
+
+    if (std::abs(pMC->GetParticleId()) == E_MINUS)
+        nDescendantElectrons++; // Including the parent particle, ie. the first in the recursion, as a descendant
+
+    for (const MCParticle *pChildMC : pMC->GetDaughterList())
+    {
+        if (LArMCParticleHelper::CausesShower(pChildMC, nDescendantElectrons))
+            return true;
     }
 
     return false;

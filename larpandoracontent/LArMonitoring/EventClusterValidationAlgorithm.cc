@@ -42,6 +42,7 @@ EventClusterValidationAlgorithm::ClusterMetrics::ClusterMetrics() :
     m_trackAri{0.},
     m_nHits{0},
     m_nHitsNullCluster{0},
+    m_nHitsFromBeam{0},
     m_nShowerTrueHits{0},
     m_nTrackTrueHits{0},
     m_nRecoClusters{0},
@@ -76,8 +77,6 @@ EventClusterValidationAlgorithm::MatchedParticleMetrics::MatchedParticleMetrics(
 
 EventClusterValidationAlgorithm::EventClusterValidationAlgorithm() :
     m_eventNumber{0},
-    m_deltaRayLengthThresholdSquared{std::map<HitType, float>{}},
-    m_deltaRayParentWeightThreshold{0.f},
     m_caloHitListNames{{"CaloHitList2D"}},
     m_minMCHitsPerView{0},
     m_onlyRandIndex{false},
@@ -124,6 +123,7 @@ EventClusterValidationAlgorithm::~EventClusterValidationAlgorithm()
 StatusCode EventClusterValidationAlgorithm::Run()
 {
     m_eventNumber++;
+    m_rollUpper.Reset();
 
     // Gather hits by view
     std::map<HitType, CaloHitList> viewToCaloHits;
@@ -166,6 +166,14 @@ StatusCode EventClusterValidationAlgorithm::Run()
         std::map<const CaloHit *const, CaloHitParents> hitParents;
         this->GetHitParents(caloHits, clusters, hitParents);
         clusterMetrics.m_nHits = hitParents.size();
+        for (const auto &[pCaloHit, parents] : hitParents)
+        {
+            const MCParticle *const pMainMCParent{LArMCParticleHelper::GetParentMCParticle(parents.m_pMainMC)};
+            if ((LArMCParticleHelper::IsBeamParticle(pMainMCParent) || LArMCParticleHelper::IsNeutrino(pMainMCParent)))
+            {
+                clusterMetrics.m_nHitsFromBeam++;
+            }
+        }
 
         // Drop any hits with a main MC particle with insufficient activity
         this->ApplyMCParticleMinSumHits(hitParents);
@@ -211,60 +219,13 @@ StatusCode EventClusterValidationAlgorithm::Run()
 void EventClusterValidationAlgorithm::GetHitParents(
     const CaloHitList &caloHits, const ClusterList &clusters, std::map<const CaloHit *const, CaloHitParents> &hitParents) const
 {
-    std::map<const MCParticle *const, const MCParticle *const> mcFoldTo;
     for (const CaloHit *const pCaloHit : caloHits)
     {
-        MCParticleWeightMap weightMap{pCaloHit->GetMCParticleWeightMap()};
-
-        if (m_foldShowers)
-        {
-            MCParticleWeightMap foldedWeightMap;
-            for (const auto &[pMC, weight] : weightMap)
-            {
-                const MCParticle *pFoldedMC{nullptr};
-                if (mcFoldTo.find(pMC) != mcFoldTo.end())
-                {
-                    pFoldedMC = mcFoldTo.at(pMC);
-                }
-                else
-                {
-                    pFoldedMC = this->FoldMCTo(pMC);
-                    mcFoldTo.insert({pMC, pFoldedMC});
-                }
-                foldedWeightMap[pFoldedMC] += weight;
-            }
-            weightMap = std::move(foldedWeightMap);
-        }
-
-        const MCParticle *pMainMC{nullptr};
-        float maxWeight{0.f};
-        for (const auto &[pMC, weight] : weightMap)
-        {
-            if (weight > maxWeight)
-            {
-                pMainMC = pMC;
-                maxWeight = weight;
-            }
-            if (weight == maxWeight && pMainMC) // tie-breaker (very unlikely)
-            {
-                if (LArMCParticleHelper::SortByMomentum(pMC, pMainMC))
-                {
-                    pMainMC = pMC;
-                }
-            }
-        }
+        const MCParticle *const pMainMC{m_rollUpper.RollUpCaloHit(pCaloHit)};
         if (pMainMC)
         {
             hitParents[pCaloHit] = CaloHitParents();
             hitParents[pCaloHit].m_pMainMC = pMainMC;
-        }
-    }
-
-    if (m_handleDeltaRays)
-    {
-        for (auto &[pCaloHit, parents] : hitParents)
-        {
-            parents.m_pMainMC = this->FoldPotentialDeltaRayTo(pCaloHit, parents.m_pMainMC);
         }
     }
 
@@ -284,118 +245,6 @@ void EventClusterValidationAlgorithm::GetHitParents(
             hitParents[pCaloHit].m_pCluster = pCluster;
         }
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const MCParticle *EventClusterValidationAlgorithm::FoldMCTo(const MCParticle *const pMC) const
-{
-    if (!LArMCParticleHelper::IsEM(pMC))
-    {
-        return pMC;
-    }
-
-    bool hasAncestorElectron{false};
-    const MCParticle *pCurrentMC{pMC};
-    const MCParticle *pLeadingMC{pMC};
-    while (!pCurrentMC->IsRootParticle())
-    {
-        const MCParticle *const pParentMC{*(pCurrentMC->GetParentList().begin())};
-        const int parentPdg{std::abs(pParentMC->GetParticleId())};
-        if (parentPdg == PHOTON || parentPdg == E_MINUS)
-        {
-            if (parentPdg == E_MINUS)
-            {
-                hasAncestorElectron = true;
-            }
-            pCurrentMC = pParentMC;
-            continue;
-        }
-        pLeadingMC = pCurrentMC;
-        break;
-    }
-
-    // Don't fold "showers" that consist of only compton scatters
-    // Trying to prevents distant diffuse hits disconnected from a "real" bremm + pair production shower being clustered together
-    if (hasAncestorElectron || std::abs(pLeadingMC->GetParticleId()) == E_MINUS)
-    {
-        return pLeadingMC;
-    }
-    else if (this->CausesShower(pLeadingMC, 0))
-    {
-        return pLeadingMC;
-    }
-    else
-    {
-        return pMC;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool EventClusterValidationAlgorithm::CausesShower(const MCParticle *const pMC, int nDescendentElectrons) const
-{
-    if (nDescendentElectrons > 1)
-    {
-        return true;
-    }
-
-    if (std::abs(pMC->GetParticleId()) == E_MINUS)
-    {
-        nDescendentElectrons++; // Including the parent particle, ie. the first in the recursion, as a descendent
-    }
-    for (const MCParticle *pChildMC : pMC->GetDaughterList())
-    {
-        if (this->CausesShower(pChildMC, nDescendentElectrons))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const MCParticle *EventClusterValidationAlgorithm::FoldPotentialDeltaRayTo(const CaloHit *const pCaloHit, const MCParticle *const pMC) const
-{
-    // Not an electron -> not a delta ray -> do nothing
-    if (pMC->IsRootParticle() || pMC->GetParticleId() != E_MINUS)
-    {
-        return pMC;
-    }
-
-    // Did not come from a track-like particle -> not a delta ray -> do nothing
-    const MCParticle *const pParentMC{*(pMC->GetParentList().begin())};
-    const int parentPdg{std::abs(pParentMC->GetParticleId())};
-    if (parentPdg == PHOTON || parentPdg == E_MINUS || PdgTable::GetParticleCharge(parentPdg) == 0)
-    {
-        return pMC;
-    }
-
-    // Delta ray that does not start a shower and is short -> fold into parent particle
-    if (!this->CausesShower(pMC, 0) &&
-        (pMC->GetVertex() - pMC->GetEndpoint()).GetMagnitudeSquared() < m_deltaRayLengthThresholdSquared.at(pCaloHit->GetHitType()))
-    {
-        return pParentMC;
-    }
-
-    // Now have a delta ray that we would like to cluster but only the hits that are not overlapping with the parent particle
-    float parentWeight{std::numeric_limits<float>::lowest()};
-    const MCParticleWeightMap &weightMap{pCaloHit->GetMCParticleWeightMap()};
-    for (const auto &[pContributingMC, weight] : weightMap)
-    {
-        if (pContributingMC == pParentMC)
-        {
-            parentWeight = weight;
-            break;
-        }
-    }
-    if (parentWeight > m_deltaRayParentWeightThreshold)
-    {
-        return pParentMC;
-    }
-    return pMC;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -764,8 +613,8 @@ void EventClusterValidationAlgorithm::GetMatchedParticleMetrics(
     for (const auto &[pMC, pCluster] : mcMatchedCluster)
     {
         metrics.m_pdg.emplace_back(pMC->GetParticleId());
-        metrics.m_causesShower.emplace_back(this->CausesShower(pMC, 0));
-        metrics.m_isPrimary.emplace_back(pMC->GetParentList().front()->IsRootParticle());
+        metrics.m_causesShower.emplace_back(LArMCParticleHelper::CausesShower(pMC));
+        metrics.m_isPrimary.emplace_back(pMC->IsRootParticle() || pMC->GetParentList().front()->IsRootParticle());
         metrics.m_trueEnergy.emplace_back(pMC->GetEnergy());
         metrics.m_nTrueHits.emplace_back(mcNTrueHits.at(pMC));
         metrics.m_trueHitsSumEnergy.emplace_back(mcTrueHitsSumEnergy.at(pMC));
@@ -873,6 +722,7 @@ void EventClusterValidationAlgorithm::SetBranches([[maybe_unused]] const Cluster
     // Just the all-hits ARI with some values that might be needed for cuts
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "n_hits", clusterMetrics.m_nHits));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "n_hits_null", clusterMetrics.m_nHitsNullCluster));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "n_hits_from_beam", clusterMetrics.m_nHitsFromBeam));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "adjusted_rand_idx", clusterMetrics.m_ari));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "n_true_clusters", clusterMetrics.m_nTrueClusters));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "n_ari_reco_clusters", clusterMetrics.m_nAriRecoClusters));
@@ -1020,11 +870,20 @@ StatusCode EventClusterValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OnlyRandIndex", m_onlyRandIndex));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FoldShowers", m_foldShowers));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "HandleDeltaRays", m_handleDeltaRays));
-    if (m_handleDeltaRays)
+    if (m_handleDeltaRays && !m_foldShowers)
     {
-        m_deltaRayLengthThresholdSquared = {{TPC_VIEW_U, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U), 2.))},
-            {TPC_VIEW_V, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V), 2.))},
-            {TPC_VIEW_W, static_cast<float>(pow(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W), 2.))}};
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+    else if (m_handleDeltaRays)
+    {
+        const std::map<HitType, float> lengthThresholds{{TPC_VIEW_U, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)},
+            {TPC_VIEW_V, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)},
+            {TPC_VIEW_W, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)}};
+        m_rollUpper = RollUpper(std::make_unique<RollUpEMWithComptonFilterAndAmbiguousDeltaRayHitsPolicy>(0.f, lengthThresholds));
+    }
+    else if (m_foldShowers)
+    {
+        m_rollUpper = RollUpper(std::make_unique<RollUpEMPolicy>());
     }
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MergeShowerClustersForRandIndex", m_mergeShowerClustersForRandIndex));

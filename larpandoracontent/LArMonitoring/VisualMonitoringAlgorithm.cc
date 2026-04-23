@@ -214,6 +214,7 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
     for (const CaloHit *const pCaloHit : caloHitList)
     {
         const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
+        PANDORA_THROW_IF(STATUS_CODE_FAILURE, !pLArCaloHit);
         const std::pair<unsigned int, unsigned int> volId{pLArCaloHit->GetLArTPCVolumeId(), pLArCaloHit->GetDaughterVolumeId()};
         volIdToCaloHits[volId].push_back(pCaloHit);
     }
