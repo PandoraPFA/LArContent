@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/ThreeDAssociationAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDAssociationAlgorithm.cc
  *
  *  @brief  Implementation of the 3D association algorithm class.
  *
@@ -11,9 +11,8 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/ThreeDAssociationAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDAssociationAlgorithm.h"
 
-using namespace std::literals;
 using namespace pandora;
 
 namespace lar_content
