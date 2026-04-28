@@ -12,8 +12,6 @@
 
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h"
 
-#include <chrono>
-
 using namespace pandora;
 
 namespace lar_content
@@ -239,9 +237,6 @@ void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssocia
 
     if (clusterAssociationMap.end() == iterAssociation)
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-    //if( !clusterSet.insert(pCluster).second )
-    //  return;
 
     (void)clusterSet.insert(pCluster);
 
