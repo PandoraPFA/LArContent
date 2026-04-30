@@ -27,7 +27,7 @@ ShowerValidationTool::ShowerValidationTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ShowerValidationTool::Run(const Algorithm *const pAlgorithm, const MCParticle *const /*pMCNu*/, 
+StatusCode ShowerValidationTool::Run(const Algorithm *const pAlgorithm, [[maybe_unused]] const MCParticle *const pMCNu, 
     const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticleVector &targetMC, 
     const PfoVector &bestRecoMatch)
 {
@@ -57,8 +57,9 @@ StatusCode ShowerValidationTool::Run(const Algorithm *const pAlgorithm, const MC
         }
 
         // Perform shower fit 
-        float recoShrLength(-1.f);
-        CartesianVector recoShrVtx(0.f, 0.f, 0.f), recoShrDir(0.f, 0.f, 0.f);
+        float recoShrLength(m_invalidSmallFloat);
+        CartesianVector recoShrVtx(m_invalidLargeFloat, m_invalidLargeFloat, m_invalidLargeFloat);
+        CartesianVector recoShrDir(m_invalidLargeFloat, m_invalidLargeFloat, m_invalidLargeFloat);
         bool fitSuccess(pPfo && (this->FitShower(pPfo, recoShrVtx, recoShrDir, recoShrLength)));
 
         if (fitSuccess)
@@ -83,7 +84,7 @@ void ShowerValidationTool::GetTrueLength(const LArHierarchyHelper::MCMatchesVect
      ShowerTreeVars &showerTreeVars)
 {
     // Get 3D positions/directions
-    const CartesianVector trueShrVtx(pMCParticle->GetVertex());
+    const CartesianVector trueShrVtx((pMCParticle->GetParticleId() == PHOTON) ? pMCParticle->GetEndpoint() : pMCParticle->GetVertex());  
     const CartesianVector trueShrDir(pMCParticle->GetMomentum().GetUnitVector());
     const CartesianVector trueShrDirSeed(trueShrVtx + (trueShrDir * 10.0f));
 
@@ -123,7 +124,7 @@ void ShowerValidationTool::GetTrueLength(const LArHierarchyHelper::MCMatchesVect
         FloatVector &trueLength(hitType == TPC_VIEW_U ? showerTreeVars.m_coreTrueLengthFromU : 
                                 hitType == TPC_VIEW_V ? showerTreeVars.m_coreTrueLengthFromV : showerTreeVars.m_coreTrueLengthFromW);
 
-        float runningEnergySum(0.f), endpointL(-9999.f);
+        float runningEnergySum(0.f), endpointL(m_invalidLargeFloat);
         for (const CaloHit *const pHit2D : viewMCHits)
         {
             const float hitEnergy(std::fabs(pHit2D->GetElectromagneticEnergy()));
@@ -138,7 +139,7 @@ void ShowerValidationTool::GetTrueLength(const LArHierarchyHelper::MCMatchesVect
             }
         }
 
-        if (endpointL > -9990.f)
+        if (fabs(endpointL - m_invalidLargeFloat) > std::numeric_limits<float>::epsilon())
         {
             const CartesianVector showerEndpoint2D(trueShrVtx2D + (trueShrDir2D * endpointL));
             const float scale3D(trueShrDir.GetX() > std::numeric_limits<float>::epsilon() ?
@@ -150,7 +151,7 @@ void ShowerValidationTool::GetTrueLength(const LArHierarchyHelper::MCMatchesVect
         }
         else
         {
-            trueLength.push_back(-1.f);
+            trueLength.push_back(m_invalidSmallFloat);
         }
     }
 }
@@ -165,11 +166,14 @@ void ShowerValidationTool::GetInitialRegionVars(const LArHierarchyHelper::MCMatc
     for (const LArHierarchyHelper::MCMatches &mcMatches : mcMatchesVec)
     {
         if (mcMatches.GetMC()->GetMCParticles().front() == pMCParticle)
+        {
             mcHits = mcMatches.GetMC()->GetCaloHits();
+            break;
+        }
     }
 
     // Get 3D positions/directions
-    const CartesianVector trueShrVtx(pMCParticle->GetVertex());
+    const CartesianVector trueShrVtx((pMCParticle->GetParticleId() == PHOTON) ? pMCParticle->GetEndpoint() : pMCParticle->GetVertex());    
     const CartesianVector trueShrDir(pMCParticle->GetMomentum().GetUnitVector());
     const CartesianVector trueShrDirSeed(trueShrVtx + (trueShrDir * m_initialRegion3D));
 
@@ -229,16 +233,16 @@ void ShowerValidationTool::GetInitialRegionVars(const LArHierarchyHelper::MCMatc
         FloatVector &viewPurity(hitType == TPC_VIEW_U ? showerTreeVars.m_initialPurityU : 
             hitType == TPC_VIEW_V ? showerTreeVars.m_initialPurityV : showerTreeVars.m_initialPurityW);
 
-        const float thisCompleteness(initialMCHits.size() == 0 ? -1.f : static_cast<float>(nSharedHits) / initialMCHits.size());
-        const float thisPurity(nInitialPfoHits == 0 ? -1.f : static_cast<float>(nSharedHits) / nInitialPfoHits);
+        const float thisCompleteness(initialMCHits.size() == 0 ? m_invalidSmallFloat : static_cast<float>(nSharedHits) / initialMCHits.size());
+        const float thisPurity(nInitialPfoHits == 0 ? m_invalidSmallFloat : static_cast<float>(nSharedHits) / nInitialPfoHits);
         viewNInitialMCHits.push_back(initialMCHits.size());
         viewNInitialPfoHits.push_back(nInitialPfoHits);
         viewCompleteness.push_back(thisCompleteness);
         viewPurity.push_back(thisPurity);
     }
 
-    const float completeness(nTotalInitialMCHits == 0 ? 0 : static_cast<float>(nTotalInitialSharedHits) / nTotalInitialMCHits);
-    const float purity(nTotalInitialPfoHits == 0 ? 0 : static_cast<float>(nTotalInitialSharedHits) / nTotalInitialPfoHits);
+    const float completeness(nTotalInitialMCHits == 0 ? 0.f : static_cast<float>(nTotalInitialSharedHits) / nTotalInitialMCHits);
+    const float purity(nTotalInitialPfoHits == 0 ? 0.f : static_cast<float>(nTotalInitialSharedHits) / nTotalInitialPfoHits);
 
     showerTreeVars.m_nInitialMCHits.push_back(nTotalInitialMCHits);
     showerTreeVars.m_nInitialPfoHits.push_back(nTotalInitialPfoHits);
@@ -330,7 +334,7 @@ void ShowerValidationTool::GetMoliere(const Pfo *const pPfo, const CartesianVect
     }
 
     // Now do Molliere
-    float runningEnergySum(0.f), moliereRadius(-1.f);
+    float runningEnergySum(0.f), moliereRadius(m_invalidSmallFloat);
 
     std::sort(caloHits3DFromW.begin(), caloHits3DFromW.end(),
         [&showerDirection, &showerVertex](const CaloHit *const pCaloHitA, const CaloHit *const pCaloHitB) -> bool
@@ -399,42 +403,42 @@ void ShowerValidationTool::GetMoliere(const Pfo *const pPfo, const CartesianVect
 
 void ShowerValidationTool::FillForNullMCDir(ShowerTreeVars &showerTreeVars)
 {
-    showerTreeVars.m_coreTrueLengthFromU.push_back(-1.f);
-    showerTreeVars.m_coreTrueLengthFromV.push_back(-1.f);
-    showerTreeVars.m_coreTrueLengthFromW.push_back(-1.f);
-    showerTreeVars.m_nInitialMCHits.push_back(-1);
-    showerTreeVars.m_nInitialMCHitsU.push_back(-1);
-    showerTreeVars.m_nInitialMCHitsV.push_back(-1);
-    showerTreeVars.m_nInitialMCHitsW.push_back(-1);
-    showerTreeVars.m_nInitialPfoHits.push_back(-1);
-    showerTreeVars.m_nInitialPfoHitsU.push_back(-1);
-    showerTreeVars.m_nInitialPfoHitsV.push_back(-1);
-    showerTreeVars.m_nInitialPfoHitsW.push_back(-1);
-    showerTreeVars.m_initialCompleteness.push_back(-1.f);
-    showerTreeVars.m_initialCompletenessU.push_back(-1.f);
-    showerTreeVars.m_initialCompletenessV.push_back(-1.f);
-    showerTreeVars.m_initialCompletenessW.push_back(-1.f);
-    showerTreeVars.m_initialPurity.push_back(-1.f);
-    showerTreeVars.m_initialPurityU.push_back(-1.f);
-    showerTreeVars.m_initialPurityV.push_back(-1.f);
-    showerTreeVars.m_initialPurityW.push_back(-1.f);
-    showerTreeVars.m_recoShrDirAcc.push_back(-1.f);
+    showerTreeVars.m_coreTrueLengthFromU.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_coreTrueLengthFromV.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_coreTrueLengthFromW.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_nInitialMCHits.push_back(m_invalidInt);
+    showerTreeVars.m_nInitialMCHitsU.push_back(m_invalidInt);
+    showerTreeVars.m_nInitialMCHitsV.push_back(m_invalidInt);
+    showerTreeVars.m_nInitialMCHitsW.push_back(m_invalidInt);
+    showerTreeVars.m_nInitialPfoHits.push_back(m_invalidInt);
+    showerTreeVars.m_nInitialPfoHitsU.push_back(m_invalidInt);
+    showerTreeVars.m_nInitialPfoHitsV.push_back(m_invalidInt);
+    showerTreeVars.m_nInitialPfoHitsW.push_back(m_invalidInt);
+    showerTreeVars.m_initialCompleteness.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_initialCompletenessU.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_initialCompletenessV.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_initialCompletenessW.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_initialPurity.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_initialPurityU.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_initialPurityV.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_initialPurityW.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_recoShrDirAcc.push_back(m_invalidAngle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ShowerValidationTool::FillForFailedPfo(ShowerTreeVars &showerTreeVars)
 {
-    showerTreeVars.m_recoShrVtxX.push_back(-9999.f);
-    showerTreeVars.m_recoShrVtxY.push_back(-9999.f);
-    showerTreeVars.m_recoShrVtxZ.push_back(-9999.f);
-    showerTreeVars.m_recoShrDirX.push_back(-9999.f);
-    showerTreeVars.m_recoShrDirY.push_back(-9999.f);
-    showerTreeVars.m_recoShrDirZ.push_back(-9999.f);
-    showerTreeVars.m_recoShrLength.push_back(-1.f);
-    showerTreeVars.m_recoShrDirAcc.push_back(-1.f);
-    showerTreeVars.m_moliereRadius.push_back(-1.f);
-    showerTreeVars.m_coreRecoLength.push_back(-1.f);
+    showerTreeVars.m_recoShrVtxX.push_back(m_invalidLargeFloat);
+    showerTreeVars.m_recoShrVtxY.push_back(m_invalidLargeFloat);
+    showerTreeVars.m_recoShrVtxZ.push_back(m_invalidLargeFloat);
+    showerTreeVars.m_recoShrDirX.push_back(m_invalidLargeFloat);
+    showerTreeVars.m_recoShrDirY.push_back(m_invalidLargeFloat);
+    showerTreeVars.m_recoShrDirZ.push_back(m_invalidLargeFloat);
+    showerTreeVars.m_recoShrLength.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_recoShrDirAcc.push_back(m_invalidAngle);
+    showerTreeVars.m_moliereRadius.push_back(m_invalidSmallFloat);
+    showerTreeVars.m_coreRecoLength.push_back(m_invalidSmallFloat);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -513,11 +517,10 @@ StatusCode ShowerValidationTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InitialRegion", m_initialRegion3D));
 
-
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrueLengthEnergyFrac", m_trueLengthEnergyFrac));
 
-    return STATUS_CODE_SUCCESS;
+    return BaseValidationTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

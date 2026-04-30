@@ -27,8 +27,8 @@ EventValidationTool::EventValidationTool() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode EventValidationTool::Run(const Algorithm *const pAlgorithm, const MCParticle *const pMCNu, 
-    const LArHierarchyHelper::MCMatchesVector &/*mcMatchesVec*/, const MCParticleVector &targetMC, 
-    const PfoVector &/*bestRecoMatch*/)
+    [[maybe_unused]] const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticleVector &targetMC, 
+    [[maybe_unused]] const PfoVector &bestRecoMatch)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -51,10 +51,10 @@ StatusCode EventValidationTool::Run(const Algorithm *const pAlgorithm, const MCP
 void EventValidationTool::GetVertexVariables(const Algorithm *const pAlgorithm, const MCParticle *const pMCNu, EventTreeVars &eventTreeVars)
 {
     eventTreeVars.m_trueNuVertex = pMCNu->GetVertex();
-    eventTreeVars.m_recoNuVertexPass1 = CartesianVector(-9999.f, -9999.f, -9999.f);
-    eventTreeVars.m_recoNuVertexPass2 = CartesianVector(-9999.f, -9999.f, -9999.f);
-    eventTreeVars.m_recoNuVertexAccPass1 = -1.f;
-    eventTreeVars.m_recoNuVertexAccPass2 = -1.f;
+    eventTreeVars.m_recoNuVertexPass1 = CartesianVector(m_invalidLargeFloat, m_invalidLargeFloat, m_invalidLargeFloat);
+    eventTreeVars.m_recoNuVertexPass2 = CartesianVector(m_invalidLargeFloat, m_invalidLargeFloat, m_invalidLargeFloat);
+    eventTreeVars.m_recoNuVertexAccPass1 = m_invalidSmallFloat;
+    eventTreeVars.m_recoNuVertexAccPass2 = m_invalidSmallFloat;
 
     const VertexList *pNuVertexList_pass1(nullptr), *pNuVertexList_pass2(nullptr);
     PandoraContentApi::GetList(*pAlgorithm, m_nuVertexPass1ListName, pNuVertexList_pass1);
@@ -79,35 +79,12 @@ void EventValidationTool::GetInteractionTypeVariables(const MCParticle *const pM
 {
     eventTreeVars.m_nuPDG = pMCNu->GetParticleId();
     eventTreeVars.m_nuEnergy = pMCNu->GetEnergy(); 
+    eventTreeVars.m_isCC = LArMCParticleHelper::IsCCInteraction(pMCNu);
+    
     const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle *>(pMCNu));
-    eventTreeVars.m_nuVisEnergy = pLArMCParticle->GetVisibleEnergy();
+    if (!pLArMCParticle) { throw StatusCodeException(STATUS_CODE_FAILURE); }
 
-    // CC or NC?
-    eventTreeVars.m_isCC = 0;
-    if (std::abs(pMCNu->GetParticleId()) == 12)
-    {
-        for (const MCParticle *const pMCParticle : pMCNu->GetDaughterList())
-        {
-            if (std::abs(pMCParticle->GetParticleId()) == 11)
-                eventTreeVars.m_isCC = 1;
-        }
-    }
-    else if (std::abs(pMCNu->GetParticleId()) == 14)
-    {
-        for (const MCParticle *const pMCParticle : pMCNu->GetDaughterList())
-        {
-            if (std::abs(pMCParticle->GetParticleId()) == 13)
-                eventTreeVars.m_isCC = 1;
-        }
-    }
-    else if (std::abs(pMCNu->GetParticleId()) == 16)
-    {
-        for (const MCParticle *const pMCParticle : pMCNu->GetDaughterList())
-        {
-            if (std::abs(pMCParticle->GetParticleId()) == 15)
-                eventTreeVars.m_isCC = 1;
-        }
-    }
+    eventTreeVars.m_nuVisEnergy = pLArMCParticle->GetVisibleEnergy();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -146,7 +123,7 @@ StatusCode EventValidationTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NuVertexPass2ListName", m_nuVertexPass2ListName));
 
-    return STATUS_CODE_SUCCESS;
+    return BaseValidationTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

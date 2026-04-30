@@ -82,19 +82,19 @@ private:
     /**
      *  @brief  Fill the variables that describe the true vertex and endpoint
      *
-     *  @param  pMCParticle the target MCParticle
-     *  @param  trackTreeVars the track tree variables
+     *  @param[in]   pMCParticle the target MCParticle
+     *  @param[out]  trackTreeVars the track tree variables
     */
     void GetTrueVertexAndEndpointVars(const pandora::MCParticle *const pMCParticle, TrackTreeVars &trackTreeVars);
 
     /**
      *  @brief  Fit the pfo following the PandoraTrack implementation
      *
-     *  @param  pPfo the pfo to fit
-     *  @param  vertex the fitted vertex position
-     *  @param  vertexDir the fitted vertex direction
-     *  @param  endpoint the fitted endpoint position
-     *  @param  endpointDir the fitted endpoint direction
+     *  @param[in]   pPfo the pfo to fit
+     *  @param[out]  vertex the fitted vertex position
+     *  @param[out]  vertexDir the fitted vertex direction
+     *  @param[out]  endpoint the fitted endpoint position
+     *  @param[out]  endpointDir the fitted endpoint direction
      *
      *  @return whether the fit was successful
     */
@@ -104,12 +104,12 @@ private:
     /**
      *  @brief  Fill the variables that describe the reconstructed vertex and endpoint
      *
-     *  @param  pMCParticle the target MCParticle
-     *  @param  recoVertex the fitted vertex position
-     *  @param  recoVertexDir the fitted vertex direction
-     *  @param  recoEndpoint the fitted endpoint position
-     *  @param  recoEndpointDir the fitted endpoint direction
-     *  @param  trackTreeVars the track tree variables
+     *  @param[in]   pMCParticle the target MCParticle
+     *  @param[in]   recoVertex the fitted vertex position
+     *  @param[in]   recoVertexDir the fitted vertex direction
+     *  @param[in]   recoEndpoint the fitted endpoint position
+     *  @param[in]   recoEndpointDir the fitted endpoint direction
+     *  @param[out]  trackTreeVars the track tree variables
      */
     void GetRecoVertexAndEndpointVars(const pandora::MCParticle *const pMCParticle, const pandora::CartesianVector &recoVertex, 
         const pandora::CartesianVector &recoVertexDir, const pandora::CartesianVector &recoEndpoint, 
@@ -118,10 +118,10 @@ private:
     /**
      *  @brief  Fill the variables that describe the completeness/purity of the track end region
      *
-     *  @param  mcMatchesVec the mapping of true nodes (MCParticles) to reco node (pfo) matches
-     *  @param  pMCParticle the target MCParticle
-     *  @param  pPfo the best-matched pfo
-     *  @param  trackTreeVars the track tree variables
+     *  @param[in]  mcMatchesVec the mapping of true nodes (MCParticles) to reco node (pfo) matches
+     *  @param[in]  pMCParticle the target MCParticle
+     *  @param[in]  pPfo the best-matched pfo
+     *  @param[out]  trackTreeVars the track tree variables
      */
     void GetTrueEndRegionVars(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticle *const pMCParticle,
         const pandora::Pfo *const pPfo, TrackTreeVars &trackTreeVars);
@@ -129,9 +129,9 @@ private:
     /**
      *  @brief  Fill the variables that describe (grand)child michel MCParticles and their reconstruction
      *
-     *  @param  targetMC the vector of target MCParticles
-     *  @param  bestRecoMatch the vector of best-matched pfo's
-     *  @param  trackTreeVars the track tree variables
+     *  @param[in]   targetMC the vector of target MCParticles
+     *  @param[in]   bestRecoMatch the vector of best-matched pfo's
+     *  @param[out]  trackTreeVars the track tree variables
      */   
     void MichelValidation(const pandora::MCParticleVector &targetMC, 
         const pandora::PfoVector &bestRecoMatch, TrackTreeVars &trackTreeVars);
@@ -139,14 +139,14 @@ private:
     /**
      *  @brief  Fill relevant tree variables with default values if no best-matched pfo, or a failed track fit
      *
-     *  @param  trackTreeVars the track tree variables
+     *  @param[out]  trackTreeVars the track tree variables
      */
     void FillForFailedPfo(TrackTreeVars &trackTreeVars);
 
     /**
      *  @brief  Fill the track tree
      *
-     *  @param  trackTreeVars the track tree variables
+     *  @param[in]  trackTreeVars the track tree variables
      */
     void FillTree(TrackTreeVars &trackTreeVars);
 

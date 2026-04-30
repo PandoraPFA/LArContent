@@ -130,6 +130,15 @@ public:
     static bool IsNeutrino(const pandora::MCParticle *const pMCParticle);
 
     /**
+     *  @brief  Whether a mc particle is part of a CC interaction
+     *
+     *  @param[in]  pMCParticle the input mc particle
+     *
+     *  @return boolean
+     */
+    static bool IsCCInteraction(const pandora::MCParticle *const pMCParticle);
+    
+    /**
      *  @brief  Whether a provided mc particle matches the implemented definition of being primary
      *
      *  @param  pMCParticle the address of the mc particle

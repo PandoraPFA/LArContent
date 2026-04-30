@@ -22,23 +22,35 @@ namespace lar_content
 class BaseValidationTool : public pandora::AlgorithmTool
 {
 public:
+
+    /**
+     *  @brief  Default constructor
+     */
+    BaseValidationTool();
+
     virtual pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::MCParticle *const pMCNu, 
         const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticleVector &targetMC, 
         const pandora::PfoVector &bestRecoMatch) = 0;
 
 protected:
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
     /**
      *  @brief  Pick out the hits of a specified type from an input list of hits
      *
-     *  @param  inputList the input hit list
-     *  @param  hitType the hit type
-     *  @param  outputVector the output vector of hits
-     *  @param  totalEnergy the total charge of the filtered hits
-     *
-     *  @return boolean whether the clusters are associated
+     *  @param[in]   inputList the input hit list
+     *  @param[in]   hitType the hit type
+     *  @param[out]  outputVector the output vector of hits
+     *  @param[out]  totalEnergy the total charge of the filtered hits
      */
     void GetHitsOfType(const pandora::CaloHitList &inputList, const pandora::HitType hitType, pandora::CaloHitVector &outputVector, 
         float &totalEnergy);
+
+    float m_maxMichelSep;      ///< the maximum separation between a michel vertex and parent muon endpoint    
+    float m_invalidSmallFloat; ///< small float value used for failure case
+    float m_invalidLargeFloat; ///< large float value used for failure case    
+    int m_invalidInt;          ///< int value used for failure case    
+    float m_invalidAngle;      ///< angle value used for failure case
 };
 
 } // namespace lar_content

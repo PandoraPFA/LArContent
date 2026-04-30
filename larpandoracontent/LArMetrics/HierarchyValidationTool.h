@@ -52,11 +52,11 @@ private:
      *  @brief  Iterative function, walks down parent-child links (skipping non-reconstructable particles)
      *          to populate the 'visible' true neutrino hierarchy
      *
-     *  @param  pMCParticle the current parent
-     *  @param  pMCParent the most recent visible ancestor
-     *  @param  targetMC the vector of reconstructable MCParticles
-     *  @param  childTier the tier of found children
-     *  @param  hierarchy the output hierarchy 
+     *  @param[in]   pMCParticle the current parent
+     *  @param[in]   pMCParent the most recent visible ancestor
+     *  @param[in]   targetMC the vector of reconstructable MCParticles
+     *  @param[in]   childTier the tier of found children
+     *  @param[out]  hierarchy the output hierarchy 
      */
     void BuildVisibleHierarchy(const pandora::MCParticle *const pMCParticle, const pandora::MCParticle *const pMCParent, 
         const pandora::MCParticleVector &targetMC, const int childTier, Hierarchy &hierarchy);
@@ -64,10 +64,10 @@ private:
     /**
      *  @brief  Fill true hierarchy variables
      *
-     *  @param  pMC the MCParticle
-     *  @param  target the vector of reconstructable MCParticles
-     *  @param  hierarchy the true 'visible' hierarchy
-     *  @param  hierarchyTreeVars the hierarchy tree variables
+     *  @param[in]   pMC the MCParticle
+     *  @param[in]   target the vector of reconstructable MCParticles
+     *  @param[in]   hierarchy the true 'visible' hierarchy
+     *  @param[out]  hierarchyTreeVars the hierarchy tree variables
      */
     void FillTrueVariables(const pandora::MCParticle *const pMC, const pandora::MCParticleVector &targetMC,
         const Hierarchy &hierarchy, HierarchyTreeVars &hierarchyTreeVars);
@@ -75,17 +75,17 @@ private:
     /**
      *  @brief  Fill reco hierarchy variables
      *
-     *  @param  pBestMatch the best-matched pfo
-     *  @param  bestMatches the vector of best-matched pfos
-     *  @param  hierarchyTreeVars the hierarchy tree variables
+     *  @param[in]   pBestMatch the best-matched pfo
+     *  @param[in]   bestMatches the vector of best-matched pfos
+     *  @param[out]  hierarchyTreeVars the hierarchy tree variables
      */
     void FillRecoVariables(const pandora::Pfo *const pBestMatch, const pandora::PfoVector &bestMatches, 
         HierarchyTreeVars &hierarchyTreeVars);
 
     /**
-     *  @brief  Fill ther hierarchy tree
+     *  @brief  Fill the hierarchy tree
      *
-     *  @param  hierarchyTreeVars the hierarchy tree variables
+     *  @param[in]  hierarchyTreeVars the hierarchy tree variables
      */
     void FillTree(HierarchyTreeVars &hierarchyTreeVars);
 

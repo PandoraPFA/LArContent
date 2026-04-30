@@ -152,9 +152,6 @@ void MasterAlgorithm::StitchPfos(
 
 StatusCode MasterAlgorithm::Run()
 {
-    if (m_pSliceNuWorkerInstance)
-        PandoraApi::SetEventInformation(*m_pSliceNuWorkerInstance, this->GetPandora().GetRun(), this->GetPandora().GetSubrun(), this->GetPandora().GetEvent());
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Reset());
 
     if (!m_workerInstancesInitialized)
@@ -163,6 +160,9 @@ StatusCode MasterAlgorithm::Run()
     if (m_passMCParticlesToWorkerInstances)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles());
 
+    if (m_pSliceNuWorkerInstance)
+        PandoraApi::SetEventInformation(*m_pSliceNuWorkerInstance, this->GetPandora().GetRun(), this->GetPandora().GetSubrun(), this->GetPandora().GetEvent());
+    
     PfoToFloatMap stitchedPfosToX0Map;
     VolumeIdToHitListMap volumeIdToHitListMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetVolumeIdToHitListMap(volumeIdToHitListMap));

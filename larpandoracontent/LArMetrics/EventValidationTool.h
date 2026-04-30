@@ -62,24 +62,24 @@ private:
     /**
      *  @brief  Fill neutrino vertex variables
      *
-     *  @param  pAlgorithm a pointer to the parent algorithm 
-     *  @param  pMCNu a pointer to the neutrino MCParticle
-     *  @param  eventTreeVars the event tree variables to fill
+     *  @param[in]   pAlgorithm a pointer to the parent algorithm 
+     *  @param[in]   pMCNu a pointer to the neutrino MCParticle
+     *  @param[out]  eventTreeVars the event tree variables to fill
      */
     void GetVertexVariables(const pandora::Algorithm *const pAlgorithm, const pandora::MCParticle *const pMCNu, EventTreeVars &eventTreeVars);
 
     /**
      *  @brief  Fill neutrino interaction variables
      *
-     *  @param  pMCNu a pointer to the neutrino MCParticle
-     *  @param  eventTreeVars the event tree variables to fill
+     *  @param[in]   pMCNu a pointer to the neutrino MCParticle
+     *  @param[out]  eventTreeVars the event tree variables to fill
      */
     void GetInteractionTypeVariables(const pandora::MCParticle *const pMCNu, EventTreeVars &eventTreeVars);
 
     /**
      *  @brief  Fill the event tree
      *
-     *  @param  eventTreeVars the event tree variables to fill
+     *  @param[in]  eventTreeVars the event tree variables to fill
      */
     void FillTree(EventTreeVars &eventTreeVars);
 
