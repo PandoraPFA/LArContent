@@ -23,7 +23,6 @@ ValidationAlgorithm::ValidationAlgorithm() :
     m_mcParticleListName("Input"),
     m_pfoListNames({"TrackParticles3D", "ShowerParticles3D", "NeutrinoParticles3D"}),
     m_fileName("Validation.root"),
-    m_treeName("tree"),
     m_minPurity(0.5f),
     m_minCompleteness(0.1f),
     m_minRecoHits(15),
@@ -38,11 +37,11 @@ ValidationAlgorithm::ValidationAlgorithm() :
 
 ValidationAlgorithm::~ValidationAlgorithm()
 {
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "EventTree", m_fileName.c_str(), "UPDATE"));
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "HierarchyTree", m_fileName.c_str(), "UPDATE"));
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "PFPTree", m_fileName.c_str(), "UPDATE"));
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "TrackTree", m_fileName.c_str(), "UPDATE"));
-    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ShowerTree", m_fileName.c_str(), "UPDATE"));
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "EventTree", m_fileName, "UPDATE"));
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "HierarchyTree", m_fileName, "UPDATE"));
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "PFPTree", m_fileName, "UPDATE"));
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "TrackTree", m_fileName, "UPDATE"));
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ShowerTree", m_fileName, "UPDATE"));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -193,7 +192,6 @@ StatusCode ValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FileName", m_fileName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TreeName", m_treeName));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinPurity", m_minPurity));
     PANDORA_RETURN_RESULT_IF_AND_IF(

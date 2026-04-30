@@ -25,7 +25,7 @@ HierarchyValidationTool::HierarchyValidationTool()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode HierarchyValidationTool::Run(const Algorithm *const pAlgorithm, const MCParticle *const pMCNu, 
-    const LArHierarchyHelper::MCMatchesVector &/*mcMatchesVec*/, const MCParticleVector &targetMC, 
+    [[maybe_unused]] const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticleVector &targetMC, 
     const PfoVector &bestRecoMatch)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -54,8 +54,8 @@ StatusCode HierarchyValidationTool::Run(const Algorithm *const pAlgorithm, const
         }
         else
         {
-            hierarchyTreeVars.m_recoTier.push_back(-1);
-            hierarchyTreeVars.m_recoParentIndex.push_back(-1);
+            hierarchyTreeVars.m_recoTier.push_back(m_invalidInt);
+            hierarchyTreeVars.m_recoParentIndex.push_back(m_invalidInt);
         }
     }
 
@@ -136,13 +136,9 @@ void HierarchyValidationTool::FillRecoVariables(const Pfo *const pBestMatch, con
         // If reco parent is not in the best-match list, the particle has been split
         // I don't want this to feed into a hierarchy building 'failure' so mark as -1 and remove from downstream metrics
         if (bestMatchesIter == bestMatches.end())
-        {
             hierarchyTreeVars.m_recoParentIndex.push_back(-1);
-        }
         else
-        {
             hierarchyTreeVars.m_recoParentIndex.push_back(bestMatchesIter - bestMatches.begin());
-        }
     }
 }
 
@@ -164,9 +160,9 @@ void HierarchyValidationTool::FillTree(HierarchyTreeVars &hierarchyTreeVars)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode HierarchyValidationTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode HierarchyValidationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    return STATUS_CODE_SUCCESS;
+    return BaseValidationTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

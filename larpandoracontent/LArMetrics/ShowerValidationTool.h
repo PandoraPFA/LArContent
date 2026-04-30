@@ -75,9 +75,9 @@ private:
     /**
      *  @brief  Fill the variables that describe the true shower length in each view
      *
-     *  @param  mcMatchesVec the mapping of true nodes (MCParticles) to reco node (pfo) matches
-     *  @param  pMCParticle the target MCParticle
-     *  @param  showerTreeVars the shower tree variables
+     *  @param[in]   mcMatchesVec the mapping of true nodes (MCParticles) to reco node (pfo) matches
+     *  @param[in]   pMCParticle the target MCParticle
+     *  @param[out]  showerTreeVars the shower tree variables
      */
     void GetTrueLength(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticle *const pMCParticle,
         ShowerTreeVars &showerTreeVars);
@@ -85,10 +85,10 @@ private:
     /**
      *  @brief  Fill the variables that describe the initial region of the shower
      *
-     *  @param  mcMatchesVec the mapping of true nodes (MCParticles) to reco node (pfo) matches
-     *  @param  pMCParticle the target MCParticle
-     *  @param  pPfo the best-matched pfo
-     *  @param  showerTreeVars the shower tree variables
+     *  @param[in]   mcMatchesVec the mapping of true nodes (MCParticles) to reco node (pfo) matches
+     *  @param[in]   pMCParticle the target MCParticle
+     *  @param[in]   pPfo the best-matched pfo
+     *  @param[out]  showerTreeVars the shower tree variables
      */
     void GetInitialRegionVars(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticle *const pMCParticle, 
         const pandora::Pfo *const pPfo, ShowerTreeVars &showerTreeVars);
@@ -96,10 +96,10 @@ private:
     /**
      *  @brief  Fit the pfo following the PandoraShower implementation
      *
-     *  @param  pPfo the best-matched pfo
-     *  @param  showerVertex the fitted shower vertex
-     *  @param  showerDirection the fitted shower direction
-     *  @param  showerLength the fitted shower length
+     *  @param[in]   pPfo the best-matched pfo
+     *  @param[out]  showerVertex the fitted shower vertex
+     *  @param[out]  showerDirection the fitted shower direction
+     *  @param[out]  showerLength the fitted shower length
      *
      *  @return whether the fit was successful
      */
@@ -109,11 +109,11 @@ private:
     /**
      *  @brief  Fill the variables that describe the reconstructed shower vertex and direction
      *
-     *  @param  recoShrVtx the fitted shower vertex
-     *  @param  recoShrDir the fitted shower direction
-     *  @param  recoShrLength the fitted shower length
-     *  @param  pMC the target MCParticle (nullptr if the MCParticle has no direction)
-     *  @param  showerTreeVars the shower tree variables
+     *  @param[in]   recoShrVtx the fitted shower vertex
+     *  @param[in]   recoShrDir the fitted shower direction
+     *  @param[in]   recoShrLength the fitted shower length
+     *  @param[in]   pMC the target MCParticle (nullptr if the MCParticle has no direction)
+     *  @param[out]  showerTreeVars the shower tree variables
      */        
     void GetRecoVertexInfo(const pandora::CartesianVector &recoShrVtx, const pandora::CartesianVector &recoShrDir, const float recoShrLength,
         const pandora::MCParticle *const pMC, ShowerTreeVars &showerTreeVars);
@@ -121,10 +121,10 @@ private:
     /**
      *  @brief  Fill the variables that describe the Moliere radius and core length of the shower
      *
-     *  @param  pPfo the best-matched pfo
-     *  @param  showerVertex the fitted shower vertex
-     *  @param  showerDirection the fitted shower direction
-     *  @param  showerTreeVars the shower tree variables
+     *  @param[in]   pPfo the best-matched pfo
+     *  @param[in]   showerVertex the fitted shower vertex
+     *  @param[in]   showerDirection the fitted shower direction
+     *  @param[out]  showerTreeVars the shower tree variables
      */
     void GetMoliere(const pandora::Pfo *const pPfo, const pandora::CartesianVector &showerVertex, const pandora::CartesianVector &showerDirection,
         ShowerTreeVars &showerTreeVars);
@@ -132,21 +132,21 @@ private:
     /**
      *  @brief  Fill relevant tree variables with default values for the case of a null MCParticle direction
      *
-     *  @param  showerTreeVars the shower tree variables
+     *  @param[out]  showerTreeVars the shower tree variables
      */
     void FillForNullMCDir(ShowerTreeVars &showerTreeVars);
 
     /**
      *  @brief  Fill relevant tree variables with default values if no best-matched pfo, or a failed shower fit
      *
-     *  @param  showerTreeVars the shower tree variables
+     *  @param[out]  showerTreeVars the shower tree variables
      */
     void FillForFailedPfo(ShowerTreeVars &showerTreeVars);
 
     /**
      *  @brief  Fill the shower tree
      *
-     *  @param  showerTreeVars the shower tree variables
+     *  @param[in]  showerTreeVars the shower tree variables
      */
     void FillTree(ShowerTreeVars &showerTreeVars);
 

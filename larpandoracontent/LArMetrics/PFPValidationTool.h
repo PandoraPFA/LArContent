@@ -68,7 +68,7 @@ struct PFPTreeVars
     pandora::FloatVector m_altPurity;            ///< purity of the thief particle wrt the target particle
     pandora::IntVector m_altPDG;                 ///< PDG of the MCParticle the thief best matches
     pandora::IntVector m_altIsUpstreamHierarchy; ///< is the MCParticle that the thief best matches, an ancestor of this MCParticle?
-    pandora::IntVector m_altIsSameMC;            ///< is the MCParticle that the thief best matches, an ancestor of this MCParticle?
+    pandora::IntVector m_altIsSameMC;            ///< is the MCParticle that the thief best matches, the same as this MCParticle?
     pandora::FloatVector m_trueVertexX; ///< x-coordinate of the first trajectory point that lies within the detector [cm]
     pandora::FloatVector m_trueVertexY; ///< y-coordinate of the first trajectory point that lies within the detector [cm] 
     pandora::FloatVector m_trueVertexZ; ///< z-coordinate of the first trajectory point that lies within the detector [cm]
@@ -106,28 +106,28 @@ private:
     /**
      *  @brief  Fill MCParticle variables
      *
-     *  @param  pMCNu the neutrino MCParticle
-     *  @param  pMCTarget the MCParticle
-     *  @param  pfpTreeVars the pfo tree variables
+     *  @param[in]   pMCNu the neutrino MCParticle
+     *  @param[in]   pMCTarget the MCParticle
+     *  @param[out]  pfpTreeVars the pfo tree variables
      */
     void GetMCParticleInfo(const pandora::MCParticle *const pMCNu, const pandora::MCParticle *const pMCTarget, PFPTreeVars &pfpTreeVars);
 
     /**
      *  @brief  Fill the reco variables
      *
-     *  @param  pMCTarget the MCParticle
-     *  @param  pBestMatch the best-matched pfo
-     *  @param  pfpTreeVars the pfo tree variables
+     *  @param[in]   pMCTarget the MCParticle
+     *  @param[in]   pBestMatch the best-matched pfo
+     *  @param[out]  pfpTreeVars the pfo tree variables
      */
     void GetRecoParticleInfo(const pandora::MCParticle *const pMCTarget, const pandora::Pfo *const pBestMatch, PFPTreeVars &pfpTreeVars);
 
     /**
      *  @brief  Fill the variables that describe MCParticle-pfo match
      *
-     *  @param  mcMatchesVec the mapping of true nodes (MCParticles) to reco node (pfo) matches
-     *  @param  pMCTarget the MCParticle
-     *  @param  pBestMatch the best-matched pfo
-     *  @param  pfpTreeVars the pfo tree variables
+     *  @param[in]   mcMatchesVec the mapping of true nodes (MCParticles) to reco node (pfo) matches
+     *  @param[in]   pMCTarget the MCParticle
+     *  @param[in]   pBestMatch the best-matched pfo
+     *  @param[out]  pfpTreeVars the pfo tree variables
      */
     void GetMatchingInfo(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec,
         const pandora::MCParticle *const pMCTarget, const pandora::Pfo *const pBestMatch, PFPTreeVars &pfpTreeVars);
@@ -135,10 +135,11 @@ private:
     /**
      *  @brief  Fill the variables that describe the second-best MCParticle-pfo matches
      *
-     *  @param  mcMatchesVec the mapping of true nodes (MCParticles) to reco node (pfo) matches
-     *  @param  pMCTarget the MCParticle
-     *  @param  pBestMatch the best-matched pfo
-     *  @param  pfpTreeVars the pfo tree variables
+     *  @param[in]   mcMatchesVec the mapping of true nodes (MCParticles) to reco node (pfo) matches
+     *  @param[in]   targetMC the vector of target MCParticles
+     *  @param[in]   pMCTarget the MCParticle
+     *  @param[in]   pBestMatch the best-matched pfo
+     *  @param[out]  pfpTreeVars the pfo tree variables
      */
     void GetAltMatchInfo(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticleVector &targetMC,
         const pandora::MCParticle *const pMCTarget, const pandora::Pfo *const pBestMatch, PFPTreeVars &pfpTreeVars);
@@ -146,10 +147,10 @@ private:
     /**
      *  @brief  Calculate the matching metrics (completeness/purity) for a given match
      *
-     *  @param  pMCNode the true node associated to the MCParticle
-     *  @param  pRecoNode the reco node associated to the pfo
-     *  @param  completeness the output completeness
-     *  @param  purity the output purity
+     *  @param[in]   pMCNode the true node associated to the MCParticle
+     *  @param[in]   pRecoNode the reco node associated to the pfo
+     *  @param[out]  completeness the output completeness
+     *  @param[out]  purity the output purity
      */
     void GetAltMetrics(const LArHierarchyHelper::MCHierarchy::Node *const pMCNode, const LArHierarchyHelper::RecoHierarchy::Node *const pRecoNode,
         float &completeness, float &purity);
@@ -157,13 +158,13 @@ private:
     /**
      *  @brief  Fill the pfp tree
      *
-     *  @param  pfpTreeVars the pfo tree variables
+     *  @param[in]  pfpTreeVars the pfo tree variables
      */
     void FillTree(PFPTreeVars &pfpTreeVars);
 
     const pandora::VertexList *m_pNuVertexList; ///< a pointer to the neutrino vertex
-    std::string m_nuVertexListName; ///< the name of the neutrino vertex list
-    float m_maxMichelSep;           ///< the maximum separation between a michel vertex and parent muon endpoint
+    std::string m_nuVertexListName;             ///< the name of the neutrino vertex list
+    int m_michelPDG;                            ///< fictional pdg to denote a michel
 };
 
 } // namespace lar_content

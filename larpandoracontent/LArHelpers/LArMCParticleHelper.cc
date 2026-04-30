@@ -149,6 +149,21 @@ bool LArMCParticleHelper::IsNeutrino(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArMCParticleHelper::IsCCInteraction(const MCParticle *const pMCParticle)
+{
+    const MCParticle *const pParent(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
+
+    if (!LArMCParticleHelper::IsNeutrino(pParent))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle *>(pParent));
+    if (!pLArMCParticle) { throw StatusCodeException(STATUS_CODE_FAILURE); }
+
+    return pLArMCParticle->GetIsCC();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArMCParticleHelper::IsPrimary(const pandora::MCParticle *const pMCParticle)
 {
     try
