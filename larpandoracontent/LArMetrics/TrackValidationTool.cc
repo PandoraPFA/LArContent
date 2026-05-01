@@ -278,8 +278,11 @@ void TrackValidationTool::GetTrueEndRegionVars(const LArHierarchyHelper::MCMatch
         {
             const float l(endDirection2D.GetDotProduct(pCaloHit->GetPositionVector() - endRegionStart2D));
 
-            if ((l > 0.f) && (l < endRegionL))
+            if (((l > 0.f) || (fabs(l) < std::numeric_limits<float>::epsilon())) &&
+                ((l < endRegionL) || (fabs(l - endRegionL) < std::numeric_limits<float>::epsilon())))
+            {
                 endMCHits.push_back(pCaloHit);
+            }
         }
         nTotalEndMCHits += endMCHits.size();
     
@@ -294,8 +297,11 @@ void TrackValidationTool::GetTrueEndRegionVars(const LArHierarchyHelper::MCMatch
             {                
                 const float l(endDirection2D.GetDotProduct(pCaloHit->GetPositionVector() - endRegionStart2D));
 
-                if ((l > 0.f) && (l < endRegionL))
+                if (((l > 0.f) || (fabs(l) < std::numeric_limits<float>::epsilon())) &&
+                    ((l < endRegionL) || (fabs(l - endRegionL) < std::numeric_limits<float>::epsilon())))
+                {
                     endPfoHits.push_back(pCaloHit);
+                }
             }
             nEndPfoHits = endPfoHits.size();
             nTotalEndPfoHits += nEndPfoHits;
