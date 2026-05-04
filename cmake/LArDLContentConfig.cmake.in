@@ -1,69 +1,8 @@
-##############################################################################
-# cmake configuration file for LArDLContent
-#
-# requires:
-#   MacroCheckPackageLibs.cmake for checking package libraries
-#
-# returns following variables:
-#
-#   LArDLContent_FOUND      : set to TRUE if LArDLContent found
-#       if FIND_PACKAGE called with REQUIRED and COMPONENTS arguments
-#       LArDLContent_FOUND is only set to TRUE if ALL components are also found
-#       if REQUIRED is NOT set components may or may not be available
-#
-#   LArDLContent_ROOT       : path to this LArDLContent installation
-#   LArDLContent_VERSION    : package version
-#   LArDLContent_LIBRARIES  : list of LArDLContent libraries (NOT including COMPONENTS)
-#   LArDLContent_INCLUDE_DIRS  : list of paths to be used with INCLUDE_DIRECTORIES
-#   LArDLContent_LIBRARY_DIRS  : list of paths to be used with LINK_DIRECTORIES
-#   LArDLContent_COMPONENT_LIBRARIES      : list of LArDLContent component libraries
-#   LArDLContent_${COMPONENT}_FOUND       : set to TRUE or FALSE for each library
-#   LArDLContent_${COMPONENT}_LIBRARY     : path to individual libraries
-#   LArDLContent_${COMPONENT}_LIB_DEPENDS : individual library dependencies
-#
-# @author Andy Chappell, University of Warwick
-##############################################################################
+@PACKAGE_INIT@
 
-SET( LArDLContent_ROOT "@CMAKE_INSTALL_PREFIX@" )
-SET( LArDLContent_VERSION "@LArDLContent_VERSION@" )
+include(CMakeFindDependencyMacro)
+find_dependency(LArContent 04.16.00 REQUIRED)
+find_dependency(Torch REQUIRED)
+find_dependency(TBB REQUIRED)
 
-
-# ---------- include dirs -----------------------------------------------------
-# do not store find results in cache
-SET( LArDLContent_INCLUDE_DIRS LArDLContent_INCLUDE_DIRS-NOTFOUND )
-MARK_AS_ADVANCED( LArDLContent_INCLUDE_DIRS )
-
-FIND_PATH( LArDLContent_INCLUDE_DIRS
-	NAMES larpandoradlcontent/LArDLContent.h
-	PATHS ${LArDLContent_ROOT} ${LArDLContent_ROOT}/include
-	NO_DEFAULT_PATH
-)
-
-
-
-# ---------- libraries --------------------------------------------------------
-INCLUDE( "@PANDORA_CMAKE_MODULES_PATH@/MacroCheckPackageLibs.cmake" )
-
-# only standard libraries should be passed as arguments to CHECK_PACKAGE_LIBS
-# additional components are set by cmake in variable PKG_FIND_COMPONENTS
-# first argument should be the package name
-CHECK_PACKAGE_LIBS( LArDLContent LArDLContent )
-
-
-
-
-# ---------- libraries dependencies -------------------------------------------
-# this sets LArDLContent_${COMPONENT}_LIB_DEPENDS variables
-INCLUDE( "${LArDLContent_ROOT}/lib/cmake/LArDLContentLibDeps.cmake" )
- 
-
-
-
-# ---------- final checking ---------------------------------------------------
-INCLUDE( FindPackageHandleStandardArgs )
-# set LArDLContentNEW_FOUND to TRUE if all listed variables are TRUE and not empty
-# LArDLContent_COMPONENT_VARIABLES will be set if FIND_PACKAGE is called with REQUIRED argument
-FIND_PACKAGE_HANDLE_STANDARD_ARGS( LArDLContent DEFAULT_MSG LArDLContent_ROOT LArDLContent_INCLUDE_DIRS LArDLContent_LIBRARIES ${LArDLContent_COMPONENT_VARIABLES} )
-
-SET( LArDLContent_FOUND ${LArDLContentNEW_FOUND} )
-
+include("${CMAKE_CURRENT_LIST_DIR}/LArDLContentTargets.cmake")

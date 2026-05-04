@@ -1,69 +1,7 @@
-##############################################################################
-# cmake configuration file for LArContent
-#
-# requires:
-#   MacroCheckPackageLibs.cmake for checking package libraries
-#
-# returns following variables:
-#
-#   LArContent_FOUND      : set to TRUE if LArContent found
-#       if FIND_PACKAGE called with REQUIRED and COMPONENTS arguments
-#       LArContent_FOUND is only set to TRUE if ALL components are also found
-#       if REQUIRED is NOT set components may or may not be available
-#
-#   LArContent_ROOT       : path to this LArContent installation
-#   LArContent_VERSION    : package version
-#   LArContent_LIBRARIES  : list of LArContent libraries (NOT including COMPONENTS)
-#   LArContent_INCLUDE_DIRS  : list of paths to be used with INCLUDE_DIRECTORIES
-#   LArContent_LIBRARY_DIRS  : list of paths to be used with LINK_DIRECTORIES
-#   LArContent_COMPONENT_LIBRARIES      : list of LArContent component libraries
-#   LArContent_${COMPONENT}_FOUND       : set to TRUE or FALSE for each library
-#   LArContent_${COMPONENT}_LIBRARY     : path to individual libraries
-#   LArContent_${COMPONENT}_LIB_DEPENDS : individual library dependencies
-#
-# @author Jan Engels, Desy
-##############################################################################
+@PACKAGE_INIT@
 
-SET( LArContent_ROOT "@CMAKE_INSTALL_PREFIX@" )
-SET( LArContent_VERSION "@LArContent_VERSION@" )
+include(CMakeFindDependencyMacro)
+find_dependency(PandoraSDK 04.00.00 REQUIRED)
+find_dependency(Eigen3 3.3 REQUIRED)
 
-
-# ---------- include dirs -----------------------------------------------------
-# do not store find results in cache
-SET( LArContent_INCLUDE_DIRS LArContent_INCLUDE_DIRS-NOTFOUND )
-MARK_AS_ADVANCED( LArContent_INCLUDE_DIRS )
-
-FIND_PATH( LArContent_INCLUDE_DIRS
-	NAMES larpandoracontent/LArCheating/CheatingClusterCreationAlgorithm.h
-	PATHS ${LArContent_ROOT} ${LArContent_ROOT}/include
-	NO_DEFAULT_PATH
-)
-
-
-
-# ---------- libraries --------------------------------------------------------
-INCLUDE( "@PANDORA_CMAKE_MODULES_PATH@/MacroCheckPackageLibs.cmake" )
-
-# only standard libraries should be passed as arguments to CHECK_PACKAGE_LIBS
-# additional components are set by cmake in variable PKG_FIND_COMPONENTS
-# first argument should be the package name
-CHECK_PACKAGE_LIBS( LArContent LArContent )
-
-
-
-
-# ---------- libraries dependencies -------------------------------------------
-# this sets LArContent_${COMPONENT}_LIB_DEPENDS variables
-INCLUDE( "${LArContent_ROOT}/lib/cmake/LArContentLibDeps.cmake" )
- 
-
-
-
-# ---------- final checking ---------------------------------------------------
-INCLUDE( FindPackageHandleStandardArgs )
-# set LARCONTENTNEW_FOUND to TRUE if all listed variables are TRUE and not empty
-# LArContent_COMPONENT_VARIABLES will be set if FIND_PACKAGE is called with REQUIRED argument
-FIND_PACKAGE_HANDLE_STANDARD_ARGS( LArContent DEFAULT_MSG LArContent_ROOT LArContent_INCLUDE_DIRS LArContent_LIBRARIES ${LArContent_COMPONENT_VARIABLES} )
-
-SET( LArContent_FOUND ${LARCONTENTNEW_FOUND} )
-
+include("${CMAKE_CURRENT_LIST_DIR}/LArContentTargets.cmake")
