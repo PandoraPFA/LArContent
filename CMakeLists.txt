@@ -8,7 +8,7 @@ else()
     set(LAR_PROJECT_NAME LArContent)
 endif()
 
-project(${LAR_PROJECT_NAME} VERSION 04.19.05 LANGUAGES CXX)
+project(${LAR_PROJECT_NAME} VERSION 05.00.00 LANGUAGES CXX)
 
 if(cetmodules_FOUND)
     # Deal with MRB changing top-level CMake invocation location
