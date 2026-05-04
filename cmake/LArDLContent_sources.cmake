@@ -1,0 +1,25 @@
+set(LAR_DL_CONTENT_SRCS
+    larpandoradlcontent/LArCheating/DLCheatHierarchyTool.cc
+    larpandoradlcontent/LArControlFlow/DLMasterAlgorithm.cc
+    larpandoradlcontent/LArDLContent.cc
+    larpandoradlcontent/LArEventClassification/CNNTrackShowerCountingAlgorithm.cc
+    larpandoradlcontent/LArHelpers/LArCanvasHelper.cc
+    larpandoradlcontent/LArHelpers/LArDLHelper.cc
+    larpandoradlcontent/LArMonitoring/DlHitValidationAlgorithm.cc
+    larpandoradlcontent/LArObjects/VertexTuple.cc
+    larpandoradlcontent/LArShowerGrowing/DLTwoDShowerGrowingAlgorithm.cc
+    larpandoradlcontent/LArSignalId/DlSNSignalAlgorithm.cc
+    larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLBaseHierarchyTool.cc
+    larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLLaterTierHierarchyTool.cc
+    larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLNeutrinoHierarchyAlgorithm.cc
+    larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.cc
+    larpandoradlcontent/LArTrackShowerId/DlClusterCharacterisationAlgorithm.cc
+    larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.cc
+    larpandoradlcontent/LArTrackShowerId/DlPfoCharacterisationAlgorithm.cc
+    larpandoradlcontent/LArTrackShowerId/DlTrackCharacterisationAlgorithm.cc
+    larpandoradlcontent/LArTwoDReco/DLThreeDClusterSplittingAlgorithm.cc
+    larpandoradlcontent/LArTwoDReco/DlTrackShowerStreamSelectionAlgorithm.cc
+    larpandoradlcontent/LArVertex/DlSecondaryVertexingAlgorithm.cc
+    larpandoradlcontent/LArVertex/DlVertexingAlgorithm.cc
+    larpandoradlcontent/LArVertex/DlVertexingBaseAlgorithm.cc
+)
