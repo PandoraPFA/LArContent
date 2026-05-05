@@ -44,29 +44,29 @@ private:
     bool AreClustersAssociated(const pandora::Cluster *const pInnerCluster, const pandora::Cluster *const pOuterCluster) const;
 
     /**
-     *  @brief Perform PCA fitting on a cluster
+     *  @brief Populate cluster fit attributes 
      *
      *  @param  pCluster address of the cluster used to fitting
      */
-    void PCAFit(const pandora::Cluster *pCluster) const;
+    void PopulateFitAttributes(const pandora::Cluster *pCluster) const;
 
     float m_minClusterLength;            ///< minimum cluster length
+    float m_shortClusterLength;          ///< length threshold for short cluster
     float m_minCosRelativeAngle;         ///< maximum allowed relative angle between associated clusters
     float m_maxGapDistanceSquared;       ///< maximum allowed distance (squared) between associated clusters
     mutable pandora::HitType m_view;     ///< The view to which the hits under consideration belong
 
-    // struct to cache PCA attributes
+    // struct to cache cluster attributes
     struct ClusterAttr {
-        float length;
-        pandora::CartesianVector innerCoordinate = pandora::CartesianVector(0.f, 0.f, 0.f);
-        pandora::CartesianVector outerCoordinate = pandora::CartesianVector(0.f, 0.f, 0.f);
-        pandora::CartesianVector centroid = pandora::CartesianVector(0.f, 0.f, 0.f);
-        LArPcaHelper::EigenValues eigenValues = LArPcaHelper::EigenValues(0.f, 0.f, 0.f);
-        LArPcaHelper::EigenVectors eigenVectors;
+        float m_length;
+        pandora::CartesianVector m_innerCoordinate = pandora::CartesianVector(0.f, 0.f, 0.f);
+        pandora::CartesianVector m_outerCoordinate = pandora::CartesianVector(0.f, 0.f, 0.f);
+        pandora::CartesianVector m_centroid = pandora::CartesianVector(0.f, 0.f, 0.f);
+        LArPcaHelper::EigenVectors m_eigenVectors;
     };
 
     typedef std::unordered_map<const pandora::Cluster*, ClusterAttr> ClusterAttrMap;
-    mutable ClusterAttrMap clusterAttrMap;
+    mutable ClusterAttrMap m_clusterAttrMap;
 };
 
 } // namespace lar_content

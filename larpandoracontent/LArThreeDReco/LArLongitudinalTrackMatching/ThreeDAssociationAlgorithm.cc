@@ -19,7 +19,8 @@ namespace lar_content
 {
 
 ThreeDAssociationAlgorithm::ThreeDAssociationAlgorithm() :
-    m_minClusterLength(1.1f),
+    m_minClusterLength(1.10f),
+    m_shortClusterLength(2.50f),
     m_minCosRelativeAngle(0.94f),
     m_maxGapDistanceSquared(10.f),
     m_view(TPC_3D)
@@ -33,17 +34,17 @@ void ThreeDAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const
     if (!pClusterList->empty())
         m_view = LArClusterHelper::GetClusterHitType(pClusterList->front());
 
-    clusterAttrMap.clear();
+    m_clusterAttrMap.clear();
 
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        const Cluster *const pCluster = *iter;
-        float clusterLength = LArClusterHelper::GetLength(pCluster);
+        const Cluster *const pCluster{ *iter };
+        const float clusterLength{ LArClusterHelper::GetLength(pCluster) };
 
         if( clusterLength < m_minClusterLength )
             continue;
 
-        this->PCAFit(pCluster);
+        this->PopulateFitAttributes(pCluster);
 
         clusterVector.push_back(pCluster);
 
@@ -51,9 +52,9 @@ void ThreeDAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const
         CartesianVector outerCoordinate(0.f, 0.f, 0.f);
         LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
 
-        clusterAttrMap[pCluster].length = clusterLength;
-        clusterAttrMap[pCluster].innerCoordinate = innerCoordinate;
-        clusterAttrMap[pCluster].outerCoordinate = outerCoordinate;
+        m_clusterAttrMap[pCluster].m_length = clusterLength;
+        m_clusterAttrMap[pCluster].m_innerCoordinate = innerCoordinate;
+        m_clusterAttrMap[pCluster].m_outerCoordinate = outerCoordinate;
     }
 
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByInnerPosition);
@@ -63,14 +64,14 @@ void ThreeDAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const
 
 void ThreeDAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const
 {
-    // ATTN This method assumes that clusters have been sorted by layer
+    // ATTN This method assumes that clusters have been sorted with LArClusterHelper::SortByInnerPosition
     for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterIEnd = clusterVector.end(); iterI != iterIEnd; ++iterI)
     {
-        const Cluster *const pInnerCluster = *iterI;
+        const Cluster *const pInnerCluster{ *iterI };
 
         for (ClusterVector::const_iterator iterJ = iterI, iterJEnd = clusterVector.end(); iterJ != iterJEnd; ++iterJ)
         {
-            const Cluster *const pOuterCluster = *iterJ;
+            const Cluster *const pOuterCluster{ *iterJ };
 
             if (pInnerCluster == pOuterCluster)
                 continue;
@@ -88,15 +89,30 @@ void ThreeDAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVect
 
 bool ThreeDAssociationAlgorithm::IsExtremalCluster(const bool isForward, const Cluster *const pCurrentCluster, const Cluster *const pTestCluster) const
 {
-    CartesianVector currentClusterInnerCoordinate{ clusterAttrMap.at(pCurrentCluster).innerCoordinate };
-    CartesianVector currentClusterOuterCoordinate{ clusterAttrMap.at(pCurrentCluster).outerCoordinate };
+    CartesianVector currentClusterInnerCoordinate(0.f, 0.f, 0.f);
+    CartesianVector currentClusterOuterCoordinate(0.f, 0.f, 0.f);
+    CartesianVector testClusterInnerCoordinate(0.f, 0.f, 0.f);
+    CartesianVector testClusterOuterCoordinate(0.f, 0.f, 0.f);
 
-    CartesianVector testClusterInnerCoordinate{ clusterAttrMap.at(pTestCluster).innerCoordinate };
-    CartesianVector testClusterOuterCoordinate{ clusterAttrMap.at(pTestCluster).outerCoordinate };
+    if( m_clusterAttrMap.find(pCurrentCluster) == m_clusterAttrMap.end() )
+        LArClusterHelper::GetExtremalCoordinates(pCurrentCluster, currentClusterInnerCoordinate, currentClusterOuterCoordinate);
+    else{
+        currentClusterInnerCoordinate = m_clusterAttrMap.at(pCurrentCluster).m_innerCoordinate;
+        currentClusterOuterCoordinate = m_clusterAttrMap.at(pCurrentCluster).m_outerCoordinate;
+    }
+    
+    if ( m_clusterAttrMap.find(pTestCluster) == m_clusterAttrMap.end() )
+        LArClusterHelper::GetExtremalCoordinates(pTestCluster, testClusterInnerCoordinate, testClusterOuterCoordinate);
+    else {
+        testClusterInnerCoordinate = m_clusterAttrMap.at(pTestCluster).m_innerCoordinate;
+        testClusterOuterCoordinate = m_clusterAttrMap.at(pTestCluster).m_outerCoordinate;
+    }
 
-    const CartesianVector currentPosition{ isForward ? currentClusterOuterCoordinate : currentClusterInnerCoordinate };
-    const CartesianVector testPosition{ isForward ? testClusterOuterCoordinate : testClusterInnerCoordinate };
+    const CartesianVector &currentPosition{ isForward ? currentClusterOuterCoordinate : currentClusterInnerCoordinate };
+    const CartesianVector &testPosition{ isForward ? testClusterOuterCoordinate : testClusterInnerCoordinate };
 
+    // Find the extremal cluster by comparing the outermost coordinates (forward) or innermost coordinates (backward)
+    // Pick the cluster with more hits if coordinates are the same
     if( isForward && ((LArClusterHelper::SortCoordinatesByPosition(currentPosition, testPosition) || 
                       ((currentPosition == testPosition) && LArClusterHelper::SortByNHits(pTestCluster, pCurrentCluster)))))
         return true;
@@ -112,22 +128,23 @@ bool ThreeDAssociationAlgorithm::IsExtremalCluster(const bool isForward, const C
 
 bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInnerCluster, const Cluster *const pOuterCluster) const
 {
+    if( (m_clusterAttrMap.find(pInnerCluster) == m_clusterAttrMap.end()) || (m_clusterAttrMap.find(pOuterCluster) == m_clusterAttrMap.end()) )
+        throw pandora::StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    const float closestDistance = LArClusterHelper::GetClosestDistance(pInnerCluster, pOuterCluster);
+    const float closestDistance{ LArClusterHelper::GetClosestDistance(pInnerCluster, pOuterCluster) };
 
     if( closestDistance > m_maxGapDistanceSquared )
         return false;
 
-    const CartesianVector innerClusterInnerCoordinate{ clusterAttrMap.at(pInnerCluster).innerCoordinate };
-    const CartesianVector innerClusterOuterCoordinate{ clusterAttrMap.at(pInnerCluster).outerCoordinate };
-    const CartesianVector outerClusterInnerCoordinate{ clusterAttrMap.at(pOuterCluster).innerCoordinate };
-    const CartesianVector outerClusterOuterCoordinate{ clusterAttrMap.at(pOuterCluster).outerCoordinate };
+    const CartesianVector &innerClusterInnerCoordinate{ m_clusterAttrMap.at(pInnerCluster).m_innerCoordinate };
+    const CartesianVector &innerClusterOuterCoordinate{ m_clusterAttrMap.at(pInnerCluster).m_outerCoordinate };
+    const CartesianVector &outerClusterInnerCoordinate{ m_clusterAttrMap.at(pOuterCluster).m_innerCoordinate };
 
     if( !LArClusterHelper::SortCoordinatesByPosition(innerClusterInnerCoordinate, outerClusterInnerCoordinate) )
         throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-    const LArPcaHelper::EigenVectors innerVectors{ clusterAttrMap.at(pInnerCluster).eigenVectors };
-    const LArPcaHelper::EigenVectors outerVectors{ clusterAttrMap.at(pOuterCluster).eigenVectors };
+    const LArPcaHelper::EigenVectors &innerVectors{ m_clusterAttrMap.at(pInnerCluster).m_eigenVectors };
+    const LArPcaHelper::EigenVectors &outerVectors{ m_clusterAttrMap.at(pOuterCluster).m_eigenVectors };
 
     const CartesianVector innerPrimaryAxis  { innerVectors.at(0).GetZ() > 0.f ? innerVectors.at(0) : innerVectors.at(0) * -1.f };
     const CartesianVector innerSecondaryAxis{ innerVectors.at(1).GetZ() > 0.f ? innerVectors.at(1) : innerVectors.at(1) * -1.f };
@@ -137,29 +154,25 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
     const CartesianVector outerSecondaryAxis{ outerVectors.at(1).GetZ() > 0.f ? outerVectors.at(1) : outerVectors.at(1) * -1.f };
     const CartesianVector outerTertiaryAxis { outerVectors.at(2).GetZ() > 0.f ? outerVectors.at(2) : outerVectors.at(2) * -1.f };
 
-    const CartesianVector innerCentroid{ clusterAttrMap.at(pInnerCluster).centroid };
-    const CartesianVector outerCentroid{ clusterAttrMap.at(pOuterCluster).centroid };
-
     const float openingAngle{ innerPrimaryAxis.GetCosOpeningAngle(outerPrimaryAxis) };
+    const double channelPitch{ 1.3 * LArGeometryHelper::GetWirePitch(this->GetPandora(), m_view) };
 
-    constexpr float shortClusterLength = 2.50f;
-
-    // Bypass opening angle cut if a short cluster is the extension of a longer one
-    if( (closestDistance > 0.5f) ||
-        ((clusterAttrMap.at(pInnerCluster).length <= shortClusterLength ) == (clusterAttrMap.at(pOuterCluster).length <= shortClusterLength))){
+    // Bypass opening angle check if a short cluster extends a long one (or vice versa)
+    if( (closestDistance > channelPitch) ||
+        ((m_clusterAttrMap.at(pInnerCluster).m_length <= m_shortClusterLength ) == (m_clusterAttrMap.at(pOuterCluster).m_length <= m_shortClusterLength))){
 
         if( openingAngle < m_minCosRelativeAngle )
             return false;
     }
 
-    bool isInnerLongest{ LArClusterHelper::SortByNHits(pInnerCluster, pOuterCluster) && 
-        (clusterAttrMap.at(pInnerCluster).length > clusterAttrMap.at(pOuterCluster).length) };
+    const bool isInnerLongest{ LArClusterHelper::SortByNHits(pInnerCluster, pOuterCluster) && 
+        (m_clusterAttrMap.at(pInnerCluster).m_length > m_clusterAttrMap.at(pOuterCluster).m_length) };
     
-    const CartesianVector centroid{ isInnerLongest ? innerCentroid : outerCentroid };
+    const CartesianVector &centroid{ isInnerLongest ? m_clusterAttrMap.at(pInnerCluster).m_centroid : m_clusterAttrMap.at(pOuterCluster).m_centroid };
 
-    const CartesianVector primaryAxis  { isInnerLongest ? innerPrimaryAxis   : outerPrimaryAxis   };
-    const CartesianVector secondaryAxis{ isInnerLongest ? innerSecondaryAxis : outerSecondaryAxis };
-    const CartesianVector tertiaryAxis { isInnerLongest ? innerTertiaryAxis  : outerTertiaryAxis  };
+    const CartesianVector &primaryAxis  { isInnerLongest ? innerPrimaryAxis   : outerPrimaryAxis   };
+    const CartesianVector &secondaryAxis{ isInnerLongest ? innerSecondaryAxis : outerSecondaryAxis };
+    const CartesianVector &tertiaryAxis { isInnerLongest ? innerTertiaryAxis  : outerTertiaryAxis  };
 
     const CartesianVector innerEndPrimaryAxis  { centroid + primaryAxis * primaryAxis.GetDotProduct(innerClusterOuterCoordinate - centroid) };
     const CartesianVector outerStartPrimaryAxis{ centroid + primaryAxis * primaryAxis.GetDotProduct(outerClusterInnerCoordinate - centroid) };
@@ -170,10 +183,10 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
     const CartesianVector innerEndTertiaryAxis  { centroid + tertiaryAxis * tertiaryAxis.GetDotProduct(innerClusterOuterCoordinate - centroid) };
     const CartesianVector outerStartTertiaryAxis{ centroid + tertiaryAxis * tertiaryAxis.GetDotProduct(outerClusterInnerCoordinate - centroid) };
 
-    if( (innerEndTertiaryAxis - outerStartTertiaryAxis).GetMagnitudeSquared() > shortClusterLength )
+    if( (innerEndTertiaryAxis - outerStartTertiaryAxis).GetMagnitudeSquared() > m_shortClusterLength )
         return false;
 
-    if( (innerEndSecondaryAxis - outerStartSecondaryAxis).GetMagnitudeSquared() > shortClusterLength )
+    if( (innerEndSecondaryAxis - outerStartSecondaryAxis).GetMagnitudeSquared() > m_shortClusterLength )
         return false;
 
     if( (innerEndPrimaryAxis - outerStartPrimaryAxis).GetMagnitudeSquared() < m_maxGapDistanceSquared )
@@ -186,21 +199,20 @@ bool ThreeDAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInn
 
 StatusCode ThreeDAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "MinClusterLength", m_minClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLength", m_minClusterLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosRelativeAngle", m_minCosRelativeAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShortClusterLength", m_shortClusterLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
-        XmlHelper::ReadValue(xmlHandle, "MaxGapDistanceSquared", m_maxGapDistanceSquared));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosRelativeAngle", m_minCosRelativeAngle));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxGapDistanceSquared", m_maxGapDistanceSquared));
 
     return ClusterAssociationAlgorithm::ReadSettings(xmlHandle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDAssociationAlgorithm::PCAFit( const pandora::Cluster *const pCluster ) const
+void ThreeDAssociationAlgorithm::PopulateFitAttributes( const pandora::Cluster *const pCluster ) const
 {
     CaloHitList clusterHits;
     LArClusterHelper::GetAllHits(pCluster, clusterHits);   
@@ -213,9 +225,8 @@ void ThreeDAssociationAlgorithm::PCAFit( const pandora::Cluster *const pCluster 
 
     LArPcaHelper::RunPca(clusterHits, centroid, eigenValues, eigenVectors);
 
-    clusterAttrMap[pCluster].centroid = centroid;
-    clusterAttrMap[pCluster].eigenValues = eigenValues;
-    clusterAttrMap[pCluster].eigenVectors = eigenVectors;
+    m_clusterAttrMap[pCluster].m_centroid = centroid;
+    m_clusterAttrMap[pCluster].m_eigenVectors = eigenVectors;
 }
 
 } // namespace lar_content
