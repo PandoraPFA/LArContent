@@ -778,11 +778,10 @@ bool LArClusterHelper::SortByInnerPosition(const Cluster *const pLhs, const Clus
 {
     CartesianVector lhsInnerCoordinate(0.f, 0.f, 0.f); 
     CartesianVector rhsInnerCoordinate(0.f, 0.f, 0.f);
-    CartesianVector lhsOuterCoordinate(0.f, 0.f, 0.f); 
-    CartesianVector rhsOuterCoordinate(0.f, 0.f, 0.f);
+    CartesianVector unused(0.f, 0.f, 0.f);
 
-    LArClusterHelper::GetExtremalCoordinates(pLhs, lhsInnerCoordinate, lhsOuterCoordinate);
-    LArClusterHelper::GetExtremalCoordinates(pRhs, rhsInnerCoordinate, rhsOuterCoordinate);
+    LArClusterHelper::GetExtremalCoordinates(pLhs, lhsInnerCoordinate, unused);
+    LArClusterHelper::GetExtremalCoordinates(pRhs, rhsInnerCoordinate, unused);
 
     return LArClusterHelper::SortCoordinatesByPosition(lhsInnerCoordinate, rhsInnerCoordinate);
 }
@@ -795,7 +794,6 @@ bool LArClusterHelper::SortByPulseHeight(const Cluster *const pLhs, const Cluste
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 
 bool LArClusterHelper::SortHitsByPosition(const CaloHit *const pLhs, const CaloHit *const pRhs)
 {
