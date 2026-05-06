@@ -3,12 +3,10 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 find_package(cetmodules 3.13.00 QUIET)
 
 if(cetmodules_FOUND)
-    set(LAR_PROJECT_NAME larpandoracontent)
+  project(larpandoracontent VERSION 05.00.00 LANGUAGES CXX)
 else()
-    set(LAR_PROJECT_NAME LArContent)
+  project(LArContent VERSION 05.00.00 LANGUAGES CXX)
 endif()
-
-project(${LAR_PROJECT_NAME} VERSION 05.00.00 LANGUAGES CXX)
 
 if(cetmodules_FOUND)
     # Deal with MRB changing top-level CMake invocation location
