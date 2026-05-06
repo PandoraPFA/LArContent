@@ -29,6 +29,7 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_minLengthSquared(50.f),
     m_minCosRelativeAngle(0.966),
     m_relaxMinLongitudinalDisplacement(-5.f),
+    m_minLongitudinalDisplacementX(-1.f),
     m_maxLongitudinalDisplacementX(15.f),
     m_maxTransverseDisplacement(5.f),
     m_relaxCosRelativeAngle(0.906),
@@ -258,7 +259,7 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
 
     const float minL((!LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex1.GetPosition(), TPC_3D) ||
                          !LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex2.GetPosition(), TPC_3D))
-            ? -1.f
+            ? m_minLongitudinalDisplacementX
             : m_relaxMinLongitudinalDisplacement);
     const float dXdL1(m_useXcoordinate                                  ? pX1
             : (1.f - pX1 * pX1 > std::numeric_limits<float>::epsilon()) ? pX1 / std::sqrt(1.f - pX1 * pX1)
