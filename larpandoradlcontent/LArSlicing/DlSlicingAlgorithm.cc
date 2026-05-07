@@ -61,6 +61,7 @@ StatusCode DlSlicingAlgorithm::Infer()
 {
     const CaloHitList *pCaloHitList{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+    const unsigned int numHits = pCaloHitList->size();
 
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<CartesianVector> nodes;
@@ -81,8 +82,14 @@ StatusCode DlSlicingAlgorithm::Infer()
     node_features.clear();
     node_features.shrink_to_fit();
 
+    // Tensors for inference results...
     torch::Tensor instancePreds;
     torch::Tensor fullInstancePreds;
+
+    // Data structures for post-processing...
+    std::vector<int> candidateIndices;
+    std::vector<int> noiseMask(numHits, 0);
+
     {
         LArDLHelper::TorchMultiOutput semanticOutput;
         t1 = std::chrono::high_resolution_clock::now();
@@ -150,7 +157,6 @@ StatusCode DlSlicingAlgorithm::Infer()
         // candidates. Scope the working buffers so they're freed before instance seg.
         std::vector<CartesianVector> foundVertices;
         {
-            const unsigned int numHits = semanticLabels.size(0);
             const auto contiguousSemanticLabels = semanticLabels.contiguous();
             std::vector<float> semanticLabelsVec(
                 contiguousSemanticLabels.data_ptr<float>(), contiguousSemanticLabels.data_ptr<float>() + (numHits * m_nDistanceClasses));
@@ -163,6 +169,30 @@ StatusCode DlSlicingAlgorithm::Infer()
             duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
             std::cout << "Hough Transform vertex finding took " << duration << " ms." << std::endl;
             std::cout << "Found " << foundVertices.size() << " vertex candidates." << std::endl;
+        }
+
+        // Store some info about the candidates for later post processing...
+        for (int i = 0; i < numHits; ++i)
+        {
+            for (const auto &vtx : foundVertices)
+            {
+                if ((nodes[i] - vtx).GetMagnitudeSquared() < 100.f)
+                {
+                    candidateIndices.push_back(i);
+                    break;
+                }
+            }
+        }
+
+        // Similarly, pull out a noise mask before we clear that.
+        const int noiseClass = m_nDistanceClasses - 1;
+        auto semanticPreds = torch::argmax(semanticLabels, 1);
+        for (int i = 0; i < numHits; ++i)
+        {
+            if (semanticPreds[i].item<int>() == noiseClass)
+            {
+                noiseMask[i] = 1;
+            }
         }
 
         // nodes is no longer needed after the Hough finder.
@@ -280,6 +310,116 @@ StatusCode DlSlicingAlgorithm::Infer()
 
     HepEVD::getServer()->addParticles(particlesToVis);
     HepEVD::saveState("Slicing Result");
+#endif
+
+    std::cout << "Starting Post-Processing..." << std::endl;
+    t1 = std::chrono::high_resolution_clock::now();
+
+    // Rebuild the positions array from the native Pandora hits, as it is needed for the post-processing steps.
+    std::vector<pandora::CartesianVector> positions;
+    positions.reserve(pCaloHitList->size());
+    for (const auto pCaloHit : *pCaloHitList)
+    {
+        if (pCaloHit)
+            positions.push_back(pCaloHit->GetPositionVector());
+    }
+
+    std::vector<int> originalLabels(numHits);
+    std::vector<int> cleanLabels(numHits);
+
+    // TODO: Populate the t0 information once a sensible input format is decided on.
+    std::vector<float> t0s;
+    std::vector<bool> t0Valid;
+
+    // Unpack DL output and apply the noise mask we saved earlier
+    for (int i = 0; i < numHits; ++i)
+    {
+        int label = instancePreds[i].item<int>();
+        originalLabels[i] = label;
+        cleanLabels[i] = (noiseMask[i] == 1) ? -1 : label;
+    }
+
+    // Perform the stages of actual post processing...
+    // First, split up the large clusters, to highly pure anchor and debris clusters...
+    t2 = std::chrono::high_resolution_clock::now();
+    auto postProcessingDuration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "Pre-processing for post-processing took " << postProcessingDuration << " ms." << std::endl;
+    t1 = std::chrono::high_resolution_clock::now();
+
+    std::vector<int> splitLabels;
+    std::set<int> anchors, debris;
+    this->SplitAndClassifyClusters(positions, cleanLabels, candidateIndices, splitLabels, anchors, debris, 20.0f, 20);
+    t2 = std::chrono::high_resolution_clock::now();
+    postProcessingDuration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "Split and classify clusters took " << postProcessingDuration << " ms." << std::endl;
+
+    // Then, start to attach the split clusters back together...
+    std::vector<int> floodLabels = splitLabels;
+    t1 = std::chrono::high_resolution_clock::now();
+    this->FloodFill(positions, t0s, t0Valid, cleanLabels, floodLabels, anchors, debris, 3.0f, 15.0f);
+    t2 = std::chrono::high_resolution_clock::now();
+    postProcessingDuration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "Flood fill took " << postProcessingDuration << " ms." << std::endl;
+
+    // And finally, perform clean up, ensuring every hit ends up in a cluster.
+    std::vector<int> finalLabels = floodLabels;
+    t1 = std::chrono::high_resolution_clock::now();
+    this->CleanSmallClusters(positions, t0s, t0Valid, originalLabels, finalLabels, 450);
+    t2 = std::chrono::high_resolution_clock::now();
+    postProcessingDuration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "Clean small clusters took " << postProcessingDuration << " ms." << std::endl;
+
+    // Build the final cluster -> hit map, so we can save it.
+    std::map<int, std::list<const CaloHit *>> clusterHitsMap;
+    int hitIdx = 0;
+    for (const auto pCaloHit : *pCaloHitList)
+    {
+        if (nullptr == pCaloHit)
+            continue;
+
+        const auto clusterPrediction = finalLabels[hitIdx];
+        if (clusterPrediction >= 0)
+            clusterHitsMap[clusterPrediction].push_back(pCaloHit);
+
+        ++hitIdx;
+    }
+
+#if DEBUG_MODE
+    // DEBUG: Visualise the post-post-processing clusters.
+    instanceHitsMap.clear();
+    evdHitIdx = 0;
+
+    for (const auto pCaloHit : *pCaloHitList)
+    {
+        if (nullptr == pCaloHit)
+            continue;
+
+        const auto x = pCaloHit->GetPositionVector().GetX();
+        const auto y = pCaloHit->GetPositionVector().GetY();
+        const auto z = pCaloHit->GetPositionVector().GetZ();
+        const auto e = pCaloHit->GetInputEnergy();
+
+        const auto clusterPrediction = finalLabels[evdHitIdx];
+
+        HepEVD::Hit *evdHit = new HepEVD::Hit({x, y, z}, e);
+        instanceHitsMap[clusterPrediction].push_back(evdHit);
+
+        ++evdHitIdx;
+    }
+
+    // DEBUG: Flatten to particles.
+    particlesToVis.clear();
+    clusterId = 0;
+
+    for (const auto &[clusterId, hits] : instanceHitsMap)
+    {
+        std::cout << "Cluster " << clusterId << ": " << hits.size() << " hits" << std::endl;
+        HepEVD::Particle *evdParticle = new HepEVD::Particle(hits, std::to_string(clusterId));
+        particlesToVis.push_back(evdParticle);
+    }
+
+    HepEVD::getServer()->addParticles(particlesToVis);
+    HepEVD::saveState("Post Processing Result");
     HepEVD::startServer();
 #endif
 
@@ -291,21 +431,6 @@ StatusCode DlSlicingAlgorithm::Infer()
     std::string clusterListName = m_outputClusterListName;
     const ClusterList *pClusterList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, clusterListName));
-
-    // Build the clusters from the predicted instances.
-    std::map<int, std::list<const CaloHit *>> clusterHitsMap;
-    int hitIdx{0};
-
-    for (const auto pCaloHit : *pCaloHitList)
-    {
-        if (nullptr == pCaloHit)
-            continue;
-
-        const auto clusterPrediction = instancePreds[hitIdx].item<int>();
-        clusterHitsMap[clusterPrediction].push_back(pCaloHit);
-
-        ++hitIdx;
-    }
 
     for (const auto &[clusterId, hits] : clusterHitsMap)
     {
