@@ -83,6 +83,7 @@ private:
      *
      *  @param positions The positions of the nodes.
      *  @param t0s The t0 values of the nodes, if available.
+     *  @param t0Valid The validity flags for each t0 value (i.e. missing / unset t0s will be marked as invalid).
      *  @param originalLabels The original predicted cluster labels for each node.
      *  @param finalLabels The new cluster labels for each node, after flood fill.
      *  @param anchors The indices of the anchor nodes.
@@ -91,8 +92,8 @@ private:
      *  @param ogBonusGap The distance gap to use when applying a bonus for attaching debris back to its original predicted cluster.
      */
     pandora::StatusCode FloodFill(const std::vector<pandora::CartesianVector> &positions, const std::vector<float> &t0s,
-        const std::vector<int> &originalLabels, std::vector<int> &finalLabels, const std::set<int> &anchors, std::set<int> &debris,
-        const float baseGap = 3.f, const float ogBonusGap = 15.f) const;
+        const std::vector<bool> &t0Valid, const std::vector<int> &originalLabels, std::vector<int> &finalLabels,
+        const std::set<int> &anchors, const std::set<int> &debris, const float baseGap = 3.f, const float ogBonusGap = 15.f) const;
 
     /**
      *  @brief Final clean up algorithm to classify any remaining small
@@ -102,12 +103,25 @@ private:
      *
      *  @param positions The positions of the nodes.
      *  @param t0s The t0 values of the nodes, if available.
+     *  @param t0Valid The validity flags for each t0 value (i.e. missing / unset t0s will be marked as invalid).
      *  @param originalLabels The original predicted cluster labels for each node.
      *  @param finalLabels The new cluster labels for each node, after clean up.
      *  @param minSize The min hit size for a cluster to be considered real, rather than debris.
      */
     pandora::StatusCode CleanSmallClusters(const std::vector<pandora::CartesianVector> &positions, const std::vector<float> &t0s,
-        const std::vector<int> &originalLabels, std::vector<int> &finalLabels, const int minSize = 300) const;
+        const std::vector<bool> &t0Valid, const std::vector<int> &originalLabels, std::vector<int> &finalLabels, const int minSize = 300) const;
+
+    /**
+     *  @brief Precompute the median t0 values for each cluster.
+     *
+     *  @param labels The cluster labels for each node.
+     *  @param t0s The t0 values for each node.
+     *  @param t0Valid The validity flags for each t0 value (i.e. missing / unset t0s will be marked as invalid).
+     *
+     *  @return A map from cluster IDs to their median t0 values.
+     */
+    std::unordered_map<int, float> PrecomputeT0Medians(
+        const std::vector<int> &labels, const std::vector<float> &t0s, const std::vector<bool> &t0Valid) const;
 
     LArDLHelper::TorchModel m_modelFile; ///< The model to use.
 
