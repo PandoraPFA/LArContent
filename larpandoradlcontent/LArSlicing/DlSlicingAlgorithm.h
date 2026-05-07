@@ -40,8 +40,8 @@ private:
      *  @param pos The positions of the nodes.
      *  @param node_features The features for each node.
      */
-    pandora::StatusCode GetNodeData(const pandora::CaloHitList &caloHits, std::vector<pandora::CartesianVector> &pos,
-        std::vector<std::array<float, 1>> &node_features);
+    pandora::StatusCode GetNodeData(
+        const pandora::CaloHitList &caloHits, std::vector<pandora::CartesianVector> &pos, std::vector<std::array<float, 1>> &node_features);
 
     /**
      *  @brief Process the given node data into the expected tensor format for the model, and insert into the input vector.
@@ -50,8 +50,64 @@ private:
      *  @param pos The positions of the nodes.
      *  @param node_features The features for each node.
      */
-    pandora::StatusCode BuildInput(LArDLHelper::TorchInputVector &inputs, std::vector<pandora::CartesianVector> &pos,
-        std::vector<std::array<float, 1>> &node_features);
+    pandora::StatusCode BuildInput(
+        LArDLHelper::TorchInputVector &inputs, std::vector<pandora::CartesianVector> &pos, std::vector<std::array<float, 1>> &node_features);
+
+    /**
+     *  @brief Given the predicted slicing labels, perform topological
+     *         splitting, to aide further post-processing and cluster classification.
+     *         Clusters are split into either "anchor" clusters (large predicted
+     *         clusters near to candidate vertices) or "debris" clusters (small
+     *         predicted clusters far from candidate vertices).
+     *
+     *  @param positions The positions of the nodes.
+     *  @param clusterLabels The predicted cluster labels for each node.
+     *  @param candidateIndices The indices of the candidate vertices.
+     *  @param newLabels The new cluster labels for each node, after topological splitting
+     *  @param anchors The indices of the anchor nodes
+     *  @param debris The indices of the debris nodes
+     *  @param distanceThreshold The distance threshold to use when deciding whether to split a cluster.
+     *  @param minAnchorSize The minimum number of nodes for an anchor cluster.
+     */
+    pandora::StatusCode SplitAndClassifyClusters(const std::vector<pandora::CartesianVector> &positions,
+        const std::vector<int> &clusterLabels, const std::vector<int> &candidateIndices, std::vector<int> &newLabels,
+        std::set<int> &anchors, std::set<int> &debris, const float distanceThreshold = 20.f, const int minAnchorSize = 20) const;
+
+    /**
+     *  @brief Starting from split anchors, perform a "flood fill" type
+     *         algorithm to start attaching debris to the anchors, improving
+     *         completeness whilst maintaining good purity.
+     *         Bonuses are applied for attaching debris back to its original
+     *         predicted cluster, similarly can gate connections with optional
+     *         t0 information.
+     *
+     *  @param positions The positions of the nodes.
+     *  @param t0s The t0 values of the nodes, if available.
+     *  @param originalLabels The original predicted cluster labels for each node.
+     *  @param finalLabels The new cluster labels for each node, after flood fill.
+     *  @param anchors The indices of the anchor nodes.
+     *  @param debris The indices of the debris nodes.
+     *  @param baseGap The base distance gap to use when deciding whether to attach debris to an anchor.
+     *  @param ogBonusGap The distance gap to use when applying a bonus for attaching debris back to its original predicted cluster.
+     */
+    pandora::StatusCode FloodFill(const std::vector<pandora::CartesianVector> &positions, const std::vector<float> &t0s,
+        const std::vector<int> &originalLabels, std::vector<int> &finalLabels, const std::set<int> &anchors, std::set<int> &debris,
+        const float baseGap = 3.f, const float ogBonusGap = 15.f) const;
+
+    /**
+     *  @brief Final clean up algorithm to classify any remaining small
+     *         clusters. Clusters are either: Restored back to their original,
+     *         pre-split cluster, promoted up to a real cluster, or attached to the
+     *         nearest large cluster.
+     *
+     *  @param positions The positions of the nodes.
+     *  @param t0s The t0 values of the nodes, if available.
+     *  @param originalLabels The original predicted cluster labels for each node.
+     *  @param finalLabels The new cluster labels for each node, after clean up.
+     *  @param minSize The min hit size for a cluster to be considered real, rather than debris.
+     */
+    pandora::StatusCode CleanSmallClusters(const std::vector<pandora::CartesianVector> &positions, const std::vector<float> &t0s,
+        const std::vector<int> &originalLabels, std::vector<int> &finalLabels, const int minSize = 300) const;
 
     LArDLHelper::TorchModel m_modelFile; ///< The model to use.
 

@@ -393,6 +393,131 @@ StatusCode DlSlicingAlgorithm::BuildInput(
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
+void DlSlicingAlgorithm::SplitAndClassifyClusters(const std::vector<pandora::CartesianVector> &positions,
+    const std::vector<int> &clusterLabels, const std::vector<int> &candidateIndices, std::vector<int> &newLabels, std::set<int> &anchors,
+    std::set<int> &debris, const float distanceThreshold, const int minAnchorSize) const
+{
+    const int nHits = positions.size();
+    newLabels.assign(nHits, -1);
+    std::vector<bool> visited(nHits, false);
+    int currentLabel = 0;
+    const float thresholdSq = distanceThreshold * distanceThreshold;
+
+    // Identify unique clusters, ignoring noise hits (label < 0)
+    std::set<int> uniqueClusters;
+    for (int label : clusterLabels)
+    {
+        if (label >= 0)
+            uniqueClusters.insert(label);
+    }
+
+    // Split the clusters using BFS.
+    //
+    // Essentially, for each unvisted hit in a cluster, do a BFS to find all
+    // hits in the same cluster within the distance threshold, and label them
+    // with the same new cluster ID.
+    for (int origCluster : uniqueClusters)
+    {
+        for (int i = 0; i < nHits; ++i)
+        {
+            if (clusterLabels[i] != origCluster || visited[i])
+                continue;
+
+            std::queue<int> queue;
+            queue.push(i);
+            visited[i] = true;
+            newLabels[i] = currentLabel;
+
+            while (!queue.empty())
+            {
+                int currIdx = queue.front();
+                queue.pop();
+                const pandora::CartesianVector &currPos = positions[currIdx];
+
+                for (int j = 0; j < nHits; ++j)
+                {
+                    if (clusterLabels[j] != origCluster || visited[j])
+                        continue;
+
+                    if ((positions[j] - currPos).GetMagnitudeSquared() < thresholdSq)
+                    {
+                        visited[j] = true;
+                        newLabels[j] = currentLabel;
+                        queue.push(j);
+                    }
+                }
+            }
+            currentLabel++;
+        }
+    }
+
+    // Add the noise hits back in with their original labels.
+    for (int i = 0; i < nHits; ++i)
+    {
+        if (clusterLabels[i] < 0)
+            newLabels[i] = clusterLabels[i];
+    }
+
+    // Classify the clusters as either anchors or debris, based on their proximity to candidate vertices and their size.
+    // There should only be a single anchor per original cluster.
+    // Later algorithms can then use the anchors as a seed for growing the clusters back out.
+    for (int origId : uniqueClusters)
+    {
+        std::map<int, std::vector<int>> subClusters;
+        for (int i = 0; i < nHits; ++i)
+        {
+            if (clusterLabels[i] == origId && newLabels[i] >= 0)
+            {
+                subClusters[newLabels[i]].push_back(i);
+            }
+        }
+
+        if (subClusters.empty())
+            continue;
+
+        int anchorId = -1;
+        int maxVertexHits = 0;
+        int maxTotalHits = 0;
+        int fallbackAnchorId = -1;
+
+        for (const auto &[scId, scHits] : subClusters)
+        {
+            int vertexHitCount = 0;
+            for (int hitIdx : scHits)
+            {
+                if (std::find(candidateIndices.begin(), candidateIndices.end(), hitIdx) != candidateIndices.end())
+                    vertexHitCount++;
+            }
+
+            if (vertexHitCount > maxVertexHits && scHits.size() >= minAnchorSize)
+            {
+                maxVertexHits = vertexHitCount;
+                anchorId = scId;
+            }
+
+            if (scHits.size() > maxTotalHits && scHits.size() >= minAnchorSize)
+            {
+                maxTotalHits = scHits.size();
+                fallbackAnchorId = scId;
+            }
+        }
+
+        if (anchorId == -1)
+            anchorId = fallbackAnchorId;
+
+        if (anchorId != -1)
+            anchors.insert(anchorId);
+
+        for (const auto &[scId, scHits] : subClusters)
+        {
+            if (scId != anchorId)
+                debris.insert(scId);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode DlSlicingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     std::string modelName;
