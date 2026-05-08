@@ -131,6 +131,7 @@ private:
     std::string m_caloHitListName;       ///< The name of the input CaloHit list.
     std::string m_outputClusterListName; ///< The name of the output Cluster list to create with the predicted instances.
     int m_k;                             ///< The number of nearest neighbours to use when building the graph.
+    bool m_runPostProcessing;            ///< Whether to run the post-processing steps after inference.
 };
 
 } // namespace lar_dl_content
