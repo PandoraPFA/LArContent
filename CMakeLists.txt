@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 find_package(cetmodules 3.13.00 QUIET)
 
 if(cetmodules_FOUND)
-  project(larpandoracontent VERSION 05.00.00 LANGUAGES CXX)
+  project(larpandoracontent VERSION 05.01.00 LANGUAGES CXX)
 else()
   project(LArContent VERSION 05.00.00 LANGUAGES CXX)
 endif()
