@@ -59,6 +59,13 @@ set(LAR_CONTENT_SRCS
     larpandoracontent/LArHelpers/LArPointingClusterHelper.cc
     larpandoracontent/LArHelpers/LArStitchingHelper.cc
     larpandoracontent/LArHelpers/LArVertexHelper.cc
+    larpandoracontent/LArMetrics/BaseValidationTool.cc
+    larpandoracontent/LArMetrics/EventValidationTool.cc
+    larpandoracontent/LArMetrics/HierarchyValidationTool.cc
+    larpandoracontent/LArMetrics/PFPValidationTool.cc
+    larpandoracontent/LArMetrics/ShowerValidationTool.cc
+    larpandoracontent/LArMetrics/TrackValidationTool.cc
+    larpandoracontent/LArMetrics/ValidationAlgorithm.cc
     larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.cc
     larpandoracontent/LArMonitoring/EventClusterValidationAlgorithm.cc
     larpandoracontent/LArMonitoring/EventValidationBaseAlgorithm.cc

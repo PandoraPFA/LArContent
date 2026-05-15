@@ -79,6 +79,7 @@ set(LAR_CONTENT_DIRS
   larpandoracontent/LArControlFlow
   larpandoracontent/LArCustomParticles
   larpandoracontent/LArHelpers
+  larpandoracontent/LArMetrics
   larpandoracontent/LArMonitoring
   larpandoracontent/LArObjects
   larpandoracontent/LArPersistency
