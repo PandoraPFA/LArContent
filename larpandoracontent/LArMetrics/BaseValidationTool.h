@@ -47,8 +47,8 @@ protected:
         float &totalEnergy);
 
     float m_maxMichelSep;      ///< the maximum separation between a michel vertex and parent muon endpoint    
-    float m_invalidSmallFloat; ///< small float value used for failure case
-    float m_invalidLargeFloat; ///< large float value used for failure case    
+    float m_invalidSmallFloat; ///< small float value used for failure case (visible on plots)
+    float m_invalidLargeFloat; ///< large float value used for failure case (used when small value is a valid value)
     int m_invalidInt;          ///< int value used for failure case    
     float m_invalidAngle;      ///< angle value used for failure case
 };
