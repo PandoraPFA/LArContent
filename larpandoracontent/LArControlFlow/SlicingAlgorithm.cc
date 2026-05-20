@@ -10,6 +10,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+
 #include "larpandoracontent/LArControlFlow/SlicingAlgorithm.h"
 
 using namespace pandora;
@@ -26,6 +28,12 @@ SlicingAlgorithm::SlicingAlgorithm() :
 
 StatusCode SlicingAlgorithm::Run()
 {
+    const CaloHitList *pCaloHitList{nullptr};
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "CaloHitList2D", pCaloHitList));
+
+    LArMCParticleHelper::MCContributionMap mcToHitsMap;
+    LArMCParticleHelper::GetMCToHitsMap(*pCaloHitList, mcToHitsMap, false);
+
     SliceList sliceList;
     m_pEventSlicingTool->RunSlicing(this, m_caloHitListNames, m_clusterListNames, sliceList);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_slicingListDeletionAlgorithm));
@@ -43,6 +51,44 @@ StatusCode SlicingAlgorithm::Run()
 
     for (const Slice &slice : sliceList)
     {
+        std::cout << "Slice" << std::endl;
+        for (const auto &[pMC, caloHits] : mcToHitsMap)
+        {
+            if (std::abs(pMC->GetParticleId()) == PROTON)
+            {
+                int mcHitsU(0), mcHitsV(0), mcHitsW(0);
+                int sliceHitsU(0), sliceHitsV(0), sliceHitsW(0);
+                for (const CaloHit *const pCaloHit : caloHits)
+                {
+                    switch (pCaloHit->GetHitType())
+                    {
+                        case TPC_VIEW_U:
+                            ++mcHitsU;
+                            if (std::find(slice.m_caloHitListU.begin(), slice.m_caloHitListU.end(), pCaloHit) != slice.m_caloHitListU.end())
+                                ++sliceHitsU;
+                            break;
+                        case TPC_VIEW_V:
+                            ++mcHitsV;
+                            if (std::find(slice.m_caloHitListV.begin(), slice.m_caloHitListV.end(), pCaloHit) != slice.m_caloHitListV.end())
+                                ++sliceHitsV;
+                            break;
+                        case TPC_VIEW_W:
+                            ++mcHitsW;
+                            if (std::find(slice.m_caloHitListW.begin(), slice.m_caloHitListW.end(), pCaloHit) != slice.m_caloHitListW.end())
+                                ++sliceHitsW;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                if (sliceHitsU > 0 || sliceHitsV > 0 || sliceHitsW > 0)
+                {
+                    std::cout << "   Found proton (" << pMC << ") in slice [" << sliceHitsU << "/" << mcHitsU << "," << 
+                        sliceHitsV << "/" << mcHitsV << "," << sliceHitsW << "/" << mcHitsW << "]" << std::endl;
+                }
+            }
+        }
+
         const Cluster *pClusterU(nullptr), *pClusterV(nullptr), *pClusterW(nullptr);
         PandoraContentApi::Cluster::Parameters clusterParametersU, clusterParametersV, clusterParametersW;
         clusterParametersU.m_caloHitList = slice.m_caloHitListU;

@@ -510,6 +510,39 @@ void LArMCParticleHelper::GetMCToSelfMap(const MCParticleList *const pMCParticle
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
+void LArMCParticleHelper::GetMCToHitsMap(const CaloHitList &caloHitList2D, MCContributionMap &mcToHitsMap, const bool allowSharing)
+{
+    for (const CaloHit *const pCaloHit : caloHitList2D)
+    {
+        try
+        {
+            if (!allowSharing)
+            {
+                const MCParticle *const pMC{MCParticleHelper::GetMainMCParticle(pCaloHit)};
+                if (mcToHitsMap.find(pMC) == mcToHitsMap.end())
+                    mcToHitsMap[pMC] = CaloHitList();
+                mcToHitsMap[pMC].emplace_back(pCaloHit);
+            }
+            else
+            {
+                const MCParticleWeightMap &mcWeightMap{pCaloHit->GetMCParticleWeightMap()};
+
+                for (const auto &[pMC, _] : mcWeightMap)
+                {
+                    if (mcToHitsMap.find(pMC) == mcToHitsMap.end())
+                        mcToHitsMap[pMC] = CaloHitList();
+                    mcToHitsMap[pMC].emplace_back(pCaloHit);
+                }
+            }
+        }
+        catch (StatusCodeException &)
+        {
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
 void LArMCParticleHelper::GetMCToHitsMap(const CaloHitList *const pCaloHitList2D, const MCParticleList *const pMCParticleList,
     LArMCParticleHelper::MCContributionMap &mcToHitsMap)
 {
