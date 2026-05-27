@@ -163,7 +163,7 @@ public:
      *
      *  @return the vector of trajectory points
      */
-    pandora::CartesianPointVector GetTrajPoints() const;
+    const pandora::CartesianPointVector &GetTrajPoints() const;
 
 private:
     int m_nuanceCode; ///< The nuance code
@@ -277,7 +277,7 @@ inline int LArMCParticle::GetNTrajPoints() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CartesianPointVector LArMCParticle::GetTrajPoints() const
+inline const pandora::CartesianPointVector &LArMCParticle::GetTrajPoints() const
 {
     return m_trajPoints;
 }
@@ -487,7 +487,7 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
             PANDORA_RETURN_RESULT_IF(
                 pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("NTrajPoints", static_cast<int>(nTrajPoints)));
 
-            for (pandora::CartesianVector &trajPoint : pLArMCParticle->GetTrajPoints())                                         
+            for (const pandora::CartesianVector &trajPoint : pLArMCParticle->GetTrajPoints())                                         
             {
                 PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, 
                     xmlFileWriter.WriteVariable("TrajPointX", static_cast<float>(trajPoint.GetX())));
