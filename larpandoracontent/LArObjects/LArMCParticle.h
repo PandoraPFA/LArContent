@@ -409,6 +409,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
     larMCParticleParameters.m_isCC = isCC;
     larMCParticleParameters.m_visibleEnergy = visibleEnergy;
     larMCParticleParameters.m_endDirection = endDirection;
+    larMCParticleParameters.m_nTrajPoints = nTrajPoints;
     larMCParticleParameters.m_trajPoints = trajPoints;
 
     return pandora::STATUS_CODE_SUCCESS;
