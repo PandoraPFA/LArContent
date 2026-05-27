@@ -37,6 +37,12 @@ jobs:
       - name: Checkout Workflow Repository
         uses: actions/checkout@v5
 
+      - name: Setup Pandora Build Dependencies
+        uses: ./.github/actions/pandora-setup
+        with:
+          monitoring: ${{ matrix.monitoring }}
+          torch: ${{ matrix.torch }}
+
       # Cache the build tool, to speed up subsequent runs.
       - name: Cache Coverity Build Tool
         id: cov-build-cache
