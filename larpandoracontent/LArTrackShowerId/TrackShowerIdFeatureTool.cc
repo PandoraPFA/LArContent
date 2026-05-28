@@ -653,7 +653,8 @@ void ConeChargeFeatureTool_ICARUS::Run(
         // Checks
         if (clusterListU.empty() && clusterListV.empty())
         {
-            this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListW.front(), orderedCaloHitList);
+            if (!clusterListW.empty())
+                this->OrderCaloHitsByDistanceToVertex(pAlgorithm, clusterListW.front(), orderedCaloHitList);
         }
         else
         {
