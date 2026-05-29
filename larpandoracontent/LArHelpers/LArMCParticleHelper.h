@@ -137,7 +137,7 @@ public:
      *  @return boolean
      */
     static bool IsCCInteraction(const pandora::MCParticle *const pMCParticle);
-    
+
     /**
      *  @brief  Whether a provided mc particle matches the implemented definition of being primary
      *

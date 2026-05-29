@@ -8,8 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 #include "larpandoracontent/LArMetrics/EventValidationTool.h"
 
@@ -26,8 +26,8 @@ EventValidationTool::EventValidationTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode EventValidationTool::Run(const Algorithm *const pAlgorithm, const MCParticle *const pMCNu, 
-    [[maybe_unused]] const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticleVector &targetMC, 
+StatusCode EventValidationTool::Run(const Algorithm *const pAlgorithm, const MCParticle *const pMCNu,
+    [[maybe_unused]] const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticleVector &targetMC,
     [[maybe_unused]] const PfoVector &bestRecoMatch)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -78,11 +78,14 @@ void EventValidationTool::GetVertexVariables(const Algorithm *const pAlgorithm, 
 void EventValidationTool::GetInteractionTypeVariables(const MCParticle *const pMCNu, EventTreeVars &eventTreeVars)
 {
     eventTreeVars.m_nuPDG = pMCNu->GetParticleId();
-    eventTreeVars.m_nuEnergy = pMCNu->GetEnergy(); 
+    eventTreeVars.m_nuEnergy = pMCNu->GetEnergy();
     eventTreeVars.m_isCC = LArMCParticleHelper::IsCCInteraction(pMCNu);
-    
+
     const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle *>(pMCNu));
-    if (!pLArMCParticle) { throw StatusCodeException(STATUS_CODE_FAILURE); }
+    if (!pLArMCParticle)
+    {
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
 
     eventTreeVars.m_nuVisEnergy = pLArMCParticle->GetVisibleEnergy();
 }

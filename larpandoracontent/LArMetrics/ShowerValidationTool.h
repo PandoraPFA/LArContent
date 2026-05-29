@@ -23,53 +23,52 @@ namespace lar_content
 class ShowerValidationTool : public BaseValidationTool
 {
 public:
-/**
+    /**
  *  @brief  ShowerTreeVars struct
  */
-struct ShowerTreeVars
-{
-    int m_run;    ///< run number
-    int m_subrun; ///< subrun number
-    int m_event;  ///< event number
-    pandora::FloatVector m_coreTrueLengthFromU; ///< 3D length that captures X% of the charge in the U-view
-    pandora::FloatVector m_coreTrueLengthFromV; ///< 3D length that captures X% of the charge in the V-view
-    pandora::FloatVector m_coreTrueLengthFromW; ///< 3D length that captures X% of the charge in the W-view
-    pandora::FloatVector m_recoShrVtxX;    ///< x-coordinate of the pfo vertex given under a shower hypothesis
-    pandora::FloatVector m_recoShrVtxY;    ///< y-coordinate of the pfo vertex given under a shower hypothesis
-    pandora::FloatVector m_recoShrVtxZ;    ///< z-coordinate of the pfo vertex given under a shower hypothesis
-    pandora::FloatVector m_recoShrDirX;    ///< x-component of the initial direction obtained by a PCA
-    pandora::FloatVector m_recoShrDirY;    ///< y-component of the initial direction obtained by a PCA
-    pandora::FloatVector m_recoShrDirZ;    ///< z-component of the initial direction obtained by a PCA
-    pandora::FloatVector m_coreRecoLength; ///< 3D length that captures X% of the charge in the W-view
-    pandora::FloatVector m_recoShrLength;  ///< 3D length obtained by a PCA fit to the shower
-    pandora::FloatVector m_recoShrDirAcc;  //< opening angle between true and reco initial directions [radians]
-    pandora::FloatVector m_moliereRadius;  ///< the transverse 3D distance (from the core shower axis) that captures 90% of the charge in the W-view
-    pandora::IntVector m_nInitialMCHits;   ///< number of 2D MCParticle hits in the Xcm following the MCParticle vertex
-    pandora::IntVector m_nInitialMCHitsU;  ///< number of U-view MCParticle hits in the Xcm following the MCParticle vertex
-    pandora::IntVector m_nInitialMCHitsV;  ///< number of V-view MCParticle hits in the Xcm following the MCParticle vertex
-    pandora::IntVector m_nInitialMCHitsW;  ///< number of W-view MCParticle hits in the Xcm following the MCParticle vertex
-    pandora::IntVector m_nInitialPfoHits;  ///< number of 2D Pfo hits in the Xcm following the MCParticle vertex
-    pandora::IntVector m_nInitialPfoHitsU; ///< number of U-view Pfo hits in the Xcm following the MCParticle vertex
-    pandora::IntVector m_nInitialPfoHitsV; ///< number of V-view Pfo hits in the Xcm following the MCParticle vertex
-    pandora::IntVector m_nInitialPfoHitsW; ///< number of W-view Pfo hits in the Xcm following the MCParticle vertex
-    pandora::FloatVector m_initialCompleteness;  ///< completeness of the initial region
-    pandora::FloatVector m_initialCompletenessU; ///< completeness of the initial region in the U-view
-    pandora::FloatVector m_initialCompletenessV; ///< completeness of the initial region in the V-view
-    pandora::FloatVector m_initialCompletenessW; ///< completeness of the initial region in the W-view
-    pandora::FloatVector m_initialPurity;        ///< purity of the initial region
-    pandora::FloatVector m_initialPurityU;       ///< purity of the initial region in the U-view
-    pandora::FloatVector m_initialPurityV;       ///< purity of the initial region in the V-view
-    pandora::FloatVector m_initialPurityW;       ///< purity of the initial region in the W-view
-};
+    struct ShowerTreeVars
+    {
+        int m_run;                                  ///< run number
+        int m_subrun;                               ///< subrun number
+        int m_event;                                ///< event number
+        pandora::FloatVector m_coreTrueLengthFromU; ///< 3D length that captures X% of the charge in the U-view
+        pandora::FloatVector m_coreTrueLengthFromV; ///< 3D length that captures X% of the charge in the V-view
+        pandora::FloatVector m_coreTrueLengthFromW; ///< 3D length that captures X% of the charge in the W-view
+        pandora::FloatVector m_recoShrVtxX;         ///< x-coordinate of the pfo vertex given under a shower hypothesis
+        pandora::FloatVector m_recoShrVtxY;         ///< y-coordinate of the pfo vertex given under a shower hypothesis
+        pandora::FloatVector m_recoShrVtxZ;         ///< z-coordinate of the pfo vertex given under a shower hypothesis
+        pandora::FloatVector m_recoShrDirX;         ///< x-component of the initial direction obtained by a PCA
+        pandora::FloatVector m_recoShrDirY;         ///< y-component of the initial direction obtained by a PCA
+        pandora::FloatVector m_recoShrDirZ;         ///< z-component of the initial direction obtained by a PCA
+        pandora::FloatVector m_coreRecoLength;      ///< 3D length that captures X% of the charge in the W-view
+        pandora::FloatVector m_recoShrLength;       ///< 3D length obtained by a PCA fit to the shower
+        pandora::FloatVector m_recoShrDirAcc;       //< opening angle between true and reco initial directions [radians]
+        pandora::FloatVector m_moliereRadius; ///< the transverse 3D distance (from the core shower axis) that captures 90% of the charge in the W-view
+        pandora::IntVector m_nInitialMCHits;         ///< number of 2D MCParticle hits in the Xcm following the MCParticle vertex
+        pandora::IntVector m_nInitialMCHitsU;        ///< number of U-view MCParticle hits in the Xcm following the MCParticle vertex
+        pandora::IntVector m_nInitialMCHitsV;        ///< number of V-view MCParticle hits in the Xcm following the MCParticle vertex
+        pandora::IntVector m_nInitialMCHitsW;        ///< number of W-view MCParticle hits in the Xcm following the MCParticle vertex
+        pandora::IntVector m_nInitialPfoHits;        ///< number of 2D Pfo hits in the Xcm following the MCParticle vertex
+        pandora::IntVector m_nInitialPfoHitsU;       ///< number of U-view Pfo hits in the Xcm following the MCParticle vertex
+        pandora::IntVector m_nInitialPfoHitsV;       ///< number of V-view Pfo hits in the Xcm following the MCParticle vertex
+        pandora::IntVector m_nInitialPfoHitsW;       ///< number of W-view Pfo hits in the Xcm following the MCParticle vertex
+        pandora::FloatVector m_initialCompleteness;  ///< completeness of the initial region
+        pandora::FloatVector m_initialCompletenessU; ///< completeness of the initial region in the U-view
+        pandora::FloatVector m_initialCompletenessV; ///< completeness of the initial region in the V-view
+        pandora::FloatVector m_initialCompletenessW; ///< completeness of the initial region in the W-view
+        pandora::FloatVector m_initialPurity;        ///< purity of the initial region
+        pandora::FloatVector m_initialPurityU;       ///< purity of the initial region in the U-view
+        pandora::FloatVector m_initialPurityV;       ///< purity of the initial region in the V-view
+        pandora::FloatVector m_initialPurityW;       ///< purity of the initial region in the W-view
+    };
 
     /**
      *  @brief  Default constructor
      */
     ShowerValidationTool();
 
-    pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::MCParticle *const pMCNu, 
-        const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticleVector &targetMC, 
-        const pandora::PfoVector &bestRecoMatch);
+    pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::MCParticle *const pMCNu,
+        const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticleVector &targetMC, const pandora::PfoVector &bestRecoMatch);
 
 private:
     /**
@@ -79,8 +78,7 @@ private:
      *  @param[in]   pMCParticle the target MCParticle
      *  @param[out]  showerTreeVars the shower tree variables
      */
-    void GetTrueLength(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticle *const pMCParticle,
-        ShowerTreeVars &showerTreeVars);
+    void GetTrueLength(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticle *const pMCParticle, ShowerTreeVars &showerTreeVars);
 
     /**
      *  @brief  Fill the variables that describe the initial region of the shower
@@ -90,7 +88,7 @@ private:
      *  @param[in]   pPfo the best-matched pfo
      *  @param[out]  showerTreeVars the shower tree variables
      */
-    void GetInitialRegionVars(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticle *const pMCParticle, 
+    void GetInitialRegionVars(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticle *const pMCParticle,
         const pandora::Pfo *const pPfo, ShowerTreeVars &showerTreeVars);
 
     /**
@@ -103,8 +101,7 @@ private:
      *
      *  @return whether the fit was successful
      */
-    bool FitShower(const pandora::Pfo *const pPfo, pandora::CartesianVector &showerVertex, 
-        pandora::CartesianVector &showerDirection, float &showerLength);
+    bool FitShower(const pandora::Pfo *const pPfo, pandora::CartesianVector &showerVertex, pandora::CartesianVector &showerDirection, float &showerLength);
 
     /**
      *  @brief  Fill the variables that describe the reconstructed shower vertex and direction
@@ -114,9 +111,9 @@ private:
      *  @param[in]   recoShrLength the fitted shower length
      *  @param[in]   pMC the target MCParticle (nullptr if the MCParticle has no direction)
      *  @param[out]  showerTreeVars the shower tree variables
-     */        
-    void GetRecoVertexInfo(const pandora::CartesianVector &recoShrVtx, const pandora::CartesianVector &recoShrDir, const float recoShrLength,
-        const pandora::MCParticle *const pMC, ShowerTreeVars &showerTreeVars);
+     */
+    void GetRecoVertexInfo(const pandora::CartesianVector &recoShrVtx, const pandora::CartesianVector &recoShrDir,
+        const float recoShrLength, const pandora::MCParticle *const pMC, ShowerTreeVars &showerTreeVars);
 
     /**
      *  @brief  Fill the variables that describe the Moliere radius and core length of the shower
@@ -126,8 +123,8 @@ private:
      *  @param[in]   showerDirection the fitted shower direction
      *  @param[out]  showerTreeVars the shower tree variables
      */
-    void GetMoliere(const pandora::Pfo *const pPfo, const pandora::CartesianVector &showerVertex, const pandora::CartesianVector &showerDirection,
-        ShowerTreeVars &showerTreeVars);
+    void GetMoliere(const pandora::Pfo *const pPfo, const pandora::CartesianVector &showerVertex,
+        const pandora::CartesianVector &showerDirection, ShowerTreeVars &showerTreeVars);
 
     /**
      *  @brief  Fill relevant tree variables with default values for the case of a null MCParticle direction

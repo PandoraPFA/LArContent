@@ -23,38 +23,37 @@ namespace lar_content
 class EventValidationTool : public BaseValidationTool
 {
 public:
-/**
+    /**
  *  @brief  EventTreeVars struct
  */
-struct EventTreeVars
-{
-    /**
+    struct EventTreeVars
+    {
+        /**
      *  @brief  Default constructor
      */
-    EventTreeVars();
+        EventTreeVars();
 
-    int m_run;           ///< run number
-    int m_subrun;        ///< subrun number
-    int m_event;         ///< event number
-    int m_nTargets;      ///< number of 'reconstructable' MCParticles
-    int m_nuPDG;         ///< nu PDG
-    float m_nuEnergy;    ///< true nu energy [GeV]
-    float m_nuVisEnergy; ///< true nu visible energy [GeV]
-    int m_isCC;          ///< whether CC interaction 
-    pandora::CartesianVector m_trueNuVertex;      ///< true neutrino vertex
-    pandora::CartesianVector m_recoNuVertexPass1; ///< pass 1 reco neutrino vertex 
-    pandora::CartesianVector m_recoNuVertexPass2; ///< pass 2 reco neutrino vertex 
-    float m_recoNuVertexAccPass1; ///< accuracy of the pass 1 reco neutrino vertex
-    float m_recoNuVertexAccPass2; ///< accuracy of the pass 1 reco neutrino vertex
-};
+        int m_run;                                    ///< run number
+        int m_subrun;                                 ///< subrun number
+        int m_event;                                  ///< event number
+        int m_nTargets;                               ///< number of 'reconstructable' MCParticles
+        int m_nuPDG;                                  ///< nu PDG
+        float m_nuEnergy;                             ///< true nu energy [GeV]
+        float m_nuVisEnergy;                          ///< true nu visible energy [GeV]
+        int m_isCC;                                   ///< whether CC interaction
+        pandora::CartesianVector m_trueNuVertex;      ///< true neutrino vertex
+        pandora::CartesianVector m_recoNuVertexPass1; ///< pass 1 reco neutrino vertex
+        pandora::CartesianVector m_recoNuVertexPass2; ///< pass 2 reco neutrino vertex
+        float m_recoNuVertexAccPass1;                 ///< accuracy of the pass 1 reco neutrino vertex
+        float m_recoNuVertexAccPass2;                 ///< accuracy of the pass 1 reco neutrino vertex
+    };
     /**
      *  @brief  Default constructor
      */
     EventValidationTool();
 
-    pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::MCParticle *const pMCNu, 
-        const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticleVector &targetMC, 
-        const pandora::PfoVector &bestRecoMatch);
+    pandora::StatusCode Run(const pandora::Algorithm *const pAlgorithm, const pandora::MCParticle *const pMCNu,
+        const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const pandora::MCParticleVector &targetMC, const pandora::PfoVector &bestRecoMatch);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -62,7 +61,7 @@ private:
     /**
      *  @brief  Fill neutrino vertex variables
      *
-     *  @param[in]   pAlgorithm a pointer to the parent algorithm 
+     *  @param[in]   pAlgorithm a pointer to the parent algorithm
      *  @param[in]   pMCNu a pointer to the neutrino MCParticle
      *  @param[out]  eventTreeVars the event tree variables to fill
      */

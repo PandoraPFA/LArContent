@@ -24,9 +24,8 @@ HierarchyValidationTool::HierarchyValidationTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode HierarchyValidationTool::Run(const Algorithm *const pAlgorithm, const MCParticle *const pMCNu, 
-    [[maybe_unused]] const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticleVector &targetMC, 
-    const PfoVector &bestRecoMatch)
+StatusCode HierarchyValidationTool::Run(const Algorithm *const pAlgorithm, const MCParticle *const pMCNu,
+    [[maybe_unused]] const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticleVector &targetMC, const PfoVector &bestRecoMatch)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -66,11 +65,11 @@ StatusCode HierarchyValidationTool::Run(const Algorithm *const pAlgorithm, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void HierarchyValidationTool::BuildVisibleHierarchy(const MCParticle *const pMCParticle, const MCParticle *const pMCParent, const MCParticleVector &targetMC,
-    const int childTier, Hierarchy &hierarchy)
+void HierarchyValidationTool::BuildVisibleHierarchy(const MCParticle *const pMCParticle, const MCParticle *const pMCParent,
+    const MCParticleVector &targetMC, const int childTier, Hierarchy &hierarchy)
 {
     for (const MCParticle *const pMCChild : pMCParticle->GetDaughterList())
-    {        
+    {
         // If child is not a target, then leapfrog
         if (std::find(targetMC.begin(), targetMC.end(), pMCChild) == targetMC.end())
         {
@@ -86,8 +85,8 @@ void HierarchyValidationTool::BuildVisibleHierarchy(const MCParticle *const pMCP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void HierarchyValidationTool::FillTrueVariables(const MCParticle *const pMC, const MCParticleVector &targetMC, 
-    const Hierarchy &hierarchy, HierarchyTreeVars &hierarchyTreeVars)
+void HierarchyValidationTool::FillTrueVariables(
+    const MCParticle *const pMC, const MCParticleVector &targetMC, const Hierarchy &hierarchy, HierarchyTreeVars &hierarchyTreeVars)
 {
     const auto hierarchyIter(hierarchy.find(pMC));
 
@@ -146,10 +145,10 @@ void HierarchyValidationTool::FillRecoVariables(const Pfo *const pBestMatch, con
 
 void HierarchyValidationTool::FillTree(HierarchyTreeVars &hierarchyTreeVars)
 {
-    IntVector& trueTier = hierarchyTreeVars.m_trueTier;
-    IntVector& trueParentIndex = hierarchyTreeVars.m_trueParentIndex;
-    IntVector& recoTier = hierarchyTreeVars.m_recoTier;
-    IntVector& recoParentIndex = hierarchyTreeVars.m_recoParentIndex;
+    IntVector &trueTier = hierarchyTreeVars.m_trueTier;
+    IntVector &trueParentIndex = hierarchyTreeVars.m_trueParentIndex;
+    IntVector &recoTier = hierarchyTreeVars.m_recoTier;
+    IntVector &recoParentIndex = hierarchyTreeVars.m_recoParentIndex;
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "HierarchyTree", "MC_HierarchyTier", &trueTier));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "HierarchyTree", "MC_ParentIndex", &trueParentIndex));

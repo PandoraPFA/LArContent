@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArHierarchyHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArMetrics/TrackValidationTool.h"
 
@@ -31,9 +31,8 @@ TrackValidationTool::TrackValidationTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackValidationTool::Run(const Algorithm *const pAlgorithm, [[maybe_unused]] const MCParticle *const pMCNu, 
-    const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticleVector &targetMC, 
-    const PfoVector &bestRecoMatch)
+StatusCode TrackValidationTool::Run(const Algorithm *const pAlgorithm, [[maybe_unused]] const MCParticle *const pMCNu,
+    const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticleVector &targetMC, const PfoVector &bestRecoMatch)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -76,15 +75,18 @@ void TrackValidationTool::GetTrueVertexAndEndpointVars(const MCParticle *const p
 {
     int isLeaving(0);
     const LArMCParticle *const pLArMC(dynamic_cast<const LArMCParticle *>(pMCParticle));
-    if (!pLArMC) { throw StatusCodeException(STATUS_CODE_FAILURE); }
+    if (!pLArMC)
+    {
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
     const CartesianVector trueEndpoint(pLArMC->GetEndpoint());
     LArGeometryHelper::DetectorBoundaries detectorBoundaries(LArGeometryHelper::GetDetectorBoundaries(this->GetPandora()));
 
-    if ((std::fabs(trueEndpoint.GetX() - detectorBoundaries.m_xBoundaries.first) < m_edgeBuffer) || 
+    if ((std::fabs(trueEndpoint.GetX() - detectorBoundaries.m_xBoundaries.first) < m_edgeBuffer) ||
         (std::fabs(trueEndpoint.GetX() - detectorBoundaries.m_xBoundaries.second) < m_edgeBuffer) ||
         (std::fabs(trueEndpoint.GetY() - detectorBoundaries.m_yBoundaries.first) < m_edgeBuffer) ||
         (std::fabs(trueEndpoint.GetY() - detectorBoundaries.m_yBoundaries.second) < m_edgeBuffer) ||
-        (std::fabs(trueEndpoint.GetZ() - detectorBoundaries.m_zBoundaries.first) < m_edgeBuffer) || 
+        (std::fabs(trueEndpoint.GetZ() - detectorBoundaries.m_zBoundaries.first) < m_edgeBuffer) ||
         (std::fabs(trueEndpoint.GetZ() - detectorBoundaries.m_zBoundaries.second) < m_edgeBuffer))
     {
         isLeaving = 1;
@@ -95,8 +97,8 @@ void TrackValidationTool::GetTrueVertexAndEndpointVars(const MCParticle *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackValidationTool::FitTrack(const Pfo *const pPfo, CartesianVector &vertex, CartesianVector &vertexDir, 
-    CartesianVector &endpoint, CartesianVector &endpointDir)
+bool TrackValidationTool::FitTrack(
+    const Pfo *const pPfo, CartesianVector &vertex, CartesianVector &vertexDir, CartesianVector &endpoint, CartesianVector &endpointDir)
 {
     ClusterList clusters3D;
     LArPfoHelper::GetClusters(pPfo, TPC_3D, clusters3D);
@@ -150,19 +152,23 @@ bool TrackValidationTool::FitTrack(const Pfo *const pPfo, CartesianVector &verte
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackValidationTool::GetRecoVertexAndEndpointVars(const MCParticle *const pMCParticle, const CartesianVector &recoVertex, const CartesianVector &recoVertexDir,
-    const CartesianVector &recoEndpoint, const CartesianVector &recoEndpointDir, TrackTreeVars &trackTreeVars)
+void TrackValidationTool::GetRecoVertexAndEndpointVars(const MCParticle *const pMCParticle, const CartesianVector &recoVertex,
+    const CartesianVector &recoVertexDir, const CartesianVector &recoEndpoint, const CartesianVector &recoEndpointDir, TrackTreeVars &trackTreeVars)
 {
     const LArMCParticle *const pLArMC(dynamic_cast<const LArMCParticle *>(pMCParticle));
-    if (!pLArMC) { throw StatusCodeException(STATUS_CODE_FAILURE); }        
+    if (!pLArMC)
+    {
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
     const bool doesMCHaveStartDir(pMCParticle->GetMomentum().GetMagnitudeSquared() > std::numeric_limits<float>::epsilon());
     const bool doesMCHaveEndDir(pLArMC->GetEndDirection().GetMagnitudeSquared() > std::numeric_limits<float>::epsilon());
     const CartesianVector trueEndpoint(pLArMC->GetEndpoint());
 
     // Endpoint accuracy
     float endpointAcc((recoEndpoint - trueEndpoint).GetMagnitude());
-    const float sign((endpointAcc < std::numeric_limits<float>::epsilon() || !doesMCHaveEndDir)
-                     ? 1.f : (recoEndpoint - trueEndpoint).GetOpeningAngle(pLArMC->GetEndDirection()) < (M_PI * 0.5) ? 1.f : -1.f);
+    const float sign((endpointAcc < std::numeric_limits<float>::epsilon() || !doesMCHaveEndDir)       ? 1.f
+            : (recoEndpoint - trueEndpoint).GetOpeningAngle(pLArMC->GetEndDirection()) < (M_PI * 0.5) ? 1.f
+                                                                                                      : -1.f);
     endpointAcc *= sign;
 
     // Start direction
@@ -174,12 +180,12 @@ void TrackValidationTool::GetRecoVertexAndEndpointVars(const MCParticle *const p
     // Is flipped?
     int isOrientationCorrect(m_invalidInt);
     const CartesianVector trueOrientation(trueEndpoint - pMCParticle->GetVertex());
-    const CartesianVector recoOrientation(recoEndpoint - recoVertex);    
+    const CartesianVector recoOrientation(recoEndpoint - recoVertex);
 
     if ((trueOrientation.GetMagnitudeSquared() > std::numeric_limits<float>::epsilon()) &&
         (recoOrientation.GetMagnitudeSquared() > std::numeric_limits<float>::epsilon()))
     {
-        isOrientationCorrect = (trueOrientation.GetOpeningAngle(recoOrientation) > (M_PI*0.5f) ? 0 : 1);
+        isOrientationCorrect = (trueOrientation.GetOpeningAngle(recoOrientation) > (M_PI * 0.5f) ? 0 : 1);
     }
 
     trackTreeVars.m_recoEndpointX.push_back(recoEndpoint.GetX());
@@ -216,10 +222,9 @@ void TrackValidationTool::FillForFailedPfo(TrackTreeVars &trackTreeVars)
     trackTreeVars.m_isCorrectOrientation.push_back(m_invalidInt);
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackValidationTool::GetTrueEndRegionVars(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticle *const pMCParticle, 
+void TrackValidationTool::GetTrueEndRegionVars(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticle *const pMCParticle,
     const Pfo *const pPfo, TrackTreeVars &trackTreeVars)
 {
     const LArMCParticle *const pLArMC(dynamic_cast<const LArMCParticle *>(pMCParticle));
@@ -285,7 +290,7 @@ void TrackValidationTool::GetTrueEndRegionVars(const LArHierarchyHelper::MCMatch
             }
         }
         nTotalEndMCHits += endMCHits.size();
-    
+
         int nEndPfoHits(0), nSharedHits(0);
         if (pPfo)
         {
@@ -294,7 +299,7 @@ void TrackValidationTool::GetTrueEndRegionVars(const LArHierarchyHelper::MCMatch
             LArPfoHelper::GetCaloHits(pPfo, hitType, viewPfoHitList);
             CaloHitVector viewPfoHits(viewPfoHitList.begin(), viewPfoHitList.end()), endPfoHits;
             for (const CaloHit *const pCaloHit : viewPfoHits)
-            {                
+            {
                 const float l(endDirection2D.GetDotProduct(pCaloHit->GetPositionVector() - endRegionStart2D));
 
                 if (((l > 0.f) || (fabs(l) < std::numeric_limits<float>::epsilon())) &&
@@ -310,22 +315,28 @@ void TrackValidationTool::GetTrueEndRegionVars(const LArHierarchyHelper::MCMatch
             for (const CaloHit *const pCaloHit : endMCHits)
             {
                 if (std::find(endPfoHits.begin(), endPfoHits.end(), pCaloHit) != endPfoHits.end())
-                    ++nSharedHits; 
+                    ++nSharedHits;
             }
             nTotalEndSharedHits += nSharedHits;
         }
 
-        IntVector &viewNEndpointMCHits(hitType == TPC_VIEW_U ? trackTreeVars.m_nEndpointMCHitsU : 
-            hitType == TPC_VIEW_V ? trackTreeVars.m_nEndpointMCHitsV : trackTreeVars.m_nEndpointMCHitsW);
-        IntVector &viewNEndpointPfoHits(hitType == TPC_VIEW_U ? trackTreeVars.m_nEndpointPfoHitsU : 
-            hitType == TPC_VIEW_V ? trackTreeVars.m_nEndpointPfoHitsV : trackTreeVars.m_nEndpointPfoHitsW);
-        FloatVector &viewCompleteness(hitType == TPC_VIEW_U ? trackTreeVars.m_endpointCompletenessU : 
-            hitType == TPC_VIEW_V ? trackTreeVars.m_endpointCompletenessV : trackTreeVars.m_endpointCompletenessW);
-        FloatVector &viewPurity(hitType == TPC_VIEW_U ? trackTreeVars.m_endpointPurityU : 
-            hitType == TPC_VIEW_V ? trackTreeVars.m_endpointPurityV : trackTreeVars.m_endpointPurityW);
+        IntVector &viewNEndpointMCHits(hitType == TPC_VIEW_U ? trackTreeVars.m_nEndpointMCHitsU
+                : hitType == TPC_VIEW_V                      ? trackTreeVars.m_nEndpointMCHitsV
+                                                             : trackTreeVars.m_nEndpointMCHitsW);
+        IntVector &viewNEndpointPfoHits(hitType == TPC_VIEW_U ? trackTreeVars.m_nEndpointPfoHitsU
+                : hitType == TPC_VIEW_V                       ? trackTreeVars.m_nEndpointPfoHitsV
+                                                              : trackTreeVars.m_nEndpointPfoHitsW);
+        FloatVector &viewCompleteness(hitType == TPC_VIEW_U ? trackTreeVars.m_endpointCompletenessU
+                : hitType == TPC_VIEW_V                     ? trackTreeVars.m_endpointCompletenessV
+                                                            : trackTreeVars.m_endpointCompletenessW);
+        FloatVector &viewPurity(hitType == TPC_VIEW_U ? trackTreeVars.m_endpointPurityU
+                : hitType == TPC_VIEW_V               ? trackTreeVars.m_endpointPurityV
+                                                      : trackTreeVars.m_endpointPurityW);
 
         const float thisCompleteness(endMCHits.size() == 0 ? m_invalidSmallFloat : static_cast<float>(nSharedHits) / endMCHits.size());
-        const float thisPurity(endMCHits.size() == 0 ? m_invalidSmallFloat : nEndPfoHits == 0 ? 0 : static_cast<float>(nSharedHits) / nEndPfoHits);
+        const float thisPurity(endMCHits.size() == 0 ? m_invalidSmallFloat
+                : nEndPfoHits == 0                   ? 0
+                                                     : static_cast<float>(nSharedHits) / nEndPfoHits);
         viewNEndpointMCHits.push_back(endMCHits.size());
         viewNEndpointPfoHits.push_back(nEndPfoHits);
         viewCompleteness.push_back(thisCompleteness);
@@ -333,7 +344,9 @@ void TrackValidationTool::GetTrueEndRegionVars(const LArHierarchyHelper::MCMatch
     }
 
     const float completeness(nTotalEndMCHits == 0 ? m_invalidSmallFloat : static_cast<float>(nTotalEndSharedHits) / nTotalEndMCHits);
-    const float purity(nTotalEndMCHits == 0 ? m_invalidSmallFloat : nTotalEndPfoHits == 0 ? 0 : static_cast<float>(nTotalEndSharedHits) / nTotalEndPfoHits);
+    const float purity(nTotalEndMCHits == 0 ? m_invalidSmallFloat
+            : nTotalEndPfoHits == 0         ? 0
+                                            : static_cast<float>(nTotalEndSharedHits) / nTotalEndPfoHits);
 
     trackTreeVars.m_nEndpointMCHits.push_back(nTotalEndMCHits);
     trackTreeVars.m_nEndpointPfoHits.push_back(nTotalEndPfoHits);
@@ -343,8 +356,7 @@ void TrackValidationTool::GetTrueEndRegionVars(const LArHierarchyHelper::MCMatch
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackValidationTool::MichelValidation(const MCParticleVector &targetMC, const PfoVector &bestRecoMatch,
-    TrackTreeVars &trackTreeVars)
+void TrackValidationTool::MichelValidation(const MCParticleVector &targetMC, const PfoVector &bestRecoMatch, TrackTreeVars &trackTreeVars)
 {
     for (unsigned int iMC = 0; iMC < targetMC.size(); ++iMC)
     {
@@ -361,11 +373,10 @@ void TrackValidationTool::MichelValidation(const MCParticleVector &targetMC, con
                 if (std::abs(pMCChild->GetParticleId()) != E_MINUS)
                     continue;
 
-                if (((pMCParent->GetEndpoint() - pMCChild->GetVertex()).GetMagnitude() > m_maxMichelSep) ||
-                    (!LArMCParticleHelper::IsDecay(pMCChild)))
+                if (((pMCParent->GetEndpoint() - pMCChild->GetVertex()).GetMagnitude() > m_maxMichelSep) || (!LArMCParticleHelper::IsDecay(pMCChild)))
                 {
                     continue;
-                }            
+                }
 
                 this_michelFromMuon = 1;
 
@@ -427,8 +438,8 @@ void TrackValidationTool::MichelValidation(const MCParticleVector &targetMC, con
                     if (bestRecoMatch.at(iMC))
                     {
                         const PfoList &muonChildren(bestRecoMatch.at(iMC)->GetDaughterPfoList());
-                        this_michelIsChild = (std::find(muonChildren.begin(), muonChildren.end(),
-                                                        bestRecoMatch.at(this_michelIndex)) != muonChildren.end());
+                        this_michelIsChild =
+                            (std::find(muonChildren.begin(), muonChildren.end(), bestRecoMatch.at(this_michelIndex)) != muonChildren.end());
                     }
                 }
             }
@@ -448,43 +459,43 @@ void TrackValidationTool::MichelValidation(const MCParticleVector &targetMC, con
 
 void TrackValidationTool::FillTree(TrackTreeVars &trackTreeVars)
 {
-    FloatVector& recoEndpointX = trackTreeVars.m_recoEndpointX;
-    FloatVector& recoEndpointY = trackTreeVars.m_recoEndpointY;
-    FloatVector& recoEndpointZ = trackTreeVars.m_recoEndpointZ;
-    FloatVector& recoEndpointAcc = trackTreeVars.m_recoEndpointAcc;
-    FloatVector& recoStartDirX = trackTreeVars.m_recoStartDirX;
-    FloatVector& recoStartDirY = trackTreeVars.m_recoStartDirY;
-    FloatVector& recoStartDirZ = trackTreeVars.m_recoStartDirZ;
-    FloatVector& startDirAcc = trackTreeVars.m_startDirAcc;
-    FloatVector& recoEndDirX = trackTreeVars.m_recoEndDirX;
-    FloatVector& recoEndDirY = trackTreeVars.m_recoEndDirY;
-    FloatVector& recoEndDirZ = trackTreeVars.m_recoEndDirZ;
-    FloatVector& endDirAcc = trackTreeVars.m_endDirAcc;
-    IntVector& isCorrectOrientation = trackTreeVars.m_isCorrectOrientation;
-    IntVector& isLeaving = trackTreeVars.m_isLeaving;
-    IntVector& nEndpointMCHits = trackTreeVars.m_nEndpointMCHits;
-    IntVector& nEndpointMCHitsU = trackTreeVars.m_nEndpointMCHitsU;
-    IntVector& nEndpointMCHitsV = trackTreeVars.m_nEndpointMCHitsV;
-    IntVector& nEndpointMCHitsW = trackTreeVars.m_nEndpointMCHitsW;
-    IntVector& nEndpointPfoHits = trackTreeVars.m_nEndpointPfoHits;
-    IntVector& nEndpointPfoHitsU = trackTreeVars.m_nEndpointPfoHitsU;
-    IntVector& nEndpointPfoHitsV = trackTreeVars.m_nEndpointPfoHitsV;
-    IntVector& nEndpointPfoHitsW = trackTreeVars.m_nEndpointPfoHitsW;
-    FloatVector& endpointCompleteness = trackTreeVars.m_endpointCompleteness;
-    FloatVector& endpointCompletenessU = trackTreeVars.m_endpointCompletenessU;
-    FloatVector& endpointCompletenessV = trackTreeVars.m_endpointCompletenessV;
-    FloatVector& endpointCompletenessW = trackTreeVars.m_endpointCompletenessW;
-    FloatVector& endpointPurity = trackTreeVars.m_endpointPurity;
-    FloatVector& endpointPurityU = trackTreeVars.m_endpointPurityU;
-    FloatVector& endpointPurityV = trackTreeVars.m_endpointPurityV;
-    FloatVector& endpointPurityW = trackTreeVars.m_endpointPurityW;
-    IntVector& hasMichel = trackTreeVars.m_hasMichel;
-    IntVector& michelFromMuon = trackTreeVars.m_michelFromMuon;
-    IntVector& hasTargetMichel = trackTreeVars.m_hasTargetMichel;
-    IntVector& hasRecoMichel = trackTreeVars.m_hasRecoMichel;
-    IntVector& michelIndex = trackTreeVars.m_michelIndex;
-    IntVector& michelIsChild = trackTreeVars.m_michelIsChild;
-    IntVector& michelIsShower = trackTreeVars.m_michelIsShower;
+    FloatVector &recoEndpointX = trackTreeVars.m_recoEndpointX;
+    FloatVector &recoEndpointY = trackTreeVars.m_recoEndpointY;
+    FloatVector &recoEndpointZ = trackTreeVars.m_recoEndpointZ;
+    FloatVector &recoEndpointAcc = trackTreeVars.m_recoEndpointAcc;
+    FloatVector &recoStartDirX = trackTreeVars.m_recoStartDirX;
+    FloatVector &recoStartDirY = trackTreeVars.m_recoStartDirY;
+    FloatVector &recoStartDirZ = trackTreeVars.m_recoStartDirZ;
+    FloatVector &startDirAcc = trackTreeVars.m_startDirAcc;
+    FloatVector &recoEndDirX = trackTreeVars.m_recoEndDirX;
+    FloatVector &recoEndDirY = trackTreeVars.m_recoEndDirY;
+    FloatVector &recoEndDirZ = trackTreeVars.m_recoEndDirZ;
+    FloatVector &endDirAcc = trackTreeVars.m_endDirAcc;
+    IntVector &isCorrectOrientation = trackTreeVars.m_isCorrectOrientation;
+    IntVector &isLeaving = trackTreeVars.m_isLeaving;
+    IntVector &nEndpointMCHits = trackTreeVars.m_nEndpointMCHits;
+    IntVector &nEndpointMCHitsU = trackTreeVars.m_nEndpointMCHitsU;
+    IntVector &nEndpointMCHitsV = trackTreeVars.m_nEndpointMCHitsV;
+    IntVector &nEndpointMCHitsW = trackTreeVars.m_nEndpointMCHitsW;
+    IntVector &nEndpointPfoHits = trackTreeVars.m_nEndpointPfoHits;
+    IntVector &nEndpointPfoHitsU = trackTreeVars.m_nEndpointPfoHitsU;
+    IntVector &nEndpointPfoHitsV = trackTreeVars.m_nEndpointPfoHitsV;
+    IntVector &nEndpointPfoHitsW = trackTreeVars.m_nEndpointPfoHitsW;
+    FloatVector &endpointCompleteness = trackTreeVars.m_endpointCompleteness;
+    FloatVector &endpointCompletenessU = trackTreeVars.m_endpointCompletenessU;
+    FloatVector &endpointCompletenessV = trackTreeVars.m_endpointCompletenessV;
+    FloatVector &endpointCompletenessW = trackTreeVars.m_endpointCompletenessW;
+    FloatVector &endpointPurity = trackTreeVars.m_endpointPurity;
+    FloatVector &endpointPurityU = trackTreeVars.m_endpointPurityU;
+    FloatVector &endpointPurityV = trackTreeVars.m_endpointPurityV;
+    FloatVector &endpointPurityW = trackTreeVars.m_endpointPurityW;
+    IntVector &hasMichel = trackTreeVars.m_hasMichel;
+    IntVector &michelFromMuon = trackTreeVars.m_michelFromMuon;
+    IntVector &hasTargetMichel = trackTreeVars.m_hasTargetMichel;
+    IntVector &hasRecoMichel = trackTreeVars.m_hasRecoMichel;
+    IntVector &michelIndex = trackTreeVars.m_michelIndex;
+    IntVector &michelIsChild = trackTreeVars.m_michelIsChild;
+    IntVector &michelIsShower = trackTreeVars.m_michelIsShower;
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "TrackTree", "Run", trackTreeVars.m_run));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "TrackTree", "Subrun", trackTreeVars.m_subrun));
@@ -533,14 +544,12 @@ void TrackValidationTool::FillTree(TrackTreeVars &trackTreeVars)
 
 StatusCode TrackValidationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EdgeBuffer", m_edgeBuffer));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EdgeBuffer", m_edgeBuffer));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EndRegion", m_endRegion));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EndRegion", m_endRegion));
 
     return BaseValidationTool::ReadSettings(xmlHandle);
 }

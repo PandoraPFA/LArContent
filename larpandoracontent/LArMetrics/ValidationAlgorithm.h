@@ -42,20 +42,20 @@ private:
      *  @param[in]  pMCNode the MCNode
      *
      *  @return whether the MCParticle is deemed to be reconstructable
-     */    
+     */
     bool IsReconstructable(const LArHierarchyHelper::MCHierarchy::Node *pMCNode);
 
-    std::string m_caloHitListName;        ///< The calo hit list name     
-    std::string m_mcParticleListName;     ///< The MCParticle list name
-    pandora::StringVector m_pfoListNames; ///< The pfo list names
-    std::string m_fileName;               ///< The name of the output validation file
-    float m_minPurity;                 ///< Minimum purity to tag a node as being of good quality
-    float m_minCompleteness;           ///< Minimum completeness to tag a node as being of good quality
-    unsigned int m_minRecoHits;        ///< Minimum number of reconstructed primary good hits
-    unsigned int m_minRecoHitsPerView; ///< Minimum number of reconstructed hits for a good view
-    unsigned int m_minRecoGoodViews;   ///< Minimum number of reconstructed primary good views
-    bool m_removeRecoNeutrons;         ///< Whether to remove reconstructed neutrons and their downstream particles
-    bool m_selectRecoHits;             ///< Whether to select reco hits that overlap with the MC particle hits
+    std::string m_caloHitListName;               ///< The calo hit list name
+    std::string m_mcParticleListName;            ///< The MCParticle list name
+    pandora::StringVector m_pfoListNames;        ///< The pfo list names
+    std::string m_fileName;                      ///< The name of the output validation file
+    float m_minPurity;                           ///< Minimum purity to tag a node as being of good quality
+    float m_minCompleteness;                     ///< Minimum completeness to tag a node as being of good quality
+    unsigned int m_minRecoHits;                  ///< Minimum number of reconstructed primary good hits
+    unsigned int m_minRecoHitsPerView;           ///< Minimum number of reconstructed hits for a good view
+    unsigned int m_minRecoGoodViews;             ///< Minimum number of reconstructed primary good views
+    bool m_removeRecoNeutrons;                   ///< Whether to remove reconstructed neutrons and their downstream particles
+    bool m_selectRecoHits;                       ///< Whether to select reco hits that overlap with the MC particle hits
     ValidationToolVector m_validationToolVector; ///< The vector of validation tools ran by the validation algorithm
 };
 

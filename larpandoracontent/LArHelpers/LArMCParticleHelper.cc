@@ -157,7 +157,10 @@ bool LArMCParticleHelper::IsCCInteraction(const MCParticle *const pMCParticle)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle *>(pParent));
-    if (!pLArMCParticle) { throw StatusCodeException(STATUS_CODE_FAILURE); }
+    if (!pLArMCParticle)
+    {
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
 
     return pLArMCParticle->GetIsCC();
 }

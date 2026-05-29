@@ -48,12 +48,12 @@
 #include "larpandoracontent/LArCustomParticles/PcaShowerParticleBuildingAlgorithm.h"
 #include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
 
-#include "larpandoracontent/LArMetrics/ValidationAlgorithm.h"
 #include "larpandoracontent/LArMetrics/EventValidationTool.h"
 #include "larpandoracontent/LArMetrics/HierarchyValidationTool.h"
+#include "larpandoracontent/LArMetrics/PFPValidationTool.h"
 #include "larpandoracontent/LArMetrics/ShowerValidationTool.h"
 #include "larpandoracontent/LArMetrics/TrackValidationTool.h"
-#include "larpandoracontent/LArMetrics/PFPValidationTool.h"
+#include "larpandoracontent/LArMetrics/ValidationAlgorithm.h"
 
 #include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
 #include "larpandoracontent/LArMonitoring/EventClusterValidationAlgorithm.h"

@@ -16,16 +16,16 @@ namespace lar_content
 {
 
 BaseValidationTool::BaseValidationTool() :
-    m_maxMichelSep(3.f),    
-    m_invalidSmallFloat(-1.f),    
+    m_maxMichelSep(3.f),
+    m_invalidSmallFloat(-1.f),
     m_invalidLargeFloat(-9999.f),
-    m_invalidInt(-1),    
+    m_invalidInt(-1),
     m_invalidAngle(-4.f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 void BaseValidationTool::GetHitsOfType(const CaloHitList &inputList, const HitType hitType, CaloHitVector &outputVector, float &totalEnergy)
 {
     totalEnergy = 0.f;
@@ -43,7 +43,7 @@ void BaseValidationTool::GetHitsOfType(const CaloHitList &inputList, const HitTy
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode BaseValidationTool::ReadSettings(const TiXmlHandle xmlHandle)
-{    
+{
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxMichelSeparation", m_maxMichelSep));
 
@@ -53,14 +53,11 @@ StatusCode BaseValidationTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InvalidLargeFloat", m_invalidLargeFloat));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InvalidInt", m_invalidInt));
-    
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InvalidAngle", m_invalidAngle));
-    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InvalidInt", m_invalidInt));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InvalidAngle", m_invalidAngle));
+
     return STATUS_CODE_SUCCESS;
 }
 
-    
 } // namespace lar_content

@@ -9,8 +9,8 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArHierarchyHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArMetrics/ShowerValidationTool.h"
 
@@ -27,9 +27,8 @@ ShowerValidationTool::ShowerValidationTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ShowerValidationTool::Run(const Algorithm *const pAlgorithm, [[maybe_unused]] const MCParticle *const pMCNu, 
-    const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticleVector &targetMC, 
-    const PfoVector &bestRecoMatch)
+StatusCode ShowerValidationTool::Run(const Algorithm *const pAlgorithm, [[maybe_unused]] const MCParticle *const pMCNu,
+    const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticleVector &targetMC, const PfoVector &bestRecoMatch)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -56,7 +55,7 @@ StatusCode ShowerValidationTool::Run(const Algorithm *const pAlgorithm, [[maybe_
             this->FillForNullMCDir(showerTreeVars);
         }
 
-        // Perform shower fit 
+        // Perform shower fit
         float recoShrLength(m_invalidSmallFloat);
         CartesianVector recoShrVtx(m_invalidLargeFloat, m_invalidLargeFloat, m_invalidLargeFloat);
         CartesianVector recoShrDir(m_invalidLargeFloat, m_invalidLargeFloat, m_invalidLargeFloat);
@@ -80,11 +79,11 @@ StatusCode ShowerValidationTool::Run(const Algorithm *const pAlgorithm, [[maybe_
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerValidationTool::GetTrueLength(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticle *const pMCParticle,
-     ShowerTreeVars &showerTreeVars)
+void ShowerValidationTool::GetTrueLength(
+    const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticle *const pMCParticle, ShowerTreeVars &showerTreeVars)
 {
     // Get 3D positions/directions
-    const CartesianVector trueShrVtx((pMCParticle->GetParticleId() == PHOTON) ? pMCParticle->GetEndpoint() : pMCParticle->GetVertex());  
+    const CartesianVector trueShrVtx((pMCParticle->GetParticleId() == PHOTON) ? pMCParticle->GetEndpoint() : pMCParticle->GetVertex());
     const CartesianVector trueShrDir(pMCParticle->GetMomentum().GetUnitVector());
     const CartesianVector trueShrDirSeed(trueShrVtx + (trueShrDir * 10.0f));
 
@@ -109,20 +108,21 @@ void ShowerValidationTool::GetTrueLength(const LArHierarchyHelper::MCMatchesVect
 
         // Order hits wrt l
         std::sort(viewMCHits.begin(), viewMCHits.end(),
-                  [&trueShrDir2D, &trueShrVtx2D](const CaloHit *const pCaloHitA, const CaloHit *const pCaloHitB) -> bool
-        {
-            const CartesianVector positionA(pCaloHitA->GetPositionVector() - trueShrVtx2D);
-            const CartesianVector positionB(pCaloHitB->GetPositionVector() - trueShrVtx2D);
-            
-            const float lA(trueShrDir2D.GetDotProduct(positionA));
-            const float lB(trueShrDir2D.GetDotProduct(positionB));
+            [&trueShrDir2D, &trueShrVtx2D](const CaloHit *const pCaloHitA, const CaloHit *const pCaloHitB) -> bool
+            {
+                const CartesianVector positionA(pCaloHitA->GetPositionVector() - trueShrVtx2D);
+                const CartesianVector positionB(pCaloHitB->GetPositionVector() - trueShrVtx2D);
 
-            return lA < lB;
-        });
+                const float lA(trueShrDir2D.GetDotProduct(positionA));
+                const float lB(trueShrDir2D.GetDotProduct(positionB));
+
+                return lA < lB;
+            });
 
         // Calculate 'true length'
-        FloatVector &trueLength(hitType == TPC_VIEW_U ? showerTreeVars.m_coreTrueLengthFromU : 
-                                hitType == TPC_VIEW_V ? showerTreeVars.m_coreTrueLengthFromV : showerTreeVars.m_coreTrueLengthFromW);
+        FloatVector &trueLength(hitType == TPC_VIEW_U ? showerTreeVars.m_coreTrueLengthFromU
+                : hitType == TPC_VIEW_V               ? showerTreeVars.m_coreTrueLengthFromV
+                                                      : showerTreeVars.m_coreTrueLengthFromW);
 
         float runningEnergySum(0.f), endpointL(m_invalidLargeFloat);
         for (const CaloHit *const pHit2D : viewMCHits)
@@ -130,8 +130,7 @@ void ShowerValidationTool::GetTrueLength(const LArHierarchyHelper::MCMatchesVect
             const float hitEnergy(std::fabs(pHit2D->GetElectromagneticEnergy()));
             runningEnergySum += hitEnergy;
 
-            if ((totalEnergy > std::numeric_limits<float>::epsilon()) && 
-                ((runningEnergySum / totalEnergy) > m_trueLengthEnergyFrac))
+            if ((totalEnergy > std::numeric_limits<float>::epsilon()) && ((runningEnergySum / totalEnergy) > m_trueLengthEnergyFrac))
             {
                 const CartesianVector displacement(pHit2D->GetPositionVector() - trueShrVtx2D);
                 endpointL = trueShrDir2D.GetDotProduct(displacement);
@@ -142,11 +141,11 @@ void ShowerValidationTool::GetTrueLength(const LArHierarchyHelper::MCMatchesVect
         if (fabs(endpointL - m_invalidLargeFloat) > std::numeric_limits<float>::epsilon())
         {
             const CartesianVector showerEndpoint2D(trueShrVtx2D + (trueShrDir2D * endpointL));
-            const float scale3D(trueShrDir.GetX() > std::numeric_limits<float>::epsilon() ?
-                                (showerEndpoint2D.GetX() - trueShrVtx2D.GetX()) / trueShrDir.GetX() :
-                                trueShrDir.GetY() > std::numeric_limits<float>::epsilon() ?
-                                (showerEndpoint2D.GetY() - trueShrVtx2D.GetY()) / trueShrDir.GetY() :
-                                (showerEndpoint2D.GetZ() - trueShrVtx2D.GetZ()));
+            const float scale3D(trueShrDir.GetX() > std::numeric_limits<float>::epsilon()
+                    ? (showerEndpoint2D.GetX() - trueShrVtx2D.GetX()) / trueShrDir.GetX()
+                    : trueShrDir.GetY() > std::numeric_limits<float>::epsilon()
+                    ? (showerEndpoint2D.GetY() - trueShrVtx2D.GetY()) / trueShrDir.GetY()
+                    : (showerEndpoint2D.GetZ() - trueShrVtx2D.GetZ()));
             trueLength.push_back(scale3D);
         }
         else
@@ -158,8 +157,8 @@ void ShowerValidationTool::GetTrueLength(const LArHierarchyHelper::MCMatchesVect
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerValidationTool::GetInitialRegionVars(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec, const MCParticle *const pMCParticle, 
-    const Pfo *const pPfo, ShowerTreeVars &showerTreeVars)
+void ShowerValidationTool::GetInitialRegionVars(const LArHierarchyHelper::MCMatchesVector &mcMatchesVec,
+    const MCParticle *const pMCParticle, const Pfo *const pPfo, ShowerTreeVars &showerTreeVars)
 {
     // Loop over matches to get MCNode
     CaloHitList mcHits;
@@ -173,7 +172,7 @@ void ShowerValidationTool::GetInitialRegionVars(const LArHierarchyHelper::MCMatc
     }
 
     // Get 3D positions/directions
-    const CartesianVector trueShrVtx((pMCParticle->GetParticleId() == PHOTON) ? pMCParticle->GetEndpoint() : pMCParticle->GetVertex());    
+    const CartesianVector trueShrVtx((pMCParticle->GetParticleId() == PHOTON) ? pMCParticle->GetEndpoint() : pMCParticle->GetVertex());
     const CartesianVector trueShrDir(pMCParticle->GetMomentum().GetUnitVector());
     const CartesianVector trueShrDirSeed(trueShrVtx + (trueShrDir * m_initialRegion3D));
 
@@ -208,7 +207,7 @@ void ShowerValidationTool::GetInitialRegionVars(const LArHierarchyHelper::MCMatc
             for (const CaloHit *const pCaloHit : viewPfoHits)
             {
                 const float l(trueShrDir2D.GetDotProduct(pCaloHit->GetPositionVector() - trueShrVtx2D));
-                
+
                 if (l < initialRegionL)
                     initialPfoHits.push_back(pCaloHit);
             }
@@ -219,19 +218,23 @@ void ShowerValidationTool::GetInitialRegionVars(const LArHierarchyHelper::MCMatc
             for (const CaloHit *const pCaloHit : initialMCHits)
             {
                 if (std::find(initialPfoHits.begin(), initialPfoHits.end(), pCaloHit) != initialPfoHits.end())
-                    ++nSharedHits; 
+                    ++nSharedHits;
             }
             nTotalInitialSharedHits += nSharedHits;
         }
 
-        IntVector &viewNInitialMCHits(hitType == TPC_VIEW_U ? showerTreeVars.m_nInitialMCHitsU : 
-            hitType == TPC_VIEW_V ? showerTreeVars.m_nInitialMCHitsV : showerTreeVars.m_nInitialMCHitsW);
-        IntVector &viewNInitialPfoHits(hitType == TPC_VIEW_U ? showerTreeVars.m_nInitialPfoHitsU : 
-            hitType == TPC_VIEW_V ? showerTreeVars.m_nInitialPfoHitsV : showerTreeVars.m_nInitialPfoHitsW);
-        FloatVector &viewCompleteness(hitType == TPC_VIEW_U ? showerTreeVars.m_initialCompletenessU : 
-            hitType == TPC_VIEW_V ? showerTreeVars.m_initialCompletenessV : showerTreeVars.m_initialCompletenessW);
-        FloatVector &viewPurity(hitType == TPC_VIEW_U ? showerTreeVars.m_initialPurityU : 
-            hitType == TPC_VIEW_V ? showerTreeVars.m_initialPurityV : showerTreeVars.m_initialPurityW);
+        IntVector &viewNInitialMCHits(hitType == TPC_VIEW_U ? showerTreeVars.m_nInitialMCHitsU
+                : hitType == TPC_VIEW_V                     ? showerTreeVars.m_nInitialMCHitsV
+                                                            : showerTreeVars.m_nInitialMCHitsW);
+        IntVector &viewNInitialPfoHits(hitType == TPC_VIEW_U ? showerTreeVars.m_nInitialPfoHitsU
+                : hitType == TPC_VIEW_V                      ? showerTreeVars.m_nInitialPfoHitsV
+                                                             : showerTreeVars.m_nInitialPfoHitsW);
+        FloatVector &viewCompleteness(hitType == TPC_VIEW_U ? showerTreeVars.m_initialCompletenessU
+                : hitType == TPC_VIEW_V                     ? showerTreeVars.m_initialCompletenessV
+                                                            : showerTreeVars.m_initialCompletenessW);
+        FloatVector &viewPurity(hitType == TPC_VIEW_U ? showerTreeVars.m_initialPurityU
+                : hitType == TPC_VIEW_V               ? showerTreeVars.m_initialPurityV
+                                                      : showerTreeVars.m_initialPurityW);
 
         const float thisCompleteness(initialMCHits.size() == 0 ? m_invalidSmallFloat : static_cast<float>(nSharedHits) / initialMCHits.size());
         const float thisPurity(nInitialPfoHits == 0 ? m_invalidSmallFloat : static_cast<float>(nSharedHits) / nInitialPfoHits);
@@ -249,7 +252,7 @@ void ShowerValidationTool::GetInitialRegionVars(const LArHierarchyHelper::MCMatc
     showerTreeVars.m_initialCompleteness.push_back(completeness);
     showerTreeVars.m_initialPurity.push_back(purity);
 }
-  
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 // Replicate PandoraShower fitting
@@ -257,22 +260,24 @@ bool ShowerValidationTool::FitShower(const Pfo *const pPfo, CartesianVector &sho
 {
     CartesianPointVector positions3D;
     LArPfoHelper::GetCoordinateVector(pPfo, TPC_3D, positions3D);
-    if (positions3D.empty()){return false;}
+    if (positions3D.empty())
+    {
+        return false;
+    }
 
     try
     {
         const Vertex *const pRecoVertex(LArPfoHelper::GetVertex(pPfo));
         const CartesianVector vertexPosition(pRecoVertex->GetPosition());
-        const LArShowerPCA initialLArShowerPCA(LArPfoHelper::GetPrincipalComponents(positions3D, vertexPosition)); 
-        const CartesianVector& centroid(initialLArShowerPCA.GetCentroid());
-        const CartesianVector& primaryAxis(initialLArShowerPCA.GetPrimaryAxis());
-        const CartesianVector& secondaryAxis(initialLArShowerPCA.GetSecondaryAxis());
-        const CartesianVector& tertiaryAxis(initialLArShowerPCA.GetTertiaryAxis());
-        const CartesianVector& eigenvalues(initialLArShowerPCA.GetEigenValues());
+        const LArShowerPCA initialLArShowerPCA(LArPfoHelper::GetPrincipalComponents(positions3D, vertexPosition));
+        const CartesianVector &centroid(initialLArShowerPCA.GetCentroid());
+        const CartesianVector &primaryAxis(initialLArShowerPCA.GetPrimaryAxis());
+        const CartesianVector &secondaryAxis(initialLArShowerPCA.GetSecondaryAxis());
+        const CartesianVector &tertiaryAxis(initialLArShowerPCA.GetTertiaryAxis());
+        const CartesianVector &eigenvalues(initialLArShowerPCA.GetEigenValues());
 
         // Project the PFParticle vertex onto the PCA axis
-        const CartesianVector projectedVertexPosition(centroid -
-            primaryAxis.GetUnitVector() * (centroid - vertexPosition).GetDotProduct(primaryAxis));
+        const CartesianVector projectedVertexPosition(centroid - primaryAxis.GetUnitVector() * (centroid - vertexPosition).GetDotProduct(primaryAxis));
 
         // By convention, principal axis should always point away from vertex
         const float testProjection(primaryAxis.GetDotProduct(projectedVertexPosition - centroid));
@@ -283,17 +288,20 @@ bool ShowerValidationTool::FitShower(const Pfo *const pPfo, CartesianVector &sho
 
         showerVertex = projectedVertexPosition;
         showerDirection = larShowerPCA.GetPrimaryAxis();
-        showerLength = larShowerPCA.GetAxisLengths().GetX();    
+        showerLength = larShowerPCA.GetAxisLengths().GetX();
     }
-    catch(...){ return false;}
+    catch (...)
+    {
+        return false;
+    }
 
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerValidationTool::GetRecoVertexInfo(const CartesianVector &recoShrVtx, const CartesianVector &recoShrDir, const float recoShrLength,
-    const MCParticle *const pMC, ShowerTreeVars &showerTreeVars)
+void ShowerValidationTool::GetRecoVertexInfo(const CartesianVector &recoShrVtx, const CartesianVector &recoShrDir,
+    const float recoShrLength, const MCParticle *const pMC, ShowerTreeVars &showerTreeVars)
 {
     showerTreeVars.m_recoShrVtxX.push_back(recoShrVtx.GetX());
     showerTreeVars.m_recoShrVtxY.push_back(recoShrVtx.GetY());
@@ -302,7 +310,7 @@ void ShowerValidationTool::GetRecoVertexInfo(const CartesianVector &recoShrVtx, 
     showerTreeVars.m_recoShrDirY.push_back(recoShrDir.GetY());
     showerTreeVars.m_recoShrDirZ.push_back(recoShrDir.GetZ());
     showerTreeVars.m_recoShrLength.push_back(recoShrLength);
-    
+
     if (pMC)
     {
         const CartesianVector trueDir(pMC->GetMomentum().GetUnitVector());
@@ -312,8 +320,8 @@ void ShowerValidationTool::GetRecoVertexInfo(const CartesianVector &recoShrVtx, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerValidationTool::GetMoliere(const Pfo *const pPfo, const CartesianVector &showerVertex, const CartesianVector &showerDirection,
-    ShowerTreeVars &showerTreeVars)
+void ShowerValidationTool::GetMoliere(
+    const Pfo *const pPfo, const CartesianVector &showerVertex, const CartesianVector &showerDirection, ShowerTreeVars &showerTreeVars)
 {
     CaloHitList caloHits3D;
     LArPfoHelper::GetCaloHits(pPfo, TPC_3D, caloHits3D);
@@ -341,7 +349,7 @@ void ShowerValidationTool::GetMoliere(const Pfo *const pPfo, const CartesianVect
         {
             const CartesianVector positionA(pCaloHitA->GetPositionVector() - showerVertex);
             const CartesianVector positionB(pCaloHitB->GetPositionVector() - showerVertex);
-            
+
             const float tA(showerDirection.GetCrossProduct(positionA).GetMagnitude());
             const float tB(showerDirection.GetCrossProduct(positionB).GetMagnitude());
 
@@ -354,8 +362,7 @@ void ShowerValidationTool::GetMoliere(const Pfo *const pPfo, const CartesianVect
         const float hitEnergy(std::fabs(pHit2D->GetElectromagneticEnergy()));
         runningEnergySum += hitEnergy;
 
-        if ((totalEnergy > std::numeric_limits<float>::epsilon()) && 
-            ((runningEnergySum / totalEnergy) > 0.9f))
+        if ((totalEnergy > std::numeric_limits<float>::epsilon()) && ((runningEnergySum / totalEnergy) > 0.9f))
         {
             const CartesianVector displacement(pHit3D->GetPositionVector() - showerVertex);
             moliereRadius = showerDirection.GetCrossProduct(displacement).GetMagnitude();
@@ -374,7 +381,7 @@ void ShowerValidationTool::GetMoliere(const Pfo *const pPfo, const CartesianVect
         {
             const CartesianVector positionA(pCaloHitA->GetPositionVector() - showerVertex);
             const CartesianVector positionB(pCaloHitB->GetPositionVector() - showerVertex);
-            
+
             const float lA(showerDirection.GetDotProduct(positionA));
             const float lB(showerDirection.GetDotProduct(positionB));
 
@@ -387,8 +394,7 @@ void ShowerValidationTool::GetMoliere(const Pfo *const pPfo, const CartesianVect
         const float hitEnergy(std::fabs(pHit2D->GetElectromagneticEnergy()));
         runningEnergySum += hitEnergy;
 
-        if ((totalEnergy > std::numeric_limits<float>::epsilon()) && 
-            ((runningEnergySum / totalEnergy) > m_trueLengthEnergyFrac))
+        if ((totalEnergy > std::numeric_limits<float>::epsilon()) && ((runningEnergySum / totalEnergy) > m_trueLengthEnergyFrac))
         {
             const CartesianVector displacement(pHit3D->GetPositionVector() - showerVertex);
             coreShowerLength = showerDirection.GetDotProduct(displacement);
@@ -514,8 +520,7 @@ void ShowerValidationTool::FillTree(ShowerTreeVars &showerTreeVars)
 
 StatusCode ShowerValidationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InitialRegion", m_initialRegion3D));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InitialRegion", m_initialRegion3D));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrueLengthEnergyFrac", m_trueLengthEnergyFrac));
