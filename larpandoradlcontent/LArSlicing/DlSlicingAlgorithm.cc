@@ -88,6 +88,7 @@ StatusCode DlSlicingAlgorithm::Infer()
     torch::Tensor fullInstancePreds;
 
     // Data structures for post-processing...
+    std::vector<CartesianVector> foundVertices;
     std::vector<int> candidateIndices;
     std::vector<int> noiseMask(numHits, 0);
 
@@ -156,7 +157,6 @@ StatusCode DlSlicingAlgorithm::Infer()
 
         // Next, process the semantic labels with the Hough Transform to find vertex
         // candidates. Scope the working buffers so they're freed before instance seg.
-        std::vector<CartesianVector> foundVertices;
         {
             const auto contiguousSemanticLabels = semanticLabels.contiguous();
             std::vector<float> semanticLabelsVec(
@@ -235,10 +235,6 @@ StatusCode DlSlicingAlgorithm::Infer()
             candidateTensorData[i * 3 + 1] = foundVertices[i].GetY();
             candidateTensorData[i * 3 + 2] = foundVertices[i].GetZ();
         }
-
-        // The vertices are now encoded in candidateTensor and no longer needed.
-        foundVertices.clear();
-        foundVertices.shrink_to_fit();
 
         // Now, populate the full input tensor with all the required data:
         // 1) The semantic distance logits for each hit.
@@ -463,6 +459,31 @@ StatusCode DlSlicingAlgorithm::Infer()
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_outputClusterListName));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_outputClusterListName));
+    }
+
+    // We should also write out the predicted vertices to a new output list, as
+    // they may be useful for seeding later algorithms, even if the instance
+    // segmentation fails.
+    std::string vertexListName = m_outputVertexListName;
+    const VertexList *pVertexList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
+    std::cout << "Writing out " << foundVertices.size() << " vertex candidates to " << vertexListName << std::endl;
+
+    for (const auto &vertex : foundVertices)
+    {
+        PandoraContentApi::Vertex::Parameters parameters;
+        parameters.m_position = vertex;
+        parameters.m_vertexLabel = VERTEX_INTERACTION;
+        parameters.m_vertexType = VERTEX_3D;
+
+        const Vertex *pVertex(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+    }
+
+    if (!pVertexList->empty())
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -977,6 +998,7 @@ StatusCode DlSlicingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ScalingFactor", m_scalingFactor));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListName", m_outputClusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DistanceThresholds", m_thresholds));
 

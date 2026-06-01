@@ -160,6 +160,7 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
 
         HepEVD::getServer()->addMarkers(pointsToVis);
         HepEVD::saveState("FoundVertices");
+        HepEVD::startServer();
 #endif
 
         if (foundVertices.size() == 0)
