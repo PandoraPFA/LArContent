@@ -52,6 +52,13 @@ public:
      */
     const pandora::FloatVector &GetShowerCountingScores() const;
 
+    /**
+     *  @brief  Clone this context object
+     *
+     *  @return a deep copy of this object
+     */
+    const pandora::EventContextObject *Clone() const override;
+
 private:
     pandora::FloatVector m_nuScores;     ///< Vector of neutrino class scores
     pandora::FloatVector m_trackScores;  ///< Vector of track counting scores
@@ -87,6 +94,13 @@ inline const pandora::FloatVector &TrackShowerCountingContextObject::GetTrackCou
 inline const pandora::FloatVector &TrackShowerCountingContextObject::GetShowerCountingScores() const
 {
     return m_showerScores;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::EventContextObject *TrackShowerCountingContextObject::Clone() const
+{
+    return new TrackShowerCountingContextObject(*this);
 }
 
 } // namespace lar_content

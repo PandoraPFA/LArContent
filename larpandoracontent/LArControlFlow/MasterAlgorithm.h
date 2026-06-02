@@ -116,6 +116,35 @@ protected:
     pandora::StatusCode CopyMCParticles(const pandora::Pandora* instance) const;
 
     /**
+     *  @brief  Copy all event context objects from the master instance to worker instances.
+     *
+     *  @param  instances optional explicit worker list, otherwise all workers are used
+     */
+    pandora::StatusCode CopyEventContextToWorkerInstances(PandoraInstanceList *instances = nullptr) const;
+
+    /**
+     *  @brief  Copy all event context objects from the master instance to a specific worker.
+     *
+     *  @param  instance the destination worker instance
+     */
+    pandora::StatusCode CopyEventContextToWorkerInstance(const pandora::Pandora *instance) const;
+
+    /**
+     *  @brief  Copy all event context objects from a worker instance to the master instance.
+     *
+     *  @param  instance the source worker instance
+     */
+    pandora::StatusCode CopyEventContextFromWorkerInstance(const pandora::Pandora *instance) const;
+
+    /**
+     *  @brief  Copy all event context objects between two pandora instances.
+     *
+     *  @param  sourcePandora the source instance
+     *  @param  targetPandora the target instance
+     */
+    pandora::StatusCode CopyEventContextObjects(const pandora::Pandora &sourcePandora, const pandora::Pandora &targetPandora) const;
+
+    /**
      *  @brief  Get the mapping from lar tpc volume id to lists of all hits, and truncated hits
      *
      *  @param  volumeIdToHitListMap to receive the populated volume id to hit list map
