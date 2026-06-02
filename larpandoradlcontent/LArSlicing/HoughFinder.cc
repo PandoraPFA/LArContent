@@ -4,17 +4,16 @@
  */
 
 #include <algorithm>
-#include <numeric>
 #include <cmath>
+#include <numeric>
 
 #include "larpandoradlcontent/LArSlicing/HoughFinder.h"
 
 namespace lar_content
 {
 
-FastHoughFinder::FastHoughFinder(
-    const std::vector<float> &thresholds, const float scalingFactor, const float tolerance, const int minVotes, const float nmsRadius,
-    const int maxSeedClass, const bool useDynamicSeedClass) :
+FastHoughFinder::FastHoughFinder(const std::vector<float> &thresholds, const float scalingFactor, const float tolerance, const int minVotes,
+    const float nmsRadius, const int maxSeedClass, const bool useDynamicSeedClass) :
     m_thresholds(thresholds),
     m_scalingFactor(scalingFactor),
     m_tolerance(tolerance),
@@ -79,8 +78,8 @@ void FastHoughFinder::GetSeedAndVoterIndices(const std::vector<int> &predClasses
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void FastHoughFinder::CalculateSortScores(const std::vector<int> &seedIndices, const std::vector<int> &predClasses, const std::vector<int> &voteCounts,
-    const std::vector<float> &logits, std::vector<int> &sortScores) const
+void FastHoughFinder::CalculateSortScores(const std::vector<int> &seedIndices, const std::vector<int> &predClasses,
+    const std::vector<float> &voteCounts, const std::vector<float> &logits, std::vector<int> &sortScores) const
 {
     const int numSeeds = seedIndices.size();
     const int numClasses = m_thresholds.size() + 1;
@@ -134,12 +133,16 @@ std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pan
 
     const int numSeeds = seedIndices.size();
     const int numVoters = voterIndices.size();
-    std::vector<int> voteCounts(numSeeds, 0);
+    std::vector<float> voteCounts(numSeeds, 0);
     std::vector<int> sortScores(numSeeds, 0);
 
     // Simple vectors for positions, to help with cache locality.
     std::vector<float> vX(numVoters), vY(numVoters), vZ(numVoters);
     std::vector<float> voterLowerBoundSq(numVoters), voterUpperBoundSq(numVoters);
+
+    // Also store a weighting for each voter, based on the local density of hits around it.
+    std::vector<float> voterWeights(numVoters, 1.0f);
+    const float densityRadiusSq = 5.0f * 5.0f; // TODO: Param?
 
     // Precompute the voter positions and their distance bounds for voting.
     for (int v = 0; v < numVoters; ++v)
@@ -156,6 +159,18 @@ std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pan
         const float ub = pd + m_tolerance;
         voterLowerBoundSq[v] = lb * lb;
         voterUpperBoundSq[v] = ub * ub;
+
+        int neighbors = 0;
+        for (int v2 = 0; v2 < numVoters; ++v2)
+        {
+            const float dx = vX[v] - vX[v2];
+            const float dy = vY[v] - vY[v2];
+            const float dz = vZ[v] - vZ[v2];
+            if ((dx * dx + dy * dy + dz * dz) < densityRadiusSq)
+                neighbors++;
+        }
+
+        voterWeights[v] = 1.0f / static_cast<float>(neighbors);
     }
 
     // Voting loop - for each candidate, count how many voters are within the
@@ -167,7 +182,7 @@ std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pan
         const float cY = hitPositions[seedIdx].GetY();
         const float cZ = hitPositions[seedIdx].GetZ();
 
-        int votes = 0;
+        float votes = 0.f;
 
         for (int v = 0; v < numVoters; ++v)
         {
@@ -176,9 +191,9 @@ std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pan
             const float dz = cZ - vZ[v];
             const float distSq = (dx * dx) + (dy * dy) + (dz * dz);
 
-            votes += (distSq >= voterLowerBoundSq[v]) & (distSq <= voterUpperBoundSq[v]);
+            if (distSq >= voterLowerBoundSq[v] && distSq <= voterUpperBoundSq[v])
+                votes += voterWeights[v];
         }
-
         voteCounts[s] = votes;
     }
 

@@ -41,14 +41,14 @@ public:
 
 private:
     /**
-     * @brief Helper to separate seed and voter selection logic
+     * @brief Seed Vs Voter Selection Helper
      */
     void GetSeedAndVoterIndices(const std::vector<int> &predClasses, std::vector<int> &seedIndices, std::vector<int> &voterIndices) const;
 
     /**
-     * @brief Helper to separate the sorting score logic (Legacy vs Confidence-Weighted)
+     * @brief Score sorting helper
      */
-    void CalculateSortScores(const std::vector<int> &seedIndices, const std::vector<int> &predClasses, const std::vector<int> &voteCounts,
+    void CalculateSortScores(const std::vector<int> &seedIndices, const std::vector<int> &predClasses, const std::vector<float> &voteCounts,
         const std::vector<float> &logits, std::vector<int> &sortScores) const;
 
     std::vector<float> m_thresholds;    ///< The distance thresholds for each class bin edge. Must match the training thresholds.
