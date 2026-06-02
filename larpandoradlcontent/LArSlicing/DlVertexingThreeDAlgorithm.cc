@@ -28,7 +28,7 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 #if DEBUG_MODE
 #define HEP_EVD_PANDORA_HELPERS 1
 #include "hep_evd.h"
@@ -220,15 +220,33 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
         LArMCParticleHelper::MCRelationMap mcPrimaryMap;
         LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
 
+        CaloHitList croppedHits;
+        for (const auto &hit : *pCaloHitList)
+        {
+            for (const auto &pos : nodes)
+            {
+                if (hit->GetPositionVector() == pos)
+                {
+                    croppedHits.push_back(hit);
+                    break;
+                }
+            }
+        }
+
         LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
         LArMCParticleHelper::CaloHitToMCMap hitToMCMap;
-        LArMCParticleHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcPrimaryMap, hitToMCMap, mcToTrueHitListMap);
+        LArMCParticleHelper::GetMCParticleToCaloHitMatches(&croppedHits, mcPrimaryMap, hitToMCMap, mcToTrueHitListMap);
         std::set<const MCParticle *> uniqueMCParticles;
+
+        float bestCandidate = std::numeric_limits<float>::max();
+        float bestNew = std::numeric_limits<float>::max();
+        float bestHit = std::numeric_limits<float>::max();
+        float bestCrop = std::numeric_limits<float>::max();
 
         for (const auto &caloHitMCPair : hitToMCMap)
         {
             const auto &pMCParticle = caloHitMCPair.second;
-            const auto primary = mcPrimaryMap.at(pMCParticle);
+            const auto primary = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
 
             if (uniqueMCParticles.find(primary) != uniqueMCParticles.end())
                 continue;
@@ -237,11 +255,43 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
             evdPoint->setColour("green");
             pointsToVis.push_back(*evdPoint);
             uniqueMCParticles.insert(primary);
+
+            for (const auto &cand : candidateVertices)
+            {
+                const float squaredDist = cand.GetDistanceSquared(primary->GetVertex());
+                if (squaredDist < bestCandidate)
+                    bestCandidate = squaredDist;
+            }
+
+            for (const auto &newVtx : foundVertices)
+            {
+                const float squaredDist = newVtx.GetDistanceSquared(primary->GetVertex());
+                if (squaredDist < bestNew)
+                    bestNew = squaredDist;
+            }
+
+            for (const auto &graphHit : nodes)
+            {
+                pandora::CartesianVector hitPos(graphHit.GetX(), graphHit.GetY(), graphHit.GetZ());
+                const float squaredDist = hitPos.GetDistanceSquared(primary->GetVertex());
+                if (squaredDist < bestCrop)
+                    bestCrop = squaredDist;
+            }
+
+            for (const auto &caloHit : *pCaloHitList)
+            {
+                const float squaredDist = caloHit->GetPositionVector().GetDistanceSquared(primary->GetVertex());
+                if (squaredDist < bestHit)
+                    bestHit = squaredDist;
+            }
         }
+
+        std::cout << "[METRICS] Slice: " << std::sqrt(bestCandidate) << " | GNN: " << std::sqrt(bestNew)
+                  << " | Crop Limit: " << std::sqrt(bestCrop) << " | Voxel Limit: " << std::sqrt(bestHit) << " cm" << std::endl;
 
         HepEVD::getServer()->addMarkers(pointsToVis);
         HepEVD::saveState("FoundVertices");
-        HepEVD::startServer();
+        HepEVD::startServer(-1, false);
 #endif
 
         if (foundVertices.size() == 0)
