@@ -37,21 +37,22 @@ private:
      *  @brief Get the node data (positions and features) from the input CaloHit list.
      *
      *  @param caloHits The input calo hits.
-     *  @param pos The positions of the nodes.
+     *  @param candidateVertices The candidate vertices to match to.
+     *  @param nodes The positions of the nodes.
      *  @param node_features The features for each node.
      */
-    pandora::StatusCode GetNodeData(
-        const pandora::CaloHitList &caloHits, std::vector<pandora::CartesianVector> &pos, std::vector<std::array<float, 1>> &node_features);
+    pandora::StatusCode GetNodeData(const pandora::CaloHitList &caloHits, const std::vector<pandora::CartesianVector> &candidateVertices,
+        std::vector<pandora::CartesianVector> &nodes, std::vector<std::array<float, 1>> &node_features);
 
     /**
      *  @brief Process the given node data into the expected tensor format for the model, and insert into the input vector.
      *
      *  @param inputs The input vector to be filled with the node data.
-     *  @param pos The positions of the nodes.
+     *  @param nodes The positions of the nodes.
      *  @param node_features The features for each node.
      */
-    pandora::StatusCode BuildInput(
-        LArDLHelper::TorchInputVector &inputs, std::vector<pandora::CartesianVector> &pos, std::vector<std::array<float, 1>> &node_features);
+    pandora::StatusCode BuildInput(LArDLHelper::TorchInputVector &inputs, std::vector<pandora::CartesianVector> &nodes,
+        std::vector<std::array<float, 1>> &node_features);
 
     LArDLHelper::TorchModel m_modelFile; ///< The model to use.
 

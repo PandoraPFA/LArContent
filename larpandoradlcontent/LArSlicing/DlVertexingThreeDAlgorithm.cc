@@ -16,11 +16,12 @@
 
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 
-#include "larpandoradlcontent/LArSlicing/HoughFinder.h"
-#include "larpandoradlcontent/LArSlicing/DlVertexingThreeDAlgorithm.h"
 #include "larpandoradlcontent/LArSlicing/DlSlicingAlgorithm.h"
+#include "larpandoradlcontent/LArSlicing/DlVertexingThreeDAlgorithm.h"
+#include "larpandoradlcontent/LArSlicing/HoughFinder.h"
 
 #include <Eigen/Dense>
 #include <c10/core/TensorOptions.h>
@@ -50,7 +51,15 @@ DlThreeDVertexingAlgorithm::DlThreeDVertexingAlgorithm() :
 
 StatusCode DlThreeDVertexingAlgorithm::Run()
 {
-    return this->Infer();
+    try
+    {
+        return this->Infer();
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << "Exception caught in DlThreeDVertexingAlgorithm: " << e.what() << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -69,17 +78,18 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
     }
     catch (const StatusCodeException &e)
     {
-        std::cout << "DlVertexingThreeDAlgorithm: Failed to get vertex context object with key " << m_inputVertexContextKey << ", " << e.ToString() << std::endl;
+        std::cout << "DlVertexingThreeDAlgorithm: Failed to get vertex context object with key " << m_inputVertexContextKey << ", "
+                  << e.ToString() << std::endl;
         return STATUS_CODE_FAILURE;
     }
-    const auto &positions = pSlicingVerticesContextObject->GetVertexPositions();
+    const auto &candidateVertices = pSlicingVerticesContextObject->GetVertexPositions();
 
-    std::cout << "Running DL vertexing with " << numHits << " hits and " << positions.size() << " candidate vertices." << std::endl;
+    std::cout << "Running DL vertexing with " << numHits << " hits and " << candidateVertices.size() << " candidate vertices." << std::endl;
 
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<CartesianVector> nodes;
     std::vector<std::array<float, 1>> node_features;
-    this->GetNodeData(*pCaloHitList, nodes, node_features);
+    this->GetNodeData(*pCaloHitList, candidateVertices, nodes, node_features);
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     std::cout << "Getting node data took " << duration << " ms." << std::endl;
@@ -115,7 +125,6 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
 
 #if DEBUG_MODE
         // DEBUG: Add visualization of the semantic labels to EVD.
-        const auto argMaxLabels = torch::argmax(semanticLabels, 1);
         HepEVD::Hits hitsToVis;
 
         int evdHitIdx{0};
@@ -124,18 +133,12 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
             if (nullptr == pCaloHit)
                 continue;
 
-            const double label = argMaxLabels[evdHitIdx].item<double>();
-
             const auto x = pCaloHit->GetPositionVector().GetX();
             const auto y = pCaloHit->GetPositionVector().GetY();
             const auto z = pCaloHit->GetPositionVector().GetZ();
             const auto e = pCaloHit->GetInputEnergy();
 
             HepEVD::Hit *evdHit = new HepEVD::Hit({x, y, z}, e);
-            evdHit->addProperties({{"SemanticLabel", label}});
-
-            if (label <= 2)
-                evdHit->addProperties({{"SeedCandidate", 1}});
 
             hitsToVis.push_back(evdHit);
 
@@ -143,6 +146,36 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
         }
 
         HepEVD::setHepEVDGeometry(this->GetPandora().GetGeometry());
+        HepEVD::getServer()->addHits(hitsToVis);
+        HepEVD::saveState("RawHits");
+
+        const auto argMaxLabels = torch::argmax(semanticLabels, 1);
+        const torch::Tensor confidences = torch::softmax(semanticLabels, /*dim=*/1);
+        evdHitIdx = 0;
+        hitsToVis.clear();
+
+        for (const auto graphHit : nodes)
+        {
+            const double label = argMaxLabels[evdHitIdx].item<double>();
+            const double confidence = confidences[evdHitIdx][label].item<double>();
+            const double seedConfidence = confidences[evdHitIdx][0].item<double>();
+
+            const auto x = graphHit.GetX();
+            const auto y = graphHit.GetY();
+            const auto z = graphHit.GetZ();
+            const auto e = 1.0;
+
+            HepEVD::Hit *evdHit = new HepEVD::Hit({x, y, z}, e);
+            evdHit->addProperties({{"SemanticLabel", label}, {"SemanticConfidence", confidence}, {"SeedConfidence", seedConfidence}});
+
+            if (label <= 0)
+                evdHit->addProperties({{"SeedCandidate", 1}});
+
+            hitsToVis.push_back(evdHit);
+
+            evdHitIdx++;
+        }
+
         HepEVD::getServer()->addHits(hitsToVis);
 #endif
 
@@ -155,7 +188,7 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
 
             // Setup and run the Hough Transform vertex finder.
             t1 = std::chrono::high_resolution_clock::now();
-            FastHoughFinder houghFinder(m_thresholds, m_scalingFactor);
+            FastHoughFinder houghFinder(m_thresholds, m_scalingFactor, 0.5f, 3, 10.f, 0, true);
             foundVertices = houghFinder.Fit(nodes, semanticLabelsVec);
             t2 = std::chrono::high_resolution_clock::now();
             duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
@@ -171,7 +204,39 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
         for (const auto &vertex : foundVertices)
         {
             HepEVD::Point *evdPoint = new HepEVD::Point({vertex.GetX(), vertex.GetY(), vertex.GetZ()});
+            evdPoint->setColour("red");
             pointsToVis.push_back(*evdPoint);
+        }
+
+        for (const auto &vertex : candidateVertices)
+        {
+            HepEVD::Point *evdPoint = new HepEVD::Point({vertex.GetX(), vertex.GetY(), vertex.GetZ()});
+            evdPoint->setColour("blue");
+            pointsToVis.push_back(*evdPoint);
+        }
+
+        const MCParticleList *pMCParticleList(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
+        LArMCParticleHelper::MCRelationMap mcPrimaryMap;
+        LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
+
+        LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
+        LArMCParticleHelper::CaloHitToMCMap hitToMCMap;
+        LArMCParticleHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcPrimaryMap, hitToMCMap, mcToTrueHitListMap);
+        std::set<const MCParticle *> uniqueMCParticles;
+
+        for (const auto &caloHitMCPair : hitToMCMap)
+        {
+            const auto &pMCParticle = caloHitMCPair.second;
+            const auto primary = mcPrimaryMap.at(pMCParticle);
+
+            if (uniqueMCParticles.find(primary) != uniqueMCParticles.end())
+                continue;
+
+            HepEVD::Point *evdPoint = new HepEVD::Point({primary->GetVertex().GetX(), primary->GetVertex().GetY(), primary->GetVertex().GetZ()});
+            evdPoint->setColour("green");
+            pointsToVis.push_back(*evdPoint);
+            uniqueMCParticles.insert(primary);
         }
 
         HepEVD::getServer()->addMarkers(pointsToVis);
@@ -210,24 +275,71 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlThreeDVertexingAlgorithm::GetNodeData(
-    const CaloHitList &caloHits, std::vector<CartesianVector> &pos, std::vector<std::array<float, 1>> &node_features)
+StatusCode DlThreeDVertexingAlgorithm::GetNodeData(const CaloHitList &caloHits, const std::vector<CartesianVector> &candidateVertices,
+    std::vector<CartesianVector> &nodes, std::vector<std::array<float, 1>> &node_features)
 {
-    pos.reserve(caloHits.size());
+    nodes.reserve(caloHits.size());
     node_features.reserve(caloHits.size());
 
-    // Populate the positional and node feature vectors from the CaloHits.
-    int hitIdx{0};
+    // Find the candidate vertex for this specific slice.
+    std::vector<CartesianVector> matchedVertices;
+    const float matchEpsilonSq = 1e-4f;
+
+    for (const CartesianVector &vertexPos : candidateVertices)
+    {
+        bool foundMatch = false;
+        for (const auto pCaloHit : caloHits)
+        {
+            if (nullptr == pCaloHit)
+                continue;
+
+            if ((pCaloHit->GetPositionVector() - vertexPos).GetMagnitudeSquared() < matchEpsilonSq)
+            {
+                foundMatch = true;
+                break;
+            }
+        }
+        if (foundMatch)
+        {
+            matchedVertices.push_back(vertexPos);
+        }
+    }
+
+    if (matchedVertices.empty())
+    {
+        std::cout << "DlVertexingThreeDAlgorithm: No matching candidate vertex found for this slice. Skipping." << std::endl;
+        return STATUS_CODE_SUCCESS;
+    }
+
+    if (matchedVertices.size() > 1)
+    {
+        std::cout << "DlVertexingThreeDAlgorithm: WARNING - Found " << matchedVertices.size()
+                  << " candidate vertices in this slice. Proceeding with the first one." << std::endl;
+    }
+
+    const CartesianVector &cropCenter = matchedVertices.front();
+
+    // Perform the crop around the matched vertex.
+    // TODO: Move to XML setting.
+    const float cropRadiusSq = 30.0f * 30.0f;
+
     for (const auto pCaloHit : caloHits)
     {
         if (nullptr == pCaloHit)
             continue;
 
-        const CartesianVector &hitPos = pCaloHit->GetPositionVector();
-
-        pos.push_back(hitPos);
-        node_features.push_back({pCaloHit->GetInputEnergy() / 10.f});
+        if ((pCaloHit->GetPositionVector() - cropCenter).GetMagnitudeSquared() <= cropRadiusSq)
+        {
+            nodes.push_back(pCaloHit->GetPositionVector());
+            node_features.push_back({pCaloHit->GetInputEnergy() / 10.f});
+        }
     }
+
+    // Shrink to fit now that we've cropped the graph
+    nodes.shrink_to_fit();
+    node_features.shrink_to_fit();
+
+    std::cout << "Cropped graph from " << caloHits.size() << " to " << nodes.size() << " hits." << std::endl;
 
     return STATUS_CODE_SUCCESS;
 }
@@ -235,9 +347,9 @@ StatusCode DlThreeDVertexingAlgorithm::GetNodeData(
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DlThreeDVertexingAlgorithm::BuildInput(
-    LArDLHelper::TorchInputVector &inputs, std::vector<CartesianVector> &pos, std::vector<std::array<float, 1>> &node_features)
+    LArDLHelper::TorchInputVector &inputs, std::vector<CartesianVector> &nodes, std::vector<std::array<float, 1>> &node_features)
 {
-    const int numNodes{static_cast<int>(pos.size())};
+    const int numNodes{static_cast<int>(nodes.size())};
     const int numFeatures{static_cast<int>(node_features[0].size())};
 
     LArDLHelper::TorchInput posTensor, xTensor;
@@ -258,9 +370,9 @@ StatusCode DlThreeDVertexingAlgorithm::BuildInput(
     // Fill in the position and node feature tensors...
     for (int i = 0; i < numNodes; ++i)
     {
-        posTensorPtr[i * 3 + 0] = pos[i].GetX();
-        posTensorPtr[i * 3 + 1] = pos[i].GetY();
-        posTensorPtr[i * 3 + 2] = pos[i].GetZ();
+        posTensorPtr[i * 3 + 0] = nodes[i].GetX();
+        posTensorPtr[i * 3 + 1] = nodes[i].GetY();
+        posTensorPtr[i * 3 + 2] = nodes[i].GetZ();
         xTensorPtr[i] = node_features[i][0];
     }
 

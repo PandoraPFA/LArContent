@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <cmath>
 
 #include "larpandoradlcontent/LArSlicing/HoughFinder.h"
 
@@ -12,12 +13,15 @@ namespace lar_content
 {
 
 FastHoughFinder::FastHoughFinder(
-    const std::vector<float> &thresholds, const float scalingFactor, const float tolerance, const int minVotes, const float nmsRadius) :
+    const std::vector<float> &thresholds, const float scalingFactor, const float tolerance, const int minVotes, const float nmsRadius,
+    const int maxSeedClass, const bool useDynamicSeedClass) :
     m_thresholds(thresholds),
     m_scalingFactor(scalingFactor),
     m_tolerance(tolerance),
     m_minVotes(minVotes),
-    m_nmsRadiusSq(nmsRadius * nmsRadius)
+    m_maxSeedClass(maxSeedClass),
+    m_nmsRadiusSq(nmsRadius * nmsRadius),
+    m_useDynamicSeedClass(useDynamicSeedClass)
 {
     float prev_t = 0.0f;
     for (const float t : m_thresholds)
@@ -26,6 +30,67 @@ FastHoughFinder::FastHoughFinder(
         prev_t = t;
     }
     m_binCenters.push_back(0.0f);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void FastHoughFinder::GetSeedAndVoterIndices(const std::vector<int> &predClasses, std::vector<int> &seedIndices, std::vector<int> &voterIndices) const
+{
+    const int numHits = predClasses.size();
+    const int noiseClass = m_thresholds.size();
+
+    int targetSeedClass = m_maxSeedClass;
+
+    // Optional: Dynamically find the absolute lowest available class in this point cloud.
+    // In some instances...there many not be a class 0 or 1 etc (i.e. true vertex is in gap)
+    // so this should let it go as low as it needs to find seeds.
+    //
+    // TODO: Should there be a cut off? If m_maxSeedClass + X break and don't run?
+    if (m_useDynamicSeedClass)
+    {
+        targetSeedClass = noiseClass - 1;
+        for (int i = 0; i < numHits; ++i)
+        {
+            if (predClasses[i] < targetSeedClass)
+                targetSeedClass = predClasses[i];
+        }
+    }
+
+    for (int i = 0; i < numHits; ++i)
+    {
+        const int bestClass = predClasses[i];
+
+        if (m_useDynamicSeedClass)
+        {
+            if (bestClass == targetSeedClass)
+                seedIndices.push_back(i);
+        }
+        else
+        {
+            if (bestClass <= m_maxSeedClass)
+                seedIndices.push_back(i);
+        }
+
+        // The last class is noise, so we don't want those voting.
+        if (bestClass != noiseClass)
+            voterIndices.push_back(i);
+    }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void FastHoughFinder::CalculateSortScores(const std::vector<int> &seedIndices, const std::vector<int> &predClasses, const std::vector<int> &voteCounts,
+    const std::vector<float> &logits, std::vector<int> &sortScores) const
+{
+    const int numSeeds = seedIndices.size();
+    const int numClasses = m_thresholds.size() + 1;
+
+    for (int s = 0; s < numSeeds; ++s)
+    {
+        const int seedGlobalIdx = seedIndices[s];
+        const int seedClass = predClasses[seedGlobalIdx];
+        sortScores[s] = voteCounts[s] + (((m_maxSeedClass + 1) - seedClass) * 100);
+    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -40,7 +105,7 @@ std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pan
 
     std::vector<float> predDists(numHits);
     std::vector<int> predClasses(numHits);
-    std::vector<int> candidateIndices;
+    std::vector<int> seedIndices;
     std::vector<int> voterIndices;
 
     for (int i = 0; i < numHits; ++i)
@@ -59,23 +124,18 @@ std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pan
 
         predDists[i] = m_binCenters[bestClass] * m_scalingFactor;
         predClasses[i] = bestClass;
-
-        // TODO: Param for classes as candidates vs voters.
-        if (bestClass <= 2)
-            candidateIndices.push_back(i);
-
-        // INFO: The last class is noise, so we don't want those voting.
-        if (bestClass != numClasses - 1)
-            voterIndices.push_back(i);
     }
 
-    if (candidateIndices.empty())
+    // Separate hits into seeds and voters.
+    this->GetSeedAndVoterIndices(predClasses, seedIndices, voterIndices);
+
+    if (seedIndices.empty())
         return {};
 
-    const int numCandidates = candidateIndices.size();
+    const int numSeeds = seedIndices.size();
     const int numVoters = voterIndices.size();
-    std::vector<int> voteCounts(numCandidates, 0);
-    std::vector<int> sortScores(numCandidates, 0);
+    std::vector<int> voteCounts(numSeeds, 0);
+    std::vector<int> sortScores(numSeeds, 0);
 
     // Simple vectors for positions, to help with cache locality.
     std::vector<float> vX(numVoters), vY(numVoters), vZ(numVoters);
@@ -100,12 +160,12 @@ std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pan
 
     // Voting loop - for each candidate, count how many voters are within the
     // predicted distance (with tolerance).
-    for (int c = 0; c < numCandidates; ++c)
+    for (int s = 0; s < numSeeds; ++s)
     {
-        const int candIdx = candidateIndices[c];
-        const float cX = hitPositions[candIdx].GetX();
-        const float cY = hitPositions[candIdx].GetY();
-        const float cZ = hitPositions[candIdx].GetZ();
+        const int seedIdx = seedIndices[s];
+        const float cX = hitPositions[seedIdx].GetX();
+        const float cY = hitPositions[seedIdx].GetY();
+        const float cZ = hitPositions[seedIdx].GetZ();
 
         int votes = 0;
 
@@ -119,33 +179,30 @@ std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pan
             votes += (distSq >= voterLowerBoundSq[v]) & (distSq <= voterUpperBoundSq[v]);
         }
 
-        voteCounts[c] = votes;
+        voteCounts[s] = votes;
     }
 
-    // Calculate the sort scores
-    for (int c = 0; c < numCandidates; ++c)
-    {
-        const int candClass = predClasses[candidateIndices[c]];
-        sortScores[c] = voteCounts[c] + ((3 - candClass) * 100);
-    }
+    // Calculate sorting scores, to pick the best candidates first in NMS.
+    this->CalculateSortScores(seedIndices, predClasses, voteCounts, logits, sortScores);
 
-    std::vector<int> sortedCandIndices(numCandidates);
+    std::vector<int> sortedCandIndices(numSeeds);
     std::iota(sortedCandIndices.begin(), sortedCandIndices.end(), 0);
     std::sort(sortedCandIndices.begin(), sortedCandIndices.end(), [&sortScores](int a, int b) { return sortScores[a] > sortScores[b]; });
 
     std::vector<pandora::CartesianVector> foundVertices;
-    std::vector<bool> candidateIsAvailable(numCandidates, true);
+    std::vector<bool> seedIsAvailable(numSeeds, true);
     std::vector<bool> voterIsAvailable(numVoters, true);
 
+    // Non-Maximum Suppression Loop then final vertex creation
     for (const int candListIdx : sortedCandIndices)
     {
-        if (!candidateIsAvailable[candListIdx])
+        if (!seedIsAvailable[candListIdx])
             continue;
 
         if (voteCounts[candListIdx] < m_minVotes)
             break;
 
-        const int candGlobalIdx = candidateIndices[candListIdx];
+        const int candGlobalIdx = seedIndices[candListIdx];
         const float cX = hitPositions[candGlobalIdx].GetX();
         const float cY = hitPositions[candGlobalIdx].GetY();
         const float cZ = hitPositions[candGlobalIdx].GetZ();
@@ -176,26 +233,24 @@ std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pan
         const auto candPos = pandora::CartesianVector(cX, cY, cZ);
         foundVertices.push_back(candPos);
 
-        // Consume the voters so they can't vote for subsequent nearby candidates
+        // Consume the voters so they can't vote for subsequent nearby seeds
         for (const int localVoterIdx : claimedVotersLocal)
             voterIsAvailable[localVoterIdx] = false;
 
-        for (int c = 0; c < numCandidates; ++c)
+        for (int s = 0; s < numSeeds; ++s)
         {
-            if (!candidateIsAvailable[c])
+            if (!seedIsAvailable[s])
                 continue;
 
-            const pandora::CartesianVector &otherCandPos = hitPositions[candidateIndices[c]];
+            const pandora::CartesianVector &otherCandPos = hitPositions[seedIndices[s]];
             if ((candPos - otherCandPos).GetMagnitudeSquared() < m_nmsRadiusSq)
             {
-                candidateIsAvailable[c] = false;
+                seedIsAvailable[s] = false;
             }
         }
     }
 
     return foundVertices;
 }
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
 
 } // namespace lar_content
