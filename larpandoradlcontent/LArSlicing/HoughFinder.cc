@@ -72,7 +72,7 @@ void FastHoughFinder::GetSeedAndVoterIndices(const std::vector<int> &predClasses
         }
 
         // The last class is noise, so we don't want those voting.
-        if (bestClass != noiseClass)
+        if (bestClass > targetSeedClass && bestClass != noiseClass)
             voterIndices.push_back(i);
     }
 }

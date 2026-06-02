@@ -24,11 +24,10 @@ public:
      * @param nmsRadius Radius (in cm) for Non-Maximum Suppression (NMS)
      * @param maxSeedClass Maximum distance class to consider as a seed for vertex finding
      * @param useDynamicSeedClass If true, dynamically finds the closest available class to use as seeds
-     * @param useConfidenceScoring If true, breaks score ties using the network's Softmax confidence
      */
     FastHoughFinder(const std::vector<float> &thresholds, const float scalingFactor = 400.0f, const float tolerance = 25.0f,
         const int minVotes = 3, const float nmsRadius = 35.0f, const int maxSeedClass = 2,
-        const bool useDynamicSeedClass = false, const bool useConfidenceScoring = false);
+        const bool useDynamicSeedClass = false);
 
     /**
      * @brief Finds vertices based on hit positions and network distance logits
