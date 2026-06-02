@@ -20,13 +20,14 @@
 
 #include "larpandoradlcontent/LArSlicing/HoughFinder.h"
 #include "larpandoradlcontent/LArSlicing/DlVertexingThreeDAlgorithm.h"
+#include "larpandoradlcontent/LArSlicing/DlSlicingAlgorithm.h"
 
 #include <Eigen/Dense>
 #include <c10/core/TensorOptions.h>
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 #if DEBUG_MODE
 #define HEP_EVD_PANDORA_HELPERS 1
 #include "hep_evd.h"
@@ -59,6 +60,21 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
     const CaloHitList *pCaloHitList{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
     const unsigned int numHits = pCaloHitList->size();
+
+    const DLSlicingVerticesContextObject *pSlicingVerticesContextObject(nullptr);
+    try
+    {
+        const EventContextObject *pEventContextObject(PandoraContentApi::GetEventContextObject(*this, m_inputVertexContextKey));
+        pSlicingVerticesContextObject = dynamic_cast<const DLSlicingVerticesContextObject *>(pEventContextObject);
+    }
+    catch (const StatusCodeException &e)
+    {
+        std::cout << "DlVertexingThreeDAlgorithm: Failed to get vertex context object with key " << m_inputVertexContextKey << ", " << e.ToString() << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
+    const auto &positions = pSlicingVerticesContextObject->GetVertexPositions();
+
+    std::cout << "Running DL vertexing with " << numHits << " hits and " << positions.size() << " candidate vertices." << std::endl;
 
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<CartesianVector> nodes;
@@ -269,6 +285,7 @@ StatusCode DlThreeDVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ScalingFactor", m_scalingFactor));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListName", m_caloHitListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexContextKey", m_inputVertexContextKey));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DistanceThresholds", m_thresholds));
