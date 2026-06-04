@@ -71,9 +71,10 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
     const unsigned int numHits = pCaloHitList->size();
 
-    // Get the candidate vertices for this slice from the event context.
-    const auto parentInstanceName = MultiPandoraApi::GetPrimaryPandoraInstance(&(*this).GetPandora());
-    const auto childInstanceList = MultiPandoraApi::GetDaughterPandoraInstanceList(parentInstanceName);
+    // Load the Slicing Worker instance, to pull out the slice PFOs + their associated candidate vertices.
+    // We can use them as a start point for where to zoom in on.
+    const auto parentInstance= MultiPandoraApi::GetPrimaryPandoraInstance(&(*this).GetPandora());
+    const auto childInstanceList = MultiPandoraApi::GetDaughterPandoraInstanceList(parentInstance);
     const pandora::Pandora *pSlicingInstance{nullptr};
 
     for (const auto pInstance : childInstanceList)
@@ -83,6 +84,15 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
             pSlicingInstance = pInstance;
             break;
         }
+    }
+
+    if (pSlicingInstance == nullptr)
+    {
+        // TODO: We may need a pass 1 network...I.e. if a PFO has no vertex for various reasons (post processed out, DETR) etc...
+        // That algorithm could load and store the vertex if there, passing it over to this algorithm.
+        // It could then also do "Can't find one...we should make one!".
+        std::cout << "DlVertexingThreeDAlgorithm::Infer - ERROR: Could not find SlicingWorker instance!" << std::endl;
+        return STATUS_CODE_FAILURE;
     }
 
     const PfoList *pSlicePfos(nullptr);
