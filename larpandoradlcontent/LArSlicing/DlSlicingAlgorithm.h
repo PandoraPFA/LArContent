@@ -131,68 +131,11 @@ private:
     int m_nDistanceClasses;              ///< The number of distance classes (derived from thresholds).
     std::string m_caloHitListName;       ///< The name of the input CaloHit list.
     std::string m_outputClusterListName; ///< The name of the output Cluster list to create with the predicted instances.
-    std::string m_outputVertexContextKey;///< The event-context key used to store predicted candidate vertices.
+    std::string m_outputVertexListName;  ///< The name of the output Vertex list to create with the predicted candidate vertices.
     int m_k;                             ///< The number of nearest neighbours to use when building the graph.
     bool m_runPostProcessing;            ///< Whether to run the post-processing steps after inference.
 };
 
 } // namespace lar_dl_content
-
-namespace lar_content
-{
-
-/**
- *  @brief  DLSlicingVerticesContextObject class
- */
-class DLSlicingVerticesContextObject : public pandora::EventContextObject
-{
-public:
-    /**
-     *  @brief  Constructor
-     *
-     *  @param  vertexPositions the predicted candidate-vertex positions
-     */
-    explicit DLSlicingVerticesContextObject(const pandora::CartesianPointVector &vertexPositions);
-
-    /**
-     *  @brief  Get the candidate-vertex positions
-     *
-     *  @return the predicted candidate-vertex positions
-     */
-    const pandora::CartesianPointVector &GetVertexPositions() const;
-
-    /**
-     *  @brief  Clone this context object
-     *
-     *  @return a deep copy of this object
-     */
-    const pandora::EventContextObject *Clone() const override;
-
-private:
-    pandora::CartesianPointVector m_vertexPositions; ///< Predicted candidate-vertex positions
-};
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-inline DLSlicingVerticesContextObject::DLSlicingVerticesContextObject(const pandora::CartesianPointVector &vertexPositions) :
-    m_vertexPositions(vertexPositions)
-{
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::CartesianPointVector &DLSlicingVerticesContextObject::GetVertexPositions() const
-{
-    return m_vertexPositions;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::EventContextObject *DLSlicingVerticesContextObject::Clone() const
-{
-    return new DLSlicingVerticesContextObject(*this);
-}
-
-} // namespace lar_content
 
 #endif // LAR_DL_SLICING_ALGORITHM_H

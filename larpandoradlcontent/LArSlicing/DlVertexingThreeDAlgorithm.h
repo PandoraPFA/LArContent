@@ -60,7 +60,6 @@ private:
     std::vector<float> m_thresholds;     ///< Distance Class Thresholds.
     int m_nDistanceClasses;              ///< The number of distance classes (derived from thresholds).
     std::string m_caloHitListName;       ///< The name of the input CaloHit list.
-    std::string m_inputVertexContextKey; ///< The key for the input vertex context.
     std::string m_outputVertexListName;  ///< The name of the output Vertex list to create with the predicted vertices.
 };
 

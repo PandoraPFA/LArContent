@@ -9,7 +9,6 @@
 #include "Api/PandoraApi.h"
 
 #include "Pandora/AlgorithmHeaders.h"
-#include "Objects/EventContext.h"
 
 #include "larpandoracontent/LArContent.h"
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
@@ -270,68 +269,6 @@ StatusCode MasterAlgorithm::CopyMCParticles(const pandora::Pandora* instance) co
 {
     PandoraInstanceList instanceVector({instance});
     return this->CopyMCParticles(&instanceVector);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode MasterAlgorithm::CopyEventContextObjects(const pandora::Pandora &sourcePandora, const pandora::Pandora &targetPandora) const
-{
-    std::vector<std::string> keys;
-    PandoraApi::GetEventContextKeys(sourcePandora, keys);
-
-    for (const std::string &key : keys)
-    {
-        const EventContextObject *const pEventObject(PandoraApi::GetEventContextObject(sourcePandora, key));
-
-        if (!pEventObject)
-            continue;
-
-        const EventContextObject *const pClonedEventObject(pEventObject->Clone());
-
-        if (PandoraApi::DoesEventContextKeyExist(targetPandora, key))
-            PandoraApi::ReplaceEventContextObject(targetPandora, key, pClonedEventObject);
-        else
-            PandoraApi::AddEventContextObject(targetPandora, key, pClonedEventObject);
-    }
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode MasterAlgorithm::CopyEventContextToWorkerInstances(PandoraInstanceList *instances) const
-{
-    PandoraInstanceList pandoraWorkerInstances(instances ? *instances : PandoraInstanceList(m_crWorkerInstances));
-
-    if (!instances)
-    {
-        if (m_pSlicingWorkerInstance)
-            pandoraWorkerInstances.push_back(m_pSlicingWorkerInstance);
-        if (m_pSliceNuWorkerInstance)
-            pandoraWorkerInstances.push_back(m_pSliceNuWorkerInstance);
-        if (m_pSliceCRWorkerInstance)
-            pandoraWorkerInstances.push_back(m_pSliceCRWorkerInstance);
-    }
-
-    for (const Pandora *const pPandoraWorker : pandoraWorkerInstances)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyEventContextObjects(this->GetPandora(), *pPandoraWorker));
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode MasterAlgorithm::CopyEventContextToWorkerInstance(const pandora::Pandora *instance) const
-{
-    PandoraInstanceList instanceVector({instance});
-    return this->CopyEventContextToWorkerInstances(&instanceVector);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode MasterAlgorithm::CopyEventContextFromWorkerInstance(const pandora::Pandora *instance) const
-{
-    return this->CopyEventContextObjects(*instance, this->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

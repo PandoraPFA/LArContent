@@ -28,7 +28,7 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 #if DEBUG_MODE
 #define HEP_EVD_PANDORA_HELPERS 1
 #include "hep_evd.h"
@@ -462,14 +462,30 @@ StatusCode DlSlicingAlgorithm::Infer()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_outputClusterListName));
     }
 
-    std::cout << "Publishing " << foundVertices.size() << " vertex candidates to EventContext key '" << m_outputVertexContextKey << "'" << std::endl;
+    // We should also write out the predicted vertices to a new output list, as
+    // they may be useful for seeding later algorithms, even if the instance
+    // segmentation fails.
+    std::string vertexListName = m_outputVertexListName;
+    const VertexList *pVertexList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
+    std::cout << "Writing out " << foundVertices.size() << " vertex candidates to " << vertexListName << std::endl;
 
-    const auto *const pContextObject(new DLSlicingVerticesContextObject(foundVertices));
+    for (const auto &vertex : foundVertices)
+    {
+        PandoraContentApi::Vertex::Parameters parameters;
+        parameters.m_position = vertex;
+        parameters.m_vertexLabel = VERTEX_INTERACTION;
+        parameters.m_vertexType = VERTEX_3D;
 
-    if (PandoraApi::DoesEventContextKeyExist(this->GetPandora(), m_outputVertexContextKey))
-        PandoraContentApi::ReplaceEventContextObject(*this, m_outputVertexContextKey, pContextObject);
-    else
-        PandoraContentApi::AddEventContextObject(*this, m_outputVertexContextKey, pContextObject);
+        const Vertex *pVertex(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+    }
+
+    if (!pVertexList->empty())
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -983,10 +999,7 @@ StatusCode DlSlicingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ScalingFactor", m_scalingFactor));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListName", m_outputClusterListName));
-
-    m_outputVertexContextKey = "DLSlicingVertices3D";
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexContextKey", m_outputVertexContextKey));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DistanceThresholds", m_thresholds));
 

@@ -14,6 +14,7 @@
 #include "Pandora/PandoraInternal.h"
 #include "Pandora/StatusCodes.h"
 
+#include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
@@ -70,21 +71,33 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
     const unsigned int numHits = pCaloHitList->size();
 
-    const DLSlicingVerticesContextObject *pSlicingVerticesContextObject(nullptr);
-    try
-    {
-        const EventContextObject *pEventContextObject(PandoraContentApi::GetEventContextObject(*this, m_inputVertexContextKey));
-        pSlicingVerticesContextObject = dynamic_cast<const DLSlicingVerticesContextObject *>(pEventContextObject);
-    }
-    catch (const StatusCodeException &e)
-    {
-        std::cout << "DlVertexingThreeDAlgorithm: Failed to get vertex context object with key " << m_inputVertexContextKey << ", "
-                  << e.ToString() << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
-    const auto &candidateVertices = pSlicingVerticesContextObject->GetVertexPositions();
+    // Get the candidate vertices for this slice from the event context.
+    const auto parentInstanceName = MultiPandoraApi::GetPrimaryPandoraInstance(&(*this).GetPandora());
+    const auto childInstanceList = MultiPandoraApi::GetDaughterPandoraInstanceList(parentInstanceName);
+    const pandora::Pandora *pSlicingInstance{nullptr};
 
-    std::cout << "Running DL vertexing with " << numHits << " hits and " << candidateVertices.size() << " candidate vertices." << std::endl;
+    for (const auto pInstance : childInstanceList)
+    {
+        if (pInstance->GetName() == "SlicingWorker")
+        {
+            pSlicingInstance = pInstance;
+            break;
+        }
+    }
+
+    const PfoList *pSlicePfos(nullptr);
+    const auto slicingPfos = PandoraApi::GetCurrentPfoList(*pSlicingInstance, pSlicePfos);
+    std::cout << "Slicing instance has " << pSlicePfos->size() << " PFOs." << std::endl;
+
+    CartesianPointVector candidateVertices({});
+    for (const auto pPfo : *pSlicePfos)
+    {
+        const auto vertices = pPfo->GetVertexList();
+        for (const auto pVertex : vertices)
+            candidateVertices.push_back(pVertex->GetPosition());
+    }
+
+    std::cout << "Found " << candidateVertices.size() << " candidate vertices from slicing." << std::endl;
 
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<CartesianVector> nodes;
@@ -447,7 +460,6 @@ StatusCode DlThreeDVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ScalingFactor", m_scalingFactor));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListName", m_caloHitListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexContextKey", m_inputVertexContextKey));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DistanceThresholds", m_thresholds));

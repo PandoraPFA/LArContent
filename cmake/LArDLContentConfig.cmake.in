@@ -4,7 +4,6 @@ include(CMakeFindDependencyMacro)
 find_dependency(LArContent 04.16.00 REQUIRED)
 find_dependency(Torch REQUIRED)
 find_dependency(TorchScatter REQUIRED)
-find_dependency(TorchSparse REQUIRED)
 find_dependency(TorchCluster REQUIRED)
 find_dependency(TBB REQUIRED)
 

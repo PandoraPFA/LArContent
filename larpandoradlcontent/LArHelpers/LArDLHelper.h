@@ -13,7 +13,6 @@
 #include <c10/core/InferenceMode.h>
 #include <c10/util/Exception.h>
 #include <torchscatter/scatter.h>
-#include <torchsparse/sparse.h>
 #include <torchcluster/cluster.h>
 
 #include "Pandora/StatusCodes.h"
