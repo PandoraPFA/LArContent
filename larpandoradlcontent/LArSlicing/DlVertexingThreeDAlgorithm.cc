@@ -202,8 +202,8 @@ StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &calo
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<CartesianVector> nodes;
     std::vector<std::array<float, 1>> node_features;
-    const int numHits(caloHits.size());
     this->GetNodeData(caloHits, nodes, node_features, cropVertex);
+    const int numHits(nodes.size());
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     std::cout << "Getting node data took " << duration << " ms." << std::endl;
@@ -405,13 +405,12 @@ StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &calo
 
         HepEVD::getServer()->addMarkers(pointsToVis);
         HepEVD::saveState("FoundVertices");
-        HepEVD::startServer(-1, false);
+        HepEVD::startServer();
 #endif
 
         if (foundVertices.size() == 0)
         {
             std::cout << "DLVertexingThreeDAlgorithm::Infer - no vertex candidates found, skipping instance segmentation step" << std::endl;
-            // TODO: What to do here?
             return STATUS_CODE_SUCCESS;
         }
     }
