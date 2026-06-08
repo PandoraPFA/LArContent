@@ -34,15 +34,33 @@ private:
     pandora::StatusCode Infer();
 
     /**
+     *  @brief Run the pass 1: Either load the previous candidate vertex or if missing infer one.
+     */
+    pandora::StatusCode RunPass1();
+
+    /**
+     *  @brief Run the pass 2: Use the previously inferred vertex to find the final vertex position.
+     */
+    pandora::StatusCode RunPass2();
+
+    /**
+     *  @brief Run the actual model inference, given the input calo hits and the candidate crop vertex (if needed).
+     *
+     *  @param caloHits The input calo hits.
+     *  @param cropVertex An optional vertex position to crop around (for pass 2).
+     */
+    pandora::StatusCode RunModel(const pandora::CaloHitList &caloHits, const pandora::CartesianVector *cropVertex = nullptr);
+
+    /**
      *  @brief Get the node data (positions and features) from the input CaloHit list.
      *
      *  @param caloHits The input calo hits.
-     *  @param candidateVertices The candidate vertices to match to.
      *  @param nodes The positions of the nodes.
      *  @param node_features The features for each node.
+     *  @param cropVertex An optional vertex position to crop around (for pass 2).
      */
-    pandora::StatusCode GetNodeData(const pandora::CaloHitList &caloHits, const std::vector<pandora::CartesianVector> &candidateVertices,
-        std::vector<pandora::CartesianVector> &nodes, std::vector<std::array<float, 1>> &node_features);
+    pandora::StatusCode GetNodeData(const pandora::CaloHitList &caloHits, std::vector<pandora::CartesianVector> &nodes,
+        std::vector<std::array<float, 1>> &node_features, const pandora::CartesianVector *cropVertex = nullptr);
 
     /**
      *  @brief Process the given node data into the expected tensor format for the model, and insert into the input vector.
@@ -56,11 +74,13 @@ private:
 
     LArDLHelper::TorchModel m_modelFile; ///< The model to use.
 
-    float m_scalingFactor;               ///< The scaling factor for the input.
-    std::vector<float> m_thresholds;     ///< Distance Class Thresholds.
-    int m_nDistanceClasses;              ///< The number of distance classes (derived from thresholds).
-    std::string m_caloHitListName;       ///< The name of the input CaloHit list.
-    std::string m_outputVertexListName;  ///< The name of the output Vertex list to create with the predicted vertices.
+    int m_pass;                         ///< The pass to run (1 or 2).
+    float m_scalingFactor;              ///< The scaling factor for the input.
+    std::vector<float> m_thresholds;    ///< Distance Class Thresholds.
+    int m_nDistanceClasses;             ///< The number of distance classes (derived from thresholds).
+    std::string m_caloHitListName;      ///< The name of the input CaloHit list.
+    std::string m_outputVertexListName; ///< The name of the output Vertex list to create with the predicted vertices.
+    std::string m_inputVertexListName;  ///< The name of the input Vertex list.
 };
 
 } // namespace lar_dl_content

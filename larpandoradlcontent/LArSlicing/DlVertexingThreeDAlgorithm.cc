@@ -13,6 +13,7 @@
 #include "Objects/CartesianVector.h"
 #include "Pandora/PandoraInternal.h"
 #include "Pandora/StatusCodes.h"
+#include "Api/PandoraApi.h"
 
 #include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
@@ -52,28 +53,34 @@ DlThreeDVertexingAlgorithm::DlThreeDVertexingAlgorithm() :
 
 StatusCode DlThreeDVertexingAlgorithm::Run()
 {
-    try
+    if (m_pass == 1)
+        return this->RunPass1();
+    else if (m_pass == 2)
+        return this->RunPass2();
+    else
     {
-        return this->Infer();
-    }
-    catch (const std::exception &e)
-    {
-        std::cout << "Exception caught in DlThreeDVertexingAlgorithm: " << e.what() << std::endl;
+        std::cout << "DlThreeDVertexingAlgorithm::Run - Invalid pass number: " << m_pass << ". Must be 1 or 2." << std::endl;
         return STATUS_CODE_FAILURE;
     }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlThreeDVertexingAlgorithm::Infer()
+StatusCode DlThreeDVertexingAlgorithm::RunPass1()
 {
     const CaloHitList *pCaloHitList{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
     const unsigned int numHits = pCaloHitList->size();
 
+    if (numHits == 0)
+    {
+        std::cout << "DlThreeDVertexingAlgorithm::RunPass1 - No calo hits in the input list, skipping." << std::endl;
+        return STATUS_CODE_SUCCESS;
+    }
+
     // Load the Slicing Worker instance, to pull out the slice PFOs + their associated candidate vertices.
     // We can use them as a start point for where to zoom in on.
-    const auto parentInstance= MultiPandoraApi::GetPrimaryPandoraInstance(&(*this).GetPandora());
+    const auto parentInstance = MultiPandoraApi::GetPrimaryPandoraInstance(&(*this).GetPandora());
     const auto childInstanceList = MultiPandoraApi::GetDaughterPandoraInstanceList(parentInstance);
     const pandora::Pandora *pSlicingInstance{nullptr};
 
@@ -86,33 +93,118 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
         }
     }
 
-    if (pSlicingInstance == nullptr)
+    // We've found the slicing worker, and can now try and pull out the vertex for this slice.
+    if (pSlicingInstance != nullptr)
     {
-        // TODO: We may need a pass 1 network...I.e. if a PFO has no vertex for various reasons (post processed out, DETR) etc...
-        // That algorithm could load and store the vertex if there, passing it over to this algorithm.
-        // It could then also do "Can't find one...we should make one!".
-        std::cout << "DlVertexingThreeDAlgorithm::Infer - ERROR: Could not find SlicingWorker instance!" << std::endl;
-        return STATUS_CODE_FAILURE;
+        const PfoList *pSlicePfos(nullptr);
+        const auto slicingPfos = PandoraApi::GetCurrentPfoList(*pSlicingInstance, pSlicePfos);
+        std::cout << "Slicing instance has " << pSlicePfos->size() << " PFOs." << std::endl;
+
+        CartesianPointVector candidateVertices({});
+        for (const auto pPfo : *pSlicePfos)
+        {
+            const auto vertices = pPfo->GetVertexList();
+            for (const auto pVertex : vertices)
+                candidateVertices.push_back(pVertex->GetPosition());
+        }
+
+        std::cout << "Found " << candidateVertices.size() << " candidate vertices from slicing." << std::endl;
+
+        // Process the candidate vertices, and find the most appropriate for this slice.
+        std::vector<CartesianVector> matchedVertices;
+        const float matchEpsilonSq = 1e-4f;
+
+        for (const CartesianVector &vertexPos : candidateVertices)
+        {
+            bool foundMatch = false;
+            for (const auto pCaloHit : *pCaloHitList)
+            {
+                if (nullptr == pCaloHit)
+                    continue;
+
+                if ((pCaloHit->GetPositionVector() - vertexPos).GetMagnitudeSquared() < matchEpsilonSq)
+                {
+                    foundMatch = true;
+                    break;
+                }
+            }
+
+            if (foundMatch)
+                matchedVertices.push_back(vertexPos);
+        }
+
+        if (!matchedVertices.empty())
+        {
+            std::cout << "DlVertexingThreeDAlgorithm: No matching candidate vertex found for this slice. Skipping." << std::endl;
+            return STATUS_CODE_SUCCESS;
+
+            if (matchedVertices.size() > 1)
+            {
+                std::cout << "DlVertexingThreeDAlgorithm: WARNING - Found " << matchedVertices.size()
+                          << " candidate vertices in this slice. Proceeding with the first one." << std::endl;
+            }
+
+            // Finally, write out the predicted vertices to the new output list.
+            const VertexList *pVertexList{nullptr};
+            std::string temporaryListName;
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
+
+            PandoraContentApi::Vertex::Parameters parameters;
+            parameters.m_position = matchedVertices.front();
+            parameters.m_vertexLabel = VERTEX_INTERACTION;
+            parameters.m_vertexType = VERTEX_3D;
+
+            const Vertex *pVertex(nullptr);
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
+
+            return STATUS_CODE_SUCCESS;
+        }
     }
 
-    const PfoList *pSlicePfos(nullptr);
-    const auto slicingPfos = PandoraApi::GetCurrentPfoList(*pSlicingInstance, pSlicePfos);
-    std::cout << "Slicing instance has " << pSlicePfos->size() << " PFOs." << std::endl;
+    // INFO: If we are here...then we failed to load or find a vertex for this slice.
+    return this->RunModel(*pCaloHitList, nullptr);
+}
 
-    CartesianPointVector candidateVertices({});
-    for (const auto pPfo : *pSlicePfos)
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode DlThreeDVertexingAlgorithm::RunPass2()
+{
+    const CaloHitList *pCaloHitList{nullptr};
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+    const unsigned int numHits = pCaloHitList->size();
+
+    if (numHits == 0)
     {
-        const auto vertices = pPfo->GetVertexList();
-        for (const auto pVertex : vertices)
-            candidateVertices.push_back(pVertex->GetPosition());
+        std::cout << "DlThreeDVertexingAlgorithm::RunPass2 - No calo hits in the input list, skipping." << std::endl;
+        return STATUS_CODE_SUCCESS;
     }
 
-    std::cout << "Found " << candidateVertices.size() << " candidate vertices from slicing." << std::endl;
+    const VertexList *pInputVertexList{nullptr};
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pInputVertexList));
 
+    if (!pInputVertexList || pInputVertexList->empty())
+    {
+        std::cout << "DlThreeDVertexingAlgorithm::RunPass2 - No valid input vertices found, skipping." << std::endl;
+        return STATUS_CODE_SUCCESS;
+    }
+
+    // For simplicity, we will just take the first vertex in the list as the crop center.
+    const auto cropCenter = (*pInputVertexList->begin())->GetPosition();
+
+    return this->RunModel(*pCaloHitList, &cropCenter);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &caloHits, const pandora::CartesianVector *cropVertex)
+{
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<CartesianVector> nodes;
     std::vector<std::array<float, 1>> node_features;
-    this->GetNodeData(*pCaloHitList, candidateVertices, nodes, node_features);
+    const int numHits(caloHits.size());
+    this->GetNodeData(caloHits, nodes, node_features, cropVertex);
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     std::cout << "Getting node data took " << duration << " ms." << std::endl;
@@ -151,7 +243,7 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
         HepEVD::Hits hitsToVis;
 
         int evdHitIdx{0};
-        for (const auto pCaloHit : *pCaloHitList)
+        for (const auto pCaloHit : caloHits)
         {
             if (nullptr == pCaloHit)
                 continue;
@@ -231,9 +323,9 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
             pointsToVis.push_back(*evdPoint);
         }
 
-        for (const auto &vertex : candidateVertices)
+        if (cropVertex != nullptr)
         {
-            HepEVD::Point *evdPoint = new HepEVD::Point({vertex.GetX(), vertex.GetY(), vertex.GetZ()});
+            HepEVD::Point *evdPoint = new HepEVD::Point({cropVertex->GetX(), cropVertex->GetY(), cropVertex->GetZ()});
             evdPoint->setColour("blue");
             pointsToVis.push_back(*evdPoint);
         }
@@ -244,7 +336,7 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
         LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
 
         CaloHitList croppedHits;
-        for (const auto &hit : *pCaloHitList)
+        for (const auto &hit : caloHits)
         {
             for (const auto &pos : nodes)
             {
@@ -279,9 +371,9 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
             pointsToVis.push_back(*evdPoint);
             uniqueMCParticles.insert(primary);
 
-            for (const auto &cand : candidateVertices)
+            if (cropVertex != nullptr)
             {
-                const float squaredDist = cand.GetDistanceSquared(primary->GetVertex());
+                const float squaredDist = cropVertex->GetDistanceSquared(primary->GetVertex());
                 if (squaredDist < bestCandidate)
                     bestCandidate = squaredDist;
             }
@@ -301,7 +393,7 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
                     bestCrop = squaredDist;
             }
 
-            for (const auto &caloHit : *pCaloHitList)
+            for (const auto &caloHit : caloHits)
             {
                 const float squaredDist = caloHit->GetPositionVector().GetDistanceSquared(primary->GetVertex());
                 if (squaredDist < bestHit)
@@ -348,49 +440,11 @@ StatusCode DlThreeDVertexingAlgorithm::Infer()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DlThreeDVertexingAlgorithm::GetNodeData(const CaloHitList &caloHits, const std::vector<CartesianVector> &candidateVertices,
-    std::vector<CartesianVector> &nodes, std::vector<std::array<float, 1>> &node_features)
+StatusCode DlThreeDVertexingAlgorithm::GetNodeData(const CaloHitList &caloHits, std::vector<CartesianVector> &nodes,
+    std::vector<std::array<float, 1>> &node_features, const pandora::CartesianVector *cropVertex)
 {
     nodes.reserve(caloHits.size());
     node_features.reserve(caloHits.size());
-
-    // Find the candidate vertex for this specific slice.
-    std::vector<CartesianVector> matchedVertices;
-    const float matchEpsilonSq = 1e-4f;
-
-    for (const CartesianVector &vertexPos : candidateVertices)
-    {
-        bool foundMatch = false;
-        for (const auto pCaloHit : caloHits)
-        {
-            if (nullptr == pCaloHit)
-                continue;
-
-            if ((pCaloHit->GetPositionVector() - vertexPos).GetMagnitudeSquared() < matchEpsilonSq)
-            {
-                foundMatch = true;
-                break;
-            }
-        }
-        if (foundMatch)
-        {
-            matchedVertices.push_back(vertexPos);
-        }
-    }
-
-    if (matchedVertices.empty())
-    {
-        std::cout << "DlVertexingThreeDAlgorithm: No matching candidate vertex found for this slice. Skipping." << std::endl;
-        return STATUS_CODE_SUCCESS;
-    }
-
-    if (matchedVertices.size() > 1)
-    {
-        std::cout << "DlVertexingThreeDAlgorithm: WARNING - Found " << matchedVertices.size()
-                  << " candidate vertices in this slice. Proceeding with the first one." << std::endl;
-    }
-
-    const CartesianVector &cropCenter = matchedVertices.front();
 
     // Perform the crop around the matched vertex.
     // TODO: Move to XML setting.
@@ -401,18 +455,16 @@ StatusCode DlThreeDVertexingAlgorithm::GetNodeData(const CaloHitList &caloHits, 
         if (nullptr == pCaloHit)
             continue;
 
-        if ((pCaloHit->GetPositionVector() - cropCenter).GetMagnitudeSquared() <= cropRadiusSq)
+        if (cropVertex == nullptr || (pCaloHit->GetPositionVector() - *cropVertex).GetMagnitudeSquared() <= cropRadiusSq)
         {
             nodes.push_back(pCaloHit->GetPositionVector());
             node_features.push_back({pCaloHit->GetInputEnergy() / 10.f});
         }
     }
 
-    // Shrink to fit now that we've cropped the graph
+    // Shrink the vectors, in case cropping resulted in significantly fewer hits than the original list size.
     nodes.shrink_to_fit();
     node_features.shrink_to_fit();
-
-    std::cout << "Cropped graph from " << caloHits.size() << " to " << nodes.size() << " hits." << std::endl;
 
     return STATUS_CODE_SUCCESS;
 }
@@ -468,9 +520,24 @@ StatusCode DlThreeDVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
     LArDLHelper::LoadModel(modelName, m_modelFile);
 
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "Pass", m_pass));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ScalingFactor", m_scalingFactor));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListName", m_caloHitListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_inputVertexListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
+
+    if (m_pass != 1 && m_pass != 2)
+    {
+        std::cout << "DlThreeDVertexingAlgorithm::ReadSettings - Invalid pass number: " << m_pass << ". Must be 1 or 2." << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
+
+    if (m_pass == 2 && m_inputVertexListName.empty())
+    {
+        std::cout << "DlThreeDVertexingAlgorithm::ReadSettings - Pass 2 requires an input vertex list name, but it is missing." << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DistanceThresholds", m_thresholds));
 
