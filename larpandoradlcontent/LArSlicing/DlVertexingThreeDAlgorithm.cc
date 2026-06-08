@@ -135,9 +135,6 @@ StatusCode DlThreeDVertexingAlgorithm::RunPass1()
 
         if (!matchedVertices.empty())
         {
-            std::cout << "DlVertexingThreeDAlgorithm: No matching candidate vertex found for this slice. Skipping." << std::endl;
-            return STATUS_CODE_SUCCESS;
-
             if (matchedVertices.size() > 1)
             {
                 std::cout << "DlVertexingThreeDAlgorithm: WARNING - Found " << matchedVertices.size()
@@ -149,6 +146,7 @@ StatusCode DlThreeDVertexingAlgorithm::RunPass1()
             std::string temporaryListName;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
 
+            // TODO: First vertex? All vertices? Can we pick the best or something?
             PandoraContentApi::Vertex::Parameters parameters;
             parameters.m_position = matchedVertices.front();
             parameters.m_vertexLabel = VERTEX_INTERACTION;
@@ -164,6 +162,7 @@ StatusCode DlThreeDVertexingAlgorithm::RunPass1()
     }
 
     // INFO: If we are here...then we failed to load or find a vertex for this slice.
+    std::cout << "DlVertexingThreeDAlgorithm: No candidate vertex found from slicing. Inferring to produce candidate vertex." << std::endl;
     return this->RunModel(*pCaloHitList, nullptr);
 }
 
@@ -190,9 +189,7 @@ StatusCode DlThreeDVertexingAlgorithm::RunPass2()
         return STATUS_CODE_SUCCESS;
     }
 
-    // For simplicity, we will just take the first vertex in the list as the crop center.
     const auto cropCenter = (*pInputVertexList->begin())->GetPosition();
-
     return this->RunModel(*pCaloHitList, &cropCenter);
 }
 
@@ -457,7 +454,7 @@ StatusCode DlThreeDVertexingAlgorithm::GetNodeData(const CaloHitList &caloHits, 
         if (nullptr == pCaloHit)
             continue;
 
-        if (cropVertex == nullptr || (pCaloHit->GetPositionVector() - *cropVertex).GetMagnitudeSquared() <= cropRadiusSq)
+        if (cropVertex == nullptr || ((pCaloHit->GetPositionVector() - *cropVertex).GetMagnitudeSquared() <= cropRadiusSq))
         {
             nodes.push_back(pCaloHit->GetPositionVector());
             node_features.push_back({pCaloHit->GetInputEnergy() / 10.f});
