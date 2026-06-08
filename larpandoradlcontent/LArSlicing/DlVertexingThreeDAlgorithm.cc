@@ -10,10 +10,10 @@
 #include <string>
 #include <vector>
 
+#include "Api/PandoraApi.h"
 #include "Objects/CartesianVector.h"
 #include "Pandora/PandoraInternal.h"
 #include "Pandora/StatusCodes.h"
-#include "Api/PandoraApi.h"
 
 #include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
@@ -200,6 +200,8 @@ StatusCode DlThreeDVertexingAlgorithm::RunPass2()
 
 StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &caloHits, const pandora::CartesianVector *cropVertex)
 {
+    std::cout << "DLVertexingThreeDAlgorithm::RunModel - Pass " << m_pass << " - Running model with " << caloHits.size() << " calo hits." << std::endl;
+
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<CartesianVector> nodes;
     std::vector<std::array<float, 1>> node_features;

@@ -28,7 +28,7 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 #if DEBUG_MODE
 #define HEP_EVD_PANDORA_HELPERS 1
 #include "hep_evd.h"
@@ -441,9 +441,9 @@ StatusCode DlSlicingAlgorithm::Infer()
     // This will likely eventually need to be made into a LArRecoND algorithm,
     // that is based on EventSlicingThreeD, but this will work for now
     // and we can have a basic LArRecoND tool that just loads this cluster list.
-    std::string clusterListName = m_outputClusterListName;
     const ClusterList *pClusterList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, clusterListName));
+    std::string temporaryListName;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, temporaryListName));
 
     for (const auto &[clusterId, hits] : clusterHitsMap)
     {
@@ -465,10 +465,10 @@ StatusCode DlSlicingAlgorithm::Infer()
     // We should also write out the predicted vertices to a new output list, as
     // they may be useful for seeding later algorithms, even if the instance
     // segmentation fails.
-    std::string vertexListName = m_outputVertexListName;
     const VertexList *pVertexList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
-    std::cout << "Writing out " << foundVertices.size() << " vertex candidates to " << vertexListName << std::endl;
+    temporaryListName.clear();
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
+    std::cout << "Writing out " << foundVertices.size() << " vertex candidates to " << m_outputVertexListName << std::endl;
 
     for (const auto &vertex : foundVertices)
     {
