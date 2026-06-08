@@ -2,12 +2,13 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 find_package(cetmodules 3.13.00 QUIET)
 
-set(LARCONTENT_VERSION 05.01.00)
+# Common version must be applied manually pending ups compatible solution
+# set(LARCONTENT_VERSION 05.01.00)
 
 if(cetmodules_FOUND)
-  project(larpandoracontent VERSION ${LARCONTENT_VERSION} LANGUAGES CXX)
+  project(larpandoracontent VERSION 05.01.00 LANGUAGES CXX)
 else()
-  project(LArContent VERSION ${LARCONTENT_VERSION} LANGUAGES CXX)
+  project(LArContent VERSION 05.01.00 LANGUAGES CXX)
 endif()
 
 if(cetmodules_FOUND)
