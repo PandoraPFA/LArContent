@@ -794,6 +794,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
             m_detectorXGaps.insert(static_cast<double>(pLineGap->GetLineEndX()));
         }
     }
+    PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, !m_trainingMode && m_includeDistToXGapFeature && m_detectorXGaps.empty());
 
     return STATUS_CODE_SUCCESS;
 }
