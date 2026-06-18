@@ -58,13 +58,16 @@ DlThreeDVertexingAlgorithm::DlThreeDVertexingAlgorithm() :
 
 DlThreeDVertexingAlgorithm::~DlThreeDVertexingAlgorithm()
 {
-    try
+    if (m_pass == 2)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
-    }
-    catch (StatusCodeException e)
-    {
-        std::cout << "DlThreeDVertexingAlgorithm: Unable to write to ROOT tree" << std::endl;
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
+        }
+        catch (StatusCodeException e)
+        {
+            std::cout << "DlThreeDVertexingAlgorithm: Unable to write to ROOT tree" << std::endl;
+        }
     }
 }
 
