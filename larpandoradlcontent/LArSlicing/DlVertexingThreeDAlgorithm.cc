@@ -48,7 +48,9 @@ namespace lar_dl_content
 DlThreeDVertexingAlgorithm::DlThreeDVertexingAlgorithm() :
     m_scalingFactor{-1.0f},
     m_thresholds{},
-    m_nDistanceClasses{-1}
+    m_nDistanceClasses{-1},
+    m_treeName{"threeDVertexMetrics"},
+    m_fileName{"threeDVertexMetrics.root"}
 {
 }
 
@@ -58,7 +60,7 @@ DlThreeDVertexingAlgorithm::~DlThreeDVertexingAlgorithm()
 {
     try
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "threeDVertexMetrics", "threeDVertexMetrics.root", "UPDATE"));
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
     }
     catch (StatusCodeException e)
     {
@@ -619,32 +621,34 @@ StatusCode DlThreeDVertexingAlgorithm::WriteMetrics(std::vector<CartesianVector>
             const float dist = std::sqrt(foundVertex.GetDistanceSquared(pNeutrino->GetVertex()));
             const bool isClosestVertex(dist <= closestDistance);
 
+            const auto parentInstance = MultiPandoraApi::GetPrimaryPandoraInstance(&(*this).GetPandora());
+
             // Now, we can write out the reco and MC truth values for this vertex.
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "run", static_cast<int>(this->GetPandora().GetRun())));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "subrun", static_cast<int>(this->GetPandora().GetSubrun())));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "event", static_cast<int>(this->GetPandora().GetEvent())));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "run", static_cast<int>(parentInstance->GetRun())));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "subrun", static_cast<int>(parentInstance->GetSubrun())));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "event", static_cast<int>(parentInstance->GetEvent())));
 
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "trueNuEnergy", pNeutrino->GetEnergy()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "trueNuPDG", pNeutrino->GetParticleId()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "trueNumMCParticles", static_cast<int>(allRecoHitsForNeutrino.size())));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "trueNuVtxX", pNeutrino->GetVertex().GetX()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "trueNuVtxY", pNeutrino->GetVertex().GetY()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "trueNuVtxZ", pNeutrino->GetVertex().GetZ()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "trueNumHitsInSlice", static_cast<int>(allRecoHitsForNeutrino.size())));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "biggestContributor", static_cast<int>(hasMostHits)));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "mostEnergetic", static_cast<int>(hasMostEnergy)));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "closestVertex", static_cast<int>(isClosestVertex)));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuEnergy", pNeutrino->GetEnergy()));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuPDG", pNeutrino->GetParticleId()));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNumNusInSlice", static_cast<int>(neutrinoToHitMap.size())));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuVtxX", pNeutrino->GetVertex().GetX()));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuVtxY", pNeutrino->GetVertex().GetY()));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuVtxZ", pNeutrino->GetVertex().GetZ()));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNumHitsInSlice", static_cast<int>(allRecoHitsForNeutrino.size())));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "biggestContributor", static_cast<int>(hasMostHits)));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mostEnergetic", static_cast<int>(hasMostEnergy)));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "closestVertex", static_cast<int>(isClosestVertex)));
 
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "recoVtxX", foundVertex.GetX()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "recoVtxY", foundVertex.GetY()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "recoVtxZ", foundVertex.GetZ()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "recoNumSliceNumHits", static_cast<int>(caloHits.size())));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVtxX", foundVertex.GetX()));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVtxY", foundVertex.GetY()));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVtxZ", foundVertex.GetZ()));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNumSliceNumHits", static_cast<int>(caloHits.size())));
 
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "vtxDx", foundVertex.GetX() - pNeutrino->GetVertex().GetX()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "vtxDy", foundVertex.GetY() - pNeutrino->GetVertex().GetY()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "vtxDz", foundVertex.GetZ() - pNeutrino->GetVertex().GetZ()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "threeDVertexMetrics", "vtxDr", dist));
-            PANDORA_MONITORING_API(FillTree(this->GetPandora(), "threeDVertexMetrics"));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDx", foundVertex.GetX() - pNeutrino->GetVertex().GetX()));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDy", foundVertex.GetY() - pNeutrino->GetVertex().GetY()));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDz", foundVertex.GetZ() - pNeutrino->GetVertex().GetZ()));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDr", dist));
+            PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
         }
     }
 

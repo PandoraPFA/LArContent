@@ -91,6 +91,9 @@ private:
     std::string m_caloHitListName;      ///< The name of the input CaloHit list.
     std::string m_outputVertexListName; ///< The name of the output Vertex list to create with the predicted vertices.
     std::string m_inputVertexListName;  ///< The name of the input Vertex list.
+
+    std::string m_fileName;             ///< The name of the output ROOT file to write metrics to.
+    std::string m_treeName;             ///< The name of the output ROOT tree to write
 };
 
 } // namespace lar_dl_content
