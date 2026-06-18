@@ -7,8 +7,6 @@
  */
 
 #include <chrono>
-#include <cmath>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -20,11 +18,8 @@
 #include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
-#include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 
-#include "larpandoradlcontent/LArSlicing/DlSlicingAlgorithm.h"
 #include "larpandoradlcontent/LArSlicing/DlVertexingThreeDAlgorithm.h"
 #include "larpandoradlcontent/LArSlicing/HoughFinder.h"
 
@@ -48,27 +43,8 @@ namespace lar_dl_content
 DlThreeDVertexingAlgorithm::DlThreeDVertexingAlgorithm() :
     m_scalingFactor{-1.0f},
     m_thresholds{},
-    m_nDistanceClasses{-1},
-    m_treeName{"threeDVertexMetrics"},
-    m_fileName{"threeDVertexMetrics.root"}
+    m_nDistanceClasses{-1}
 {
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-DlThreeDVertexingAlgorithm::~DlThreeDVertexingAlgorithm()
-{
-    if (m_pass == 2)
-    {
-        try
-        {
-            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
-        }
-        catch (StatusCodeException e)
-        {
-            std::cout << "DlThreeDVertexingAlgorithm: Unable to write to ROOT tree" << std::endl;
-        }
-    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -455,9 +431,6 @@ StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &calo
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
 
-    if (m_pass == 2)
-        this->WriteMetrics(foundVertices, caloHits);
-
     return STATUS_CODE_SUCCESS;
 }
 
@@ -530,130 +503,6 @@ StatusCode DlThreeDVertexingAlgorithm::BuildInput(
     // Print some debug information
     std::cout << "Nodes: " << posTensor.sizes() << ", " << posTensor.dtype() << std::endl;
     std::cout << "Features: " << xTensor.sizes() << ", " << xTensor.dtype() << std::endl;
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode DlThreeDVertexingAlgorithm::WriteMetrics(std::vector<CartesianVector> &foundVertices, const CaloHitList &caloHits) const
-{
-    if (this->GetPandora().GetSettings()->IsMonitoringEnabled() == false)
-    {
-        std::cout << "DLVertexingThreeDAlgorithm::WriteMetrics - Monitoring is not enabled, skipping metrics writing." << std::endl;
-        return STATUS_CODE_SUCCESS;
-    }
-
-    std::cout << "DLVertexingThreeDAlgorithm::WriteMetrics - Writing metrics for " << foundVertices.size() << " found vertices." << std::endl;
-    std::map<const MCParticle *, CaloHitList> neutrinoToHitMap;
-    std::map<const CaloHit*, const MCParticle*> hitToNeutrinoMap;
-    unsigned int failureCount{0};
-
-    // First, get a map of every hit to its neutrino, and the other way around.
-    for (const auto pCaloHit : caloHits)
-    {
-        try {
-            const MCParticle *const pMCParticle = MCParticleHelper::GetMainMCParticle(pCaloHit);
-
-            if (!pMCParticle)
-                throw std::runtime_error("CaloHit with no associated MCParticle");
-
-            const MCParticle *const pNeutrino(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
-
-            if (nullptr == pNeutrino || !LArMCParticleHelper::IsNeutrino(pNeutrino))
-                continue;
-
-            neutrinoToHitMap[pNeutrino].push_back(pCaloHit);
-            hitToNeutrinoMap[pCaloHit] = pNeutrino;
-        } catch (StatusCodeException &e) {
-            ++failureCount;
-            continue;
-        }
-    }
-
-    std::cout << "DLVertexingThreeDAlgorithm::WriteMetrics - Found " << neutrinoToHitMap.size() << " neutrinos in this slice." << std::endl;
-    std::cout << "DLVertexingThreeDAlgorithm::WriteMetrics - Failed to find neutrino for " << failureCount << " hits, out of " << caloHits.size() << std::endl;
-
-    unsigned int mostHits{0};
-    float mostEnergetic{0.f};
-
-    for (const auto &neutrinoIt : neutrinoToHitMap)
-    {
-        const MCParticle *const pNeutrino(neutrinoIt.first);
-        const CaloHitList allRecoHitsForNeutrino(neutrinoIt.second);
-
-        if (allRecoHitsForNeutrino.size() > mostHits)
-            mostHits = allRecoHitsForNeutrino.size();
-
-        float totalEnergy{0.f};
-        for (const auto &hit : allRecoHitsForNeutrino)
-            totalEnergy += hit->GetInputEnergy();
-
-        if (totalEnergy > mostEnergetic)
-            mostEnergetic = totalEnergy;
-    }
-
-    // With that, we can start to write over the found vertices, and compare them to the MC truth.
-    for (const auto &foundVertex : foundVertices)
-    {
-
-        float closestDistance{std::numeric_limits<float>::max()};
-        for (const auto &neutrinoIt : neutrinoToHitMap)
-        {
-            const MCParticle *const pNeutrino(neutrinoIt.first);
-            const auto &trueVertex(pNeutrino->GetVertex());
-            const float distSq = foundVertex.GetDistanceSquared(trueVertex);
-
-            if (distSq < closestDistance)
-                closestDistance = std::sqrt(distSq);
-        }
-
-        for (const auto &neutrinoIt : neutrinoToHitMap)
-        {
-            const MCParticle *const pNeutrino(neutrinoIt.first);
-            const CaloHitList allRecoHitsForNeutrino(neutrinoIt.second);
-
-            const bool hasMostHits(allRecoHitsForNeutrino.size() >= mostHits);
-
-            float totalEnergy{0.f};
-            for (const auto &hit : allRecoHitsForNeutrino)
-                totalEnergy += hit->GetInputEnergy();
-
-            const bool hasMostEnergy(totalEnergy >= mostEnergetic);
-
-            const float dist = std::sqrt(foundVertex.GetDistanceSquared(pNeutrino->GetVertex()));
-            const bool isClosestVertex(dist <= closestDistance);
-
-            const auto parentInstance = MultiPandoraApi::GetPrimaryPandoraInstance(&(*this).GetPandora());
-
-            // Now, we can write out the reco and MC truth values for this vertex.
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "run", static_cast<int>(parentInstance->GetRun())));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "subrun", static_cast<int>(parentInstance->GetSubrun())));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "event", static_cast<int>(parentInstance->GetEvent())));
-
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuEnergy", pNeutrino->GetEnergy()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuPDG", pNeutrino->GetParticleId()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNumNusInSlice", static_cast<int>(neutrinoToHitMap.size())));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuVtxX", pNeutrino->GetVertex().GetX()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuVtxY", pNeutrino->GetVertex().GetY()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuVtxZ", pNeutrino->GetVertex().GetZ()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNumHitsInSlice", static_cast<int>(allRecoHitsForNeutrino.size())));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "biggestContributor", static_cast<int>(hasMostHits)));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mostEnergetic", static_cast<int>(hasMostEnergy)));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "closestVertex", static_cast<int>(isClosestVertex)));
-
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVtxX", foundVertex.GetX()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVtxY", foundVertex.GetY()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVtxZ", foundVertex.GetZ()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNumSliceNumHits", static_cast<int>(caloHits.size())));
-
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDx", foundVertex.GetX() - pNeutrino->GetVertex().GetX()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDy", foundVertex.GetY() - pNeutrino->GetVertex().GetY()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDz", foundVertex.GetZ() - pNeutrino->GetVertex().GetZ()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDr", dist));
-            PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
-        }
-    }
 
     return STATUS_CODE_SUCCESS;
 }

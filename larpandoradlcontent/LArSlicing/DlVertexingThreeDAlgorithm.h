@@ -28,8 +28,6 @@ public:
      */
     DlThreeDVertexingAlgorithm();
 
-    virtual ~DlThreeDVertexingAlgorithm();
-
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -74,14 +72,6 @@ private:
     pandora::StatusCode BuildInput(LArDLHelper::TorchInputVector &inputs, std::vector<pandora::CartesianVector> &nodes,
         std::vector<std::array<float, 1>> &node_features);
 
-    /**
-     *  @brief Write out a ROOT file with the final Reco / MC performance information.
-     *
-     *  @param foundVertices The list of found vertices.
-     *  @param caloHits The list of CaloHits.
-     */
-    pandora::StatusCode WriteMetrics(std::vector<pandora::CartesianVector> &foundVertices, const pandora::CaloHitList &caloHits) const;
-
     LArDLHelper::TorchModel m_modelFile; ///< The model to use.
 
     int m_pass;                         ///< The pass to run (1 or 2).
@@ -91,9 +81,6 @@ private:
     std::string m_caloHitListName;      ///< The name of the input CaloHit list.
     std::string m_outputVertexListName; ///< The name of the output Vertex list to create with the predicted vertices.
     std::string m_inputVertexListName;  ///< The name of the input Vertex list.
-
-    std::string m_fileName;             ///< The name of the output ROOT file to write metrics to.
-    std::string m_treeName;             ///< The name of the output ROOT tree to write
 };
 
 } // namespace lar_dl_content

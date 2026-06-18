@@ -26,4 +26,5 @@ set(LAR_DL_CONTENT_SRCS
 	larpandoradlcontent/LArSlicing/DlVertexingThreeDAlgorithm.cc
 	larpandoradlcontent/LArSlicing/KnnKDTree.cc
 	larpandoradlcontent/LArSlicing/HoughFinder.cc
+	larpandoradlcontent/LArSlicing/BasicVertexingMetrics.cc
 )
