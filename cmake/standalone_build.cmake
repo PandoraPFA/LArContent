@@ -59,7 +59,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 if(PandoraMonitoring_FOUND)
     target_link_libraries(${PROJECT_NAME} PUBLIC PandoraPFA::PandoraMonitoring)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE -DMONITORING)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DMONITORING)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
