@@ -58,6 +58,19 @@ StatusCode BasicVertexingMetrics::Run()
     const VertexList *pInputVertexList{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pInputVertexList));
 
+    if (nullptr == pCaloHitList || pCaloHitList->empty())
+    {
+        std::cout << "BasicVertexingMetrics::WriteMetrics - No CaloHits in this slice." << std::endl;
+        return STATUS_CODE_SUCCESS;
+    }
+
+    if (nullptr == pInputVertexList || pInputVertexList->empty())
+    {
+        std::cout << "BasicVertexingMetrics::WriteMetrics - No vertices in this slice." << std::endl;
+        return STATUS_CODE_SUCCESS;
+    }
+
+
     std::map<const MCParticle *, CaloHitList> neutrinoToHitMap;
     std::map<const CaloHit*, const MCParticle*> hitToNeutrinoMap;
     unsigned int failureCount{0};

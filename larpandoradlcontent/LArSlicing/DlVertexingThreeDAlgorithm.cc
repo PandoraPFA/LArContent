@@ -408,7 +408,7 @@ StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &calo
 
         if (foundVertices.size() == 0)
         {
-            std::cout << "DLVertexingThreeDAlgorithm::Infer - no vertex candidates found, skipping instance segmentation step" << std::endl;
+            std::cout << "DLVertexingThreeDAlgorithm::Infer - no vertex candidates found! Skipping writing list. " << std::endl;
             return STATUS_CODE_SUCCESS;
         }
     }
