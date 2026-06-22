@@ -130,9 +130,10 @@ StatusCode BasicVertexingMetrics::Run()
             const MCParticle *const pNeutrino(neutrinoIt.first);
             const auto &trueVertex(pNeutrino->GetVertex());
             const float distSq = foundVertexPos.GetDistanceSquared(trueVertex);
+            const float dist = std::sqrt(distSq);
 
-            if (distSq < closestDistance)
-                closestDistance = std::sqrt(distSq);
+            if (dist < closestDistance)
+                closestDistance = dist;
         }
 
         for (const auto &neutrinoIt : neutrinoToHitMap)
