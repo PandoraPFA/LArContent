@@ -83,6 +83,7 @@ private:
     pandora::StringVector m_eventFileNameVector; ///< Vector of file names to be processed
 
     unsigned int m_skipToEvent;          ///< Index of first event to consider in first input file
+    bool m_isEnhancedEventFile;          ///< Whether the event file has a 'file describing' block
     bool m_useLArCaloHits;               ///< Whether to read lar calo hits, or standard pandora calo hits
     unsigned int m_larCaloHitVersion;    ///< LArCaloHit version for LArCaloHitFactory
     bool m_useLArMCParticles;            ///< Whether to read lar mc particles, or standard pandora mc particles
