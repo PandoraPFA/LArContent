@@ -6,8 +6,6 @@
  *  $Log: $
  */
 
-#include "Api/PandoraApi.h"
-
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "Persistency/BinaryFileReader.h"
