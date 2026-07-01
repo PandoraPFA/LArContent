@@ -32,7 +32,7 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
     m_shouldWriteGeometry(false),
     m_writtenGeometry(false),
     m_shouldWriteEvents(true),
-    m_fileMajorVersion(1),
+    m_fileMajorVersion(2),
     m_fileMinorVersion(0),
     m_writtenEventGlobalHeader(false),
     m_shouldWriteMCRelationships(true),
