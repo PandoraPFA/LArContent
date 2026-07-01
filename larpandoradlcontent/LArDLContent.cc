@@ -21,6 +21,11 @@
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLLaterTierHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLNeutrinoHierarchyAlgorithm.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArShowerMatching/DLThreeViewClearShowersTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArShowerMatching/DLTwoViewClearShowersTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArShowerMatching/DLThreeViewMergeAndCreateShowersTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArShowerMatching/DLTwoViewMergeAndCreateShowersTool.h"
+#include "larpandoradlcontent/LArThreeDReco/LArShowerMatching/DLMultiViewMatchingAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlClusterCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlPfoCharacterisationAlgorithm.h"
@@ -43,6 +48,7 @@
     d("LArDLSecondaryVertexing",         DlSecondaryVertexingAlgorithm)                               \
     d("LArDLSNSignal",                   DlSNSignalAlgorithm)                                         \
     d("LArDLThreeDClusterSplitting",     DLThreeDClusterSplittingAlgorithm)                           \
+    d("LArDLMultiViewMatching",          DLMultiViewMatchingAlgorithm)                                \
     d("LArDLTrackCharacterisation",      DlTrackCharacterisationAlgorithm)                            \
     d("LArDLTrackShowerStreamSelection", DlTrackShowerStreamSelectionAlgorithm)                       \
     d("LArDLVertexing",                  DlVertexingAlgorithm)                                        \
@@ -51,7 +57,11 @@
 
 #define LAR_DL_ALGORITHM_TOOL_LIST(d)                                                                                                     \
     d("LArDLCheatHierarchy",                    DLCheatHierarchyTool)                                                                     \
-    d("LArDLLaterTierHierarchy",                DLLaterTierHierarchyTool)                                                                 \
+    d("LArDLThreeViewClearShowers",             DLThreeViewClearShowersTool)                                                              \
+    d("LArDLTwoViewClearShowers",               DLTwoViewClearShowersTool)                                                                \
+    d("LArDLThreeViewMergeAndCreateShowers",    DLThreeViewMergeAndCreateShowersTool)                                                     \
+    d("LArDLTwoViewMergeAndCreateShowers",      DLTwoViewMergeAndCreateShowersTool)                                                       \
+    d("LArDLLaterTierHierarchy",                DLLaterTierHierarchyTool) \
     d("LArDLPrimaryHierarchy",                  DLPrimaryHierarchyTool)
 
 #define DL_FACTORY Factory

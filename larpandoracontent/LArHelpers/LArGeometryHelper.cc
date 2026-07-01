@@ -620,6 +620,21 @@ LArGeometryHelper::DetectorBoundaries LArGeometryHelper::GetDetectorBoundaries(c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArGeometryHelper::GetDetectorXGaps(const Pandora &pandora, std::set<float> &detXGaps)
+{
+    for (const DetectorGap *const pDetectorGap : pandora.GetGeometry()->GetDetectorGapList())
+    {
+        const LineGap *const pLineGap = dynamic_cast<const LineGap *>(pDetectorGap);
+        if (pLineGap->GetLineGapType() == TPC_DRIFT_GAP)
+        {
+            detXGaps.insert(static_cast<double>(pLineGap->GetLineStartX()));
+            detXGaps.insert(static_cast<double>(pLineGap->GetLineEndX()));
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArGeometryHelper::IsInDetector(const DetectorBoundaries &detectorBoundaries, const CartesianVector &position)
 {
     if ((position.GetX() < detectorBoundaries.m_xBoundaries.first) || (position.GetX() > detectorBoundaries.m_xBoundaries.second))
