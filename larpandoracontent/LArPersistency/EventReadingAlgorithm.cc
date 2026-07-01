@@ -110,6 +110,9 @@ void EventReadingAlgorithm::MoveToNextEventFile()
     m_eventFileNameVector.pop_back();
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceEventFileReader(m_eventFileName));
 
+    if (m_isEnhancedEventFile)
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadGlobalHeader());
+
     try
     {
         m_pEventFileReader->ReadEvent();
