@@ -84,13 +84,11 @@ StatusCode EventWritingAlgorithm::Initialize()
 
         if (BINARY == m_geometryFileType)
         {
-            m_pGeometryFileWriter = new BinaryFileWriter(this->GetPandora(), m_geometryFileName, fileMode,
-                m_fileMajorVersion, m_fileMinorVersion);
+            m_pGeometryFileWriter = new BinaryFileWriter(this->GetPandora(), m_geometryFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
         }
         else if (XML == m_geometryFileType)
         {
-            m_pGeometryFileWriter = new XmlFileWriter(this->GetPandora(), m_geometryFileName, fileMode,
-                m_fileMajorVersion, m_fileMinorVersion);
+            m_pGeometryFileWriter = new XmlFileWriter(this->GetPandora(), m_geometryFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
         }
         else
         {
@@ -104,13 +102,11 @@ StatusCode EventWritingAlgorithm::Initialize()
 
         if (BINARY == m_eventFileType)
         {
-            m_pEventFileWriter = new BinaryFileWriter(this->GetPandora(), m_eventFileName, fileMode,
-                m_fileMajorVersion, m_fileMinorVersion);
+            m_pEventFileWriter = new BinaryFileWriter(this->GetPandora(), m_eventFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
         }
         else if (XML == m_eventFileType)
         {
-            m_pEventFileWriter = new XmlFileWriter(this->GetPandora(), m_eventFileName, fileMode,
-                m_fileMajorVersion, m_fileMinorVersion);
+            m_pEventFileWriter = new XmlFileWriter(this->GetPandora(), m_eventFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
         }
         else
         {
@@ -326,11 +322,11 @@ StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         }
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "FileMajorVersion", m_fileMajorVersion));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FileMajorVersion", m_fileMajorVersion));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "FileMinorVersion", m_fileMinorVersion));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FileMinorVersion", m_fileMinorVersion));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ShouldWriteMCRelationships", m_shouldWriteMCRelationships));
