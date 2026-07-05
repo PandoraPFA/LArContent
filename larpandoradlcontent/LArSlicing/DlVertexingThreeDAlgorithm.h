@@ -31,7 +31,6 @@ public:
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    pandora::StatusCode Infer();
 
     /**
      *  @brief Run the pass 1: Either load the previous candidate vertex or if missing infer one.

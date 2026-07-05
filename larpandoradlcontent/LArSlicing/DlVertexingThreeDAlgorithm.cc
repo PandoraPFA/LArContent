@@ -28,7 +28,7 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 #if DEBUG_MODE
 #define HEP_EVD_PANDORA_HELPERS 1
 #include "hep_evd.h"
@@ -43,7 +43,8 @@ namespace lar_dl_content
 DlThreeDVertexingAlgorithm::DlThreeDVertexingAlgorithm() :
     m_scalingFactor{-1.0f},
     m_thresholds{},
-    m_nDistanceClasses{-1}
+    m_nDistanceClasses{-1},
+    m_pass{1}
 {
 }
 
@@ -205,6 +206,12 @@ StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &calo
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     std::cout << "Getting node data took " << duration << " ms." << std::endl;
+
+    if (numHits == 0)
+    {
+        std::cout << "DLVertexingThreeDAlgorithm::RunModel - No calo hits to build graph with, skipping." << std::endl;
+        return STATUS_CODE_SUCCESS;
+    }
 
     LArDLHelper::TorchInputVector inputs;
     t1 = std::chrono::high_resolution_clock::now();
@@ -408,8 +415,17 @@ StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &calo
 
         if (foundVertices.size() == 0)
         {
-            std::cout << "DLVertexingThreeDAlgorithm::Infer - no vertex candidates found! Skipping writing list. " << std::endl;
-            return STATUS_CODE_SUCCESS;
+            // INFO: Rather than fail, if we had a rough region...its better than literally nothing.
+            if (cropVertex != nullptr)
+            {
+                std::cout << "DLVertexingThreeDAlgorithm::Infer - Hough returned empty. Reverting to slicing crop vertex." << std::endl;
+                foundVertices.push_back(*cropVertex);
+            }
+            else
+            {
+                std::cout << "DLVertexingThreeDAlgorithm::Infer - no vertex candidates found and no crop vertex! Skipping writing list." << std::endl;
+                return STATUS_CODE_SUCCESS;
+            }
         }
     }
 
