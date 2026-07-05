@@ -14,7 +14,7 @@ namespace lar_content
 {
 
 KnnKdTree::KnnKdTree(const std::vector<KnnNode> &inputNodes) :
-    m_nodes(inputNodes)
+    m_nodes(std::move(inputNodes))
 {
     this->BuildTree(0, m_nodes.size(), 0);
 }
