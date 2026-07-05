@@ -49,7 +49,7 @@ private:
      * @brief Score sorting helper
      */
     void CalculateSortScores(const std::vector<int> &seedIndices, const std::vector<int> &predClasses, const std::vector<float> &voteCounts,
-        const std::vector<float> &logits, std::vector<int> &sortScores) const;
+        const std::vector<float> &logits, std::vector<float> &sortScores) const;
 
     std::vector<float> m_thresholds;    ///< The distance thresholds for each class bin edge. Must match the training thresholds.
     std::vector<float> m_binCenters;    ///< The pre-computed bin centers for each class, derived from the thresholds, used to convert class predictions to distance predictions.
