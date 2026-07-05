@@ -44,7 +44,6 @@ DlSlicingAlgorithm::DlSlicingAlgorithm() :
     m_scalingFactor{-1.0f},
     m_thresholds{},
     m_nDistanceClasses{-1},
-    m_k{4},
     m_runPostProcessing{false}
 {
 }
@@ -238,11 +237,10 @@ StatusCode DlSlicingAlgorithm::Infer()
         }
 
         // Now, populate the full input tensor with all the required data:
-        // 1) The semantic distance logits for each hit.
+        // 1) The position embeddings for each hit.
         // 2) The raw embeddings for each hit.
-        // 3) The position embeddings for each hit.
+        // 3) The semantic distance logits for each hit.
         // 4) The candidate vertex positions.
-        // 5) The edges between hits.
         inputs.clear();
         LArDLHelper::TorchInputVector fullInputTensor;
         fullInputTensor.push_back(std::move(encodedPos));
@@ -352,7 +350,7 @@ StatusCode DlSlicingAlgorithm::Infer()
 
         std::vector<int> splitLabels;
         std::set<int> anchors, debris;
-        this->SplitAndClassifyClusters(positions, cleanLabels, candidateIndices, splitLabels, anchors, debris, 20.0f, 20);
+        this->SplitAndClassifyClusters(positions, cleanLabels, candidateIndices, splitLabels, anchors, debris, 10.0f, 50);
         t2 = std::chrono::high_resolution_clock::now();
         postProcessingDuration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
         std::cout << "Split and classify clusters took " << postProcessingDuration << " ms." << std::endl;
@@ -360,7 +358,7 @@ StatusCode DlSlicingAlgorithm::Infer()
         // Then, start to attach the split clusters back together...
         std::vector<int> floodLabels = splitLabels;
         t1 = std::chrono::high_resolution_clock::now();
-        this->FloodFill(positions, t0s, t0Valid, cleanLabels, floodLabels, anchors, debris, 3.0f, 15.0f);
+        this->FloodFill(positions, t0s, t0Valid, cleanLabels, floodLabels, anchors, debris, 20.f, 25.0f);
         t2 = std::chrono::high_resolution_clock::now();
         postProcessingDuration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
         std::cout << "Flood fill took " << postProcessingDuration << " ms." << std::endl;

@@ -20,6 +20,12 @@
 
 #include "larpandoradlcontent/LArSlicing/BasicVertexingMetrics.h"
 
+#define DEBUG_MODE 0
+#if DEBUG_MODE
+#define HEP_EVD_PANDORA_HELPERS 1
+#include "hep_evd.h"
+#endif
+
 using namespace pandora;
 using namespace lar_content;
 
@@ -119,6 +125,34 @@ StatusCode BasicVertexingMetrics::Run()
             mostEnergetic = totalEnergy;
     }
 
+#if DEBUG_MODE
+        // DEBUG: Add visualization of the semantic labels to EVD.
+        HepEVD::Hits hitsToVis;
+
+        int evdHitIdx{0};
+        for (const auto pCaloHit : *pCaloHitList)
+        {
+            if (nullptr == pCaloHit)
+                continue;
+
+            const auto x = pCaloHit->GetPositionVector().GetX();
+            const auto y = pCaloHit->GetPositionVector().GetY();
+            const auto z = pCaloHit->GetPositionVector().GetZ();
+            const auto e = pCaloHit->GetInputEnergy();
+
+            HepEVD::Hit *evdHit = new HepEVD::Hit({x, y, z}, e);
+
+            hitsToVis.push_back(evdHit);
+
+            evdHitIdx++;
+        }
+
+        HepEVD::setHepEVDGeometry(this->GetPandora().GetGeometry());
+        HepEVD::getServer()->addHits(hitsToVis);
+
+        HepEVD::Markers pointsToVis;
+#endif
+
     // With that, we can start to write over the found vertices, and compare them to the MC truth.
     for (const auto &foundVertex : *pInputVertexList)
     {
@@ -135,6 +169,12 @@ StatusCode BasicVertexingMetrics::Run()
             if (dist < closestDistance)
                 closestDistance = dist;
         }
+
+#if DEBUG_MODE
+            HepEVD::Point *recoVtx = new HepEVD::Point({foundVertexPos.GetX(), foundVertexPos.GetY(), foundVertexPos.GetZ()});
+            recoVtx->setColour("red");
+            pointsToVis.push_back(*recoVtx);
+#endif
 
         for (const auto &neutrinoIt : neutrinoToHitMap)
         {
@@ -153,6 +193,21 @@ StatusCode BasicVertexingMetrics::Run()
             const bool isClosestVertex(dist <= closestDistance);
 
             const auto parentInstance = MultiPandoraApi::GetPrimaryPandoraInstance(&(*this).GetPandora());
+
+#if DEBUG_MODE
+            HepEVD::Point *mcVtx = new HepEVD::Point({pNeutrino->GetVertex().GetX(), pNeutrino->GetVertex().GetY(), pNeutrino->GetVertex().GetZ()});
+
+            if (hasMostHits)
+                mcVtx->setColour("blue");
+            else if (hasMostEnergy)
+                mcVtx->setColour("cyan");
+            else if (isClosestVertex)
+                mcVtx->setColour("magenta");
+            else
+                mcVtx->setColour("green");
+
+            pointsToVis.push_back(*mcVtx);
+#endif
 
             // Now, we can write out the reco and MC truth values for this vertex.
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "run", static_cast<int>(parentInstance->GetRun())));
@@ -182,6 +237,12 @@ StatusCode BasicVertexingMetrics::Run()
             PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
         }
     }
+
+#if DEBUG_MODE
+    HepEVD::getServer()->addMarkers(pointsToVis);
+    HepEVD::saveState("FoundVertices");
+    HepEVD::startServer();
+#endif
 
     return STATUS_CODE_SUCCESS;
 }
