@@ -273,11 +273,27 @@ StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &calo
         evdHitIdx = 0;
         hitsToVis.clear();
 
+        double lowestClassFound = std::numeric_limits<double>::max();
+        double maxConfForLowestClass = -1.0;
+        pandora::CartesianVector bestConfHitPos(0, 0, 0);
+
         for (const auto graphHit : nodes)
         {
             const double label = argMaxLabels[evdHitIdx].item<double>();
             const double confidence = confidences[evdHitIdx][label].item<double>();
             const double seedConfidence = confidences[evdHitIdx][0].item<double>();
+
+            if (label < lowestClassFound)
+            {
+                lowestClassFound = label;
+                maxConfForLowestClass = confidence;
+                bestConfHitPos = pandora::CartesianVector(graphHit.GetX(), graphHit.GetY(), graphHit.GetZ());
+            }
+            else if (label == lowestClassFound && confidence > maxConfForLowestClass)
+            {
+                maxConfForLowestClass = confidence;
+                bestConfHitPos = pandora::CartesianVector(graphHit.GetX(), graphHit.GetY(), graphHit.GetZ());
+            }
 
             const auto x = graphHit.GetX();
             const auto y = graphHit.GetY();
@@ -361,6 +377,7 @@ StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &calo
         float bestNew = std::numeric_limits<float>::max();
         float bestHit = std::numeric_limits<float>::max();
         float bestCrop = std::numeric_limits<float>::max();
+        float bestConfHitDist = std::numeric_limits<float>::max();
 
         for (const auto &caloHitMCPair : hitToMCMap)
         {
@@ -374,6 +391,11 @@ StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &calo
             evdPoint->setColour("green");
             pointsToVis.push_back(*evdPoint);
             uniqueMCParticles.insert(primary);
+
+            // Calculate how far the network's most confident hit (of the lowest available class) is from the true vertex
+            const float squaredDistConf = bestConfHitPos.GetDistanceSquared(primary->GetVertex());
+            if (squaredDistConf < bestConfHitDist)
+                bestConfHitDist = squaredDistConf;
 
             if (cropVertex != nullptr)
             {
@@ -405,8 +427,9 @@ StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &calo
             }
         }
 
-        std::cout << "[METRICS] Slice: " << std::sqrt(bestCandidate) << " | GNN: " << std::sqrt(bestNew)
-                  << " | Crop Limit: " << std::sqrt(bestCrop) << " | Voxel Limit: " << std::sqrt(bestHit) << " cm" << std::endl;
+        std::cout << "[METRICS] Slice: " << std::sqrt(bestCandidate) << " | GNN Hough: " << std::sqrt(bestNew)
+                  << " | Max Conf Hit: " << std::sqrt(bestConfHitDist) << " | Crop Limit: " << std::sqrt(bestCrop)
+                  << " | Voxel Limit: " << std::sqrt(bestHit) << " cm" << std::endl;
 
         HepEVD::getServer()->addMarkers(pointsToVis);
         HepEVD::saveState("FoundVertices");
