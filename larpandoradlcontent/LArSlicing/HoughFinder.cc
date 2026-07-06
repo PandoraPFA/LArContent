@@ -90,12 +90,48 @@ void FastHoughFinder::CalculateSortScores(const std::vector<int> &seedIndices, c
     const std::vector<float> &voteCounts, const std::vector<float> &logits, std::vector<float> &sortScores) const
 {
     const int numSeeds = seedIndices.size();
+    const int numClasses = m_thresholds.size() + 1;
+
+    float maxVotes = 0.0f;
+    for (int s = 0; s < numSeeds; ++s)
+    {
+        if (voteCounts[s] > maxVotes)
+            maxVotes = voteCounts[s];
+    }
+
+    const float eliteThreshold = std::max(0.0f, maxVotes - 3.0f);
 
     for (int s = 0; s < numSeeds; ++s)
     {
         const int seedGlobalIdx = seedIndices[s];
         const int seedClass = predClasses[seedGlobalIdx];
-        sortScores[s] = voteCounts[s] + (((m_maxSeedClass + 1) - seedClass) * 100);
+
+        // Calculate Confidence
+        const int logitOffset = seedGlobalIdx * numClasses;
+        float maxLogit = -std::numeric_limits<float>::max();
+        for (int c = 0; c < numClasses; ++c)
+            maxLogit = std::max(maxLogit, logits[logitOffset + c]);
+
+        float sumExp = 0.0f;
+        for (int c = 0; c < numClasses; ++c)
+            sumExp += std::exp(logits[logitOffset + c] - maxLogit);
+
+        const float confidence = std::exp(logits[logitOffset + seedClass] - maxLogit) / sumExp;
+
+        // Build the hierarchical score
+        float score = ((m_maxSeedClass + 1) - seedClass) * 10000.0f;
+
+        if (voteCounts[s] >= eliteThreshold)
+        {
+            score += 1000.0f + (confidence * 100.0f);
+        }
+        else
+        {
+            // REGULAR POOL: Sorted normally by votes.
+            score += voteCounts[s];
+        }
+
+        sortScores[s] = score;
     }
 }
 
@@ -210,6 +246,29 @@ std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pan
     std::vector<int> sortedCandIndices(numSeeds);
     std::iota(sortedCandIndices.begin(), sortedCandIndices.end(), 0);
     std::sort(sortedCandIndices.begin(), sortedCandIndices.end(), [&sortScores](int a, int b) { return sortScores[a] > sortScores[b]; });
+
+    std::cout << "\n--- TOP 5 HOUGH CANDIDATES ---" << std::endl;
+    const int numClassesLog = m_thresholds.size() + 1;
+    for (int i = 0; i < std::min(5, numSeeds); ++i)
+    {
+        const int candIdx = sortedCandIndices[i];
+        const int globalIdx = seedIndices[candIdx];
+        const int sClass = predClasses[globalIdx];
+
+        // Quick confidence calc for logging
+        const int offset = globalIdx * numClassesLog;
+        float maxL = -std::numeric_limits<float>::max();
+        for (int c = 0; c < numClassesLog; ++c)
+            maxL = std::max(maxL, logits[offset + c]);
+        float sExp = 0.0f;
+        for (int c = 0; c < numClassesLog; ++c)
+            sExp += std::exp(logits[offset + c] - maxL);
+        const float conf = std::exp(logits[offset + sClass] - maxL) / sExp;
+
+        std::cout << "Rank " << i + 1 << " | Class: " << sClass << " | Weighted Votes: " << voteCounts[candIdx] << " | Confidence: " << conf
+                  << " | Total Score: " << sortScores[candIdx] << std::endl;
+    }
+    std::cout << "------------------------------\n" << std::endl;
 
     std::vector<pandora::CartesianVector> foundVertices;
     std::vector<bool> seedIsAvailable(numSeeds, true);
