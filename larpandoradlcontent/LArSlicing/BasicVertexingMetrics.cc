@@ -7,6 +7,7 @@
  */
 
 #include <cmath>
+#include <limits>
 #include <map>
 #include <string>
 
@@ -59,32 +60,44 @@ BasicVertexingMetrics::~BasicVertexingMetrics()
 StatusCode BasicVertexingMetrics::Run()
 {
     const CaloHitList *pCaloHitList{nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+    auto statusCode(PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
-    const VertexList *pInputVertexList{nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pInputVertexList));
-
-    if (nullptr == pCaloHitList || pCaloHitList->empty())
+    if (statusCode != STATUS_CODE_SUCCESS || nullptr == pCaloHitList || pCaloHitList->empty())
     {
         std::cout << "BasicVertexingMetrics::WriteMetrics - No CaloHits in this slice." << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
-    if (nullptr == pInputVertexList || pInputVertexList->empty())
+    const VertexList *pInputVertexList{nullptr};
+    statusCode = PandoraContentApi::GetList(*this, m_inputVertexListName, pInputVertexList);
+    bool noVertexFound(nullptr == pInputVertexList || pInputVertexList->empty());
+
+    // INFO: Allow for the possibility of no vertices in this slice, as this is a valid case.
+    if (noVertexFound)
     {
         std::cout << "BasicVertexingMetrics::WriteMetrics - No vertices in this slice." << std::endl;
-        return STATUS_CODE_SUCCESS;
+
+        // INFO: Add a singular fake entry, to ensure that the tree is filled for this slice, even if no vertices were found.
+        PandoraContentApi::Vertex::Parameters parameters;
+        parameters.m_position =
+            CartesianVector(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+        parameters.m_vertexLabel = VERTEX_INTERACTION;
+        parameters.m_vertexType = VERTEX_3D;
+
+        const Vertex *pVertex(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+        pInputVertexList = new VertexList({pVertex});
     }
 
-
     std::map<const MCParticle *, CaloHitList> neutrinoToHitMap;
-    std::map<const CaloHit*, const MCParticle*> hitToNeutrinoMap;
+    std::map<const CaloHit *, const MCParticle *> hitToNeutrinoMap;
     unsigned int failureCount{0};
 
     // First, get a map of every hit to its neutrino, and the other way around.
     for (const auto pCaloHit : *pCaloHitList)
     {
-        try {
+        try
+        {
             const MCParticle *const pMCParticle = MCParticleHelper::GetMainMCParticle(pCaloHit);
 
             if (!pMCParticle)
@@ -97,14 +110,17 @@ StatusCode BasicVertexingMetrics::Run()
 
             neutrinoToHitMap[pNeutrino].push_back(pCaloHit);
             hitToNeutrinoMap[pCaloHit] = pNeutrino;
-        } catch (StatusCodeException &e) {
+        }
+        catch (StatusCodeException &e)
+        {
             ++failureCount;
             continue;
         }
     }
 
     std::cout << "BasicVertexingMetrics::WriteMetrics - Found " << neutrinoToHitMap.size() << " neutrinos in this slice." << std::endl;
-    std::cout << "BasicVertexingMetrics::WriteMetrics - Failed to find neutrino for " << failureCount << " hits, out of " << pCaloHitList->size() << std::endl;
+    std::cout << "BasicVertexingMetrics::WriteMetrics - Failed to find neutrino for " << failureCount << " hits, out of "
+              << pCaloHitList->size() << std::endl;
 
     unsigned int mostHits{0};
     float mostEnergetic{0.f};
@@ -126,31 +142,31 @@ StatusCode BasicVertexingMetrics::Run()
     }
 
 #if DEBUG_MODE
-        // DEBUG: Add visualization of the semantic labels to EVD.
-        HepEVD::Hits hitsToVis;
+    // DEBUG: Add visualization of the semantic labels to EVD.
+    HepEVD::Hits hitsToVis;
 
-        int evdHitIdx{0};
-        for (const auto pCaloHit : *pCaloHitList)
-        {
-            if (nullptr == pCaloHit)
-                continue;
+    int evdHitIdx{0};
+    for (const auto pCaloHit : *pCaloHitList)
+    {
+        if (nullptr == pCaloHit)
+            continue;
 
-            const auto x = pCaloHit->GetPositionVector().GetX();
-            const auto y = pCaloHit->GetPositionVector().GetY();
-            const auto z = pCaloHit->GetPositionVector().GetZ();
-            const auto e = pCaloHit->GetInputEnergy();
+        const auto x = pCaloHit->GetPositionVector().GetX();
+        const auto y = pCaloHit->GetPositionVector().GetY();
+        const auto z = pCaloHit->GetPositionVector().GetZ();
+        const auto e = pCaloHit->GetInputEnergy();
 
-            HepEVD::Hit *evdHit = new HepEVD::Hit({x, y, z}, e);
+        HepEVD::Hit *evdHit = new HepEVD::Hit({x, y, z}, e);
 
-            hitsToVis.push_back(evdHit);
+        hitsToVis.push_back(evdHit);
 
-            evdHitIdx++;
-        }
+        evdHitIdx++;
+    }
 
-        HepEVD::setHepEVDGeometry(this->GetPandora().GetGeometry());
-        HepEVD::getServer()->addHits(hitsToVis);
+    HepEVD::setHepEVDGeometry(this->GetPandora().GetGeometry());
+    HepEVD::getServer()->addHits(hitsToVis);
 
-        HepEVD::Markers pointsToVis;
+    HepEVD::Markers pointsToVis;
 #endif
 
     // With that, we can start to write over the found vertices, and compare them to the MC truth.
@@ -171,9 +187,9 @@ StatusCode BasicVertexingMetrics::Run()
         }
 
 #if DEBUG_MODE
-            HepEVD::Point *recoVtx = new HepEVD::Point({foundVertexPos.GetX(), foundVertexPos.GetY(), foundVertexPos.GetZ()});
-            recoVtx->setColour("red");
-            pointsToVis.push_back(*recoVtx);
+        HepEVD::Point *recoVtx = new HepEVD::Point({foundVertexPos.GetX(), foundVertexPos.GetY(), foundVertexPos.GetZ()});
+        recoVtx->setColour("red");
+        pointsToVis.push_back(*recoVtx);
 #endif
 
         for (const auto &neutrinoIt : neutrinoToHitMap)
@@ -216,23 +232,30 @@ StatusCode BasicVertexingMetrics::Run()
 
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuEnergy", pNeutrino->GetEnergy()));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuPDG", pNeutrino->GetParticleId()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNumNusInSlice", static_cast<int>(neutrinoToHitMap.size())));
+            PANDORA_MONITORING_API(
+                SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNumNusInSlice", static_cast<int>(neutrinoToHitMap.size())));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuVtxX", pNeutrino->GetVertex().GetX()));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuVtxY", pNeutrino->GetVertex().GetY()));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNuVtxZ", pNeutrino->GetVertex().GetZ()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNumHitsInSlice", static_cast<int>(allRecoHitsForNeutrino.size())));
+            PANDORA_MONITORING_API(
+                SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueNumHitsInSlice", static_cast<int>(allRecoHitsForNeutrino.size())));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "biggestContributor", static_cast<int>(hasMostHits)));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mostEnergetic", static_cast<int>(hasMostEnergy)));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "closestVertex", static_cast<int>(isClosestVertex)));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "noVertexInSlice", static_cast<int>(noVertexFound)));
 
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVtxX", foundVertexPos.GetX()));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVtxY", foundVertexPos.GetY()));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVtxZ", foundVertexPos.GetZ()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNumSliceNumHits", static_cast<int>(pCaloHitList->size())));
+            PANDORA_MONITORING_API(
+                SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNumSliceNumHits", static_cast<int>(pCaloHitList->size())));
 
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDx", foundVertexPos.GetX() - pNeutrino->GetVertex().GetX()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDy", foundVertexPos.GetY() - pNeutrino->GetVertex().GetY()));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDz", foundVertexPos.GetZ() - pNeutrino->GetVertex().GetZ()));
+            PANDORA_MONITORING_API(
+                SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDx", foundVertexPos.GetX() - pNeutrino->GetVertex().GetX()));
+            PANDORA_MONITORING_API(
+                SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDy", foundVertexPos.GetY() - pNeutrino->GetVertex().GetY()));
+            PANDORA_MONITORING_API(
+                SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDz", foundVertexPos.GetZ() - pNeutrino->GetVertex().GetZ()));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vtxDr", dist));
             PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
         }
