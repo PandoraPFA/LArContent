@@ -90,6 +90,7 @@ set(LAR_CONTENT_SRCS
     larpandoracontent/LArObjects/LArOverlapMatrix.cc
     larpandoracontent/LArObjects/LArOverlapTensor.cc
     larpandoracontent/LArObjects/LArPfoObjects.cc
+    larpandoracontent/LArObjects/LArPlaneContextObject.cc
     larpandoracontent/LArObjects/LArPointingCluster.cc
     larpandoracontent/LArObjects/LArShowerOverlapResult.cc
     larpandoracontent/LArObjects/LArSupportVectorMachine.cc
@@ -108,6 +109,7 @@ set(LAR_CONTENT_SRCS
     larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.cc
     larpandoracontent/LArReclustering/LArExample/RandomClusteringAlgorithm.cc
     larpandoracontent/LArReclustering/LArExample/RandomFigureOfMeritTool.cc
+    larpandoracontent/LArReclustering/ShortTrackReclusteringAlgorithm.cc
     larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.cc
     larpandoracontent/LArReclustering/ThreeDMultiReclusteringAlgorithm.cc
     larpandoracontent/LArReclustering/ThreeDReclusteringAlgorithm.cc
@@ -155,6 +157,7 @@ set(LAR_CONTENT_SRCS
     larpandoracontent/LArThreeDReco/LArHitCreation/LongitudinalTrackHitsBaseTool.cc
     larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.cc
     larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.cc
+    larpandoracontent/LArThreeDReco/LArHitCreation/PlaneSolverAlgorithm.cc
     larpandoracontent/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.cc
     larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.cc
     larpandoracontent/LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.cc
@@ -171,6 +174,7 @@ set(LAR_CONTENT_SRCS
     larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMopUpAlgorithm.cc
     larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMopUpAlgorithm.cc
     larpandoracontent/LArThreeDReco/LArPfoRecovery/ParticleRecoveryAlgorithm.cc
+    larpandoracontent/LArThreeDReco/LArPfoRecovery/TrackRecoveryAlgorithm.cc
     larpandoracontent/LArThreeDReco/LArPfoRecovery/VertexBasedPfoRecoveryAlgorithm.cc
     larpandoracontent/LArThreeDReco/LArShowerFragments/ClearRemnantsTool.cc
     larpandoracontent/LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.cc
