@@ -12,7 +12,7 @@
 namespace lar_content
 {
 
-FastHoughFinder::FastHoughFinder(const std::vector<float> &thresholds, const float scalingFactor, const float tolerance, const int minVotes,
+ThreeDVertexingHoughTransform::ThreeDVertexingHoughTransform(const std::vector<float> &thresholds, const float scalingFactor, const float tolerance, const int minVotes,
     const float nmsRadius, const int maxSeedClass, const bool useDynamicSeedClass) :
     m_thresholds(thresholds),
     m_scalingFactor(scalingFactor),
@@ -33,7 +33,7 @@ FastHoughFinder::FastHoughFinder(const std::vector<float> &thresholds, const flo
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void FastHoughFinder::GetSeedAndVoterIndices(const std::vector<int> &predClasses, std::vector<int> &seedIndices, std::vector<int> &voterIndices) const
+void ThreeDVertexingHoughTransform::GetSeedAndVoterIndices(const std::vector<int> &predClasses, std::vector<int> &seedIndices, std::vector<int> &voterIndices) const
 {
     const int numHits = predClasses.size();
     const int noiseClass = m_thresholds.size();
@@ -86,7 +86,7 @@ void FastHoughFinder::GetSeedAndVoterIndices(const std::vector<int> &predClasses
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void FastHoughFinder::CalculateSortScores(const std::vector<int> &seedIndices, const std::vector<int> &predClasses,
+void ThreeDVertexingHoughTransform::CalculateSortScores(const std::vector<int> &seedIndices, const std::vector<int> &predClasses,
     const std::vector<float> &voteCounts, const std::vector<float> &logits, std::vector<float> &sortScores) const
 {
     const int numSeeds = seedIndices.size();
@@ -131,7 +131,7 @@ void FastHoughFinder::CalculateSortScores(const std::vector<int> &seedIndices, c
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pandora::CartesianVector> &hitPositions, const std::vector<float> &logits) const
+std::vector<pandora::CartesianVector> ThreeDVertexingHoughTransform::Fit(const std::vector<pandora::CartesianVector> &hitPositions, const std::vector<float> &logits) const
 {
     const int numHits = hitPositions.size();
     const int numClasses = m_thresholds.size() + 1;
@@ -240,29 +240,6 @@ std::vector<pandora::CartesianVector> FastHoughFinder::Fit(const std::vector<pan
     std::vector<int> sortedCandIndices(numSeeds);
     std::iota(sortedCandIndices.begin(), sortedCandIndices.end(), 0);
     std::sort(sortedCandIndices.begin(), sortedCandIndices.end(), [&sortScores](int a, int b) { return sortScores[a] > sortScores[b]; });
-
-    std::cout << "\n--- TOP 5 HOUGH CANDIDATES ---" << std::endl;
-    const int numClassesLog = m_thresholds.size() + 1;
-    for (int i = 0; i < std::min(5, numSeeds); ++i)
-    {
-        const int candIdx = sortedCandIndices[i];
-        const int globalIdx = seedIndices[candIdx];
-        const int sClass = predClasses[globalIdx];
-
-        // Quick confidence calc for logging
-        const int offset = globalIdx * numClassesLog;
-        float maxL = -std::numeric_limits<float>::max();
-        for (int c = 0; c < numClassesLog; ++c)
-            maxL = std::max(maxL, logits[offset + c]);
-        float sExp = 0.0f;
-        for (int c = 0; c < numClassesLog; ++c)
-            sExp += std::exp(logits[offset + c] - maxL);
-        const float conf = std::exp(logits[offset + sClass] - maxL) / sExp;
-
-        std::cout << "Rank " << i + 1 << " | Class: " << sClass << " | Weighted Votes: " << voteCounts[candIdx] << " | Confidence: " << conf
-                  << " | Total Score: " << sortScores[candIdx] << std::endl;
-    }
-    std::cout << "------------------------------\n" << std::endl;
 
     std::vector<pandora::CartesianVector> foundVertices;
     std::vector<bool> seedIsAvailable(numSeeds, true);

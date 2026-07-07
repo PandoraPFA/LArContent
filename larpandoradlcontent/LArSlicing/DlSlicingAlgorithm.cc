@@ -164,7 +164,7 @@ StatusCode DlSlicingAlgorithm::Infer()
 
             // Setup and run the Hough Transform vertex finder.
             t1 = std::chrono::high_resolution_clock::now();
-            FastHoughFinder houghFinder(m_thresholds, m_scalingFactor);
+            ThreeDVertexingHoughTransform houghFinder(m_thresholds, m_scalingFactor);
             foundVertices = houghFinder.Fit(nodes, semanticLabelsVec);
             t2 = std::chrono::high_resolution_clock::now();
             duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();

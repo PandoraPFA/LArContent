@@ -323,7 +323,7 @@ StatusCode DlThreeDVertexingAlgorithm::RunModel(const pandora::CaloHitList &calo
 
             // Setup and run the Hough Transform vertex finder.
             t1 = std::chrono::high_resolution_clock::now();
-            FastHoughFinder houghFinder(m_thresholds, m_scalingFactor, 0.5f, 3, 10.f, 0, true);
+            ThreeDVertexingHoughTransform houghFinder(m_thresholds, m_scalingFactor, 0.5f, 3, 10.f, 0, true);
             foundVertices = houghFinder.Fit(nodes, semanticLabelsVec);
             t2 = std::chrono::high_resolution_clock::now();
             duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();

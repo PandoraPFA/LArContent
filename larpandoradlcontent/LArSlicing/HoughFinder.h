@@ -11,7 +11,7 @@
 namespace lar_content
 {
 
-class FastHoughFinder
+class ThreeDVertexingHoughTransform
 {
 public:
     /**
@@ -25,7 +25,7 @@ public:
      * @param maxSeedClass Maximum distance class to consider as a seed for vertex finding
      * @param useDynamicSeedClass If true, dynamically finds the closest available class to use as seeds
      */
-    FastHoughFinder(const std::vector<float> &thresholds, const float scalingFactor = 400.0f, const float tolerance = 25.0f,
+    ThreeDVertexingHoughTransform(const std::vector<float> &thresholds, const float scalingFactor = 400.0f, const float tolerance = 25.0f,
         const int minVotes = 3, const float nmsRadius = 35.0f, const int maxSeedClass = 2,
         const bool useDynamicSeedClass = false);
 
