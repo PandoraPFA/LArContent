@@ -92,14 +92,13 @@ void FastHoughFinder::CalculateSortScores(const std::vector<int> &seedIndices, c
     const int numSeeds = seedIndices.size();
     const int numClasses = m_thresholds.size() + 1;
 
+    // Find the maximum votes across the slice
     float maxVotes = 0.0f;
     for (int s = 0; s < numSeeds; ++s)
-    {
-        if (voteCounts[s] > maxVotes)
-            maxVotes = voteCounts[s];
-    }
+        maxVotes = std::max(maxVotes, voteCounts[s]);
 
-    const float eliteThreshold = std::max(0.0f, maxVotes - 3.0f);
+    // Define the relative strict threshold (within 3 votes of the max)
+    const float strictThreshold = std::max(0.0f, maxVotes - 3.0f);
 
     for (int s = 0; s < numSeeds; ++s)
     {
@@ -109,6 +108,7 @@ void FastHoughFinder::CalculateSortScores(const std::vector<int> &seedIndices, c
         // Calculate Confidence
         const int logitOffset = seedGlobalIdx * numClasses;
         float maxLogit = -std::numeric_limits<float>::max();
+
         for (int c = 0; c < numClasses; ++c)
             maxLogit = std::max(maxLogit, logits[logitOffset + c]);
 
@@ -118,18 +118,12 @@ void FastHoughFinder::CalculateSortScores(const std::vector<int> &seedIndices, c
 
         const float confidence = std::exp(logits[logitOffset + seedClass] - maxLogit) / sumExp;
 
-        // Build the hierarchical score
         float score = ((m_maxSeedClass + 1) - seedClass) * 10000.0f;
 
-        if (voteCounts[s] >= eliteThreshold)
-        {
+        if (voteCounts[s] >= strictThreshold && voteCounts[s] >= 5.0f)
             score += 1000.0f + (confidence * 100.0f);
-        }
         else
-        {
-            // REGULAR POOL: Sorted normally by votes.
             score += voteCounts[s];
-        }
 
         sortScores[s] = score;
     }
