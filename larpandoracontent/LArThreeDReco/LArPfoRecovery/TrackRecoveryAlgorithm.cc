@@ -147,39 +147,42 @@ StatusCode TrackRecoveryAlgorithm::Run()
         {
         }
 
-/*        for (const CaloHit *const pCaloHit : mergeHitsU)
+        for (const CaloHit *const pCaloHit : mergeHitsU)
         {
             pfoToMergeHitsMap[pPfo][TPC_VIEW_U].emplace_back(pCaloHit);
-            const CartesianVector position{pCaloHit->GetPositionVector()};
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, "Merge U", RED, 2.f));
+            //const CartesianVector position{pCaloHit->GetPositionVector()};
+            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, "Merge U", RED, 2.f));
         }
         for (const CaloHit *const pCaloHit : mergeHitsV)
         {
             pfoToMergeHitsMap[pPfo][TPC_VIEW_V].emplace_back(pCaloHit);
-            const CartesianVector position{pCaloHit->GetPositionVector()};
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, "Merge V", GREEN, 2.f));
+            //const CartesianVector position{pCaloHit->GetPositionVector()};
+            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, "Merge V", GREEN, 2.f));
         }
         for (const CaloHit *const pCaloHit : mergeHitsW)
         {
             pfoToMergeHitsMap[pPfo][TPC_VIEW_W].emplace_back(pCaloHit);
-            const CartesianVector position{pCaloHit->GetPositionVector()};
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, "Merge W", BLUE, 2.f));
+            //const CartesianVector position{pCaloHit->GetPositionVector()};
+            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, "Merge W", BLUE, 2.f));
         }
-        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));*/
+        //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 
-    std::map<const CaloHit *, int> hitToNumMergesMap;
-    for (auto &[pPfo, viewToMergeHitsMap] : pfoToMergeHitsMap)
+    PfoVector sortedPfos;
+    sortedPfos.reserve(pfoToMergeHitsMap.size());
+    for (const auto &[pPfo, viewToMergeHitsMap] : pfoToMergeHitsMap)
+        sortedPfos.emplace_back(pPfo);
+    std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
+
+    for (const Pfo *const pPfo : sortedPfos)
     {
+        auto &viewToMergeHitsMap{pfoToMergeHitsMap.at(pPfo)};
         for (auto &[view, mergeHits] : viewToMergeHitsMap)
         {
             const Cluster *pNewCluster{pfoToViewClusterMap[pPfo][view]};
             // Need to allow for the possibility that the view was entirely missing, in which case we need to create a new cluster to merge into
             for (const CaloHit *const pCaloHit : mergeHits)
             {
-                if (hitToNumMergesMap.find(pCaloHit) == hitToNumMergesMap.end())
-                    hitToNumMergesMap[pCaloHit] = 0;
-                hitToNumMergesMap[pCaloHit]++;
                 if (hitToClusterMap.find(pCaloHit) != hitToClusterMap.end())
                 {
                     const Cluster *pOldCluster{hitToClusterMap[pCaloHit]};
@@ -255,12 +258,16 @@ void TrackRecoveryAlgorithm::FindUnmatchedHits(const CaloHitList &hitsA, const C
 void TrackRecoveryAlgorithm::IdentifyHitsToMerge(const Cluster *pCluster, const CaloHitList &clusterHits, const CaloHitSet &unmatchedHits,
     const ClusterToFitMap &clusterToFitMap, CaloHitList &mergeHits) const
 {
+    CaloHitVector sortedHits;
+    std::copy(unmatchedHits.begin(), unmatchedHits.end(), std::back_inserter(sortedHits));
+    std::sort(sortedHits.begin(), sortedHits.end(), LArClusterHelper::SortHitsByPosition);
+
     if (pCluster && (clusterHits.size() > 1) && (clusterToFitMap.find(pCluster) != clusterToFitMap.end()))
     {
         float rLFront{0.f}, rLBack{0.f}, dummy{0.f};
         clusterToFitMap.at(pCluster).GetLocalPosition(clusterHits.front()->GetPositionVector(), rLFront, dummy);
         clusterToFitMap.at(pCluster).GetLocalPosition(clusterHits.back()->GetPositionVector(), rLBack, dummy);
-        for (const CaloHit *const pCaloHit : unmatchedHits)
+        for (const CaloHit *const pCaloHit : sortedHits)
         {
             float rL{0.f};
             clusterToFitMap.at(pCluster).GetLocalPosition(pCaloHit->GetPositionVector(), rL, dummy);
@@ -287,7 +294,7 @@ void TrackRecoveryAlgorithm::IdentifyHitsToMerge(const Cluster *pCluster, const 
     else
     {
         // Entire view is missing, or has less than 3 hits, so we should merge all unmatched hits
-        for (const CaloHit *const pCaloHit : unmatchedHits)
+        for (const CaloHit *const pCaloHit : sortedHits)
             mergeHits.emplace_back(pCaloHit);
     }
 }
