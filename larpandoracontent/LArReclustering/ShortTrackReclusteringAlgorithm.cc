@@ -179,8 +179,15 @@ void ShortTrackReclusteringAlgorithm::FindAdcDiscontinuities(const ClusterToPfoM
 void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHitsMap &clusterToHitsMap, const ClusterToPfoMap &clusterToPfoMap,
     PfoToHitTripletsMap &pfoToHitTripletsMap) const
 {
+    ClusterVector sortedClusters;
+    sortedClusters.reserve(clusterToHitsMap.size());
     for (const auto &[pCluster, discontinuityHits] : clusterToHitsMap)
+        sortedClusters.emplace_back(pCluster);
+    std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : sortedClusters)
     {
+        const auto &discontinuityHits{clusterToHitsMap.at(pCluster)};
         const Pfo *const pPfo{clusterToPfoMap.at(pCluster)};
         CaloHitList caloHits3D;
         CaloHitVector caloHits3Du, caloHits3Dv, caloHits3Dw;
@@ -330,8 +337,15 @@ void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHit
 
 void ShortTrackReclusteringAlgorithm::PartitionDiscontinuities(const PfoToHitTripletsMap &pfoToHitTripletsMap, PartitionVector &partitions) const
 {
+    PfoVector sortedPfos;
+    sortedPfos.reserve(pfoToHitTripletsMap.size());
     for (const auto &[pPfo, hitTriplets] : pfoToHitTripletsMap)
+        sortedPfos.emplace_back(pPfo);
+    std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
+
+    for (const Pfo *const pPfo : sortedPfos)
     {
+        const auto &hitTriplets{pfoToHitTripletsMap.at(pPfo)};
         ClusterList pfoClusterList;
         LArPfoHelper::GetTwoDClusterList(pPfo, pfoClusterList);
         const Cluster *pClusterU{nullptr}, *pClusterV{nullptr}, *pClusterW{nullptr};
@@ -666,7 +680,7 @@ double ShortTrackReclusteringAlgorithm::GetMedian(const std::vector<T> &values) 
     std::vector<T> copy(values);
     const size_t mid{copy.size() / 2};
 
-    if (mid % 2 == 0)
+    if (copy.size() % 2 == 0)
     {
         std::nth_element(copy.begin(), copy.begin() + mid, copy.end());
         const double upper{copy[mid]};
