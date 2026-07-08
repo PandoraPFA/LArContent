@@ -82,7 +82,7 @@ StatusCode TrackRecoveryAlgorithm::Run()
     }
 
     // Loop over the PFOs and project 3D hits from two views into the third view to look for unassociated hits
-    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+    //PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
     std::unordered_map<const Pfo *, std::unordered_map<HitType, CaloHitList>> pfoToMergeHitsMap;
     for (const Pfo *const pPfo : *pPfoList)
     {
@@ -97,9 +97,9 @@ StatusCode TrackRecoveryAlgorithm::Run()
         this->FindUnmatchedHits(hitsW, hitsU, hitsV, unmatchedHitsU, unmatchedHitsV);
 
         // Construct 3D hits from the combinatorics of each view pair and project into the third view
-        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hitsU, "U", RED));
+        /*PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hitsU, "U", RED));
         PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hitsV, "V", GREEN));
-        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hitsW, "W", BLUE));
+        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hitsW, "W", BLUE));*/
 
         this->IdentifyHitsToMerge(pClusterU, hitsU, unmatchedHitsU, clusterToFitMap, mergeHitsU);
         this->IdentifyHitsToMerge(pClusterV, hitsV, unmatchedHitsV, clusterToFitMap, mergeHitsV);
@@ -147,7 +147,7 @@ StatusCode TrackRecoveryAlgorithm::Run()
         {
         }
 
-        for (const CaloHit *const pCaloHit : mergeHitsU)
+/*        for (const CaloHit *const pCaloHit : mergeHitsU)
         {
             pfoToMergeHitsMap[pPfo][TPC_VIEW_U].emplace_back(pCaloHit);
             const CartesianVector position{pCaloHit->GetPositionVector()};
@@ -165,7 +165,7 @@ StatusCode TrackRecoveryAlgorithm::Run()
             const CartesianVector position{pCaloHit->GetPositionVector()};
             PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, "Merge W", BLUE, 2.f));
         }
-        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));*/
     }
 
     std::map<const CaloHit *, int> hitToNumMergesMap;
@@ -210,10 +210,17 @@ std::optional<TwoDSlidingFitResult> TrackRecoveryAlgorithm::FitAndOrderCluster(c
         return std::nullopt;
     }
     const HitType view{LArClusterHelper::GetClusterHitType(pCluster)};
-    TwoDSlidingFitResult sfr(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), view));
-    LArClusterHelper::OrderHitsAlongTrajectory(pCluster, sfr, orderedHits);
-
-    return sfr;
+    try
+    {
+        TwoDSlidingFitResult sfr(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), view));
+        LArClusterHelper::OrderHitsAlongTrajectory(pCluster, sfr, orderedHits);
+        return sfr;
+    }
+    catch (const StatusCodeException &)
+    {
+        LArClusterHelper::GetAllHits(pCluster, orderedHits);
+        return std::nullopt;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

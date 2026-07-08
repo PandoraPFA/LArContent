@@ -103,20 +103,50 @@ void ShortTrackReclusteringAlgorithm::FitAndOrderClusters(const ViewToClustersMa
         for (const Cluster *const pCluster : clusters)
         {
             if (pCluster->GetNCaloHits() < 3)
+            {
+                m_clusterToOrderedHitsMap[pCluster] = CaloHitList();
+                pCluster->GetOrderedCaloHitList().FillCaloHitList(m_clusterToOrderedHitsMap[pCluster]);
                 continue;
+            }
             switch (view)
             {
                 case TPC_VIEW_U:
-                    m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)));
-                    LArClusterHelper::OrderHitsAlongTrajectory(pCluster, m_clusterToSFRMap.at(pCluster), m_clusterToOrderedHitsMap[pCluster]);
+                    try
+                    {
+                        m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(),
+                            TPC_VIEW_U)));
+                        LArClusterHelper::OrderHitsAlongTrajectory(pCluster, m_clusterToSFRMap.at(pCluster), m_clusterToOrderedHitsMap[pCluster]);
+                    }
+                    catch (const StatusCodeException &)
+                    {
+                        m_clusterToOrderedHitsMap[pCluster] = CaloHitList();
+                        pCluster->GetOrderedCaloHitList().FillCaloHitList(m_clusterToOrderedHitsMap[pCluster]);
+                    }
                     break;
+
                 case TPC_VIEW_V:
-                    m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)));
-                    LArClusterHelper::OrderHitsAlongTrajectory(pCluster, m_clusterToSFRMap.at(pCluster), m_clusterToOrderedHitsMap[pCluster]);
+                    try
+                    {
+                        m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)));
+                        LArClusterHelper::OrderHitsAlongTrajectory(pCluster, m_clusterToSFRMap.at(pCluster), m_clusterToOrderedHitsMap[pCluster]);
+                    }
+                    catch (const StatusCodeException &)
+                    {
+                        m_clusterToOrderedHitsMap[pCluster] = CaloHitList();
+                        pCluster->GetOrderedCaloHitList().FillCaloHitList(m_clusterToOrderedHitsMap[pCluster]);
+                    }
                     break;
                 case TPC_VIEW_W:
-                    m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)));
-                    LArClusterHelper::OrderHitsAlongTrajectory(pCluster, m_clusterToSFRMap.at(pCluster), m_clusterToOrderedHitsMap[pCluster]);
+                    try
+                    {
+                        m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)));
+                        LArClusterHelper::OrderHitsAlongTrajectory(pCluster, m_clusterToSFRMap.at(pCluster), m_clusterToOrderedHitsMap[pCluster]);
+                    }
+                    catch (const StatusCodeException &)
+                    {
+                        m_clusterToOrderedHitsMap[pCluster] = CaloHitList();
+                        pCluster->GetOrderedCaloHitList().FillCaloHitList(m_clusterToOrderedHitsMap[pCluster]);
+                    }
                     break;
                 default:
                     break;
@@ -450,9 +480,16 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
         for (const HitType view : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             const CaloHitList &hits{view == TPC_VIEW_U ? hitsU : (view == TPC_VIEW_V ? hitsV : hitsW)};
-            const CaloHit *hit{view == TPC_VIEW_U ? std::get<0>(hitTriplet) : (view == TPC_VIEW_V ? std::get<1>(hitTriplet) : std::get<2>(hitTriplet))};
+            const CaloHit *pHit{view == TPC_VIEW_U ? std::get<0>(hitTriplet) : (view == TPC_VIEW_V ? std::get<1>(hitTriplet) : std::get<2>(hitTriplet))};
             CaloHitList cluster1Hits, cluster2Hits;
-            this->PartitionHits(hits, hit, cluster1Hits, cluster2Hits);
+            // Not all triplets are complete, so we need to check for nullptrs
+            if (pHit)
+            {
+                const auto offset{std::distance(hits.begin(), std::find(hits.begin(), hits.end(), pHit))};
+                // Only split the hits if the discontinuity hit is not at the start or end of the cluster
+                if (offset != 0 && offset != hits.size() - 1)
+                    this->PartitionHits(hits, pHit, cluster1Hits, cluster2Hits);
+            }
             protoPfo.m_viewToHitsMap[view] = std::move(cluster2Hits);
         }
         protoPfos.emplace_back(std::move(protoPfo));
@@ -495,6 +532,9 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
         {
             PandoraContentApi::Cluster::Parameters parameters;
             parameters.m_caloHitList = std::move(protoPfo.m_viewToHitsMap[view]);
+            // Due to extremal split points, it's possible to have an empty list here
+            if (parameters.m_caloHitList.empty())
+                continue;
 
             const Cluster *pNewCluster(nullptr);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pNewCluster));
@@ -506,6 +546,9 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
     // Create the new PFOs
     for (auto &protoPfo : protoPfos)
     {
+        // Due to extremal split points, it's possible to have an empty list here
+        if (protoPfo.m_pfoParameters.m_clusterList.empty())
+            continue;
         const Pfo *pNewPfo{nullptr};
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, protoPfo.m_pfoParameters, pNewPfo));
     }
@@ -531,6 +574,7 @@ void ShortTrackReclusteringAlgorithm::PartitionHits(const CaloHitList &caloHits,
         else
             cluster2Hits.emplace_back(pCaloHit);
     }
+
     FloatVector adcs1;
     for (const CaloHit *const pCaloHit : cluster1Hits)
         adcs1.emplace_back(pCaloHit->GetInputEnergy());
