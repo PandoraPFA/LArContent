@@ -66,6 +66,7 @@ private:
 
     typedef std::unordered_map<pandora::HitType, pandora::CaloHitVector> PlaneToHitsMap;
     typedef std::unordered_map<Volume, PlaneToHitsMap, VolumeHash> VolumeToReadoutMap;
+    typedef std::unordered_map<int, PlaneToHitsMap> DriftBinToHitsMap;
     typedef std::vector<std::vector<int>> IndexMatrix;
     typedef std::vector<std::vector<float>> CostMatrix;
     typedef std::vector<Pair> PairVector;
@@ -79,6 +80,14 @@ private:
      *  @param  caloHitList the list of 2D hits to be mapped
      */
     void FillHitMap(const pandora::CaloHitList &caloHitList);
+
+    /**
+     *  @brief  Bins the hits by their drift time, to allow for a more efficient matching of hits in the same drift bin.
+     *
+     *  @param  hitsByPlane the map of 2D hits to be binned, by plane
+     *  @param[out] driftBinToHitsMap the map of drift bins to the 2D hits in that bin
+     */
+    void BinHitsByDrift(const PlaneToHitsMap &hitsByPlane, DriftBinToHitsMap &driftBinToHitsMap) const;
 
     /**
      *  @brief  Solve for the optimal set of triplet and doublet relationships between the 2D hits
@@ -187,6 +196,7 @@ private:
     std::string m_caloHitListName; ///< The name of the calo hit list containing all of the 2D hits
     std::string m_eventContextName; ///< The name of the EventContext object in which to persist the relationships between the 2D hits
     VolumeToReadoutMap m_planeToReadoutMap; ///< A map from volume, to readout plane, to the 2D hits in that plane
+    bool m_visualize; ///< Whether to visualize the hit matching process
 };
 
 } // namespace lar_content
