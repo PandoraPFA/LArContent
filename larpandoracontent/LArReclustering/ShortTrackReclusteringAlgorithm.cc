@@ -127,7 +127,8 @@ void ShortTrackReclusteringAlgorithm::FitAndOrderClusters(const ViewToClustersMa
                 case TPC_VIEW_V:
                     try
                     {
-                        m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)));
+                        m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(),
+                            TPC_VIEW_V)));
                         LArClusterHelper::OrderHitsAlongTrajectory(pCluster, m_clusterToSFRMap.at(pCluster), m_clusterToOrderedHitsMap[pCluster]);
                     }
                     catch (const StatusCodeException &)
@@ -542,6 +543,7 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
         const ClusterList *pClusterList{nullptr};
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, newClusterListName));
 
+        bool madeClusters{false};
         for (auto &protoPfo : protoPfos)
         {
             PandoraContentApi::Cluster::Parameters parameters;
@@ -553,8 +555,10 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
             const Cluster *pNewCluster(nullptr);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pNewCluster));
             protoPfo.m_pfoParameters.m_clusterList.emplace_back(pNewCluster);
+            madeClusters = true;
         }
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, viewToClusterListNameMap.at(view)));
+        if (madeClusters)
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, viewToClusterListNameMap.at(view)));
     }
 
     // Create the new PFOs
