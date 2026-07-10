@@ -188,7 +188,7 @@ StatusCode TrackRecoveryAlgorithm::Run()
                     const Cluster *pOldCluster{hitToClusterMap[pCaloHit]};
                     PandoraContentApi::RemoveFromCluster(*this, pOldCluster, pCaloHit);
                     CaloHitList &oldClusterHits{clusterToHitMap[pOldCluster]};
-                    std::remove(oldClusterHits.begin(), oldClusterHits.end(), pCaloHit);
+                    oldClusterHits.remove(pCaloHit);
                 }
                 CaloHitList preHitList;
                 LArClusterHelper::GetAllHits(pNewCluster, preHitList);

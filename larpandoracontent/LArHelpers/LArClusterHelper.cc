@@ -717,7 +717,7 @@ void LArClusterHelper::OrderHitsAlongTrajectory(const Cluster *const pCluster, c
 
     // We'll compare the size of the number of used hits to the number of hits in the cluster to determine when we're done
     const size_t nHits(clusterHits.size());
-    CaloHitSet usedHits, skippedHits;
+    CaloHitSet usedHits, skippedHits, prevSeed;
     // Start with the first hit in the list
     const CaloHit *pSeedHit{clusterHits.front()};
     bool seedIdentified{false};
@@ -739,8 +739,9 @@ void LArClusterHelper::OrderHitsAlongTrajectory(const Cluster *const pCluster, c
             const float lPos{testDir.GetDotProduct(fitDir)};
 
             // Check for upstream hit, and if found, select as new seed and repeat the process
-            if (lPos < 0)
+            if (lPos < 0.f && !prevSeed.count(pTestHit))
             {
+                prevSeed.insert(pSeedHit);
                 pSeedHit = pTestHit;
                 seedIdentified = false;
                 break;
