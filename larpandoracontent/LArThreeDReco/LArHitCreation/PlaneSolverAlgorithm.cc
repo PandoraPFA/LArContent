@@ -24,7 +24,8 @@ namespace lar_content
 PlaneSolverAlgorithm::PlaneSolverAlgorithm() :
     m_chi2Threshold(6.f),
     m_caloHitListName{"CaloHitList2D"},
-    m_eventContextName{"PlaneContext"}
+    m_eventContextName{"PlaneContext"},
+    m_visualize(false)
 {
 }
 
@@ -65,8 +66,50 @@ void PlaneSolverAlgorithm::FillHitMap(const CaloHitList &caloHitList)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void PlaneSolverAlgorithm::BinHitsByDrift(const PlaneToHitsMap &hitsByPlane, DriftBinToHitsMap &driftBinToHitsMap) const
+{
+    driftBinToHitsMap.clear();
+    float xMin{std::numeric_limits<float>::max()}, xMax{std::numeric_limits<float>::lowest()};
+    for (const auto &[view, hits] : hitsByPlane)
+    {
+        for (const auto *pHit : hits)
+        {
+            const float x{pHit->GetPositionVector().GetX()};
+            xMin = std::min(xMin, x);
+            xMax = std::max(xMax, x);
+        }
+    }
+
+    // Adjust the minimum and maximum to sit on 0.5 cm boundaries, and ensure that the bin region extends beyond the range of hits
+    float xLowBin{std::floor(xMin * 2.f) / 2.f};
+    float xHighBin{std::ceil(xMax * 2.f) / 2.f};
+    xHighBin = xHighBin == xMax ? xHighBin + 0.5f : xHighBin;
+    const int N{static_cast<int>((xHighBin - xLowBin) * 2.f)};
+
+    for (int i = 0, b = 0; i < N; i += 3, ++b)
+    {
+        const float xBinLow{xLowBin + 0.5f * i};
+        const float xBinHigh{xLowBin + 0.5f * (i + 3)};
+        for (const auto &[view, hits] : hitsByPlane)
+        {
+            for (const auto *pHit : hits)
+            {
+                const float x{pHit->GetPositionVector().GetX()};
+                if (x >= xBinLow && x < xBinHigh)
+                    driftBinToHitsMap[b][view].emplace_back(pHit);
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void PlaneSolverAlgorithm::Solve() const
 {
+    if (m_visualize)
+    {
+        PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+    }
     LArPlaneContextObject *pPlaneContextObject{new LArPlaneContextObject()};
     // Loop over each read out volume (e.g. an APA in a horizontal drift detector) and solve for the optimal set of triplet and doublet
     // relationships between the 2D hits in each unit.
@@ -74,130 +117,158 @@ void PlaneSolverAlgorithm::Solve() const
     {
         if (readout.size() < 3)
             continue;
-        // Set the used view to an "invalid" type for the first pass
-        HitType usedView{HIT_CUSTOM};
-        CaloHitSet usedHits;
-        TripletVector fallbackTriplets;
-        for (int pass = 1; pass <= 2; ++pass)
+
+        DriftBinToHitsMap driftBinToHitsMap;
+        this->BinHitsByDrift(readout, driftBinToHitsMap);
+        for (const auto &[_, driftBinHits] : driftBinToHitsMap)
         {
-            int nHitsU{static_cast<int>(usedView != TPC_VIEW_U ? readout.at(TPC_VIEW_U).size() : 0)};
-            int nHitsV{static_cast<int>(usedView != TPC_VIEW_V ? readout.at(TPC_VIEW_V).size() : 0)};
-            int nHitsW{static_cast<int>(usedView != TPC_VIEW_W ? readout.at(TPC_VIEW_W).size() : 0)};
-            if (pass == 2 && nHitsU != 0)
-            {
-                nHitsU = 0;
-                for (const auto *pHit : readout.at(TPC_VIEW_U))
-                    nHitsU += !usedHits.count(pHit);
-            }
-            if (pass == 2 && nHitsV != 0)
-            {
-                nHitsV = 0;
-                for (const auto *pHit : readout.at(TPC_VIEW_V))
-                    nHitsV += !usedHits.count(pHit);
-            }
-            if (pass == 2 && nHitsW != 0)
-            {
-                nHitsW = 0;
-                for (const auto *pHit : readout.at(TPC_VIEW_W))
-                    nHitsW += !usedHits.count(pHit);
-            }
-
-            HitType constraintView{HIT_CUSTOM};
-            if (pass == 1)
-            {
-                constraintView = nHitsW >= nHitsV && nHitsW >= nHitsU ? TPC_VIEW_W : nHitsV >= nHitsU ? TPC_VIEW_V : TPC_VIEW_U;
-            }
-            else
-            {
-                if (usedView == TPC_VIEW_U)
-                    constraintView = nHitsW <= nHitsV ? TPC_VIEW_W : TPC_VIEW_V;
-                else if (usedView == TPC_VIEW_V)
-                    constraintView = nHitsW <= nHitsU ? TPC_VIEW_W : TPC_VIEW_U;
-                else if (usedView == TPC_VIEW_W)
-                    constraintView = nHitsV <= nHitsU ? TPC_VIEW_V : TPC_VIEW_U;
-            }
-            CostMatrix costMatrix{this->ComputeCostMatrix(readout, 100.f, constraintView, usedHits)};
-            const IntVector assignment{this->KuhnMunkres(costMatrix)};
-            HitType viewA, viewB;
-            this->SelectViewPair(constraintView, viewA, viewB);
-            int nHitsA{static_cast<int>(readout.at(viewA).size())};
-            int nHitsB{static_cast<int>(readout.at(viewB).size())};
-            {
-                int nActualA{0}, nActualB{0};
-                for (const auto *pHit : readout.at(viewA))
-                    nActualA += !usedHits.count(pHit);
-                for (const auto *pHit : readout.at(viewB))
-                    nActualB += !usedHits.count(pHit);
-            }
-            if (nHitsA == 0 || nHitsB == 0)
+            if (driftBinHits.size() < 3)
                 continue;
-            const PairVector pairs{this->BuildPairs(assignment, nHitsA, nHitsB, costMatrix, m_chi2Threshold)};
-            CostMatrix tripletCostMatrix{this->ComputeTripletCostMatrix(pairs, readout, 100.f, constraintView, usedHits)};
-            const IntVector tripletAssignment{this->KuhnMunkres(tripletCostMatrix)};
-            int nHitsC{static_cast<int>(readout.at(constraintView).size())};
-            const TripletVector triplets{this->BuildTriplets(pairs, tripletAssignment, nHitsC, tripletCostMatrix, constraintView, m_chi2Threshold)};
-            for (size_t i = 0; i < triplets.size(); ++i)
+
+            // Set the used view to an "invalid" type for the first pass
+            HitType usedView{HIT_CUSTOM};
+            CaloHitSet usedHits;
+            TripletVector fallbackTriplets;
+            for (int pass = 1; pass <= 2; ++pass)
             {
-                if (triplets[i].m_uIndex >= 0 && triplets[i].m_vIndex >= 0 && triplets[i].m_wIndex >= 0)
+                int nHitsU{static_cast<int>(usedView != TPC_VIEW_U ? driftBinHits.at(TPC_VIEW_U).size() : 0)};
+                int nHitsV{static_cast<int>(usedView != TPC_VIEW_V ? driftBinHits.at(TPC_VIEW_V).size() : 0)};
+                int nHitsW{static_cast<int>(usedView != TPC_VIEW_W ? driftBinHits.at(TPC_VIEW_W).size() : 0)};
+                if (pass == 2 && nHitsU != 0)
                 {
-                    const CaloHit *pHitU{readout.at(TPC_VIEW_U)[triplets[i].m_uIndex]};
-                    const CaloHit *pHitV{readout.at(TPC_VIEW_V)[triplets[i].m_vIndex]};
-                    const CaloHit *pHitW{readout.at(TPC_VIEW_W)[triplets[i].m_wIndex]};
+                    nHitsU = 0;
+                    for (const auto *pHit : driftBinHits.at(TPC_VIEW_U))
+                        nHitsU += !usedHits.count(pHit);
+                }
+                if (pass == 2 && nHitsV != 0)
+                {
+                    nHitsV = 0;
+                    for (const auto *pHit : driftBinHits.at(TPC_VIEW_V))
+                        nHitsV += !usedHits.count(pHit);
+                }
+                if (pass == 2 && nHitsW != 0)
+                {
+                    nHitsW = 0;
+                    for (const auto *pHit : driftBinHits.at(TPC_VIEW_W))
+                        nHitsW += !usedHits.count(pHit);
+                }
 
-                    if (pass == 1 && (usedHits.count(pHitU) || usedHits.count(pHitV) || usedHits.count(pHitW)))
-                        continue;
-                    if (pass == 2)
-                    {
-                        // If the matched constraint hit is already used, we can still use the triplet if the other two hits are unused
-                        if (constraintView == TPC_VIEW_U && usedHits.count(pHitU))
-                            pHitU = nullptr;
-                        else if (constraintView == TPC_VIEW_V && usedHits.count(pHitV))
-                            pHitV = nullptr;
-                        else if (constraintView == TPC_VIEW_W && usedHits.count(pHitW))
-                            pHitW = nullptr;
-
-                        if ((pHitU && usedHits.count(pHitU)) || (pHitV && usedHits.count(pHitV)) || (pHitW && usedHits.count(pHitW)))
-                            continue;
-                    }
-                    if (pass == 1 && pPlaneContextObject->AddHitTriplet(pHitU, pHitV, pHitW))
-                    {
-                        usedHits.insert(pHitU);
-                        usedHits.insert(pHitV);
-                        usedHits.insert(pHitW);
-                    }
+                HitType constraintView{HIT_CUSTOM};
+                if (pass == 1)
+                {
+                    constraintView = nHitsW >= nHitsV && nHitsW >= nHitsU ? TPC_VIEW_W : nHitsV >= nHitsU ? TPC_VIEW_V : TPC_VIEW_U;
                 }
                 else
                 {
-                    const CaloHit *pHitU{(triplets[i].m_uIndex >= 0) ? readout.at(TPC_VIEW_U)[triplets[i].m_uIndex] : nullptr};
-                    const CaloHit *pHitV{(triplets[i].m_vIndex >= 0) ? readout.at(TPC_VIEW_V)[triplets[i].m_vIndex] : nullptr};
-                    const CaloHit *pHitW{(triplets[i].m_wIndex >= 0) ? readout.at(TPC_VIEW_W)[triplets[i].m_wIndex] : nullptr};
-                    if ((pHitU && usedHits.count(pHitU)) || (pHitV && usedHits.count(pHitV)) || (pHitW && usedHits.count(pHitW)))
-                        continue;
-                    if (pass == 1)
-                        fallbackTriplets.push_back({triplets[i].m_uIndex, triplets[i].m_vIndex, triplets[i].m_wIndex, triplets[i].m_cost});
-                    if (pass == 2 && pPlaneContextObject->AddHitTriplet(pHitU, pHitV, pHitW))
+                    if (usedView == TPC_VIEW_U)
+                        constraintView = nHitsW <= nHitsV ? TPC_VIEW_W : TPC_VIEW_V;
+                    else if (usedView == TPC_VIEW_V)
+                        constraintView = nHitsW <= nHitsU ? TPC_VIEW_W : TPC_VIEW_U;
+                    else if (usedView == TPC_VIEW_W)
+                        constraintView = nHitsV <= nHitsU ? TPC_VIEW_V : TPC_VIEW_U;
+                }
+
+                CostMatrix costMatrix{this->ComputeCostMatrix(driftBinHits, 100.f, constraintView, usedHits)};
+                const IntVector assignment{this->KuhnMunkres(costMatrix)};
+                HitType viewA, viewB;
+                this->SelectViewPair(constraintView, viewA, viewB);
+                int nHitsA{static_cast<int>(driftBinHits.at(viewA).size())};
+                int nHitsB{static_cast<int>(driftBinHits.at(viewB).size())};
+                {
+                    int nActualA{0}, nActualB{0};
+                    for (const auto *pHit : driftBinHits.at(viewA))
+                        nActualA += !usedHits.count(pHit);
+                    for (const auto *pHit : driftBinHits.at(viewB))
+                        nActualB += !usedHits.count(pHit);
+                }
+                if (nHitsA == 0 || nHitsB == 0)
+                    continue;
+                const PairVector pairs{this->BuildPairs(assignment, nHitsA, nHitsB, costMatrix, m_chi2Threshold)};
+                CostMatrix tripletCostMatrix{this->ComputeTripletCostMatrix(pairs, driftBinHits, 100.f, constraintView, usedHits)};
+                const IntVector tripletAssignment{this->KuhnMunkres(tripletCostMatrix)};
+                int nHitsC{static_cast<int>(driftBinHits.at(constraintView).size())};
+                const TripletVector triplets{this->BuildTriplets(pairs, tripletAssignment, nHitsC, tripletCostMatrix, constraintView, m_chi2Threshold)};
+                for (size_t i = 0; i < triplets.size(); ++i)
+                {
+                    if (triplets[i].m_uIndex >= 0 && triplets[i].m_vIndex >= 0 && triplets[i].m_wIndex >= 0)
                     {
-                        usedHits.insert(pHitU);
-                        usedHits.insert(pHitV);
-                        usedHits.insert(pHitW);
+                        const CaloHit *pHitU{driftBinHits.at(TPC_VIEW_U)[triplets[i].m_uIndex]};
+                        const CaloHit *pHitV{driftBinHits.at(TPC_VIEW_V)[triplets[i].m_vIndex]};
+                        const CaloHit *pHitW{driftBinHits.at(TPC_VIEW_W)[triplets[i].m_wIndex]};
+
+                        if (pass == 1 && (usedHits.count(pHitU) || usedHits.count(pHitV) || usedHits.count(pHitW)))
+                            continue;
+                        if (pass == 2)
+                        {
+                            // If the matched constraint hit is already used, we can still use the triplet if the other two hits are unused
+                            if (constraintView == TPC_VIEW_U && usedHits.count(pHitU))
+                                pHitU = nullptr;
+                            else if (constraintView == TPC_VIEW_V && usedHits.count(pHitV))
+                                pHitV = nullptr;
+                            else if (constraintView == TPC_VIEW_W && usedHits.count(pHitW))
+                                pHitW = nullptr;
+
+                            if ((pHitU && usedHits.count(pHitU)) || (pHitV && usedHits.count(pHitV)) || (pHitW && usedHits.count(pHitW)))
+                                continue;
+                        }
+                        if (pass == 1 && pPlaneContextObject->AddHitTriplet(pHitU, pHitV, pHitW))
+                        {
+                            usedHits.insert(pHitU);
+                            usedHits.insert(pHitV);
+                            usedHits.insert(pHitW);
+                        }
+                    }
+                    else
+                    {
+                        const CaloHit *pHitU{(triplets[i].m_uIndex >= 0) ? driftBinHits.at(TPC_VIEW_U)[triplets[i].m_uIndex] : nullptr};
+                        const CaloHit *pHitV{(triplets[i].m_vIndex >= 0) ? driftBinHits.at(TPC_VIEW_V)[triplets[i].m_vIndex] : nullptr};
+                        const CaloHit *pHitW{(triplets[i].m_wIndex >= 0) ? driftBinHits.at(TPC_VIEW_W)[triplets[i].m_wIndex] : nullptr};
+                        if ((pHitU && usedHits.count(pHitU)) || (pHitV && usedHits.count(pHitV)) || (pHitW && usedHits.count(pHitW)))
+                            continue;
+                        if (pass == 1)
+                            fallbackTriplets.push_back({triplets[i].m_uIndex, triplets[i].m_vIndex, triplets[i].m_wIndex, triplets[i].m_cost});
+                        if (pass == 2 && pPlaneContextObject->AddHitTriplet(pHitU, pHitV, pHitW))
+                        {
+                            usedHits.insert(pHitU);
+                            usedHits.insert(pHitV);
+                            usedHits.insert(pHitW);
+                        }
                     }
                 }
+                usedView = constraintView;
             }
-            usedView = constraintView;
-        }
-        // Add in the fallback triplets that were not picked up in the second pass
-        for (const auto& triplet : fallbackTriplets)
-        {
-            const CaloHit *pHitU{(triplet.m_uIndex >= 0) ? readout.at(TPC_VIEW_U)[triplet.m_uIndex] : nullptr};
-            const CaloHit *pHitV{(triplet.m_vIndex >= 0) ? readout.at(TPC_VIEW_V)[triplet.m_vIndex] : nullptr};
-            const CaloHit *pHitW{(triplet.m_wIndex >= 0) ? readout.at(TPC_VIEW_W)[triplet.m_wIndex] : nullptr};
-            if ((pHitU && usedHits.count(pHitU)) || (pHitV && usedHits.count(pHitV)) || (pHitW && usedHits.count(pHitW)))
-                continue;
+            // Add in the fallback triplets that were not picked up in the second pass
+            for (const auto& triplet : fallbackTriplets)
+            {
+                const CaloHit *pHitU{(triplet.m_uIndex >= 0) ? driftBinHits.at(TPC_VIEW_U)[triplet.m_uIndex] : nullptr};
+                const CaloHit *pHitV{(triplet.m_vIndex >= 0) ? driftBinHits.at(TPC_VIEW_V)[triplet.m_vIndex] : nullptr};
+                const CaloHit *pHitW{(triplet.m_wIndex >= 0) ? driftBinHits.at(TPC_VIEW_W)[triplet.m_wIndex] : nullptr};
+                if ((pHitU && usedHits.count(pHitU)) || (pHitV && usedHits.count(pHitV)) || (pHitW && usedHits.count(pHitW)))
+                    continue;
 
-            pPlaneContextObject->AddHitTriplet(pHitU, pHitV, pHitW);
+                pPlaneContextObject->AddHitTriplet(pHitU, pHitV, pHitW);
+            }
         }
     }
     PandoraContentApi::AddEventContextObject(*this, m_eventContextName, pPlaneContextObject);
+
+    if (m_visualize)
+    {
+        CaloHitList hits3D;
+        for (const LArPlaneContextObject::HitTriplet *pHitTriplet : *pPlaneContextObject)
+        {
+            const CaloHit *pHitU{pHitTriplet->m_uHit};
+            const CaloHit *pHitV{pHitTriplet->m_vHit};
+            const CaloHit *pHitW{pHitTriplet->m_wHit};
+            const CaloHit *pCaloHit3D{nullptr};
+            this->CreateThreeDHit(pHitU, pHitV, pHitW, pCaloHit3D);
+            if (pCaloHit3D)
+                hits3D.push_back(pCaloHit3D);
+        }
+
+        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hits3D, "3D", BLACK));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -223,21 +294,10 @@ PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeCostMatrix(const P
     {
         if (usedHits.count(aHits[i]))
             continue;
-        const CartesianVector a(aHits[i]->GetPositionVector());
-        const float dx_a(0.5f * aHits[i]->GetCellSize1());
-        const float xMin_a(a.GetX() - dx_a);
-        const float xMax_a(a.GetX() + dx_a);
         
         for (int j = 0; j < nB; ++j)
         {
             if (usedHits.count(bHits[j]))
-                continue;
-            const CartesianVector b(bHits[j]->GetPositionVector());
-            const float dx_b(0.5f * bHits[j]->GetCellSize1());
-            const float xMin_b(b.GetX() - dx_b);
-            const float xMax_b(b.GetX() + dx_b);
-            // Check that the A and B views are compatible in x, otherwise skip the chi-squared calculation
-            if ((xMax_a < xMin_b) || (xMin_a > xMax_b))
                 continue;
             
             float bestChi2 = std::numeric_limits<float>::max();
@@ -246,14 +306,6 @@ PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeCostMatrix(const P
             for (int k = 0; k < nC; ++k)
             {
                 // We allow the constraint hit to be used for cost calculation even if it's already used (it can validate a doublet match)
-                const CartesianVector c(cHits[k]->GetPositionVector());
-                const float dx_c(0.5f * cHits[k]->GetCellSize1());
-                const float xMin_c(c.GetX() - dx_c);
-                const float xMax_c(c.GetX() + dx_c);
-                // Check that constraint view is compatible with A and V in x, otherwise skip the chi-squared calculation
-                if ((xMax_a < xMin_c) || (xMin_a > xMax_c) || (xMax_b < xMin_c) || (xMin_b > xMax_c))
-                    continue;
-
                 float chi2{std::numeric_limits<float>::max()};
                 switch (constraintView)
                 {
@@ -577,6 +629,7 @@ StatusCode PlaneSolverAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Chi2Threshold", m_chi2Threshold));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EventContextName", m_eventContextName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
 
     return STATUS_CODE_SUCCESS;
 }
