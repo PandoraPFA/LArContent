@@ -1,0 +1,51 @@
+/**
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingPfoOperations.h
+ *
+ *  @brief  Header file for the stitching pfo operations interface class.
+ *
+ *  $Log: $
+ */
+#ifndef LAR_STITCHING_PFO_OPERATIONS_H
+#define LAR_STITCHING_PFO_OPERATIONS_H 1
+
+#include "Pandora/AlgorithmHeaders.h"
+
+#include <unordered_map>
+
+namespace lar_content
+{
+
+typedef std::unordered_map<const pandora::ParticleFlowObject *, const pandora::LArTPC *> PfoToLArTPCMap;
+
+/**
+ *  @brief  StitchingPfoOperations class
+ */
+class StitchingPfoOperations
+{
+public:
+    virtual ~StitchingPfoOperations() = default;
+
+    /**
+     *  @brief  Shift a Pfo hierarchy by a specified x0 value
+     *
+     *  @param  pPfo the address of the parent pfo
+     *  @param  stitchingInfo  the source for additional, local, stitching information
+     *  @param  x0 the x0 correction relative to the input pfo
+     */
+    virtual void ShiftPfoHierarchy(const pandora::ParticleFlowObject *const pParentPfo, const PfoToLArTPCMap &pfoToLArTPCMap,
+        const float x0) const = 0;
+
+    /**
+     *  @brief  Stitch together a pair of pfos
+     *
+     *  @param  pPfoToEnlarge the address of the pfo to enlarge
+     *  @param  pPfoToDelete the address of the pfo to delete (will become a dangling pointer)
+     *  @param  pfoToLArTPCMap the pfo to lar tpc map
+     */
+    virtual void StitchPfos(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::ParticleFlowObject *const pPfoToDelete,
+        PfoToLArTPCMap &pfoToLArTPCMap) const = 0;
+};
+
+} // namespace lar_content
+
+#endif // #ifndef LAR_STITCHING_PFO_OPERATIONS_H
