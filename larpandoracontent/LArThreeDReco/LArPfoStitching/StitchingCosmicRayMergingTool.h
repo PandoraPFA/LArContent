@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArControlFlow/StitchingCosmicRayMergingTool.h
+ *  @file   LArContent/LArThreeDReco/LArPfoStitching/StitchingCosmicRayMergingTool.h
  *
  *  @brief  Header file for the stitching cosmic ray merging tool class.
  *
@@ -9,7 +9,7 @@
 #define LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
-#include "larpandoracontent/LArControlFlow/StitchingBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingBaseTool.h"
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 

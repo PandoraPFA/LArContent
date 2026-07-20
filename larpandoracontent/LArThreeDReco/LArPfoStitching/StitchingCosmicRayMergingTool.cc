@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArControlFlow/StitchingCosmicRayMergingTool.cc
+ *  @file   LArContent/LArThreeDReco/LArPfoStitching/StitchingCosmicRayMergingTool.cc
  *
  *  @brief  Implementation of the stitching cosmic ray merging tool class.
  *
@@ -15,7 +15,7 @@
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "larpandoracontent/LArControlFlow/StitchingCosmicRayMergingTool.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingCosmicRayMergingTool.h"
 
 using namespace pandora;
 

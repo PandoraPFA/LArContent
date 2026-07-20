@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/StitchingBaseTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingBaseTool.h
  *
  *  @brief  Header file for the stitching tool base class.
  *
