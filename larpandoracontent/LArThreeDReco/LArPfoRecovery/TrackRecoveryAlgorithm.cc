@@ -231,6 +231,8 @@ void TrackRecoveryAlgorithm::FindUnmatchedHits(const CaloHitList &hitsA, const C
         return;
     const LArPlaneContextObject *pPlaneContextObject{dynamic_cast<const LArPlaneContextObject*>(PandoraContentApi::GetEventContextObject(
         *this, "PlaneContext"))};
+    if (!pPlaneContextObject)
+        return;
     const HitType viewB{hitsB.front()->GetHitType()}, viewC{hitsC.front()->GetHitType()};
     for (const CaloHit *const pCaloHitA : hitsA)
     {

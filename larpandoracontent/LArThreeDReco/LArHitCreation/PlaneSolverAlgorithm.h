@@ -192,7 +192,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    int m_chi2Threshold; ///< The chi-squared threshold below which a triplet is considered a valid match
+    float m_chi2Threshold; ///< The chi-squared threshold below which a triplet is considered a valid match
     std::string m_caloHitListName; ///< The name of the calo hit list containing all of the 2D hits
     std::string m_eventContextName; ///< The name of the EventContext object in which to persist the relationships between the 2D hits
     VolumeToReadoutMap m_planeToReadoutMap; ///< A map from volume, to readout plane, to the 2D hits in that plane
