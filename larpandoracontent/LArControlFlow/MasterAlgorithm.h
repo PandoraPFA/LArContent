@@ -17,7 +17,8 @@
 #include "larpandoracontent/LArControlFlow/CosmicRayTaggingBaseTool.h"
 #include "larpandoracontent/LArControlFlow/SliceIdBaseTool.h"
 #include "larpandoracontent/LArControlFlow/SliceSelectionBaseTool.h"
-#include "larpandoracontent/LArControlFlow/StitchingBaseTool.h"
+
+#include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingBaseTool.h"
 
 #include <unordered_map>
 

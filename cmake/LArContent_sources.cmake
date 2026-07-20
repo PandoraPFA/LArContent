@@ -32,7 +32,6 @@ set(LAR_CONTENT_SRCS
     larpandoracontent/LArControlFlow/PreProcessingAlgorithm.cc
     larpandoracontent/LArControlFlow/SimpleNeutrinoIdTool.cc
     larpandoracontent/LArControlFlow/SlicingAlgorithm.cc
-    larpandoracontent/LArControlFlow/StitchingCosmicRayMergingTool.cc
     larpandoracontent/LArControlFlow/StreamingAlgorithm.cc
     larpandoracontent/LArControlFlow/TestBeamCosmicRayTaggingTool.cc
     larpandoracontent/LArCustomParticles/CustomParticleCreationAlgorithm.cc
@@ -202,6 +201,7 @@ set(LAR_CONTENT_SRCS
     larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewSimpleTracksTool.cc
     larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.cc
     larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.cc
+    larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingCosmicRayMergingTool.cc
     larpandoracontent/LArTrackShowerId/BranchGrowingAlgorithm.cc
     larpandoracontent/LArTrackShowerId/ClusterCharacterisationBaseAlgorithm.cc
     larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.cc
