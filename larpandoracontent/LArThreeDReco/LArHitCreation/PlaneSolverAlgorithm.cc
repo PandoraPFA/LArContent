@@ -480,9 +480,9 @@ PlaneSolverAlgorithm::PairVector PlaneSolverAlgorithm::BuildPairs(const IntVecto
 
     for (int i = 0; i < nA; ++i)
     {
-        int j{assignment[i]};
+        const int j{assignment[i]};
 
-        if (j < nB && costMatrix[i][j] < chi2Threshold)
+        if (j >= 0 && j < nB && costMatrix[i][j] < chi2Threshold)
             pairs.push_back({i, j, costMatrix[i][j]});
     }
 
@@ -499,9 +499,9 @@ PlaneSolverAlgorithm::TripletVector PlaneSolverAlgorithm::BuildTriplets(const Pa
 
     for (int p = 0; p < nPairs; ++p)
     {
-        int k{assignment[p]};
+        const int k{assignment[p]};
 
-        if (k < nC && costMatrix[p][k] < chi2Threshold)
+        if (k >= 0 && k < nC && costMatrix[p][k] < chi2Threshold)
         {
             switch (constraintView)
             {
@@ -518,7 +518,7 @@ PlaneSolverAlgorithm::TripletVector PlaneSolverAlgorithm::BuildTriplets(const Pa
                     PANDORA_THROW(STATUS_CODE_INVALID_PARAMETER);
             }
         }
-        else if (costMatrix[p][k] < chi2Threshold)
+        else if (pairs[p].m_cost < chi2Threshold)
         {
             switch (constraintView)
             {

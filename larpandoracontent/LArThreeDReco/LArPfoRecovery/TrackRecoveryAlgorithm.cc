@@ -244,9 +244,9 @@ void TrackRecoveryAlgorithm::FindUnmatchedHits(const CaloHitList &hitsA, const C
         auto bIterator{std::find(hitsB.begin(), hitsB.end(), pHitB)};
         auto cIterator{std::find(hitsC.begin(), hitsC.end(), pHitC)};
         // Only flag hits as unmatched if the other hits in the triplet are present in the PFO
-        if (bIterator == hitsB.end() && cIterator != hitsC.end())
+        if (pHitB && bIterator == hitsB.end() && cIterator != hitsC.end())
             unmatchedHitsB.insert(pHitB);
-        if (cIterator == hitsC.end() && bIterator != hitsB.end())
+        if (pHitC && cIterator == hitsC.end() && bIterator != hitsB.end())
             unmatchedHitsC.insert(pHitC);
     }
 }

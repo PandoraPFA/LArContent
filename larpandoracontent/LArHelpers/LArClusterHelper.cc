@@ -754,6 +754,7 @@ void LArClusterHelper::OrderHitsAlongTrajectory(const Cluster *const pCluster, c
     // Add hits along the trajectory
     while (usedHits.size() < nHits)
     {
+        r = 2.f;
         // Get the local sliding fit trajectory
         const CartesianVector &seedPos{pSeedHit->GetPositionVector()};
         float rL{0.f}, rT{0.f};
