@@ -855,6 +855,9 @@ float ShortTrackReclusteringAlgorithm::GetMonotonicityScore(const pandora::CaloH
 
 float ShortTrackReclusteringAlgorithm::GetBalance(const pandora::CaloHitList &hits, const size_t pivot) const
 {
+    if (hits.empty() || pivot == 0 || pivot >= hits.size())
+        return 0.f;
+
     FloatVector adcs;
     // Get pre-pivot median
     size_t i{0};
