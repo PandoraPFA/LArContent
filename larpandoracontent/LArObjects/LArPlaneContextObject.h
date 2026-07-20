@@ -11,6 +11,8 @@
 #include "Objects/CaloHit.h"
 #include "Objects/EventContext.h"
 
+#include <memory>
+
 namespace lar_content
 {
 
