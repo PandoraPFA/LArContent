@@ -190,11 +190,7 @@ StatusCode TrackRecoveryAlgorithm::Run()
                     CaloHitList &oldClusterHits{clusterToHitMap[pOldCluster]};
                     oldClusterHits.remove(pCaloHit);
                 }
-                CaloHitList preHitList;
-                LArClusterHelper::GetAllHits(pNewCluster, preHitList);
                 PandoraContentApi::AddToCluster(*this, pNewCluster, pCaloHit);
-                CaloHitList postHitList;
-                LArClusterHelper::GetAllHits(pNewCluster, postHitList);
                 hitToClusterMap[pCaloHit] = pNewCluster;
             }
         }
