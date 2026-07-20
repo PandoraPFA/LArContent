@@ -3,8 +3,8 @@
  *
  *  @brief  Tries to identify short tracks that are either lost, or under-clustered and recover missing hits.
  *          This algorithm looks at all three views of a PFO to try to identify if one or more views exhibit step changes in ADC values that
- *          might be indicative of a decay or intelastic interaction. If such a change occurs it looks for consistency across views and also
- *          examines nearby unclustered hits, or hits in nearby clusters to see if a more cohenrent clustering can be identified.
+ *          might be indicative of a decay or inelastic interaction. If such a change occurs it looks for consistency across views and also
+ *          examines nearby unclustered hits, or hits in nearby clusters to see if a more coherent clustering can be identified.
  *          If these various conditions are met, then reclustering is performed.
  *
  *  $Log: $

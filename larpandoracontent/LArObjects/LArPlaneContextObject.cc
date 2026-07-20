@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArHelpers/LArPlaneContextObject.cc
+ *  @file   larpandoracontent/LArObjects/LArPlaneContextObject.cc
  *
  *  @brief  Implementation of the cluster helper class.
  *
