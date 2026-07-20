@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArHelpers/LArPlaneContextObject.h
+ *  @file   larpandoracontent/LArObjects/LArPlaneContextObject.h
  *
  *  @brief  Header file for the LArPlaneContextObject class.
  *
