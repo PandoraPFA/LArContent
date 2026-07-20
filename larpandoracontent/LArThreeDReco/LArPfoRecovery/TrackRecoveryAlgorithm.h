@@ -10,7 +10,10 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
+
 #include <optional>
+#include <unordered_map>
 
 namespace lar_content
 {

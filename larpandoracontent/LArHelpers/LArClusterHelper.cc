@@ -717,7 +717,7 @@ void LArClusterHelper::OrderHitsAlongTrajectory(const Cluster *const pCluster, c
 
     // We'll compare the size of the number of used hits to the number of hits in the cluster to determine when we're done
     const size_t nHits(clusterHits.size());
-    CaloHitSet usedHits, skippedHits, prevSeed;
+    CaloHitSet usedHits, prevSeed;
     // Start with the first hit in the list
     const CaloHit *pSeedHit{clusterHits.front()};
     bool seedIdentified{false};

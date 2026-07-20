@@ -160,7 +160,7 @@ void ShortTrackReclusteringAlgorithm::FitAndOrderClusters(const ViewToClustersMa
 
 void ShortTrackReclusteringAlgorithm::FindAdcDiscontinuities(const ClusterToPfoMap &clusterToPfoMap, ClusterToHitsMap &clusterToHitsMap) const
 {
-    for (const auto &[pCluster, pPfo] : clusterToPfoMap)
+    for (const auto &[pCluster, _] : clusterToPfoMap)
     {
         CaloHitList clusterHitList{m_clusterToOrderedHitsMap.at(pCluster)};
         // Can't perform the pointing cluster's sliding linear fit without at least 3 hits
@@ -479,8 +479,6 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
     std::string tempPfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, tempPfoListName));
 
-    std::unordered_map<const CaloHit *, int> hitCount;
-    std::unordered_map<const Pfo *, int> pfoCount;
     ProtoPfoVector protoPfos;
     for (const auto &[pPfo, hitTriplet, hitsU, hitsV, hitsW] : partitions)
     {

@@ -174,13 +174,6 @@ void PlaneSolverAlgorithm::Solve() const
                 this->SelectViewPair(constraintView, viewA, viewB);
                 int nHitsA{static_cast<int>(driftBinHits.at(viewA).size())};
                 int nHitsB{static_cast<int>(driftBinHits.at(viewB).size())};
-                {
-                    int nActualA{0}, nActualB{0};
-                    for (const auto *pHit : driftBinHits.at(viewA))
-                        nActualA += !usedHits.count(pHit);
-                    for (const auto *pHit : driftBinHits.at(viewB))
-                        nActualB += !usedHits.count(pHit);
-                }
                 if (nHitsA == 0 || nHitsB == 0)
                     continue;
                 const PairVector pairs{this->BuildPairs(assignment, nHitsA, nHitsB, costMatrix, m_chi2Threshold)};
