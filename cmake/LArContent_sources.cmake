@@ -205,6 +205,7 @@ set(LAR_CONTENT_SRCS
     larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewSimpleTracksTool.cc
     larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.cc
     larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.cc
+    larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingBaseTool.cc
     larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingCosmicRayMergingTool.cc
     larpandoracontent/LArTrackShowerId/BranchGrowingAlgorithm.cc
     larpandoracontent/LArTrackShowerId/ClusterCharacterisationBaseAlgorithm.cc
