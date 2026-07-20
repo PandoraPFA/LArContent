@@ -1,8 +1,7 @@
 @PACKAGE_INIT@
 
 include(CMakeFindDependencyMacro)
-find_dependency(LArContent 04.16.00 REQUIRED)
+find_dependency(LArContent 05.00.00 REQUIRED)
 find_dependency(Torch REQUIRED)
-find_dependency(TBB REQUIRED)
 
 include("${CMAKE_CURRENT_LIST_DIR}/LArDLContentTargets.cmake")

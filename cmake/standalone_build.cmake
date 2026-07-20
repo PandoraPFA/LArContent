@@ -24,7 +24,6 @@ endif()
 find_package(Eigen3 3.3 REQUIRED)
 if(PANDORA_LIBTORCH)
     find_package(Torch REQUIRED)
-#    find_package(TBB REQUIRED)
 endif()
 
 #include(PandoraCMakeSettings)
@@ -79,7 +78,6 @@ if(PANDORA_LIBTORCH)
 #    target_link_libraries(${DL_PROJECT_NAME} PUBLIC
 #        PandoraPFA::${PROJECT_NAME}
 #        Torch::torch
-##        TBB::tbb
 #    )
 ####### End modern version
 

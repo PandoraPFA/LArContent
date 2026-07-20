@@ -16,6 +16,7 @@ endif()
 
 find_package(Eigen3 3.3 REQUIRED EXPORT)
 
+find_package(TBB QUIET EXPORT)
 find_package(Torch QUIET EXPORT)
 if(Torch_FOUND)
   set(PANDORA_LIBTORCH ON)
@@ -49,8 +50,6 @@ if(PANDORA_MONITORING)
 endif()
 
 if(PANDORA_LIBTORCH)
-  find_package(TBB REQUIRED EXPORT)
-
   include(${PANDORA_PROJECT_ROOT}/cmake/LArDLContent_sources.cmake)
 
   if(NOT DEFINED LAR_DL_CONTENT_SRCS OR LAR_DL_CONTENT_SRCS STREQUAL "")
