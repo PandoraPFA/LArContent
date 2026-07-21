@@ -67,8 +67,8 @@ public:
     /**
      *  @brief  Shift a Pfo hierarchy by a specified x0 value
      *
-     *  @param  pPfo the address of the parent pfo
-     *  @param  stitchingInfo  the source for additional, local, stitching information
+     *  @param  pParentPfo the address of the parent pfo
+     *  @param  pfoToLArTPCMap the pfo to lar tpc map
      *  @param  x0 the x0 correction relative to the input pfo
      */
     void ShiftPfoHierarchy(const pandora::ParticleFlowObject *const pParentPfo, const PfoToLArTPCMap &pfoToLArTPCMap,
