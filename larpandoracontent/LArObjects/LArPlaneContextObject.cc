@@ -24,11 +24,20 @@ bool LArPlaneContextObject::AddHitTriplet(const CaloHit *const pHitU, const Calo
     m_hitTriplets.emplace_back(std::move(hitTriplet));
 
     if (pHitU)
+    {
+        PANDORA_THROW_IF(STATUS_CODE_ALREADY_PRESENT, m_uIndex.find(pHitU) != m_uIndex.end());
         m_uIndex[pHitU] = raw;
+    }
     if (pHitV)
+    {
+        PANDORA_THROW_IF(STATUS_CODE_ALREADY_PRESENT, m_vIndex.find(pHitV) != m_vIndex.end());
         m_vIndex[pHitV] = raw;
+    }
     if (pHitW)
+    {
+        PANDORA_THROW_IF(STATUS_CODE_ALREADY_PRESENT, m_wIndex.find(pHitW) != m_wIndex.end());
         m_wIndex[pHitW] = raw;
+    }
 
     return true;
 }
