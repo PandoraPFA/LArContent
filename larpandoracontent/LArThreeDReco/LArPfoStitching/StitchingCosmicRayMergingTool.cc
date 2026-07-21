@@ -48,11 +48,13 @@ void StitchingCosmicRayMergingTool::RunStitching(const Algorithm *const pAlgorit
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    if (this->GetPandora().GetGeometry()->GetLArTPCMap().size() < 2)
-        return;
-
     if (pfoToLArTPCMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const unsigned int firstVolId{pfoToLArTPCMap.begin()->second->GetLArTPCVolumeId()};
+    if (std::all_of(std::next(pfoToLArTPCMap.begin()), pfoToLArTPCMap.end(),
+        [&](const auto &iter){ return iter.second->GetLArTPCVolumeId() == firstVolId; }))
+        return;
 
     PfoList primaryPfos;
     this->SelectPrimaryPfos(pMultiPfoList, pfoToLArTPCMap, primaryPfos);
