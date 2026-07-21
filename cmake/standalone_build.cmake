@@ -23,6 +23,7 @@ if(PANDORA_MONITORING)
 endif()
 find_package(Eigen3 3.3 REQUIRED)
 if(PANDORA_LIBTORCH)
+    find_package(TBB QUIET)
     find_package(Torch REQUIRED)
 endif()
 
