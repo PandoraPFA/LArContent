@@ -26,7 +26,15 @@ using namespace pandora;
 namespace lar_content
 {
 
-ShortTrackReclusteringAlgorithm::ShortTrackReclusteringAlgorithm()
+ShortTrackReclusteringAlgorithm::ShortTrackReclusteringAlgorithm() :
+    m_maxHitDiscrepancy{3.f},
+    m_maxHitDiscrepancySquared{m_maxHitDiscrepancy * m_maxHitDiscrepancy},
+    m_balanceThresholdLow{0.67f},
+    m_balanceThresholdHigh{1.5f},
+    m_braggLinearSlopeThreshold{0.16f},
+    m_braggCurvatureThreshold{0.f},
+    m_braggContrastThreshold{1.4f},
+    m_braggMonotonicityThreshold{0.5f}
 {
 }
 
@@ -107,49 +115,15 @@ void ShortTrackReclusteringAlgorithm::FitAndOrderClusters(const ViewToClustersMa
                 pCluster->GetOrderedCaloHitList().FillCaloHitList(m_clusterToOrderedHitsMap[pCluster]);
                 continue;
             }
-            switch (view)
+            try
             {
-                case TPC_VIEW_U:
-                    try
-                    {
-                        m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(),
-                            TPC_VIEW_U)));
-                        LArClusterHelper::OrderHitsAlongTrajectory(pCluster, m_clusterToSFRMap.at(pCluster), m_clusterToOrderedHitsMap[pCluster]);
-                    }
-                    catch (const StatusCodeException &)
-                    {
-                        m_clusterToOrderedHitsMap[pCluster] = CaloHitList();
-                        pCluster->GetOrderedCaloHitList().FillCaloHitList(m_clusterToOrderedHitsMap[pCluster]);
-                    }
-                    break;
-
-                case TPC_VIEW_V:
-                    try
-                    {
-                        m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(),
-                            TPC_VIEW_V)));
-                        LArClusterHelper::OrderHitsAlongTrajectory(pCluster, m_clusterToSFRMap.at(pCluster), m_clusterToOrderedHitsMap[pCluster]);
-                    }
-                    catch (const StatusCodeException &)
-                    {
-                        m_clusterToOrderedHitsMap[pCluster] = CaloHitList();
-                        pCluster->GetOrderedCaloHitList().FillCaloHitList(m_clusterToOrderedHitsMap[pCluster]);
-                    }
-                    break;
-                case TPC_VIEW_W:
-                    try
-                    {
-                        m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)));
-                        LArClusterHelper::OrderHitsAlongTrajectory(pCluster, m_clusterToSFRMap.at(pCluster), m_clusterToOrderedHitsMap[pCluster]);
-                    }
-                    catch (const StatusCodeException &)
-                    {
-                        m_clusterToOrderedHitsMap[pCluster] = CaloHitList();
-                        pCluster->GetOrderedCaloHitList().FillCaloHitList(m_clusterToOrderedHitsMap[pCluster]);
-                    }
-                    break;
-                default:
-                    break;
+                m_clusterToSFRMap.emplace(pCluster, TwoDSlidingFitResult(pCluster, 3, LArGeometryHelper::GetWirePitch(this->GetPandora(), view)));
+                LArClusterHelper::OrderHitsAlongTrajectory(pCluster, m_clusterToSFRMap.at(pCluster), m_clusterToOrderedHitsMap[pCluster]);
+            }
+            catch (const StatusCodeException &)
+            {
+                m_clusterToOrderedHitsMap[pCluster] = CaloHitList();
+                pCluster->GetOrderedCaloHitList().FillCaloHitList(m_clusterToOrderedHitsMap[pCluster]);
             }
         }
     }
@@ -181,7 +155,7 @@ void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHit
 {
     ClusterVector sortedClusters;
     sortedClusters.reserve(clusterToHitsMap.size());
-    for (const auto &[pCluster, discontinuityHits] : clusterToHitsMap)
+    for (const auto &[pCluster, _] : clusterToHitsMap)
         sortedClusters.emplace_back(pCluster);
     std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
@@ -309,11 +283,11 @@ void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHit
             const CartesianVector &posU{pBestU->GetPositionVector()}, &posV{pBestV->GetPositionVector()}, &posW{pBestW->GetPositionVector()};
             const float duv{(posU - posV).GetMagnitudeSquared()}, duw{(posU - posW).GetMagnitudeSquared()}, dvw{(posV - posW).GetMagnitudeSquared()};
             const CaloHit *selectedU{static_cast<const CaloHit *>(pBestU->GetParentAddress())}, *selectedV{static_cast<const CaloHit *>(pBestV->GetParentAddress())}, *selectedW{static_cast<const CaloHit *>(pBestW->GetParentAddress())};
-            if (duv > 9.f && duw > 9.f)
+            if (duv > m_maxHitDiscrepancySquared && duw > m_maxHitDiscrepancySquared)
                 selectedU = nullptr;
-            if (duv > 9.f && dvw > 9.f)
+            if (duv > m_maxHitDiscrepancySquared && dvw > m_maxHitDiscrepancySquared)
                 selectedV = nullptr;
-            if (duw > 9.f && dvw > 9.f)
+            if (duw > m_maxHitDiscrepancySquared && dvw > m_maxHitDiscrepancySquared)
                 selectedW = nullptr;
 
             if (selectedU || selectedV || selectedW)
@@ -339,7 +313,7 @@ void ShortTrackReclusteringAlgorithm::PartitionDiscontinuities(const PfoToHitTri
 {
     PfoVector sortedPfos;
     sortedPfos.reserve(pfoToHitTripletsMap.size());
-    for (const auto &[pPfo, hitTriplets] : pfoToHitTripletsMap)
+    for (const auto &[pPfo, _] : pfoToHitTripletsMap)
         sortedPfos.emplace_back(pPfo);
     std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
 
@@ -410,14 +384,14 @@ void ShortTrackReclusteringAlgorithm::PartitionDiscontinuities(const PfoToHitTri
             const float balanceV{this->GetBalance(orderedHitsV, indexV)};
             const float balanceW{this->GetBalance(orderedHitsW, indexW)};
             int nStepUp{0}, nStepDown{0}, nMissing{0};
-            nStepUp += balanceU > 1.5f;
-            nStepDown += balanceU && balanceU < 0.67f;
+            nStepUp += balanceU > m_balanceThresholdHigh;
+            nStepDown += balanceU && balanceU < m_balanceThresholdLow;
             nMissing += !balanceU;
-            nStepUp += balanceV > 1.5f;
-            nStepDown += balanceV && balanceV < 0.67f;
+            nStepUp += balanceV > m_balanceThresholdHigh;
+            nStepDown += balanceV && balanceV < m_balanceThresholdLow;
             nMissing += !balanceV;
-            nStepUp += balanceW > 1.5f;
-            nStepDown += balanceW &&balanceW < 0.67f;
+            nStepUp += balanceW > m_balanceThresholdHigh;
+            nStepDown += balanceW && balanceW < m_balanceThresholdLow;
             nMissing += !balanceW;
 
             if (nStepUp >= 3 || nStepDown >= 3 || (nStepUp == 2 && nMissing == 1) || (nStepDown == 2 && nMissing == 1))
@@ -757,6 +731,8 @@ void ShortTrackReclusteringAlgorithm::NormalizeAdc(const pandora::CaloHitVector 
         normalizedAdc.emplace_back(pCaloHit->GetInputEnergy() / median);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ShortTrackReclusteringAlgorithm::IsBraggPeak(const pandora::CaloHitVector &hits, const size_t start, const size_t end) const
 {
     const float linearSlopeScore{this->GetLinearSlopeScore(hits, start, end)};
@@ -860,13 +836,9 @@ float ShortTrackReclusteringAlgorithm::GetBalance(const pandora::CaloHitList &hi
     FloatVector adcs;
     // Get pre-pivot median
     size_t i{0};
-    for (const CaloHit *const pCaloHit : hits)
-    {
-        if (i >= pivot)
-            break;
-        adcs.emplace_back(pCaloHit->GetInputEnergy());
-        ++i;
-    }
+    auto it{hits.begin()};
+    for (auto end = hits.end(); it != end && i < pivot; ++it, ++i)
+        adcs.emplace_back((*it)->GetInputEnergy());
     size_t mid{adcs.size() / 2};
     std::nth_element(adcs.begin(), adcs.begin() + mid, adcs.end());
     const float medianDenom{!adcs.empty() ? adcs[mid] : 0.f};
@@ -874,17 +846,8 @@ float ShortTrackReclusteringAlgorithm::GetBalance(const pandora::CaloHitList &hi
     adcs.clear();
 
     // Get post-pivot median
-    i = 0;
-    for (const CaloHit *const pCaloHit : hits)
-    {
-        if (i < pivot)
-        {
-            ++i;
-            continue;
-        }
-        adcs.emplace_back(pCaloHit->GetInputEnergy());
-        ++i;
-    }
+    for (; it != hits.end(); ++it)
+        adcs.emplace_back((*it)->GetInputEnergy());
     mid = adcs.size() / 2;
     std::nth_element(adcs.begin(), adcs.begin() + mid, adcs.end());
     const float medianNum{!adcs.empty() ? adcs[mid] : 0.f};
@@ -899,6 +862,21 @@ StatusCode ShortTrackReclusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "ClusterListNames", m_clusterListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxHitDiscrepancy",
+        m_maxHitDiscrepancy));
+    m_maxHitDiscrepancySquared = m_maxHitDiscrepancy * m_maxHitDiscrepancy;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BalanceThresholdLow",
+        m_balanceThresholdLow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BalanceThresholdHigh",
+        m_balanceThresholdHigh));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BraggLinearSlopeThreshold",
+        m_braggLinearSlopeThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BraggCurvatureThreshold",
+        m_braggCurvatureThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BraggContrastThreshold",
+        m_braggContrastThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BraggMonotonicityThreshold",
+        m_braggMonotonicityThreshold));
 
     return STATUS_CODE_SUCCESS;
 }

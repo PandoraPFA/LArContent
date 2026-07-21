@@ -281,6 +281,14 @@ private:
     std::string m_caloHitListName; ///< Name of list of calo hits to consider during reclustering
     std::string m_pfoListName; ///< Name of list of track-like pfos to consider for reclustering
     pandora::StringVector m_clusterListNames; ///< Names of lists of clusters to consider during reclustering
+    float m_maxHitDiscrepancy; ///< Maximum allowed discrepancy between 2D hit positions and triplet projections
+    float m_maxHitDiscrepancySquared; ///< Square of m_maxHitDiscrepancy, cached for efficiency
+    float m_balanceThresholdLow; ///< Threshold for the balance ratio below which a discontinuity is considered to be present
+    float m_balanceThresholdHigh; ///< Threshold for the balance ratio above which a discontinuity is considered to be present
+    float m_braggLinearSlopeThreshold; ///< Threshold for the linear slope score above which a Bragg peak is considered to be present
+    float m_braggCurvatureThreshold; ///< Threshold for the quadratic curvature score above which a Bragg peak is considered to be present
+    float m_braggContrastThreshold; ///< Threshold for the contrast score above which a Bragg peak is considered to be present
+    float m_braggMonotonicityThreshold; ///< Threshold for the monotonicity score above which a Bragg peak is considered to be present
     std::unordered_map<const pandora::Cluster *, TwoDSlidingFitResult> m_clusterToSFRMap;
     std::unordered_map<const pandora::Cluster *, pandora::CaloHitList> m_clusterToOrderedHitsMap;
 };
