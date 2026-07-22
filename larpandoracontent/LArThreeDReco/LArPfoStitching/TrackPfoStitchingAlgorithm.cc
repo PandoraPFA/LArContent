@@ -242,7 +242,7 @@ void TrackPfoStitchingAlgorithm::StitchPfos(
     for (const ParticleFlowObject *const pDaughterPfo : daughterPfos)
     {
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPfoToDelete, pDaughterPfo));
+            PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPfoToEnlarge, pDaughterPfo));
     }
 
     for (const Vertex *const pDaughterVertex : daughterVertices)
