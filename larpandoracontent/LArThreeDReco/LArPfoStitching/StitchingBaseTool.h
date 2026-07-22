@@ -40,7 +40,7 @@ protected:
      *  @brief  Run the stitching logic
      *
      *  @param  pAlgorithm address of the calling algorithm
-     *  @param  pAlgorithm address of the calling algorithm's stitching operations implementation
+     *  @param  pStitchingOperations address of the calling algorithm's stitching operations implementation
      *  @param  pMultiPfoList the list of pfos in multiple lar tpcs
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
      *  @param  stitchedPfosToX0Map a map of cosmic-ray pfos that have been stitched between lar tpcs to the X0 shift
