@@ -37,7 +37,8 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_relaxTransverseDisplacement(2.5f),
     m_minNCaloHits3D(0),
     m_maxX0FractionalDeviation(0.3f),
-    m_boundaryToleranceWidth(10.f)
+    m_boundaryToleranceWidth(10.f),
+    m_onlyFinalStatePfos(true)
 {
 }
 
@@ -56,14 +57,14 @@ void StitchingCosmicRayMergingTool::RunStitching(const Algorithm *const pAlgorit
         [&](const auto &iter){ return iter.second->GetLArTPCVolumeId() == firstVolId; }))
         return;
 
-    PfoList primaryPfos;
-    this->SelectPrimaryPfos(pMultiPfoList, pfoToLArTPCMap, primaryPfos);
+    PfoList pfos;
+    this->SelectPfos(pMultiPfoList, pfoToLArTPCMap, pfos);
 
     ThreeDPointingClusterMap pointingClusterMap;
-    this->BuildPointingClusterMaps(primaryPfos, pfoToLArTPCMap, pointingClusterMap);
+    this->BuildPointingClusterMaps(pfos, pfoToLArTPCMap, pointingClusterMap);
 
     LArTPCToPfoMap larTPCToPfoMap;
-    this->BuildTPCMaps(primaryPfos, pfoToLArTPCMap, larTPCToPfoMap);
+    this->BuildTPCMaps(pfos, pfoToLArTPCMap, larTPCToPfoMap);
 
     PfoAssociationMatrix pfoAssociationMatrix;
     this->CreatePfoMatches(larTPCToPfoMap, pointingClusterMap, pfoAssociationMatrix);
@@ -82,11 +83,11 @@ void StitchingCosmicRayMergingTool::RunStitching(const Algorithm *const pAlgorit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingCosmicRayMergingTool::SelectPrimaryPfos(const PfoList *pInputPfoList, const PfoToLArTPCMap &pfoToLArTPCMap, PfoList &outputPfoList) const
+void StitchingCosmicRayMergingTool::SelectPfos(const PfoList *pInputPfoList, const PfoToLArTPCMap &pfoToLArTPCMap, PfoList &outputPfoList) const
 {
     for (const ParticleFlowObject *const pPfo : *pInputPfoList)
     {
-        if (!LArPfoHelper::IsFinalState(pPfo) || !LArPfoHelper::IsTrack(pPfo))
+        if ((m_onlyFinalStatePfos && !LArPfoHelper::IsFinalState(pPfo)) || !LArPfoHelper::IsTrack(pPfo))
             continue;
 
         if (!pfoToLArTPCMap.count(pPfo))
@@ -533,6 +534,21 @@ void StitchingCosmicRayMergingTool::OrderPfoMerges(const PfoToLArTPCMap &pfoToLA
                         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
                     pVertexPfo = ((deltaY > 0.f) ? pPfo1 : pPfo2);
+
+                    if (!m_onlyFinalStatePfos) // vertex PFO could be downstream in the hierarchy, need to swap if we find this
+                    {
+                        const ParticleFlowObject *pNonVertexPfo{(pPfo1 == pVertexPfo) ? pPfo2 : pPfo1};
+                        PfoList downstreamPfos;
+                        LArPfoHelper::GetAllDownstreamPfos(pNonVertexPfo, downstreamPfos);
+                        for (const ParticleFlowObject *pPfo : downstreamPfos)
+                        {
+                            if (pPfo == pVertexPfo)
+                            {
+                                pVertexPfo = pNonVertexPfo;
+                                break;
+                            }
+                        }
+                    }
                 }
                 catch (const pandora::StatusCodeException &)
                 {
@@ -870,6 +886,9 @@ StatusCode StitchingCosmicRayMergingTool::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BoundaryToleranceWidth", m_boundaryToleranceWidth));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OnlyFinalStatePfos", m_onlyFinalStatePfos));
 
     return STATUS_CODE_SUCCESS;
 }
