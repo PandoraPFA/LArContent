@@ -84,9 +84,11 @@ StatusCode PfoStitchingAlgorithm::InferLArTPCs(InferredLArTPCVector &inferredTPC
         if (!pLineGap || (pLineGap->GetLineGapType() != TPC_DRIFT_GAP))
             continue;
 
-        PANDORA_RETURN_IF(STATUS_CODE_INVALID_PARAMETER,
-            pLineGap->GetLineStartX() > pLineGap->GetLineEndX() ||
-            pLineGap->GetLineStartX() < parentMinX || pLineGap->GetLineEndX() > parentMaxX);
+        PANDORA_RETURN_IF(STATUS_CODE_INVALID_PARAMETER, pLineGap->GetLineStartX() > pLineGap->GetLineEndX())
+
+        if (pLineGap->GetLineStartX() < parentMinX || pLineGap->GetLineEndX() > parentMaxX)
+            continue;
+
         driftGapXIntervals.emplace_back(pLineGap->GetLineStartX(), pLineGap->GetLineEndX());
     }
 
