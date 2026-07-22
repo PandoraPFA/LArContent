@@ -87,7 +87,7 @@ private:
         const pandora::PfoList *const pPfoList, const InferredLArTPCVector &inferredLArTPCs, PfoToLArTPCMap &pfoToLArTPCMap) const;
 
     /**
-     *  @brief  Find the named list containing a cluster or vertex used by a pfo in the input list
+     *  @brief  Find the named list containing a cluster used by a pfo in the input list
      *
      *  @param[in]  pCluster the cluster whose list is required
      *
@@ -96,7 +96,7 @@ private:
     const std::string GetListName(const pandora::Cluster *const pCluster) const;
 
     /**
-     *  @brief  Find the named list containing a cluster or vertex used by a pfo in the input list
+     *  @brief  Find the named list containing a vertex used by a pfo in the input list
      *
      *  @param[in]  pVertex the vertex whose list is required
      *
@@ -104,9 +104,18 @@ private:
      */
     const std::string GetListName(const pandora::Vertex *const pVertex) const;
 
+    /**
+     *  @brief  Find the named list containing the input pfo
+     *
+     *  @param[in]  pPfo the input pfo whose list is required
+     *
+     *  @return the list name
+     */
+    const std::string GetInputListName(const pandora::ParticleFlowObject *const pPfo) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) override;
 
-    std::string m_inputPfoListName;            ///< The list containing pfos to stitch
+    pandora::StringVector m_inputPfoListNames; ///< The input pfo list names
     pandora::StringVector m_daughterListNames; ///< Cluster and vertex lists used by the input pfos, updated when pfos are merged
     StitchingToolVector m_stitchingToolVector; ///< The stitching tools to be applied
     bool m_visualise;                          ///< Visualise merges
