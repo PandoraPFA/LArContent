@@ -88,13 +88,13 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Select primary Pfos from the input list of Pfos
+     *  @brief  Select Pfos from the input list of Pfos
      *
      *  @param  pInputPfoList the input list of Pfos
      *  @param  pfoToLArTPCMap the input mapping between Pfos and tpc
      *  @param  outputPfoList the output list of Pfos
      */
-    void SelectPrimaryPfos(const pandora::PfoList *pInputPfoList, const PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoList &outputPfoList) const;
+    void SelectPfos(const pandora::PfoList *pInputPfoList, const PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoList &outputPfoList) const;
 
     typedef std::unordered_map<const pandora::ParticleFlowObject *, LArPointingCluster> ThreeDPointingClusterMap;
 
@@ -244,6 +244,7 @@ private:
     unsigned int m_minNCaloHits3D;
     float m_maxX0FractionalDeviation; ///< The maximum allowed fractional difference of an X0 contribution for matches to be stitched
     float m_boundaryToleranceWidth;   ///< The distance from the APA/CPA boundary inside which the deviation consideration is ignored
+    bool  m_onlyFinalStatePfos;       ///< Select only final state PFOs
 };
 
 } // namespace lar_content
