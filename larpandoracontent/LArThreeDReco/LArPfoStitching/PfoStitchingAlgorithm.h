@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoStitching/TrackPfoStitchingAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoStitching/PfoStitchingAlgorithm.h
  *
  *  @brief  Header file for the track pfo stitching algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_TRACK_PFO_STITCHING_ALGORITHM_H
-#define LAR_TRACK_PFO_STITCHING_ALGORITHM_H 1
+#ifndef LAR_PFO_STITCHING_ALGORITHM_H
+#define LAR_PFO_STITCHING_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 #include "Api/PandoraApi.h"
@@ -23,9 +23,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  TrackPfoStitchingAlgorithm class
+ *  @brief  PfoStitchingAlgorithm class
  */
-class TrackPfoStitchingAlgorithm : public pandora::Algorithm, public StitchingPfoOperations
+class PfoStitchingAlgorithm : public pandora::Algorithm, public StitchingPfoOperations
 {
 public:
     /**
@@ -41,7 +41,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    TrackPfoStitchingAlgorithm();
+    PfoStitchingAlgorithm();
 
     /**
      *  @brief  Shift a Pfo hierarchy by a specified x0 value
@@ -114,4 +114,4 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_TRACK_PFO_STITCHING_ALGORITHM_H
+#endif // #ifndef LAR_PFO_STITCHING_ALGORITHM_H

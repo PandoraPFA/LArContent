@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoStitching/TrackPfoStitchingAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoStitching/PfoStitchingAlgorithm.cc
  *
  *  @brief  Implementation of the track pfo stitching algorithm class.
  *
@@ -11,7 +11,7 @@
 #include "Geometry/DetectorGap.h"
 #include "Geometry/LArTPC.h"
 
-#include "larpandoracontent/LArThreeDReco/LArPfoStitching/TrackPfoStitchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoStitching/PfoStitchingAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
@@ -23,21 +23,21 @@ using namespace pandora;
 namespace lar_content
 {
 
-TrackPfoStitchingAlgorithm::InferredLArTPC::InferredLArTPC(const PandoraApi::Geometry::LArTPC::Parameters &parameters) :
+PfoStitchingAlgorithm::InferredLArTPC::InferredLArTPC(const PandoraApi::Geometry::LArTPC::Parameters &parameters) :
     LArTPC(parameters)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackPfoStitchingAlgorithm::TrackPfoStitchingAlgorithm() :
+PfoStitchingAlgorithm::PfoStitchingAlgorithm() :
     m_visualise{false}
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackPfoStitchingAlgorithm::Run()
+StatusCode PfoStitchingAlgorithm::Run()
 {
     PANDORA_RETURN_IF(STATUS_CODE_SUCCESS, m_stitchingToolVector.empty());
 
@@ -63,7 +63,7 @@ StatusCode TrackPfoStitchingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackPfoStitchingAlgorithm::InferLArTPCs(InferredLArTPCVector &inferredTPCs) const
+StatusCode PfoStitchingAlgorithm::InferLArTPCs(InferredLArTPCVector &inferredTPCs) const
 {
     const LArTPC &parentLArTPC(this->GetPandora().GetGeometry()->GetLArTPC());
     const float parentMinX(parentLArTPC.GetCenterX() - 0.5f * parentLArTPC.GetWidthX());
@@ -127,12 +127,12 @@ StatusCode TrackPfoStitchingAlgorithm::InferLArTPCs(InferredLArTPCVector &inferr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackPfoStitchingAlgorithm::GetPfoToLArTPCMap(const PfoList *const pPfoList, const InferredLArTPCVector &inferredTPCs,
+void PfoStitchingAlgorithm::GetPfoToLArTPCMap(const PfoList *const pPfoList, const InferredLArTPCVector &inferredTPCs,
     PfoToLArTPCMap &pfoToLArTPCMap) const
 {
     for (const ParticleFlowObject *const pPfo : *pPfoList)
     {
-        if (!LArPfoHelper::IsTrack(pPfo) || LArPfoHelper::IsNeutrino(pPfo))
+        if (LArPfoHelper::IsNeutrino(pPfo))
             continue;
 
         CartesianPointVector positions;
@@ -172,7 +172,7 @@ void TrackPfoStitchingAlgorithm::GetPfoToLArTPCMap(const PfoList *const pPfoList
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const std::string TrackPfoStitchingAlgorithm::GetListName(const Cluster *const pCluster) const
+const std::string PfoStitchingAlgorithm::GetListName(const Cluster *const pCluster) const
 {
     for (const std::string &listName : m_daughterListNames)
     {
@@ -189,7 +189,7 @@ const std::string TrackPfoStitchingAlgorithm::GetListName(const Cluster *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const std::string TrackPfoStitchingAlgorithm::GetListName(const Vertex *const pVertex) const
+const std::string PfoStitchingAlgorithm::GetListName(const Vertex *const pVertex) const
 {
     for (const std::string &listName : m_daughterListNames)
     {
@@ -206,16 +206,16 @@ const std::string TrackPfoStitchingAlgorithm::GetListName(const Vertex *const pV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackPfoStitchingAlgorithm::ShiftPfoHierarchy([[maybe_unused]]const ParticleFlowObject *const pParentPfo,
+void PfoStitchingAlgorithm::ShiftPfoHierarchy([[maybe_unused]]const ParticleFlowObject *const pParentPfo,
     [[maybe_unused]]const PfoToLArTPCMap &pfoToLArTPCMap, [[maybe_unused]]const float x0) const
 {
-    std::cout << "TrackPfoStitchingAlgorithm: Stitching tools must not be configured to apply an x0 correction" << std::endl;
+    std::cout << "PfoStitchingAlgorithm: Stitching tools must not be configured to apply an x0 correction" << std::endl;
     PANDORA_THROW(STATUS_CODE_NOT_ALLOWED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackPfoStitchingAlgorithm::StitchPfos(
+void PfoStitchingAlgorithm::StitchPfos(
     const ParticleFlowObject *const pPfoToEnlarge, const ParticleFlowObject *const pPfoToDelete, PfoToLArTPCMap &pfoToLArTPCMap) const
 {
     PANDORA_THROW_IF(STATUS_CODE_NOT_ALLOWED, pPfoToEnlarge == pPfoToDelete);
@@ -271,7 +271,7 @@ void TrackPfoStitchingAlgorithm::StitchPfos(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackPfoStitchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode PfoStitchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
