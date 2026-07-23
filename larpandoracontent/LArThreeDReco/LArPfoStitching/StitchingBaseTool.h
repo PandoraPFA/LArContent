@@ -16,14 +16,15 @@
 namespace lar_content
 {
 
-typedef std::unordered_map<const pandora::ParticleFlowObject *, const pandora::LArTPC *> PfoToLArTPCMap;
-typedef std::unordered_map<const pandora::ParticleFlowObject *, float> PfoToFloatMap;
 /**
  *  @brief  StitchingBaseTool class
  */
 class StitchingBaseTool : public pandora::AlgorithmTool
 {
 public:
+    typedef std::unordered_map<const pandora::ParticleFlowObject *, const pandora::LArTPC *> PfoToLArTPCMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject *, float> PfoToFloatMap;
+
     /**
      *  @brief  Run the algorithm tool
      *

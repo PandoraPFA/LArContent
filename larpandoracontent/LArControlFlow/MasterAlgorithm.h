@@ -30,8 +30,6 @@ class LArMCParticleFactory;
 
 typedef std::vector<pandora::CaloHitList> SliceVector;
 typedef std::vector<pandora::PfoList> SliceHypotheses;
-typedef std::unordered_map<const pandora::ParticleFlowObject *, const pandora::LArTPC *> PfoToLArTPCMap;
-typedef std::unordered_map<const pandora::ParticleFlowObject *, float> PfoToFloatMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -61,8 +59,6 @@ public:
         pandora::InputBool m_shouldPerformSliceId;        ///< Whether to identify slices and select most appropriate pfos
         pandora::InputBool m_printOverallRecoStatus;      ///< Whether to print current operation status messages
     };
-
-    typedef std::unordered_map<const pandora::ParticleFlowObject *, const pandora::LArTPC *> PfoToLArTPCMap;
 
     /**
      *  @brief  Shift a Pfo hierarchy by a specified x0 value
