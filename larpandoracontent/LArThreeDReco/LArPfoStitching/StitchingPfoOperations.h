@@ -15,14 +15,15 @@
 namespace lar_content
 {
 
-typedef std::unordered_map<const pandora::ParticleFlowObject *, const pandora::LArTPC *> PfoToLArTPCMap;
-
 /**
  *  @brief  StitchingPfoOperations class
  */
 class StitchingPfoOperations
 {
 public:
+    typedef std::unordered_map<const pandora::ParticleFlowObject *, const pandora::LArTPC *> PfoToLArTPCMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject *, float> PfoToFloatMap;
+
     virtual ~StitchingPfoOperations() = default;
 
     /**
