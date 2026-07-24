@@ -94,6 +94,7 @@ set(LAR_CONTENT_DIRS
   larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching
   larpandoracontent/LArThreeDReco/LArPfoMopUp
   larpandoracontent/LArThreeDReco/LArPfoRecovery
+  larpandoracontent/LArThreeDReco/LArPfoStitching
   larpandoracontent/LArThreeDReco/LArShowerFragments
   larpandoracontent/LArThreeDReco/LArShowerMatching
   larpandoracontent/LArThreeDReco/LArThreeDBase

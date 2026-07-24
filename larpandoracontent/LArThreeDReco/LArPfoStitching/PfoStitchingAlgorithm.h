@@ -111,7 +111,18 @@ private:
      *
      *  @return the list name
      */
-    const std::string GetInputListName(const pandora::ParticleFlowObject *const pPfo) const;
+    const std::string GetListName(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
+     *  @brief  Find the named list containing the input object
+     *
+     *  @param[in]  pObject the object whose list is required
+     *  @param[in]  listNames the list names to search
+     *
+     *  @return the list name
+     */
+    template <typename TObject, typename TList>
+    const std::string GetListName(const TObject *const pObject, const pandora::StringVector &listNames) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) override;
 
