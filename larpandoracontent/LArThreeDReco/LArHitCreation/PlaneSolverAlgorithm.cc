@@ -231,7 +231,7 @@ void PlaneSolverAlgorithm::Solve() const
                 usedView = constraintView;
             }
             // Add in the fallback triplets that were not picked up in the second pass
-            for (const auto& triplet : fallbackTriplets)
+            for (const auto &triplet : fallbackTriplets)
             {
                 const CaloHit *pHitU{(triplet.m_uIndex >= 0) ? driftBinHits.at(TPC_VIEW_U)[triplet.m_uIndex] : nullptr};
                 const CaloHit *pHitV{(triplet.m_vIndex >= 0) ? driftBinHits.at(TPC_VIEW_V)[triplet.m_vIndex] : nullptr};
@@ -266,8 +266,8 @@ void PlaneSolverAlgorithm::Solve() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeCostMatrix(const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost,
-    const HitType constraintView, const CaloHitSet &usedHits) const
+PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeCostMatrix(
+    const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost, const HitType constraintView, const CaloHitSet &usedHits) const
 {
     HitType viewA, viewB;
     this->SelectViewPair(constraintView, viewA, viewB);
@@ -287,12 +287,12 @@ PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeCostMatrix(const P
     {
         if (usedHits.count(aHits[i]))
             continue;
-        
+
         for (int j = 0; j < nB; ++j)
         {
             if (usedHits.count(bHits[j]))
                 continue;
-            
+
             float bestChi2 = std::numeric_limits<float>::max();
             int bestK{-1};
 
@@ -331,8 +331,8 @@ PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeCostMatrix(const P
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeTripletCostMatrix(const PairVector &pairs, const PlaneToHitsMap &planeToHitsMap,
-    const float unmatchedCost, const HitType constraintView, const CaloHitSet &usedHits) const
+PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeTripletCostMatrix(const PairVector &pairs,
+    const PlaneToHitsMap &planeToHitsMap, const float unmatchedCost, const HitType constraintView, const CaloHitSet &usedHits) const
 {
     HitType viewA, viewB;
     this->SelectViewPair(constraintView, viewA, viewB);
@@ -378,7 +378,7 @@ PlaneSolverAlgorithm::CostMatrix PlaneSolverAlgorithm::ComputeTripletCostMatrix(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-IntVector PlaneSolverAlgorithm::KuhnMunkres(const CostMatrix& cost) const
+IntVector PlaneSolverAlgorithm::KuhnMunkres(const CostMatrix &cost) const
 {
     const int N{static_cast<int>(cost.size())};
     // Define the dual variables for rows (u) and columns (v), enforcing u[i] + v[j] <= cost[i][j]
@@ -448,8 +448,7 @@ IntVector PlaneSolverAlgorithm::KuhnMunkres(const CostMatrix& cost) const
             j0 = j1;
             // Stop when we get to an unmatched column, implying we've found an augmenting path. Otherwise, we have a clash and should look
             // to reassign the previous row (which happens because we've now set j0 to j1 for the next loop iteration)
-        }
-        while (p[j0] != 0);
+        } while (p[j0] != 0);
 
         // Walk back through way to update the matching along the augmenting path
         do
@@ -457,8 +456,7 @@ IntVector PlaneSolverAlgorithm::KuhnMunkres(const CostMatrix& cost) const
             int j1 = way[j0];
             p[j0] = p[j1];
             j0 = j1;
-        }
-        while (j0);
+        } while (j0);
     }
 
     // p[j] = i means row i is matched to column j, so we need to invert this to get the assignment of columns to rows.
@@ -473,8 +471,8 @@ IntVector PlaneSolverAlgorithm::KuhnMunkres(const CostMatrix& cost) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-PlaneSolverAlgorithm::PairVector PlaneSolverAlgorithm::BuildPairs(const IntVector &assignment, int nA, int nB, const CostMatrix& costMatrix,
-    float chi2Threshold) const
+PlaneSolverAlgorithm::PairVector PlaneSolverAlgorithm::BuildPairs(
+    const IntVector &assignment, int nA, int nB, const CostMatrix &costMatrix, float chi2Threshold) const
 {
     PairVector pairs;
 
@@ -491,8 +489,8 @@ PlaneSolverAlgorithm::PairVector PlaneSolverAlgorithm::BuildPairs(const IntVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-PlaneSolverAlgorithm::TripletVector PlaneSolverAlgorithm::BuildTriplets(const PairVector& pairs, const IntVector& assignment, int nC,
-    const CostMatrix& costMatrix, const HitType constraintView, float chi2Threshold) const
+PlaneSolverAlgorithm::TripletVector PlaneSolverAlgorithm::BuildTriplets(const PairVector &pairs, const IntVector &assignment, int nC,
+    const CostMatrix &costMatrix, const HitType constraintView, float chi2Threshold) const
 {
     TripletVector result;
     const int nPairs{static_cast<int>(pairs.size())};
@@ -542,8 +540,8 @@ PlaneSolverAlgorithm::TripletVector PlaneSolverAlgorithm::BuildTriplets(const Pa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PlaneSolverAlgorithm::CreateThreeDHit(const CaloHit *const pCaloHitU, const CaloHit *const pCaloHitV, const CaloHit *const pCaloHitW,
-    const CaloHit *&pCaloHit3D) const
+void PlaneSolverAlgorithm::CreateThreeDHit(
+    const CaloHit *const pCaloHitU, const CaloHit *const pCaloHitV, const CaloHit *const pCaloHitW, const CaloHit *&pCaloHit3D) const
 {
     const int nValidHits = (pCaloHitU ? 1 : 0) + (pCaloHitV ? 1 : 0) + (pCaloHitW ? 1 : 0);
     if (nValidHits < 2)
@@ -621,7 +619,8 @@ StatusCode PlaneSolverAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Chi2Threshold", m_chi2Threshold));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EventContextName", m_eventContextName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EventContextName", m_eventContextName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
 
     return STATUS_CODE_SUCCESS;

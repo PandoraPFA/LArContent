@@ -798,8 +798,7 @@ void LArClusterHelper::OrderHitsAlongTrajectory(const Cluster *const pCluster, c
                     ++nExpansions;
                 }
             }
-        }
-        while (!ok);
+        } while (!ok);
 
         // Find the most upstream unused hit relative to the seed hit, and set this to be the new seed
         float minLPos(std::numeric_limits<float>::max());

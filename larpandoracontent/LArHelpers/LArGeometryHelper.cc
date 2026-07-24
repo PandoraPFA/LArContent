@@ -642,8 +642,8 @@ bool LArGeometryHelper::IsInDetector(const DetectorBoundaries &detectorBoundarie
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArGeometryHelper::CalculateChiSquared(const Pandora &pandora, const CaloHit *const pCaloHitU, const CaloHit *const pCaloHitV,
-    const CaloHit *const pCaloHitW)
+float LArGeometryHelper::CalculateChiSquared(
+    const Pandora &pandora, const CaloHit *const pCaloHitU, const CaloHit *const pCaloHitV, const CaloHit *const pCaloHitW)
 {
     const CartesianVector posU(pCaloHitU->GetPositionVector());
     const CartesianVector posV(pCaloHitV->GetPositionVector());

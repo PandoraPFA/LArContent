@@ -74,8 +74,8 @@ private:
      *  @param  clusterToFitMap the map containing sliding fit results for clusters
      *  @param  mergeHits the list in which to store hits to merge
      */
-    void IdentifyHitsToMerge(const pandora::Cluster *pCluster, const pandora::CaloHitList &clusterHits, const pandora::CaloHitSet &unmatchedHits,
-        const ClusterToFitMap &clusterToFitMap, pandora::CaloHitList &mergeHits) const;
+    void IdentifyHitsToMerge(const pandora::Cluster *pCluster, const pandora::CaloHitList &clusterHits,
+        const pandora::CaloHitSet &unmatchedHits, const ClusterToFitMap &clusterToFitMap, pandora::CaloHitList &mergeHits) const;
 
     /**
      *  @brief  Filters a list of hits to merge based on their perpendicular distance to the sliding fit for the cluster.
@@ -88,7 +88,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string m_inputPfoListName; ///< The name of the input PFO list containing track-like PFOs
+    std::string m_inputPfoListName;                ///< The name of the input PFO list containing track-like PFOs
     pandora::StringVector m_inputClusterListNames; ///< The list of cluster list names to consider when looking for clusters to recover
 };
 

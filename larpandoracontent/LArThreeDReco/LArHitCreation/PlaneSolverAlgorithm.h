@@ -35,7 +35,7 @@ private:
         unsigned int m_tpc;
         unsigned int m_childVolume;
 
-        bool operator==(const Volume& other) const
+        bool operator==(const Volume &other) const
         {
             return m_tpc == other.m_tpc && m_childVolume == other.m_childVolume;
         }
@@ -43,7 +43,7 @@ private:
 
     struct VolumeHash
     {
-        std::size_t operator()(const Volume& v) const noexcept
+        std::size_t operator()(const Volume &v) const noexcept
         {
             return std::hash<int>{}(v.m_tpc) ^ (std::hash<int>{}(v.m_childVolume) << 1);
         }
@@ -139,7 +139,7 @@ private:
      *  @return The optimal matching between UV pairs and W hits, where the vector elements align with the U hits and indicate matched index
      *          in the V hits (or -1 if unmatched)
      */
-    pandora::IntVector KuhnMunkres(const CostMatrix& cost) const;
+    pandora::IntVector KuhnMunkres(const CostMatrix &cost) const;
 
     /**
      *  @brief  Build the list of AB pairs based on the assignment of B hits to A hits from the Kuhn-Munkres algorithm
@@ -152,7 +152,7 @@ private:
      *
      *  @return The list of UV pairs
      */
-    PairVector BuildPairs(const pandora::IntVector &assignment, int nA, int nB, const CostMatrix& costMatrix, float chi2Threshold) const;
+    PairVector BuildPairs(const pandora::IntVector &assignment, int nA, int nB, const CostMatrix &costMatrix, float chi2Threshold) const;
 
     /**
      *  @brief  Build the list of triplets based on the assignment of constraint hits to AB pairs from the second pass of the Kuhn-Munkres algorithm
@@ -167,7 +167,7 @@ private:
      *
      *  @return The list of triplets, where unmatched AB pairs are indicated with a constraint index of -1
      */
-    TripletVector BuildTriplets(const PairVector& pairs, const pandora::IntVector& assignment, int nC, const CostMatrix& costMatrix,
+    TripletVector BuildTriplets(const PairVector &pairs, const pandora::IntVector &assignment, int nC, const CostMatrix &costMatrix,
         const pandora::HitType constraintView, float chi2Threshold) const;
 
     /**
@@ -178,8 +178,8 @@ private:
      *  @param  pCaloHitW the W view hit
      *  @param[out] pCaloHit3D the 3D hit to be created
      */
-    void CreateThreeDHit(const pandora::CaloHit *const pCaloHitU, const pandora::CaloHit *const pCaloHitV, const pandora::CaloHit *const pCaloHitW,
-        const pandora::CaloHit *&pCaloHit3D) const;
+    void CreateThreeDHit(const pandora::CaloHit *const pCaloHitU, const pandora::CaloHit *const pCaloHitV,
+        const pandora::CaloHit *const pCaloHitW, const pandora::CaloHit *&pCaloHit3D) const;
 
     /**
      *  @brief  Select the pairing views based on the specified constraint view
@@ -192,11 +192,11 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float m_chi2Threshold; ///< The chi-squared threshold below which a triplet is considered a valid match
-    std::string m_caloHitListName; ///< The name of the calo hit list containing all of the 2D hits
+    float m_chi2Threshold;          ///< The chi-squared threshold below which a triplet is considered a valid match
+    std::string m_caloHitListName;  ///< The name of the calo hit list containing all of the 2D hits
     std::string m_eventContextName; ///< The name of the EventContext object in which to persist the relationships between the 2D hits
     VolumeToReadoutMap m_planeToReadoutMap; ///< A map from volume, to readout plane, to the 2D hits in that plane
-    bool m_visualize; ///< Whether to visualize the hit matching process
+    bool m_visualize;                       ///< Whether to visualize the hit matching process
 };
 
 } // namespace lar_content

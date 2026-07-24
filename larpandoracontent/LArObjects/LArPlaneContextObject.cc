@@ -20,7 +20,7 @@ bool LArPlaneContextObject::AddHitTriplet(const CaloHit *const pHitU, const Calo
         return false;
 
     auto hitTriplet(std::make_unique<HitTriplet>(HitTriplet{pHitU, pHitV, pHitW}));
-    HitTriplet* raw = hitTriplet.get();
+    HitTriplet *raw = hitTriplet.get();
     m_hitTriplets.emplace_back(std::move(hitTriplet));
 
     if (pHitU)

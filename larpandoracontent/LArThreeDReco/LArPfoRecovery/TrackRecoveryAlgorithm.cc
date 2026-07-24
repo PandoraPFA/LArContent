@@ -86,7 +86,7 @@ StatusCode TrackRecoveryAlgorithm::Run()
     for (const Pfo *const pPfo : *pPfoList)
     {
         const Cluster *const pClusterU{pfoToViewClusterMap[pPfo][TPC_VIEW_U]}, *const pClusterV{pfoToViewClusterMap[pPfo][TPC_VIEW_V]},
-            *const pClusterW{pfoToViewClusterMap[pPfo][TPC_VIEW_W]};
+                                                                                   *const pClusterW{pfoToViewClusterMap[pPfo][TPC_VIEW_W]};
         const CaloHitList &hitsU{clusterToHitMap[pClusterU]}, &hitsV{clusterToHitMap[pClusterV]}, &hitsW{clusterToHitMap[pClusterW]};
 
         CaloHitSet unmatchedHitsU, unmatchedHitsV, unmatchedHitsW;
@@ -186,13 +186,13 @@ std::optional<TwoDSlidingFitResult> TrackRecoveryAlgorithm::FitAndOrderCluster(c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackRecoveryAlgorithm::FindUnmatchedHits(const CaloHitList &hitsA, const CaloHitList &hitsB, const CaloHitList &hitsC, CaloHitSet &unmatchedHitsB,
-    CaloHitSet &unmatchedHitsC) const
+void TrackRecoveryAlgorithm::FindUnmatchedHits(const CaloHitList &hitsA, const CaloHitList &hitsB, const CaloHitList &hitsC,
+    CaloHitSet &unmatchedHitsB, CaloHitSet &unmatchedHitsC) const
 {
     if (hitsA.empty() || hitsB.empty() || hitsC.empty())
         return;
-    const LArPlaneContextObject *pPlaneContextObject{dynamic_cast<const LArPlaneContextObject*>(PandoraContentApi::GetEventContextObject(
-        *this, "PlaneContext"))};
+    const LArPlaneContextObject *pPlaneContextObject{
+        dynamic_cast<const LArPlaneContextObject *>(PandoraContentApi::GetEventContextObject(*this, "PlaneContext"))};
     if (!pPlaneContextObject)
         return;
     const HitType viewB{hitsB.front()->GetHitType()}, viewC{hitsC.front()->GetHitType()};

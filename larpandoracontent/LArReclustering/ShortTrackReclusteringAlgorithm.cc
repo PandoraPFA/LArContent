@@ -150,8 +150,8 @@ void ShortTrackReclusteringAlgorithm::FindAdcDiscontinuities(const ClusterToPfoM
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHitsMap &clusterToHitsMap, const ClusterToPfoMap &clusterToPfoMap,
-    PfoToHitTripletsMap &pfoToHitTripletsMap) const
+void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(
+    const ClusterToHitsMap &clusterToHitsMap, const ClusterToPfoMap &clusterToPfoMap, PfoToHitTripletsMap &pfoToHitTripletsMap) const
 {
     ClusterVector sortedClusters;
     sortedClusters.reserve(clusterToHitsMap.size());
@@ -282,7 +282,9 @@ void ShortTrackReclusteringAlgorithm::MatchAdcDiscontinuities(const ClusterToHit
             // Calculate the distances between the found 3D hits and reject if the distances are too large
             const CartesianVector &posU{pBestU->GetPositionVector()}, &posV{pBestV->GetPositionVector()}, &posW{pBestW->GetPositionVector()};
             const float duv{(posU - posV).GetMagnitudeSquared()}, duw{(posU - posW).GetMagnitudeSquared()}, dvw{(posV - posW).GetMagnitudeSquared()};
-            const CaloHit *selectedU{static_cast<const CaloHit *>(pBestU->GetParentAddress())}, *selectedV{static_cast<const CaloHit *>(pBestV->GetParentAddress())}, *selectedW{static_cast<const CaloHit *>(pBestW->GetParentAddress())};
+            const CaloHit *selectedU{static_cast<const CaloHit *>(pBestU->GetParentAddress())},
+                *selectedV{static_cast<const CaloHit *>(pBestV->GetParentAddress())},
+                *selectedW{static_cast<const CaloHit *>(pBestW->GetParentAddress())};
             if (duv > m_maxHitDiscrepancySquared && duw > m_maxHitDiscrepancySquared)
                 selectedU = nullptr;
             if (duv > m_maxHitDiscrepancySquared && dvw > m_maxHitDiscrepancySquared)
@@ -473,7 +475,7 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
             {
                 const auto offset{std::distance(hits.begin(), std::find(hits.begin(), hits.end(), pHit))};
                 // Only split the hits if the discontinuity hit is not at the start or end of the cluster
-                if (offset != 0 && offset != hits.size() - 1)
+                if (offset != 0 && offset != static_cast<decltype(offset)>(hits.size() - 1))
                     this->PartitionHits(hits, pHit, cluster1Hits, cluster2Hits);
             }
             protoPfo.m_viewToHitsMap[view] = std::move(cluster2Hits);
@@ -548,7 +550,8 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShortTrackReclusteringAlgorithm::PartitionHits(const CaloHitList &caloHits, const CaloHit *const pSplitHit, CaloHitList &cluster1Hits, CaloHitList &cluster2Hits) const
+void ShortTrackReclusteringAlgorithm::PartitionHits(
+    const CaloHitList &caloHits, const CaloHit *const pSplitHit, CaloHitList &cluster1Hits, CaloHitList &cluster2Hits) const
 {
     bool passedSplit{false};
     for (const CaloHit *const pCaloHit : caloHits)
@@ -583,8 +586,8 @@ void ShortTrackReclusteringAlgorithm::PartitionHits(const CaloHitList &caloHits,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShortTrackReclusteringAlgorithm::OrderHitsRelativeToVertex(const CaloHitVector &clusterHits, const LArPointingCluster::Vertex &vertex,
-    CaloHitVector &orderedHits) const
+void ShortTrackReclusteringAlgorithm::OrderHitsRelativeToVertex(
+    const CaloHitVector &clusterHits, const LArPointingCluster::Vertex &vertex, CaloHitVector &orderedHits) const
 {
     const CartesianVector &position(vertex.GetPosition());
     const CartesianVector &direction(vertex.GetDirection());
@@ -608,8 +611,8 @@ void ShortTrackReclusteringAlgorithm::OrderHitsRelativeToVertex(const CaloHitVec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShortTrackReclusteringAlgorithm::GetAdcMovingAverage(const FloatVector &adcs, FloatVector &movingAverage, FloatVector &movingVariance,
-    const size_t window) const
+void ShortTrackReclusteringAlgorithm::GetAdcMovingAverage(
+    const FloatVector &adcs, FloatVector &movingAverage, FloatVector &movingVariance, const size_t window) const
 {
     // Compute backward looking moving average and variance. Peforms rolling update for efficiency
     PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, window == 0);
@@ -629,7 +632,7 @@ void ShortTrackReclusteringAlgorithm::GetAdcMovingAverage(const FloatVector &adc
         ++count;
 
         movingAverage[i] = static_cast<float>(this->GetMedian(rollingWindow));
-        movingVariance[i] = count > 1 ? (V - S*S / count) / (count - 1) : 0.0; // sample variance
+        movingVariance[i] = count > 1 ? (V - S * S / count) / (count - 1) : 0.0; // sample variance
     }
     // rolling update
     for (size_t i = window; i < nHits; ++i)
@@ -640,10 +643,10 @@ void ShortTrackReclusteringAlgorithm::GetAdcMovingAverage(const FloatVector &adc
         const float n{adcs[i]};
 
         S += n - o;
-        V += n*n - o*o;
+        V += n * n - o * o;
 
         movingAverage[i] = static_cast<float>(this->GetMedian(rollingWindow));
-        movingVariance[i] = (V - S*S / count) / (count - 1); // sample variance
+        movingVariance[i] = (V - S * S / count) / (count - 1); // sample variance
     }
 }
 
@@ -672,8 +675,8 @@ double ShortTrackReclusteringAlgorithm::GetMedian(const std::vector<T> &values) 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShortTrackReclusteringAlgorithm::GetStableAdcDiscontinuities(const pandora::CaloHitVector &hits, pandora::IntVector &discontinuities,
-    const size_t window) const
+void ShortTrackReclusteringAlgorithm::GetStableAdcDiscontinuities(
+    const pandora::CaloHitVector &hits, pandora::IntVector &discontinuities, const size_t window) const
 {
     PANDORA_THROW_IF(STATUS_CODE_INVALID_PARAMETER, window == 0);
     FloatVector normalizedAdc, movingAverage, movingVariance;
@@ -763,7 +766,7 @@ float ShortTrackReclusteringAlgorithm::GetLinearSlopeScore(const pandora::CaloHi
 
     const float dx{hits[end]->GetPositionVector().GetX() - hits[start]->GetPositionVector().GetX()};
     const float dz{hits[end]->GetPositionVector().GetZ() - hits[start]->GetPositionVector().GetZ()};
-    const float dr{std::sqrt(dx*dx + dz*dz)};
+    const float dr{std::sqrt(dx * dx + dz * dz)};
 
     return (dr > 0) ? (hits[end]->GetInputEnergy() - hits[start]->GetInputEnergy()) / (median * dr) : 0.f;
 }
@@ -781,10 +784,10 @@ float ShortTrackReclusteringAlgorithm::GetQuadraticCurvatureScore(const pandora:
         const float a_p{hits[i + 1]->GetInputEnergy()};
         const float dx_m{hits[i]->GetPositionVector().GetX() - hits[i - 1]->GetPositionVector().GetX()};
         const float dz_m{hits[i]->GetPositionVector().GetZ() - hits[i - 1]->GetPositionVector().GetZ()};
-        const float dr_m{std::sqrt(dx_m*dx_m + dz_m*dz_m)};
+        const float dr_m{std::sqrt(dx_m * dx_m + dz_m * dz_m)};
         const float dx_p{hits[i + 1]->GetPositionVector().GetX() - hits[i]->GetPositionVector().GetX()};
         const float dz_p{hits[i + 1]->GetPositionVector().GetZ() - hits[i]->GetPositionVector().GetZ()};
-        const float dr_p{std::sqrt(dx_p*dx_p + dz_p*dz_p)};
+        const float dr_p{std::sqrt(dx_p * dx_p + dz_p * dz_p)};
 
         curvature += (2.f / (dr_m + dr_p)) * (((a_p - a_0) / dr_p) - ((a_0 - a_m) / dr_m));
     }
@@ -805,7 +808,7 @@ float ShortTrackReclusteringAlgorithm::GetContrastScore(const pandora::CaloHitVe
     for (size_t i = mid + 1; i <= end; ++i)
         muTail += hits[i]->GetInputEnergy();
     muTail /= (end - mid);
-    
+
     return (muHead > 0.f) ? muTail / muHead : 0.f;
 }
 
@@ -822,7 +825,7 @@ float ShortTrackReclusteringAlgorithm::GetMonotonicityScore(const pandora::CaloH
         // We only care about monotonically increasing cases here
         monotonicity += delta > 0.f ? 1.f : 0.f;
     }
-    
+
     return monotonicity / (end - start);
 }
 
@@ -862,21 +865,21 @@ StatusCode ShortTrackReclusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "ClusterListNames", m_clusterListNames));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxHitDiscrepancy",
-        m_maxHitDiscrepancy));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxHitDiscrepancy", m_maxHitDiscrepancy));
     m_maxHitDiscrepancySquared = m_maxHitDiscrepancy * m_maxHitDiscrepancy;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BalanceThresholdLow",
-        m_balanceThresholdLow));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BalanceThresholdHigh",
-        m_balanceThresholdHigh));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BraggLinearSlopeThreshold",
-        m_braggLinearSlopeThreshold));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BraggCurvatureThreshold",
-        m_braggCurvatureThreshold));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BraggContrastThreshold",
-        m_braggContrastThreshold));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BraggMonotonicityThreshold",
-        m_braggMonotonicityThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BalanceThresholdLow", m_balanceThresholdLow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BalanceThresholdHigh", m_balanceThresholdHigh));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "BraggLinearSlopeThreshold", m_braggLinearSlopeThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "BraggCurvatureThreshold", m_braggCurvatureThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BraggContrastThreshold", m_braggContrastThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "BraggMonotonicityThreshold", m_braggMonotonicityThreshold));
 
     return STATUS_CODE_SUCCESS;
 }

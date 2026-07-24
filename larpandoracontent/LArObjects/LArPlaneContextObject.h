@@ -34,20 +34,23 @@ public:
     public:
         using InnerIterator = std::vector<std::unique_ptr<HitTriplet>>::const_iterator;
 
-        explicit HitTripletIterator(InnerIterator it) : m_it(it) {}
+        explicit HitTripletIterator(InnerIterator it) :
+            m_it(it)
+        {
+        }
 
-        const HitTriplet* operator*() const
+        const HitTriplet *operator*() const
         {
             return m_it->get();
         }
 
-        HitTripletIterator& operator++()
+        HitTripletIterator &operator++()
         {
             ++m_it;
             return *this;
         }
 
-        bool operator!=(const HitTripletIterator& other) const
+        bool operator!=(const HitTripletIterator &other) const
         {
             return m_it != other.m_it;
         }
@@ -100,7 +103,7 @@ public:
     size_t Size() const;
 
 private:
-    std::vector<std::unique_ptr<HitTriplet>> m_hitTriplets; ///< Storage for all of the triplets of hits
+    std::vector<std::unique_ptr<HitTriplet>> m_hitTriplets;              ///< Storage for all of the triplets of hits
     std::unordered_map<const pandora::CaloHit *, HitTriplet *> m_uIndex; ///< A map from each U hit to the triplet of hits associated with it
     std::unordered_map<const pandora::CaloHit *, HitTriplet *> m_vIndex; ///< A map from each V hit to the triplet of hits associated with it
     std::unordered_map<const pandora::CaloHit *, HitTriplet *> m_wIndex; ///< A map from each W hit to the triplet of hits associated with it
