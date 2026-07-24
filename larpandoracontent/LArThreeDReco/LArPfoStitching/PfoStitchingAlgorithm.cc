@@ -84,7 +84,7 @@ StatusCode PfoStitchingAlgorithm::InferLArTPCs(InferredLArTPCVector &inferredTPC
         if (!pLineGap || (pLineGap->GetLineGapType() != TPC_DRIFT_GAP))
             continue;
 
-        PANDORA_RETURN_IF(STATUS_CODE_INVALID_PARAMETER, pLineGap->GetLineStartX() > pLineGap->GetLineEndX())
+        PANDORA_RETURN_IF(STATUS_CODE_INVALID_PARAMETER, pLineGap->GetLineStartX() > pLineGap->GetLineEndX());
 
         if (pLineGap->GetLineStartX() < parentMinX || pLineGap->GetLineEndX() > parentMaxX)
             continue;
@@ -147,6 +147,8 @@ void PfoStitchingAlgorithm::GetPfoToLArTPCMap(const PfoList *const pPfoList, con
         CartesianPointVector positions;
         LArPfoHelper::GetCoordinateVector(pPfo, TPC_3D, positions);
 
+        // Find the LArTPC for PFOs contained in a single LArTPC
+        // ATTN We should try relaxing this to stitch particles that span > 2 LArTPCs, would require dev in stitching tool & its helpers
         const LArTPC *pLArTPC{nullptr};
         for (const CartesianVector &pos : positions)
         {
@@ -165,7 +167,7 @@ void PfoStitchingAlgorithm::GetPfoToLArTPCMap(const PfoList *const pPfoList, con
             if (!pPosLArTPC) // 3D hit ended up in a gap or outside detector, ignoring it
                 continue;
 
-            if (pLArTPC && pLArTPC != pPosLArTPC)
+            if (pLArTPC && pLArTPC != pPosLArTPC) // Hits in > 1 LArTPC so PFO is not a stitching candidate, giving up
             {
                 pLArTPC = nullptr;
                 break;
@@ -183,43 +185,33 @@ void PfoStitchingAlgorithm::GetPfoToLArTPCMap(const PfoList *const pPfoList, con
 
 const std::string PfoStitchingAlgorithm::GetListName(const Cluster *const pCluster) const
 {
-    for (const std::string &listName : m_daughterListNames)
-    {
-        const ClusterList *pClusterList{nullptr};
-        if ((PandoraContentApi::GetList(*this, listName, pClusterList) == STATUS_CODE_SUCCESS) &&
-            (pClusterList->end() != std::find(pClusterList->begin(), pClusterList->end(), pCluster)))
-        {
-            return listName;
-        }
-    }
-    PANDORA_THROW(STATUS_CODE_NOT_FOUND);
+    return this->GetListName<Cluster, ClusterList>(pCluster, m_daughterListNames);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 const std::string PfoStitchingAlgorithm::GetListName(const Vertex *const pVertex) const
 {
-    for (const std::string &listName : m_daughterListNames)
-    {
-        const VertexList *pVertexList{nullptr};
-        if ((PandoraContentApi::GetList(*this, listName, pVertexList) == STATUS_CODE_SUCCESS) &&
-            (pVertexList->end() != std::find(pVertexList->begin(), pVertexList->end(), pVertex)))
-        {
-            return listName;
-        }
-    }
-    PANDORA_THROW(STATUS_CODE_NOT_FOUND);
+    return this->GetListName<Vertex, VertexList>(pVertex, m_daughterListNames);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const std::string PfoStitchingAlgorithm::GetInputListName(const ParticleFlowObject *const pPfo) const
+const std::string PfoStitchingAlgorithm::GetListName(const ParticleFlowObject *const pPfo) const
 {
-    for (const std::string &listName : m_inputPfoListNames)
+    return this->GetListName<ParticleFlowObject, PfoList>(pPfo, m_inputPfoListNames);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename TObject, typename TList>
+const std::string PfoStitchingAlgorithm::GetListName(const TObject *const pObject, const StringVector &listNames) const
+{
+    for (const std::string &listName : listNames)
     {
-        const PfoList *pPfoList{nullptr};
-        if ((PandoraContentApi::GetList(*this, listName, pPfoList) == STATUS_CODE_SUCCESS) &&
-            (pPfoList->end() != std::find(pPfoList->begin(), pPfoList->end(), pPfo)))
+        const TList *pObjectList{nullptr};
+        if ((PandoraContentApi::GetList(*this, listName, pObjectList) == STATUS_CODE_SUCCESS) &&
+            (pObjectList->end() != std::find(pObjectList->begin(), pObjectList->end(), pObject)))
         {
             return listName;
         }
@@ -260,7 +252,7 @@ void PfoStitchingAlgorithm::StitchPfos(
     const ClusterVector daughterClusters(pPfoToDelete->GetClusterList().begin(), pPfoToDelete->GetClusterList().end());
     const VertexVector daughterVertices(pPfoToDelete->GetVertexList().begin(), pPfoToDelete->GetVertexList().end());
 
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfoToDelete, this->GetInputListName(pPfoToDelete)));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfoToDelete, this->GetListName(pPfoToDelete)));
 
     for (const ParticleFlowObject *const pDaughterPfo : daughterPfos)
     {
@@ -297,8 +289,7 @@ void PfoStitchingAlgorithm::StitchPfos(
 StatusCode PfoStitchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadVectorOfValues(xmlHandle, "DaughterListNames", m_daughterListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DaughterListNames", m_daughterListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "Visualise", m_visualise));
