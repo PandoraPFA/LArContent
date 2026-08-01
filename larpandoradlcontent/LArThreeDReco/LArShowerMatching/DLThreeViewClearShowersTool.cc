@@ -10,7 +10,6 @@
 
 #include "larpandoradlcontent/LArThreeDReco/LArShowerMatching/DLThreeViewClearShowersTool.h"
 
-
 using namespace pandora;
 
 namespace lar_dl_content
@@ -27,11 +26,9 @@ bool DLThreeViewClearShowersTool::Run(DLMultiViewMatchingAlgorithm *const pAlgor
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    // Get connected clusters
     DLMultiViewMatchingAlgorithm::ClusterGroupVector clusterGroupVector;
     pAlgorithm->GetConnectedGroups(clusterGroupVector);    
 
-    // Loop over connected groups
     bool madeParticles(false);
     for (const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup : clusterGroupVector)
     {
@@ -41,7 +38,7 @@ bool DLThreeViewClearShowersTool::Run(DLMultiViewMatchingAlgorithm *const pAlgor
         if ((nU * nV * nW) != 1)
             continue;
             
-        this->CreateClearShowers(pAlgorithm, clusterGroup);
+        this->CreateShowers(pAlgorithm, clusterGroup);
         madeParticles = true;
     }
 
@@ -50,13 +47,9 @@ bool DLThreeViewClearShowersTool::Run(DLMultiViewMatchingAlgorithm *const pAlgor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DLThreeViewClearShowersTool::CreateClearShowers(DLMultiViewMatchingAlgorithm *const pAlgorithm, const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup)
+void DLThreeViewClearShowersTool::CreateShowers(DLMultiViewMatchingAlgorithm *const pAlgorithm, const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup)
 {
-    ClusterList pfoClusters({clusterGroup.m_clustersU.front()});
-    pfoClusters.push_back(clusterGroup.m_clustersV.front());
-    pfoClusters.push_back(clusterGroup.m_clustersW.front());
-            
-    pAlgorithm->CreatePfo(pfoClusters);
+    pAlgorithm->CreatePfo({clusterGroup.m_clustersU.front(), clusterGroup.m_clustersV.front(), clusterGroup.m_clustersW.front()});
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -67,3 +60,4 @@ StatusCode DLThreeViewClearShowersTool::ReadSettings([[maybe_unused]] const TiXm
 }
 
 } // namespace lar_dl_content
+

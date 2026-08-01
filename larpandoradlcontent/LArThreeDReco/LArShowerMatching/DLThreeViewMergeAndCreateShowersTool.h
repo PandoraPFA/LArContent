@@ -24,6 +24,14 @@ public:
      */
     DLThreeViewMergeAndCreateShowersTool();
 
+    /**
+     *  @brief  Create shower-like pfos from ambiguous L:M:N matched cluster groups
+     *
+     *  @param pAlgorithm address of the calling algorithm
+     *  @param globalSimMatrix the output cluster->cluster->score mapping
+     *
+     *  @return whether shower-like pfos have been created
+     */
     bool Run(DLMultiViewMatchingAlgorithm *const pAlgorithm,
         const DLMultiViewMatchingAlgorithm::SimilarityMatrix &globalSimMatrix);
 
@@ -40,7 +48,7 @@ private:
      *
      *  @return whether a particle was created
      */  
-    bool CreateAmbiguousShower(DLMultiViewMatchingAlgorithm *const pAlgorithm,
+    bool CreateShower(DLMultiViewMatchingAlgorithm *const pAlgorithm,
         const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup, const DLMultiViewMatchingAlgorithm::SimilarityMatrix &globalSimMatrix);
 
     /**
@@ -81,3 +89,4 @@ private:
 } // namespace lar_dl_content
 
 #endif // #ifndef DL_THREE_VIEW_MERGE_AND_CREATE_SHOWERS_TOOL_H
+

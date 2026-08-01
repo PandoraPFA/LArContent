@@ -34,24 +34,22 @@ LArDLShowerHelper::HitFeatures::HitFeatures() :
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void LArDLShowerHelper::CalculateHitFeatures(const CaloHit *const pCaloHit, const std::set<float> &detXGaps, CartesianVector vtxPos, HitFeatures &hitFeatures)
+void LArDLShowerHelper::CalculateHitFeatures(const CaloHit *const pCaloHit, const std::set<float> &detXGaps, const CartesianVector &vtxPos, HitFeatures &hitFeatures)
 {
-    const double x{static_cast<double>(pCaloHit->GetPositionVector().GetX())};
-    const double xRel{x - static_cast<double>(vtxPos.GetX())};
-    const double z{static_cast<double>(pCaloHit->GetPositionVector().GetZ())};
-    const double zRel{z - static_cast<double>(vtxPos.GetZ())};
-    const double rRel{std::sqrt(pow(xRel, 2.) + pow(zRel, 2.))};
-    const double cosThetaRel{rRel != 0. ? xRel / rRel : 0.};
-    const double sinThetaRel{rRel != 0. ? zRel / rRel : 0.};
+    const double x(pCaloHit->GetPositionVector().GetX());
+    const double xRel(x - vtxPos.GetX());
+    const double z(pCaloHit->GetPositionVector().GetZ());
+    const double zRel(z - vtxPos.GetZ());
+    const double rRel(std::sqrt(std::pow(xRel, 2.) + std::pow(zRel, 2.)));
+    const double cosThetaRel(rRel != 0. ? xRel / rRel : 0.);
+    const double sinThetaRel(rRel != 0. ? zRel / rRel : 0.);
 
-    double distToXGap{std::numeric_limits<double>::max()};
+    double distToXGap(std::numeric_limits<double>::max());
     for (const double xGap : detXGaps)
     {
-        const double dist{x - xGap};
-        if (std::abs(dist) < std::abs(distToXGap))
-        {
-                distToXGap = dist;
-        }
+        const double dist(x - xGap);
+        if (std::abs(dist) < distToXGap)
+            distToXGap = dist;
     }
 
     hitFeatures.m_xRel = static_cast<float>(xRel);

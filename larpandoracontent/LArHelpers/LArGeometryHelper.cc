@@ -624,11 +624,15 @@ void LArGeometryHelper::GetDetectorXGaps(const Pandora &pandora, std::set<float>
 {
     for (const DetectorGap *const pDetectorGap : pandora.GetGeometry()->GetDetectorGapList())
     {
-        const LineGap *const pLineGap = dynamic_cast<const LineGap *>(pDetectorGap);
+        const LineGap *const pLineGap(dynamic_cast<const LineGap *>(pDetectorGap));
+
+        if (!pLineGap)
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        
         if (pLineGap->GetLineGapType() == TPC_DRIFT_GAP)
         {
-            detXGaps.insert(static_cast<double>(pLineGap->GetLineStartX()));
-            detXGaps.insert(static_cast<double>(pLineGap->GetLineEndX()));
+            detXGaps.insert(pLineGap->GetLineStartX());
+            detXGaps.insert(pLineGap->GetLineEndX());
         }
     }
 }

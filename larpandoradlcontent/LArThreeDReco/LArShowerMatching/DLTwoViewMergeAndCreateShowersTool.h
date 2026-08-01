@@ -24,6 +24,15 @@ public:
      */
     DLTwoViewMergeAndCreateShowersTool();
 
+    /**
+     *  @brief  Create shower-like pfos from ambiguous L:M:N matched cluster groups,
+     *          where exactly one of L,M,N is zero and the other two are >=1
+     *
+     *  @param pAlgorithm address of the calling algorithm
+     *  @param globalSimMatrix the output cluster->cluster->score mapping
+     *
+     *  @return whether shower-like pfos have been created
+     */
     bool Run(DLMultiViewMatchingAlgorithm *const pAlgorithm,
         const DLMultiViewMatchingAlgorithm::SimilarityMatrix &globalSimMatrix);
 
@@ -42,8 +51,8 @@ private:
      *
      *  @return whether a particle was created
      */ 
-    bool CreateAmbiguousShower(DLMultiViewMatchingAlgorithm *const pAlgorithm,
-        const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup, const DLMultiViewMatchingAlgorithm::SimilarityMatrix &globalSimMatrix,
+    bool CreateShower(DLMultiViewMatchingAlgorithm *const pAlgorithm, const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup,
+        const DLMultiViewMatchingAlgorithm::SimilarityMatrix &globalSimMatrix,
         const pandora::HitType hitType1, const pandora::HitType hitType2);
 
     /**
@@ -84,3 +93,4 @@ private:
 } // namespace lar_dl_content
 
 #endif // #ifndef DL_TWO_VIEW_MERGE_AND_CREATE_SHOWERS_TOOL_H
+

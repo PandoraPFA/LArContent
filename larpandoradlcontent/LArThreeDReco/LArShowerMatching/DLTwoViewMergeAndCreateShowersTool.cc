@@ -31,33 +31,30 @@ bool DLTwoViewMergeAndCreateShowersTool::Run(DLMultiViewMatchingAlgorithm *const
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    // Get connected clusters
     DLMultiViewMatchingAlgorithm::ClusterGroupVector clusterGroupVector;
     pAlgorithm->GetConnectedGroups(clusterGroupVector);  
 
-    // Loop over connected groups
     bool madeParticles(false);
     for (const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup : clusterGroupVector)
     {
-        int nView0(0), nView1(0);
+        int nZeroClusterViews(0), nOneClusterViews(0);
 
         for (const ClusterList &clusterList : {clusterGroup.m_clustersU, clusterGroup.m_clustersV, clusterGroup.m_clustersW})
         {
-            if (clusterList.size() == 0)
-                ++nView0;
+            if (clusterList.empty())
+                ++nZeroClusterViews;
             else if (clusterList.size() == 1)
-                ++nView1;
+                ++nOneClusterViews;
         }
 
-        if ((nView0 != 1) || (nView1 == 2))
+        if ((nZeroClusterViews != 1) || (nOneClusterViews == 2))
             continue;
 
-        // Identify hitTypes
         const HitType ignoreHitType(clusterGroup.m_clustersU.size() == 0 ? TPC_VIEW_U : clusterGroup.m_clustersV.size() == 0 ? TPC_VIEW_V : TPC_VIEW_W);
         const HitType hitType1(ignoreHitType == TPC_VIEW_U ? TPC_VIEW_V : ignoreHitType == TPC_VIEW_V ? TPC_VIEW_W : TPC_VIEW_U);
         const HitType hitType2(ignoreHitType == TPC_VIEW_U ? TPC_VIEW_W : ignoreHitType == TPC_VIEW_V ? TPC_VIEW_U : TPC_VIEW_V);        
 
-        const bool thisMadeParticles(this->CreateAmbiguousShower(pAlgorithm, clusterGroup, globalSimMatrix, hitType1, hitType2));
+        const bool thisMadeParticles(this->CreateShower(pAlgorithm, clusterGroup, globalSimMatrix, hitType1, hitType2));
         madeParticles = madeParticles ? madeParticles : thisMadeParticles;
     }
 
@@ -66,21 +63,15 @@ bool DLTwoViewMergeAndCreateShowersTool::Run(DLMultiViewMatchingAlgorithm *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DLTwoViewMergeAndCreateShowersTool::CreateAmbiguousShower(DLMultiViewMatchingAlgorithm *const pAlgorithm,
+bool DLTwoViewMergeAndCreateShowersTool::CreateShower(DLMultiViewMatchingAlgorithm *const pAlgorithm,
     const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup, const DLMultiViewMatchingAlgorithm::SimilarityMatrix &globalSimMatrix,
     const HitType hitType1, const HitType hitType2)
 {
-    // Find 'seed' element
     const Cluster *pSeed1(nullptr), *pSeed2(nullptr);
     if (!this->FindSeed(clusterGroup, globalSimMatrix, hitType1, hitType2, pSeed1, pSeed2)) { return false; }
 
-    // Merge into seed
     this->MergeClusters(pAlgorithm, clusterGroup, globalSimMatrix, pSeed1, pSeed2);
-
-    // Create pfo
-    ClusterList pfoClusters({pSeed1});
-    pfoClusters.push_back(pSeed2);
-    pAlgorithm->CreatePfo(pfoClusters);
+    pAlgorithm->CreatePfo({pSeed1, pSeed2});
 
     return true;
 }
@@ -99,6 +90,7 @@ bool DLTwoViewMergeAndCreateShowersTool::FindSeed(const DLMultiViewMatchingAlgor
     for (const Cluster *const pCluster1 : clusterList1)
     {
         const auto iter1(globalSimMatrix.find(pCluster1));
+        if (iter1 == globalSimMatrix.end()) { continue; }
         
         for (const Cluster *const pCluster2 : clusterList2)
         {
@@ -151,7 +143,6 @@ void DLTwoViewMergeAndCreateShowersTool::MergeClusters(DLMultiViewMatchingAlgori
     }
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DLTwoViewMergeAndCreateShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
@@ -175,3 +166,4 @@ StatusCode DLTwoViewMergeAndCreateShowersTool::ReadSettings(const TiXmlHandle xm
 }
 
 } // namespace lar_dl_content
+

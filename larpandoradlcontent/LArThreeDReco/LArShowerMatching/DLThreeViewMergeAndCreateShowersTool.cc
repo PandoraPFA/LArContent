@@ -28,11 +28,9 @@ bool DLThreeViewMergeAndCreateShowersTool::Run(DLMultiViewMatchingAlgorithm *con
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    // Get connected clusters
     DLMultiViewMatchingAlgorithm::ClusterGroupVector clusterGroupVector;
     pAlgorithm->GetConnectedGroups(clusterGroupVector);  
 
-    // Loop over connected groups
     bool madeParticles(false);
     for (const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup : clusterGroupVector)
     {
@@ -41,9 +39,8 @@ bool DLThreeViewMergeAndCreateShowersTool::Run(DLMultiViewMatchingAlgorithm *con
         if ((nU * nV * nW) <= 1)
             continue;
 
-        // Deal with ambiguous showers
-        const bool thisMadeParticles(this->CreateAmbiguousShower(pAlgorithm, clusterGroup, globalSimMatrix));
-        madeParticles = madeParticles ? madeParticles : thisMadeParticles;
+        const bool thisMadeParticles(this->CreateShower(pAlgorithm, clusterGroup, globalSimMatrix));
+        madeParticles = madeParticles || thisMadeParticles;
     }
 
     return madeParticles;
@@ -51,21 +48,15 @@ bool DLThreeViewMergeAndCreateShowersTool::Run(DLMultiViewMatchingAlgorithm *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DLThreeViewMergeAndCreateShowersTool::CreateAmbiguousShower(DLMultiViewMatchingAlgorithm *const pAlgorithm,
+bool DLThreeViewMergeAndCreateShowersTool::CreateShower(DLMultiViewMatchingAlgorithm *const pAlgorithm,
     const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup, const DLMultiViewMatchingAlgorithm::SimilarityMatrix &globalSimMatrix)
 {
-    // Find 'seed' element
     const Cluster *pSeedU(nullptr), *pSeedV(nullptr), *pSeedW(nullptr);
     if (!this->FindSeed(clusterGroup, globalSimMatrix, pSeedU, pSeedV, pSeedW)) { return false; }
 
-    // Merge into seed
     this->MergeClusters(pAlgorithm, clusterGroup, globalSimMatrix, pSeedU, pSeedV, pSeedW);
-
-    // Create pfo
-    ClusterList pfoClusters({pSeedU});
-    pfoClusters.push_back(pSeedV);
-    pfoClusters.push_back(pSeedW);          
-    pAlgorithm->CreatePfo(pfoClusters);
+    pAlgorithm->CreatePfo({pSeedU, pSeedV, pSeedW});
+    
     return true;
 }
 
@@ -80,6 +71,7 @@ bool DLThreeViewMergeAndCreateShowersTool::FindSeed(const DLMultiViewMatchingAlg
     for (const Cluster *const pClusterU : clusterGroup.m_clustersU)
     {
         const auto iterU(globalSimMatrix.find(pClusterU));
+        if (iterU == globalSimMatrix.end()) { continue; }
         
         for (const Cluster *const pClusterV : clusterGroup.m_clustersV)
         {
@@ -87,6 +79,7 @@ bool DLThreeViewMergeAndCreateShowersTool::FindSeed(const DLMultiViewMatchingAlg
             if (iterUV == iterU->second.end()) { continue; }
             if (iterUV->second < m_matchThreshold) { continue; }
             const auto iterV(globalSimMatrix.find(pClusterV));
+            if (iterV == globalSimMatrix.end()) { continue; }
             
             for (const Cluster *const pClusterW : clusterGroup.m_clustersW)
             {
@@ -144,7 +137,6 @@ void DLThreeViewMergeAndCreateShowersTool::MergeClusters(DLMultiViewMatchingAlgo
     }
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DLThreeViewMergeAndCreateShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
@@ -168,3 +160,4 @@ StatusCode DLThreeViewMergeAndCreateShowersTool::ReadSettings(const TiXmlHandle 
 }
 
 } // namespace lar_dl_content
+

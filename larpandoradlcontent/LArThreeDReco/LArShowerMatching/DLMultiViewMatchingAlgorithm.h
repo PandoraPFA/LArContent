@@ -8,7 +8,6 @@
 #ifndef LAR_MULTI_VIEW_MATCHING_ALGORITHM_H
 #define LAR_MULTI_VIEW_MATCHING_ALGORITHM_H 1
 
-
 #include "Pandora/Algorithm.h"
 
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
@@ -236,7 +235,7 @@ public:
     /**
      *  @brief  Run the algorithm tool
      *
-     *  @param  pAlgorithm address of the calling algorithm
+     *  @param pAlgorithm address of the calling algorithm
      *  @param globalSimMatrix the output cluster->cluster->score mapping
      *
      *  @return whether changes have been made by the tool
@@ -244,6 +243,7 @@ public:
     virtual bool Run(DLMultiViewMatchingAlgorithm *const pAlgorithm, const DLMultiViewMatchingAlgorithm::SimilarityMatrix &globalSimMatrix) = 0;
 };    
     
-} // namespace lar_content
+} // namespace lar_dl_content
 
 #endif // #ifndef LAR_MULTI_VIEW_MATCHING_ALGORITHM_H
+

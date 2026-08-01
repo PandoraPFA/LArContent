@@ -24,6 +24,14 @@ public:
      */
     DLThreeViewClearShowersTool();
 
+    /**
+     *  @brief  Create shower-like pfos from unambiguous 1:1:1 matched cluster groups
+     *
+     *  @param pAlgorithm address of the calling algorithm
+     *  @param globalSimMatrix the output cluster->cluster->score mapping
+     *
+     *  @return whether shower-like pfos have been created
+     */    
     bool Run(DLMultiViewMatchingAlgorithm *const pAlgorithm, const DLMultiViewMatchingAlgorithm::SimilarityMatrix &globalSimMatrix);
 
 private:
@@ -35,9 +43,10 @@ private:
      *  @param pAlgorithm the calling algorithm
      *  @param clusterGroup the input connected cluster group
      */     
-    void CreateClearShowers(DLMultiViewMatchingAlgorithm *const pAlgorithm, const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup);
+    void CreateShowers(DLMultiViewMatchingAlgorithm *const pAlgorithm, const DLMultiViewMatchingAlgorithm::ClusterGroup &clusterGroup);
 };
 
 } // namespace lar_dl_content
 
 #endif // #ifndef DL_THREE_VIEW_CLEAR_SHOWERS_TOOL_H
+

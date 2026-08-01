@@ -47,7 +47,7 @@ public:
      *  @param hitFeatures[out] struct to store calculated hit properties
      */
     static void CalculateHitFeatures(const pandora::CaloHit *const pCaloHit, const std::set<float> &detXGaps,
-        pandora::CartesianVector vtxPos, HitFeatures &hitFeatures);
+        const pandora::CartesianVector &vtxPos, HitFeatures &hitFeatures);
 };
 
 } // namespace lar_dl_content
