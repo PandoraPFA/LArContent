@@ -48,7 +48,7 @@ void LArDLShowerHelper::CalculateHitFeatures(const CaloHit *const pCaloHit, cons
     for (const double xGap : detXGaps)
     {
         const double dist(x - xGap);
-        if (std::abs(dist) < distToXGap)
+        if (std::abs(dist) < std::abs(distToXGap))
             distToXGap = dist;
     }
 
