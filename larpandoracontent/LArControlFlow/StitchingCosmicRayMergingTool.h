@@ -235,6 +235,7 @@ private:
     float m_minLengthSquared;
     float m_minCosRelativeAngle;
     float m_relaxMinLongitudinalDisplacement; ///< The minimum value of the longitudinal impact parameter for association if both verticies fall in the detector gap
+    float m_minLongitudinalDisplacementX;
     float m_maxLongitudinalDisplacementX;
     float m_maxTransverseDisplacement;
     float m_relaxCosRelativeAngle;

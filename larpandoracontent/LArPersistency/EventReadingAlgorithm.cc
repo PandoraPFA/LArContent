@@ -25,6 +25,7 @@ namespace lar_content
 
 EventReadingAlgorithm::EventReadingAlgorithm() :
     m_skipToEvent(0),
+    m_isEnhancedEventFile(false),
     m_useLArCaloHits(true),
     m_larCaloHitVersion(1),
     m_useLArMCParticles(true),
@@ -67,6 +68,10 @@ StatusCode EventReadingAlgorithm::Initialize()
     if (!m_eventFileName.empty())
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceEventFileReader(m_eventFileName));
+
+        if (m_isEnhancedEventFile)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadGlobalHeader());
+
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->GoToEvent(m_skipToEvent));
     }
 
@@ -104,6 +109,9 @@ void EventReadingAlgorithm::MoveToNextEventFile()
     m_eventFileName = m_eventFileNameVector.back();
     m_eventFileNameVector.pop_back();
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceEventFileReader(m_eventFileName));
+
+    if (m_isEnhancedEventFile)
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadGlobalHeader());
 
     try
     {
@@ -224,6 +232,9 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         std::cout << "EventReadingAlgorithm - nothing to do; neither geometry nor event file specified." << std::endl;
         return STATUS_CODE_NOT_INITIALIZED;
     }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IsEnhancedEventFile", m_isEnhancedEventFile));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseLArCaloHits", m_useLArCaloHits));
 

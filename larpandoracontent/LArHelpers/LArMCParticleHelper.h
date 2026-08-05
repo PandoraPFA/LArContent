@@ -130,6 +130,15 @@ public:
     static bool IsNeutrino(const pandora::MCParticle *const pMCParticle);
 
     /**
+     *  @brief  Whether a mc particle is part of a CC interaction
+     *
+     *  @param[in]  pMCParticle the input mc particle
+     *
+     *  @return boolean
+     */
+    static bool IsCCInteraction(const pandora::MCParticle *const pMCParticle);
+
+    /**
      *  @brief  Whether a provided mc particle matches the implemented definition of being primary
      *
      *  @param  pMCParticle the address of the mc particle
@@ -243,6 +252,15 @@ public:
      *  @return address of the parent mc particle
      */
     static const pandora::MCParticle *GetParentMCParticle(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Get the next parent mc particle one tier below the current mc particle
+     *
+     *  @param  pMCParticle the input mc particle
+     *
+     *  @return address of the parent mc particle one tier away
+     */
+    static const pandora::MCParticle *GetNextParentMCParticle(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Get all descendent mc particles
@@ -577,6 +595,17 @@ public:
      *  @return  Whether or not the MC particle came from pair production
      */
     static bool IsPairProduction(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Check whether an MC particle's decay tree contains more than one electron, indicating an EM shower.
+     *
+     *  @param  pMC                   The MC particle that defines the root of the subtree to check
+     *  @param  nDescendantElectrons  The running count of electrons seen so far,
+     *                                this is a recursive parameter that should be 0 at the top level
+     *
+     *  @return  Whether the MC particle's subtree contains more than one electron
+     */
+    static bool CausesShower(const pandora::MCParticle *const pMC, int nDescendantElectrons = 0);
 
     /**
      *  @brief  Determine if two MC particles are topologically continuous within a given tolerance.

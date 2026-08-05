@@ -321,6 +321,8 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
         if (m_version > 2)
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nLabels));
+            hitScores.reserve(nLabels);
+            hitScoreLabels.reserve(nLabels);
             for (unsigned int i = 0; i < nLabels; ++i)
             {
                 float score;
@@ -342,6 +344,8 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
         if (m_version > 2)
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NHitLabels", nLabels));
+            hitScores.reserve(nLabels);
+            hitScoreLabels.reserve(nLabels);
             for (unsigned int i = 0; i < nLabels; ++i)
             {
                 float score;
@@ -362,8 +366,8 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
     LArCaloHitParameters &larCaloHitParameters(dynamic_cast<LArCaloHitParameters &>(parameters));
     larCaloHitParameters.m_larTPCVolumeId = larTPCVolumeId;
     larCaloHitParameters.m_daughterVolumeId = daughterVolumeId;
-    larCaloHitParameters.m_hitScores = hitScores;
-    larCaloHitParameters.m_hitScoreLabels = hitScoreLabels;
+    larCaloHitParameters.m_hitScores = std::move(hitScores);
+    larCaloHitParameters.m_hitScoreLabels = std::move(hitScoreLabels);
 
     return pandora::STATUS_CODE_SUCCESS;
 }

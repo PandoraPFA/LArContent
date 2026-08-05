@@ -3,15 +3,6 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR "${CMAKE_PROJECT_NAME} requires an out-of-source build.")
 endif()
 
-# Set RPATH for build and install to ensure runtime paths are portable
-set(CMAKE_BUILD_RPATH "$ORIGIN/../lib")
-set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
-
-# Ensure RPATH is not stripped
-set(CMAKE_SKIP_BUILD_RPATH FALSE)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Default install path" FORCE)
 endif()
@@ -21,18 +12,19 @@ option(PANDORA_LIBTORCH "Build the LArDLContent library against LibTorch" OFF)
 option(LArContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
 
 # Find Dependencies
-find_package(PandoraSDK 04.00.00 REQUIRED)
+if (NOT TARGET PandoraPFA::PandoraSDK)
+    find_package(PandoraSDK 05.00.00 REQUIRED)
+endif()
 option(PANDORA_MONITORING "Enable Pandora Monitoring" ON)
 if(PANDORA_MONITORING)
-    find_package(PandoraMonitoring 03.05.00 REQUIRED)
+    if (NOT TARGET PandoraPFA::PandoraMonitoring)
+        find_package(PandoraMonitoring 05.00.00 REQUIRED)
+    endif()
 endif()
 find_package(Eigen3 3.3 REQUIRED)
 if(PANDORA_LIBTORCH)
-    find_package(TBB REQUIRED)
     find_package(Torch REQUIRED)
-    find_package(TorchScatter REQUIRED)
-    # find_package(TorchSparse REQUIRED)
-    find_package(TorchCluster REQUIRED)
+#    find_package(TBB REQUIRED)
 endif()
 
 #include(PandoraCMakeSettings)
@@ -59,7 +51,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 if(PandoraMonitoring_FOUND)
     target_link_libraries(${PROJECT_NAME} PUBLIC PandoraPFA::PandoraMonitoring)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DMONITORING)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC MONITORING)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)

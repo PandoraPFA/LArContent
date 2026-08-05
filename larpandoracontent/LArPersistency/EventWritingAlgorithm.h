@@ -78,6 +78,10 @@ private:
     bool m_shouldWriteEvents;    ///< Whether to write events to a specified file
     std::string m_eventFileName; ///< Name of the output event file
 
+    unsigned int m_fileMajorVersion; ///< Major version of the output file
+    unsigned int m_fileMinorVersion; ///< Minor version of the output file
+    bool m_writtenEventGlobalHeader; ///< Whether the global header has been written to the output event file
+
     bool m_shouldWriteMCRelationships;    ///< Whether to write mc relationship information to the events file
     bool m_shouldWriteTrackRelationships; ///< Whether to write track relationship information to the events file
 

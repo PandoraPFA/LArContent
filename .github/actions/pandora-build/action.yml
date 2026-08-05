@@ -1,0 +1,106 @@
+name: Pandora Build
+
+description: Shared SDK->LArReco build flow for Pandora-based CI workflows.
+
+inputs:
+  monitoring:
+    description: Enable PandoraMonitoring in CMake (ON/OFF).
+    required: true
+  torch:
+    description: Enable LibTorch in CMake (ON/OFF).
+    required: true
+  build_larreco:
+    description: Build LArReco after LArContent (true/false).
+    required: false
+    default: "true"
+  larcontent_build_mode:
+    description: LArContent build mode (normal or Coverity).
+    required: false
+    default: "normal"
+
+runs:
+  using: composite
+  steps:
+    - name: Build PandoraSDK
+      shell: bash
+      run: |
+        mkdir -p /pandora/PandoraSDK/build && cd /pandora/PandoraSDK/build
+        cmake -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules /pandora/PandoraSDK/
+        make -j$(nproc) install
+
+    - name: Build PandoraMonitoring
+      if: ${{ inputs.monitoring == 'ON' }}
+      shell: bash
+      run: |
+        mkdir -p /pandora/PandoraMonitoring/build && cd /pandora/PandoraMonitoring/build
+        cmake \
+          -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules \
+          -DROOT_DIR=/pandora/root/cmake \
+          -DPandoraSDK_DIR=/pandora/PandoraSDK/build/install/lib/cmake/PandoraSDK \
+          /pandora/PandoraMonitoring/
+        make -j$(nproc) install
+
+    - name: Configure and Build LArContent
+      shell: bash
+      env:
+        PANDORA_MONITORING: ${{ inputs.monitoring }}
+        PANDORA_LIBTORCH: ${{ inputs.torch }}
+      run: |
+        mkdir -p /pandora/LArContent/build && cd /pandora/LArContent/build
+        cmake \
+          -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules \
+          -DPandoraSDK_DIR=/pandora/PandoraSDK/build/install/lib/cmake/PandoraSDK \
+          -DEigen3_DIR=/pandora/Eigen3/share/eigen3/cmake \
+          -DROOT_DIR=/pandora/root/cmake \
+          -DPANDORA_MONITORING=${PANDORA_MONITORING} \
+          -DPandoraMonitoring_DIR=/pandora/PandoraMonitoring/build/install/lib/cmake/PandoraMonitoring \
+          -DPANDORA_LIBTORCH=${PANDORA_LIBTORCH} \
+          -DCMAKE_PREFIX_PATH=/pandora/libtorch/ \
+          /pandora/LArContent/
+
+    - name: Build LArContent (normal)
+      if: ${{ inputs.larcontent_build_mode == 'normal' }}
+      shell: bash
+      run: |
+        cd /pandora/LArContent/build
+        make -j$(nproc) install
+
+    - name: Build LArContent (Coverity)
+      if: ${{ inputs.larcontent_build_mode == 'coverity' }}
+      shell: bash
+      run: |
+        cd /pandora/LArContent/build
+        export PATH="/pandora/coverity/cov-analysis/bin:${PATH}"
+        cov-build --dir cov-int make -j$(nproc)
+        tar -czvf coverity_build.tar.gz cov-int
+
+    - name: Validate LArContent build mode
+      if: ${{ inputs.larcontent_build_mode != 'normal' && inputs.larcontent_build_mode != 'coverity' }}
+      shell: bash
+      env:
+        LARCONTENT_BUILD_MODE: ${{ inputs.larcontent_build_mode }}
+      run: |
+        echo "Unsupported larcontent_build_mode: '${LARCONTENT_BUILD_MODE}'" >&2
+        exit 1
+
+    - name: Build LArReco
+      if: ${{ inputs.build_larreco == 'true' }}
+      shell: bash
+      env:
+        PANDORA_MONITORING: ${{ inputs.monitoring }}
+        PANDORA_LIBTORCH: ${{ inputs.torch }}
+      run: |
+        mkdir -p /pandora/LArReco/build && cd /pandora/LArReco/build
+        cmake \
+          -DCMAKE_MODULE_PATH=/pandora/PandoraPFA/cmakemodules \
+          -DPandoraSDK_DIR=/pandora/PandoraSDK/build/install/lib/cmake/PandoraSDK \
+          -DEigen3_DIR=/pandora/Eigen3/share/eigen3/cmake \
+          -DROOT_DIR=/pandora/root/cmake \
+          -DLArContent_DIR=/pandora/LArContent/build/install/lib/cmake/LArContent \
+          -DLArDLContent_DIR=/pandora/LArContent/build/install/lib/cmake/LArDLContent \
+          -DPANDORA_MONITORING=${PANDORA_MONITORING} \
+          -DPandoraMonitoring_DIR=/pandora/PandoraMonitoring/build/install/lib/cmake/PandoraMonitoring \
+          -DPANDORA_LIBTORCH=${PANDORA_LIBTORCH} \
+          -DCMAKE_PREFIX_PATH=/pandora/libtorch/ \
+          /pandora/LArReco/
+        make -j$(nproc) install

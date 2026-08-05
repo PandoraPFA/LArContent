@@ -1,0 +1,97 @@
+name: Pandora Setup
+
+description: Shared dependency and repository setup for Pandora-based CI workflows.
+
+inputs:
+  monitoring:
+    description: Enable ROOT and PandoraMonitoring setup (ON/OFF).
+    required: true
+  torch:
+    description: Enable LibTorch setup (ON/OFF).
+    required: true
+  larcontent_repository:
+    description: Optional repository for LArContent checkout (defaults to current repository).
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        sudo apt install -y xlibmesa-glu-dev libvdt-dev libtbb-dev
+        sudo mkdir -m 0777 -p /pandora
+
+    - name: Pull Eigen
+      shell: bash
+      run: wget https://gitlab.com/libeigen/eigen/-/archive/3.3.5/eigen-3.3.5.tar.gz
+
+    - name: Unpack Eigen
+      shell: bash
+      run: tar -xf eigen-3.3.5.tar.gz && rm eigen-3.3.5.tar.gz && mv eigen-3.3.5 Eigen3
+
+    - name: Build Eigen
+      shell: bash
+      run: |
+        cd Eigen3 && mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=/pandora/Eigen3 ..
+        make -j$(nproc) install
+
+    - name: Install ROOT
+      if: ${{ inputs.monitoring == 'ON' }}
+      shell: bash
+      run: |
+        wget https://root.cern/download/root_v6.28.12.Linux-ubuntu22-x86_64-gcc11.4.tar.gz
+        tar -xzvf root_v6.28.12.Linux-ubuntu22-x86_64-gcc11.4.tar.gz && mv root/ /pandora/root
+
+    - name: Install Torch
+      if: ${{ inputs.torch == 'ON' }}
+      shell: bash
+      run: |
+        wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.1.1%2Bcpu.zip
+        unzip libtorch-cxx11-abi-shared-with-deps-2.1.1+cpu.zip && mv libtorch/ /pandora/libtorch
+
+    - name: Pull PandoraPFA
+      uses: actions/checkout@v5
+      with:
+        repository: PandoraPFA/PandoraPFA
+        path: PandoraPFA
+
+    - name: Pull PandoraSDK
+      uses: actions/checkout@v5
+      with:
+        repository: PandoraPFA/PandoraSDK
+        path: PandoraSDK
+
+    - name: Pull PandoraMonitoring
+      if: ${{ inputs.monitoring == 'ON' }}
+      uses: actions/checkout@v5
+      with:
+        repository: PandoraPFA/PandoraMonitoring
+        path: PandoraMonitoring
+
+    - name: Pull LArContent (current repository)
+      if: ${{ inputs.larcontent_repository == '' }}
+      uses: actions/checkout@v5
+      with:
+        path: LArContent
+
+    - name: Pull LArContent (custom repository)
+      if: ${{ inputs.larcontent_repository != '' }}
+      uses: actions/checkout@v5
+      with:
+        repository: ${{ inputs.larcontent_repository }}
+        path: LArContent
+
+    - name: Pull LArReco
+      uses: actions/checkout@v5
+      with:
+        repository: PandoraPFA/LArReco
+        path: LArReco
+
+    - name: Update Repo Locations
+      shell: bash
+      run: |
+        mv Pandora* /pandora/
+        mv LAr* /pandora/
