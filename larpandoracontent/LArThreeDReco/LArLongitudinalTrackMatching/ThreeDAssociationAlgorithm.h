@@ -48,13 +48,13 @@ private:
      *
      *  @param  pCluster address of the cluster used to fitting
      */
-    void PopulateFitAttributes(const pandora::Cluster *pCluster) const;
+    void PopulateFitAttributes(const pandora::Cluster *const pCluster) const;
 
     float m_minClusterLength;            ///< minimum cluster length
     float m_shortClusterLength;          ///< length threshold for short cluster
     float m_minCosRelativeAngle;         ///< maximum allowed relative angle between associated clusters
     float m_maxGapDistanceSquared;       ///< maximum allowed distance (squared) between associated clusters
-    mutable pandora::HitType m_view;     ///< The view to which the hits under consideration belong
+    float m_channelPitchTolerance;       ///< factor applied to channel pitch 
 
     // struct to cache cluster attributes
     struct ClusterAttr {
