@@ -44,11 +44,11 @@ private:
     bool AreClustersAssociated(const pandora::Cluster *const pInnerCluster, const pandora::Cluster *const pOuterCluster) const;
 
     /**
-     *  @brief Populate cluster fit attributes 
+     *  @brief Populate cluster attributes 
      *
-     *  @param  pCluster address of the cluster used to fitting
+     *  @param  pCluster address of the cluster
      */
-    void PopulateFitAttributes(const pandora::Cluster *const pCluster) const;
+    void PopulateClusterAttributes(const pandora::Cluster *const pCluster) const;
 
     float m_minClusterLength;            ///< minimum cluster length
     float m_shortClusterLength;          ///< length threshold for short cluster

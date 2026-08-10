@@ -40,7 +40,7 @@ void ThreeDAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const
         if( clusterLength < m_minClusterLength )
             continue;
 
-        this->PopulateFitAttributes(pCluster);
+        this->PopulateClusterAttributes(pCluster);
 
         clusterVector.push_back(pCluster);
     }
@@ -211,7 +211,7 @@ StatusCode ThreeDAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDAssociationAlgorithm::PopulateFitAttributes( const pandora::Cluster *const pCluster ) const
+void ThreeDAssociationAlgorithm::PopulateClusterAttributes( const pandora::Cluster *const pCluster ) const
 {
     CaloHitList clusterHits;
     LArClusterHelper::GetAllHits(pCluster, clusterHits);   
