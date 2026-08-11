@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "Geometry/LArReadoutChannel.h"
+
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
@@ -120,7 +122,7 @@ StatusCode DLMultiViewMatchingAlgorithm::GetList(const std::string listName, con
     return STATUS_CODE_SUCCESS;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------    
+// //------------------------------------------------------------------------------------------------------------------------------------------    
 
 void DLMultiViewMatchingAlgorithm::PrepareClusters(const ClusterList *const pClusterListU, const ClusterList *const pClusterListV,
     const ClusterList *const pClusterListW, ClusterExtentMap &clusterExtentMap)
@@ -152,7 +154,7 @@ void DLMultiViewMatchingAlgorithm::PrepareClusters(const ClusterList *const pClu
     }    
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------    
+// //------------------------------------------------------------------------------------------------------------------------------------------    
 
 void DLMultiViewMatchingAlgorithm::FillNavigationMaps(const ClusterExtentMap &clusterExtentMap)
 {
@@ -178,7 +180,7 @@ void DLMultiViewMatchingAlgorithm::FillNavigationMaps(const ClusterExtentMap &cl
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------  
+// //------------------------------------------------------------------------------------------------------------------------------------------  
     
 bool DLMultiViewMatchingAlgorithm::DoClustersOverlap(const Cluster *const pCluster1, const Cluster *const pCluster2, const ClusterExtentMap &clusterExtentMap)
 {
@@ -194,7 +196,7 @@ bool DLMultiViewMatchingAlgorithm::DoClustersOverlap(const Cluster *const pClust
     return this->DoClustersOverlapInWire(pCluster1, pCluster2, minX, maxX);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------      
+// //------------------------------------------------------------------------------------------------------------------------------------------      
 
 bool DLMultiViewMatchingAlgorithm::DoClustersOverlapInWire(const Cluster *const pCluster1, const Cluster *const pCluster2, const float minX, const float maxX)
 {
@@ -234,43 +236,31 @@ bool DLMultiViewMatchingAlgorithm::DoClustersOverlapInWire(const Cluster *const 
             if (!pLArHit2)
                 continue;
             
-            // tpc & child volume should be the same
-            if ((pLArHit1->GetLArTPCVolumeId() != pLArHit2->GetLArTPCVolumeId()) ||
-                (pLArHit1->GetDaughterVolumeId() != pLArHit2->GetDaughterVolumeId()))
+            // Readout volume should be the same
+            if (LArGeometryHelper::GetReadoutVolume(this->GetPandora(), *pLArHit1).GetId() !=
+                LArGeometryHelper::GetReadoutVolume(this->GetPandora(), *pLArHit2).GetId())
             {
                 continue;
             }
 
-            const unsigned int wireId2(pLArHit2->GetWireId());
+            // pLAr1 get overlap in pLAr2 hit type...
+            const LArReadoutChannel &readoutChannel1(LArGeometryHelper::GetReadoutChannel(this->GetPandora(), *pLArHit1));
+            const LArReadoutChannel &readoutChannel2(LArGeometryHelper::GetReadoutChannel(this->GetPandora(), *pLArHit2));         
+            const LArReadoutChannel::ChannelInterval &channelIntervalIn2(readoutChannel1.GetChannelInterval(pLArHit2->GetHitType()));
             
-            // make sure wire intersects with proj planes
-            if (pLArHit2->GetPlane() == pLArHit1->GetPlane1())
-            {
-                const unsigned int minWireIntersect(pLArHit1->GetMinIntersectWire1());
-                const unsigned int maxWireIntersect(pLArHit1->GetMaxIntersectWire1());
-                
-                if ((minWireIntersect <= wireId2) && (maxWireIntersect >= wireId2))
-                {
-                    overlapCount++;
-                    break;
-                }
-            }
-            else
-            {
-                const unsigned int minWireIntersect(pLArHit1->GetMinIntersectWire2());
-                const unsigned int maxWireIntersect(pLArHit1->GetMaxIntersectWire2());
-                
-                if ((minWireIntersect <= wireId2) && (maxWireIntersect >= wireId2))
-                {
-                    overlapCount++;
-                    break;
-                }
-            }
+            if ((readoutChannel2.GetId() < channelIntervalIn2.first) || (readoutChannel2.GetId() > channelIntervalIn2.second))
+                continue;
+
+            overlapCount++;
+            break;
         }
     }
 
     const float overlapFraction1(nSamplingPoints1 == 0 ? 0.f : float(overlapCount) / float(nSamplingPoints1));
     const float overlapFraction2(nSamplingPoints2 == 0 ? 0.f : float(overlapCount) / float(nSamplingPoints2));
+    std::cout << "overlapFraction1: " << overlapFraction1 << std::endl;
+    std::cout << "overlapFraction2: " << overlapFraction2 << std::endl;    
+    
     return ((overlapFraction1 > m_minWireOverlapFraction) && (overlapFraction2 > m_minWireOverlapFraction));
 }
 
@@ -512,7 +502,7 @@ void DLMultiViewMatchingAlgorithm::CreatePfo(const ClusterList &clusters)
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+// //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DLMultiViewMatchingAlgorithm::DeleteCluster(const Cluster *const pClusterToRemove)
 {
@@ -747,7 +737,7 @@ StatusCode DLMultiViewMatchingAlgorithm::ReadSettings([[maybe_unused]] const TiX
     return STATUS_CODE_SUCCESS;
 }   
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+// //------------------------------------------------------------------------------------------------------------------------------------------
 
 template StatusCode DLMultiViewMatchingAlgorithm::GetList(const std::string, const ClusterList *&);
 template StatusCode DLMultiViewMatchingAlgorithm::GetList(const std::string, const VertexList *&);
