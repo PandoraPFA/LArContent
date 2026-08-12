@@ -25,11 +25,8 @@ namespace lar_content
 
 EventReadingAlgorithm::EventReadingAlgorithm() :
     m_skipToEvent(0),
-    m_isEnhancedEventFile(false),
     m_useLArCaloHits(true),
-    m_larCaloHitVersion(1),
     m_useLArMCParticles(true),
-    m_larMCParticleVersion(2),
     m_pEventFileReader(nullptr)
 {
 }
@@ -52,11 +49,13 @@ StatusCode EventReadingAlgorithm::Initialize()
         if (BINARY == geometryFileType)
         {
             BinaryFileReader fileReader(this->GetPandora(), m_geometryFileName);
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGlobalHeader());
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGeometry());
         }
         else if (XML == geometryFileType)
         {
             XmlFileReader fileReader(this->GetPandora(), m_geometryFileName);
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGlobalHeader());
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGeometry());
         }
         else
@@ -68,10 +67,7 @@ StatusCode EventReadingAlgorithm::Initialize()
     if (!m_eventFileName.empty())
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceEventFileReader(m_eventFileName));
-
-        if (m_isEnhancedEventFile)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadGlobalHeader());
-
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadGlobalHeader());
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->GoToEvent(m_skipToEvent));
     }
 
@@ -109,9 +105,7 @@ void EventReadingAlgorithm::MoveToNextEventFile()
     m_eventFileName = m_eventFileNameVector.back();
     m_eventFileNameVector.pop_back();
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceEventFileReader(m_eventFileName));
-
-    if (m_isEnhancedEventFile)
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadGlobalHeader());
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadGlobalHeader());
 
     try
     {
@@ -134,23 +128,17 @@ StatusCode EventReadingAlgorithm::ReplaceEventFileReader(const std::string &file
     const FileType eventFileType(this->GetFileType(fileName));
 
     if (BINARY == eventFileType)
-    {
         m_pEventFileReader = new BinaryFileReader(this->GetPandora(), fileName);
-    }
     else if (XML == eventFileType)
-    {
         m_pEventFileReader = new XmlFileReader(this->GetPandora(), fileName);
-    }
     else
-    {
         return STATUS_CODE_FAILURE;
-    }
 
     if (m_useLArCaloHits)
-        m_pEventFileReader->SetFactory(new LArCaloHitFactory(m_larCaloHitVersion));
+        m_pEventFileReader->SetFactory(new LArCaloHitFactory());
 
     if (m_useLArMCParticles)
-        m_pEventFileReader->SetFactory(new LArMCParticleFactory(m_larMCParticleVersion));
+        m_pEventFileReader->SetFactory(new LArMCParticleFactory());
 
     return STATUS_CODE_SUCCESS;
 }
@@ -163,13 +151,9 @@ FileType EventReadingAlgorithm::GetFileType(const std::string &fileName) const
     std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
 
     if (std::string(".xml") == fileExtension)
-    {
         return XML;
-    }
     else if (std::string(".pndr") == fileExtension)
-    {
         return BINARY;
-    }
     else
     {
         std::cout << "EventReadingAlgorithm: Unknown file type specified " << fileName << std::endl;
@@ -192,24 +176,16 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     }
 
     if (pExternalParameters && !pExternalParameters->m_geometryFileName.empty())
-    {
         m_geometryFileName = pExternalParameters->m_geometryFileName;
-    }
     else
-    {
         PANDORA_RETURN_RESULT_IF_AND_IF(
             STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GeometryFileName", m_geometryFileName));
-    }
 
     if (pExternalParameters && !pExternalParameters->m_eventFileNameList.empty())
-    {
         XmlHelper::TokenizeString(pExternalParameters->m_eventFileNameList, m_eventFileNameVector, ":");
-    }
     else
-    {
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
             XmlHelper::ReadVectorOfValues(xmlHandle, "EventFileNameList", m_eventFileNameVector));
-    }
 
     if (!m_eventFileNameVector.empty())
     {
@@ -219,13 +195,10 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     }
 
     if (pExternalParameters && pExternalParameters->m_skipToEvent.IsInitialized())
-    {
         m_skipToEvent = pExternalParameters->m_skipToEvent.Get();
-    }
     else
-    {
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SkipToEvent", m_skipToEvent));
-    }
+        PANDORA_RETURN_RESULT_IF_AND_IF(
+            STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SkipToEvent", m_skipToEvent));
 
     if (m_geometryFileName.empty() && m_eventFileName.empty())
     {
@@ -234,15 +207,7 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IsEnhancedEventFile", m_isEnhancedEventFile));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseLArCaloHits", m_useLArCaloHits));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LArCaloHitVersion", m_larCaloHitVersion));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LArMCParticleVersion", m_larMCParticleVersion));
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseLArCaloHits", m_useLArCaloHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseLArMCParticles", m_useLArMCParticles));
