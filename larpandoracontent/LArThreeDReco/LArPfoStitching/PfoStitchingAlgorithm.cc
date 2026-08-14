@@ -136,8 +136,7 @@ StatusCode PfoStitchingAlgorithm::InferLArTPCs(InferredLArTPCVector &inferredTPC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PfoStitchingAlgorithm::GetPfoToLArTPCMap(const PfoList *const pPfoList, const InferredLArTPCVector &inferredTPCs,
-    PfoToLArTPCMap &pfoToLArTPCMap) const
+void PfoStitchingAlgorithm::GetPfoToLArTPCMap(const PfoList *const pPfoList, const InferredLArTPCVector &inferredTPCs, PfoToLArTPCMap &pfoToLArTPCMap) const
 {
     for (const ParticleFlowObject *const pPfo : *pPfoList)
     {
@@ -221,8 +220,8 @@ const std::string PfoStitchingAlgorithm::GetListName(const TObject *const pObjec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PfoStitchingAlgorithm::ShiftPfoHierarchy([[maybe_unused]]const ParticleFlowObject *const pParentPfo,
-    [[maybe_unused]]const PfoToLArTPCMap &pfoToLArTPCMap, [[maybe_unused]]const float x0) const
+void PfoStitchingAlgorithm::ShiftPfoHierarchy([[maybe_unused]] const ParticleFlowObject *const pParentPfo,
+    [[maybe_unused]] const PfoToLArTPCMap &pfoToLArTPCMap, [[maybe_unused]] const float x0) const
 {
     std::cout << "PfoStitchingAlgorithm: Stitching tools must not be configured to apply an x0 correction" << std::endl;
     PANDORA_THROW(STATUS_CODE_NOT_ALLOWED);
@@ -256,14 +255,12 @@ void PfoStitchingAlgorithm::StitchPfos(
 
     for (const ParticleFlowObject *const pDaughterPfo : daughterPfos)
     {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPfoToEnlarge, pDaughterPfo));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPfoToEnlarge, pDaughterPfo));
     }
 
     for (const Vertex *const pDaughterVertex : daughterVertices)
     {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            PandoraContentApi::Delete(*this, pDaughterVertex, this->GetListName(pDaughterVertex)));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pDaughterVertex, this->GetListName(pDaughterVertex)));
     }
 
     for (const Cluster *const pDaughterCluster : daughterClusters)
@@ -291,12 +288,10 @@ StatusCode PfoStitchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DaughterListNames", m_daughterListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "Visualise", m_visualise));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualise", m_visualise));
 
     AlgorithmToolVector algorithmToolVector;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-        XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "StitchingTools", algorithmToolVector));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "StitchingTools", algorithmToolVector));
 
     for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
     {

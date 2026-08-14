@@ -171,8 +171,8 @@
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
 
-#include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingCosmicRayMergingTool.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoStitching/PfoStitchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingCosmicRayMergingTool.h"
 
 #include "larpandoracontent/LArVertex/EnergyDepositionAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"

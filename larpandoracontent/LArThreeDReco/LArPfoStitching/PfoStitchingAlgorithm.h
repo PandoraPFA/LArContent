@@ -8,9 +8,9 @@
 #ifndef LAR_PFO_STITCHING_ALGORITHM_H
 #define LAR_PFO_STITCHING_ALGORITHM_H 1
 
-#include "Pandora/Algorithm.h"
 #include "Api/PandoraApi.h"
 #include "Geometry/LArTPC.h"
+#include "Pandora/Algorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingBaseTool.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingPfoOperations.h"
@@ -50,8 +50,7 @@ public:
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
      *  @param  x0 the x0 correction relative to the input pfo
      */
-    void ShiftPfoHierarchy(const pandora::ParticleFlowObject *const pParentPfo, const PfoToLArTPCMap &pfoToLArTPCMap,
-        const float x0) const override;
+    void ShiftPfoHierarchy(const pandora::ParticleFlowObject *const pParentPfo, const PfoToLArTPCMap &pfoToLArTPCMap, const float x0) const override;
 
     /**
      *  @brief  Stitch together a pair of pfos
@@ -83,8 +82,7 @@ private:
      *  @param[in]   inferredTPCs the inferred TPC objects
      *  @param[out]  pfoToLArTPCMap the map of to inferred tpc
      */
-    void GetPfoToLArTPCMap(
-        const pandora::PfoList *const pPfoList, const InferredLArTPCVector &inferredLArTPCs, PfoToLArTPCMap &pfoToLArTPCMap) const;
+    void GetPfoToLArTPCMap(const pandora::PfoList *const pPfoList, const InferredLArTPCVector &inferredLArTPCs, PfoToLArTPCMap &pfoToLArTPCMap) const;
 
     /**
      *  @brief  Find the named list containing a cluster used by a pfo in the input list

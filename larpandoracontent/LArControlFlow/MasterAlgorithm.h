@@ -67,8 +67,7 @@ public:
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
      *  @param  x0 the x0 correction relative to the input pfo
      */
-    void ShiftPfoHierarchy(const pandora::ParticleFlowObject *const pParentPfo, const PfoToLArTPCMap &pfoToLArTPCMap,
-        const float x0) const override;
+    void ShiftPfoHierarchy(const pandora::ParticleFlowObject *const pParentPfo, const PfoToLArTPCMap &pfoToLArTPCMap, const float x0) const override;
 
     /**
      *  @brief  Stitch together a pair of pfos

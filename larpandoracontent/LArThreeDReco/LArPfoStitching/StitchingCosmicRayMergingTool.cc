@@ -42,9 +42,8 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
 {
 }
 
-void StitchingCosmicRayMergingTool::RunStitching(const Algorithm *const pAlgorithm,
-    const StitchingPfoOperations *const pStitchingOperations, const PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap,
-    PfoToFloatMap &stitchedPfosToX0Map)
+void StitchingCosmicRayMergingTool::RunStitching(const Algorithm *const pAlgorithm, const StitchingPfoOperations *const pStitchingOperations,
+    const PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -57,7 +56,7 @@ void StitchingCosmicRayMergingTool::RunStitching(const Algorithm *const pAlgorit
 
     const unsigned int firstVolId{pfoToLArTPCMap.begin()->second->GetLArTPCVolumeId()};
     if (std::all_of(std::next(pfoToLArTPCMap.begin()), pfoToLArTPCMap.end(),
-        [&](const auto &iter){ return iter.second->GetLArTPCVolumeId() == firstVolId; }))
+            [&](const auto &iter) { return iter.second->GetLArTPCVolumeId() == firstVolId; }))
         return;
 
     PfoList pfos;

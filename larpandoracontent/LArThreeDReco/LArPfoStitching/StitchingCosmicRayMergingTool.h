@@ -244,7 +244,7 @@ private:
     unsigned int m_minNCaloHits3D;
     float m_maxX0FractionalDeviation; ///< The maximum allowed fractional difference of an X0 contribution for matches to be stitched
     float m_boundaryToleranceWidth;   ///< The distance from the APA/CPA boundary inside which the deviation consideration is ignored
-    bool  m_onlyFinalStatePfos;       ///< Select only final state PFOs
+    bool m_onlyFinalStatePfos;        ///< Select only final state PFOs
 };
 
 } // namespace lar_content

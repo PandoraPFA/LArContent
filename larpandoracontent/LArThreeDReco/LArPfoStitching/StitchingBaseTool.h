@@ -8,8 +8,8 @@
 #ifndef LAR_STITCHING_BASE_TOOL_H
 #define LAR_STITCHING_BASE_TOOL_H 1
 
-#include "Pandora/AlgorithmTool.h"
 #include "Pandora/Algorithm.h"
+#include "Pandora/AlgorithmTool.h"
 
 #include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingPfoOperations.h"
 
@@ -48,7 +48,6 @@ protected:
      */
     virtual void RunStitching(const pandora::Algorithm *const pAlgorithm, const StitchingPfoOperations *const pStitchingOperations,
         const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) = 0;
-
 };
 
 } // namespace lar_content
