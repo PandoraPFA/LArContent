@@ -85,7 +85,7 @@ public:
     };
 
 private:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) override;
 
     /**
      *  @brief  Select Pfos from the input list of Pfos

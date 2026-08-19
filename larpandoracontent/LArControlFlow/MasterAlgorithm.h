@@ -92,7 +92,7 @@ protected:
 
     typedef std::map<unsigned int, LArTPCHitList> VolumeIdToHitListMap;
 
-    pandora::StatusCode Run();
+    pandora::StatusCode Run() override;
 
     /**
      *  @brief  Initialize pandora worker instances
@@ -178,7 +178,7 @@ protected:
     /**
      *  @brief  Reset all worker instances
      */
-    pandora::StatusCode Reset();
+    pandora::StatusCode Reset() override;
 
     /**
      *  @brief  Copy a specified calo hit to the provided pandora instance
@@ -292,7 +292,7 @@ protected:
      */
     virtual pandora::StatusCode RegisterCustomContent(const pandora::Pandora *const pPandora) const;
 
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) override;
 
     /**
      *  @brief  Read settings from external steering parameters block, if present, otherwise from xml as standard
